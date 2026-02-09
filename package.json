@@ -1,13 +1,13 @@
 {
-  "name": "pi-superpowers",
-  "version": "0.1.0",
+  "name": "pi-superpowers-plus",
+  "version": "0.1.0-alpha.0",
   "description": "Superpowers workflow skills adapted for pi",
   "keywords": ["pi-package"],
   "license": "MIT",
   "author": "coctostan",
   "repository": {
     "type": "git",
-    "url": "https://github.com/coctostan/pi-superpowers.git"
+    "url": "https://github.com/coctostan/pi-superpowers-plus.git"
   },
   "files": [
     "extensions/",
