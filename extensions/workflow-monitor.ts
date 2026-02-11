@@ -35,13 +35,13 @@ import { getCurrentGitRef } from "./workflow-monitor/git";
 export default function (pi: ExtensionAPI) {
   const handler = createWorkflowHandler();
 
-  // Pending violation: set during tool_call, injected during tool_result.
-  // Scoped here because tool_call and tool_result fire sequentially per call.
-  let pendingViolation: Violation | null = null;
-  let pendingVerificationViolation: VerificationViolation | null = null;
+  // Pending warnings are keyed by toolCallId to avoid cross-call leakage when
+  // tool results are interleaved.
+  const pendingViolations = new Map<string, Violation>();
+  const pendingVerificationViolations = new Map<string, VerificationViolation>();
+  const pendingBranchGates = new Map<string, string>();
   let branchNoticeShown = false;
   let branchConfirmed = false;
-  let pendingBranchGate: string | null = null;
 
   const persistWorkflowState = () => {
     pi.appendEntry(WORKFLOW_TRACKER_ENTRY_TYPE, handler.getWorkflowState());
@@ -74,11 +74,11 @@ export default function (pi: ExtensionAPI) {
     pi.on(event, async (_event, ctx) => {
       handler.resetState();
       handler.restoreWorkflowStateFromBranch(ctx.sessionManager.getBranch());
-      pendingViolation = null;
-      pendingVerificationViolation = null;
+      pendingViolations.clear();
+      pendingVerificationViolations.clear();
+      pendingBranchGates.clear();
       branchNoticeShown = false;
       branchConfirmed = false;
-      pendingBranchGate = null;
       updateWidget(ctx);
     });
   }
@@ -95,17 +95,21 @@ export default function (pi: ExtensionAPI) {
 
   // --- Tool call observation (detect file writes + verification gate) ---
   pi.on("tool_call", async (event, ctx) => {
+    const toolCallId = event.toolCallId;
+
     if (event.toolName === "bash") {
       const command = ((event.input as Record<string, any>).command as string | undefined) ?? "";
       const verificationViolation = handler.checkCommitGate(command);
       if (verificationViolation) {
-        pendingVerificationViolation = verificationViolation;
+        pendingVerificationViolations.set(toolCallId, verificationViolation);
       }
     }
 
     const input = event.input as Record<string, any>;
     const result = handler.handleToolCall(event.toolName, input);
-    pendingViolation = result.violation;
+    if (result.violation) {
+      pendingViolations.set(toolCallId, result.violation);
+    }
 
     let changed = false;
 
@@ -120,9 +124,11 @@ export default function (pi: ExtensionAPI) {
         branchConfirmed = true;
 
         if (ref) {
-          pendingBranchGate =
+          pendingBranchGates.set(
+            toolCallId,
             `⚠️ First write of this session. You're on branch \`${ref}\`.\n` +
-            "Confirm with the user this is the correct branch before continuing, or create a new branch/worktree.";
+              "Confirm with the user this is the correct branch before continuing, or create a new branch/worktree."
+          );
         } else {
           // Not a git repo: disable branch messages silently.
           branchNoticeShown = true;
@@ -142,16 +148,14 @@ export default function (pi: ExtensionAPI) {
 
   // --- Tool result modification (inject warnings + track investigation) ---
   pi.on("tool_result", async (event, ctx) => {
+    const toolCallId = event.toolCallId;
+
     // Handle read tool as investigation signal
     if (event.toolName === "read") {
       const path = (event.input as Record<string, any>).path as string ?? "";
       handler.handleReadOrInvestigation("read", path);
     }
 
-    const existingText = event.content
-      .filter((c): c is { type: "text"; text: string } => c.type === "text")
-      .map((c) => c.text)
-      .join("\n");
     const injected: string[] = [];
 
     // Layer 1: announce current branch on first tool result in session.
@@ -165,12 +169,14 @@ export default function (pi: ExtensionAPI) {
       branchNoticeShown = true;
     }
 
-    // Inject violation warning on write/edit
-    if ((event.toolName === "write" || event.toolName === "edit") && pendingViolation) {
-      const violation = pendingViolation;
-      injected.push(formatViolationWarning(violation));
+    // Inject violation warning on write/edit for the matching tool call.
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const violation = pendingViolations.get(toolCallId);
+      if (violation) {
+        injected.push(formatViolationWarning(violation));
+      }
+      pendingViolations.delete(toolCallId);
     }
-    pendingViolation = null;
 
     // Handle bash results (test runs, commits, investigation)
     if (event.toolName === "bash") {
@@ -193,24 +199,27 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
-      if (pendingVerificationViolation) {
-        const violation = pendingVerificationViolation;
-        injected.push(getVerificationViolationWarning(violation.type, violation.command));
+      const verificationViolation = pendingVerificationViolations.get(toolCallId);
+      if (verificationViolation) {
+        injected.push(
+          getVerificationViolationWarning(verificationViolation.type, verificationViolation.command)
+        );
       }
+      pendingVerificationViolations.delete(toolCallId);
     }
 
-    if ((event.toolName === "write" || event.toolName === "edit") && pendingBranchGate) {
-      injected.push(pendingBranchGate);
-      pendingBranchGate = null;
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const branchGate = pendingBranchGates.get(toolCallId);
+      if (branchGate) {
+        injected.push(branchGate);
+      }
+      pendingBranchGates.delete(toolCallId);
     }
-
-    pendingVerificationViolation = null;
 
     if (injected.length > 0) {
-      const parts = [existingText, ...injected].filter((part) => part.trim().length > 0);
       updateWidget(ctx);
       return {
-        content: [{ type: "text", text: parts.join("\n\n") }],
+        content: [{ type: "text", text: injected.join("\n\n") }, ...event.content],
       };
     }
 
