@@ -30,14 +30,18 @@ import {
   type WorkflowTrackerState,
 } from "./workflow-monitor/workflow-tracker";
 import { getTransitionPrompt } from "./workflow-monitor/workflow-transitions";
+import { getCurrentGitRef } from "./workflow-monitor/git";
 
 export default function (pi: ExtensionAPI) {
   const handler = createWorkflowHandler();
 
-  // Pending violation: set during tool_call, injected during tool_result.
-  // Scoped here because tool_call and tool_result fire sequentially per call.
-  let pendingViolation: Violation | null = null;
-  let pendingVerificationViolation: VerificationViolation | null = null;
+  // Pending warnings are keyed by toolCallId to avoid cross-call leakage when
+  // tool results are interleaved.
+  const pendingViolations = new Map<string, Violation>();
+  const pendingVerificationViolations = new Map<string, VerificationViolation>();
+  const pendingBranchGates = new Map<string, string>();
+  let branchNoticeShown = false;
+  let branchConfirmed = false;
 
   const persistWorkflowState = () => {
     pi.appendEntry(WORKFLOW_TRACKER_ENTRY_TYPE, handler.getWorkflowState());
@@ -70,8 +74,11 @@ export default function (pi: ExtensionAPI) {
     pi.on(event, async (_event, ctx) => {
       handler.resetState();
       handler.restoreWorkflowStateFromBranch(ctx.sessionManager.getBranch());
-      pendingViolation = null;
-      pendingVerificationViolation = null;
+      pendingViolations.clear();
+      pendingVerificationViolations.clear();
+      pendingBranchGates.clear();
+      branchNoticeShown = false;
+      branchConfirmed = false;
       updateWidget(ctx);
     });
   }
@@ -88,17 +95,21 @@ export default function (pi: ExtensionAPI) {
 
   // --- Tool call observation (detect file writes + verification gate) ---
   pi.on("tool_call", async (event, ctx) => {
+    const toolCallId = event.toolCallId;
+
     if (event.toolName === "bash") {
       const command = ((event.input as Record<string, any>).command as string | undefined) ?? "";
       const verificationViolation = handler.checkCommitGate(command);
       if (verificationViolation) {
-        pendingVerificationViolation = verificationViolation;
+        pendingVerificationViolations.set(toolCallId, verificationViolation);
       }
     }
 
     const input = event.input as Record<string, any>;
     const result = handler.handleToolCall(event.toolName, input);
-    pendingViolation = result.violation;
+    if (result.violation) {
+      pendingViolations.set(toolCallId, result.violation);
+    }
 
     let changed = false;
 
@@ -106,6 +117,22 @@ export default function (pi: ExtensionAPI) {
       const path = input.path as string | undefined;
       if (path) {
         changed = handler.handleFileWritten(path) || changed;
+      }
+
+      if (!branchConfirmed) {
+        const ref = getCurrentGitRef();
+        branchConfirmed = true;
+
+        if (ref) {
+          pendingBranchGates.set(
+            toolCallId,
+            `⚠️ First write of this session. You're on branch \`${ref}\`.\n` +
+              "Confirm with the user this is the correct branch before continuing, or create a new branch/worktree."
+          );
+        } else {
+          // Not a git repo: disable branch messages silently.
+          branchNoticeShown = true;
+        }
       }
     }
 
@@ -121,27 +148,35 @@ export default function (pi: ExtensionAPI) {
 
   // --- Tool result modification (inject warnings + track investigation) ---
   pi.on("tool_result", async (event, ctx) => {
+    const toolCallId = event.toolCallId;
+
     // Handle read tool as investigation signal
     if (event.toolName === "read") {
       const path = (event.input as Record<string, any>).path as string ?? "";
       handler.handleReadOrInvestigation("read", path);
     }
 
-    // Inject violation warning on write/edit
-    if ((event.toolName === "write" || event.toolName === "edit") && pendingViolation) {
-      const violation = pendingViolation;
-      pendingViolation = null;
-      const warning = formatViolationWarning(violation);
-      const existingText = event.content
-        .filter((c): c is { type: "text"; text: string } => c.type === "text")
-        .map((c) => c.text)
-        .join("\n");
-      updateWidget(ctx);
-      return {
-        content: [{ type: "text", text: `${existingText}\n\n${warning}` }],
-      };
+    const injected: string[] = [];
+
+    // Layer 1: announce current branch on first tool result in session.
+    if (!branchNoticeShown) {
+      const ref = getCurrentGitRef();
+      if (ref) {
+        injected.push(`📌 Current branch: \`${ref}\``);
+      } else {
+        branchConfirmed = true;
+      }
+      branchNoticeShown = true;
     }
-    pendingViolation = null;
+
+    // Inject violation warning on write/edit for the matching tool call.
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const violation = pendingViolations.get(toolCallId);
+      if (violation) {
+        injected.push(formatViolationWarning(violation));
+      }
+      pendingViolations.delete(toolCallId);
+    }
 
     // Handle bash results (test runs, commits, investigation)
     if (event.toolName === "bash") {
@@ -164,22 +199,30 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
-      if (pendingVerificationViolation) {
-        const violation = pendingVerificationViolation;
-        pendingVerificationViolation = null;
-        const warning = getVerificationViolationWarning(violation.type, violation.command);
-        const existingText = event.content
-          .filter((c): c is { type: "text"; text: string } => c.type === "text")
-          .map((c) => c.text)
-          .join("\n");
-        updateWidget(ctx);
-        return {
-          content: [{ type: "text", text: `${existingText}\n\n${warning}` }],
-        };
+      const verificationViolation = pendingVerificationViolations.get(toolCallId);
+      if (verificationViolation) {
+        injected.push(
+          getVerificationViolationWarning(verificationViolation.type, verificationViolation.command)
+        );
       }
+      pendingVerificationViolations.delete(toolCallId);
     }
 
-    pendingVerificationViolation = null;
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const branchGate = pendingBranchGates.get(toolCallId);
+      if (branchGate) {
+        injected.push(branchGate);
+      }
+      pendingBranchGates.delete(toolCallId);
+    }
+
+    if (injected.length > 0) {
+      updateWidget(ctx);
+      return {
+        content: [{ type: "text", text: injected.join("\n\n") }, ...event.content],
+      };
+    }
+
     updateWidget(ctx);
     return undefined;
   });
@@ -214,11 +257,19 @@ export default function (pi: ExtensionAPI) {
     const nextSkill = phaseToSkill[prompt.nextPhase] ?? "writing-plans";
     const nextInSession = `/skill:${nextSkill}`;
     const fresh = `/workflow-next ${prompt.nextPhase}${prompt.artifactPath ? ` ${prompt.artifactPath}` : ""}`;
+    const finishReminder =
+      "Before finishing:\n" +
+      "- Does this work require documentation updates? (README, CHANGELOG, API docs, inline docs)\n" +
+      "- What was learned during this implementation? (surprises, codebase knowledge, things to do differently)\n\n";
 
     if (selected === "next") {
-      ctx.ui.setEditorText(nextInSession);
+      ctx.ui.setEditorText(
+        prompt.nextPhase === "finish" ? finishReminder + nextInSession : nextInSession
+      );
     } else if (selected === "fresh") {
-      ctx.ui.setEditorText(fresh);
+      ctx.ui.setEditorText(
+        prompt.nextPhase === "finish" ? finishReminder + fresh : fresh
+      );
     } else if (selected === "skip") {
       const nextIdx = WORKFLOW_PHASES.indexOf(prompt.nextPhase);
       const phaseAfterSkip = WORKFLOW_PHASES[nextIdx + 1] ?? prompt.nextPhase;

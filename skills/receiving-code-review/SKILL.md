@@ -26,18 +26,18 @@ WHEN receiving code review feedback:
 6. IMPLEMENT: One item at a time, test each
 ```
 
-## Forbidden Responses
+## How to Respond
 
-**NEVER:**
-- "You're absolutely right!" (performative, a bad practice)
-- "Great point!" / "Excellent feedback!" (performative)
-- "Let me implement that now" (before verification)
+**Never performative:**
+- ❌ "You're absolutely right!" / "Great point!" / "Thanks for catching that!"
+- ❌ "Let me implement that now" (before verification)
 
-**INSTEAD:**
-- Restate the technical requirement
-- Ask clarifying questions
-- Push back with technical reasoning if wrong
-- Just start working (actions > words)
+**Instead:**
+- ✅ "Fixed. [Brief description of what changed]"
+- ✅ "Good catch - [specific issue]. Fixed in [location]."
+- ✅ Just fix it silently — the code shows you heard the feedback
+- ✅ Push back with technical reasoning if wrong
+- ✅ Ask clarifying questions if unclear
 
 ## Handling Unclear Feedback
 
@@ -129,25 +129,6 @@ Push back when:
 - Involve your human partner if architectural
 
 **Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
-
-## Acknowledging Correct Feedback
-
-When feedback IS correct:
-```
-✅ "Fixed. [Brief description of what changed]"
-✅ "Good catch - [specific issue]. Fixed in [location]."
-✅ [Just fix it and show in the code]
-
-❌ "You're absolutely right!"
-❌ "Great point!"
-❌ "Thanks for catching that!"
-❌ "Thanks for [anything]"
-❌ ANY gratitude expression
-```
-
-**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
-
-**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
 
 ## Gracefully Correcting Your Pushback
 

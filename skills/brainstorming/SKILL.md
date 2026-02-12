@@ -17,6 +17,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
+- Check if the codebase or ecosystem already solves this before designing from scratch
 - Ask questions one at a time to refine the idea
 - Prefer multiple choice questions when possible, but open-ended is fine too
 - Only one question per message - if a topic needs more exploration, break it into multiple questions
@@ -42,7 +43,7 @@ Start by understanding the current project context, then ask questions one at a 
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
-- Use `/skill:using-git-worktrees` to create isolated workspace
+- Set up isolated workspace — `/skill:using-git-worktrees` for larger work, or just create a branch for small changes
 - Use `/skill:writing-plans` to create detailed implementation plan
 
 ## Key Principles
@@ -50,6 +51,7 @@ Start by understanding the current project context, then ask questions one at a 
 - **One question at a time** - Don't overwhelm with multiple questions
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
+- **Design for testability** - Favor approaches with clear boundaries that are easy to verify with TDD
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense

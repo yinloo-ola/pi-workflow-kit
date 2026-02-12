@@ -61,6 +61,15 @@ After all tasks complete and verified:
 
 **Ask for clarification rather than guessing.**
 
+## When the Plan Is Wrong
+
+**Different from being blocked** — you're not stuck, but you've learned something that makes the remaining plan unworkable.
+
+- Stop executing immediately
+- Report what you've learned and why remaining tasks won't work
+- Propose a revised approach, or ask your human partner to revisit the design
+- Don't continue executing tasks you know are heading somewhere bad
+
 ## When to Revisit Earlier Steps
 
 **Return to Review (Step 1) when:**
@@ -70,6 +79,7 @@ After all tasks complete and verified:
 **Don't force through blockers** - stop and ask.
 
 ## Remember
+- TDD is the default for production code: failing test first, verify fail, implement, verify pass
 - Review plan critically first
 - Follow plan steps exactly
 - Don't skip verifications
@@ -81,6 +91,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **`/skill:using-git-worktrees`** - REQUIRED: Set up isolated workspace before starting
+- **`/skill:using-git-worktrees`** - Recommended: Set up isolated workspace before starting. For small changes, branching in the current directory is acceptable with human approval.
 - **`/skill:writing-plans`** - Creates the plan this skill executes
 - **`/skill:finishing-a-development-branch`** - Complete development after all tasks

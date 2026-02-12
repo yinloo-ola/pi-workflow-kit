@@ -95,6 +95,8 @@ git commit -m "feat: add specific feature"
 - Exact commands with expected output
 - Reference relevant skills
 - DRY, YAGNI, TDD, frequent commits
+- Order tasks so each task's dependencies are completed by earlier tasks
+- If plan exceeds ~8 tasks, consider splitting into phases with a checkpoint between them
 
 ## Execution Handoff
 
@@ -102,9 +104,9 @@ After saving the plan, offer execution choice:
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven (this session)** - Fresh subagent per task with two-stage review. Better for plans with many independent tasks.
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. Parallel Session (separate)** - Batch execution with human review checkpoints. Better when tasks are tightly coupled or you want more control between batches.
 
 **Which approach?"**
 

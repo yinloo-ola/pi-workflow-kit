@@ -37,6 +37,8 @@ digraph when_to_use {
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
 
+**Dependent tasks:** Most real plans have some dependencies. For dependent tasks, include the previous task's implementation summary and relevant file paths in the next subagent's context. Track what each completed task produced so you can pass it forward.
+
 ## The Process
 
 ```dot
@@ -171,38 +173,6 @@ Final reviewer: All requirements met, ready to merge
 Done!
 ```
 
-## Advantages
-
-**vs. Manual execution:**
-- Subagents follow TDD naturally
-- Fresh context per task (no confusion)
-- Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
-
-**vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
-
-**Efficiency gains:**
-- No file reading overhead (controller provides full text)
-- Controller curates exactly what context is needed
-- Subagent gets complete information upfront
-- Questions surfaced before work begins (not after)
-
-**Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
-
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
-
 ## Red Flags
 
 **Never:**
@@ -233,17 +203,18 @@ Done!
 **If subagent fails task:**
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
+- After 2 failed subagent attempts on the same task, stop and escalate to human — the task may need redesign
 
 ## Integration
 
 **Required workflow skills:**
-- **`/skill:using-git-worktrees`** - REQUIRED: Set up isolated workspace before starting
+- **`/skill:using-git-worktrees`** - Recommended: Set up isolated workspace before starting. For small changes, branching in the current directory is acceptable with human approval.
 - **`/skill:writing-plans`** - Creates the plan this skill executes
 - **`/skill:requesting-code-review`** - Code review template for reviewer subagents
 - **`/skill:finishing-a-development-branch`** - Complete development after all tasks
 
-**Subagents should use:**
-- **`/skill:test-driven-development`** - Subagents follow TDD for each task
+**Subagents follow by default:**
+- **TDD** - Failing test first for all production code (enforced by workflow-monitor, instructions in implementer prompt)
 
 **Alternative workflow:**
 - **`/skill:executing-plans`** - Use for parallel session instead of same-session execution

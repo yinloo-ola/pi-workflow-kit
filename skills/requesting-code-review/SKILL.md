@@ -88,8 +88,8 @@ You: [Fix progress indicators]
 - Fix before moving to next task
 
 **Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
+- Uses human review between batches — dispatched code review is optional
+- Useful before merge if no review happened during execution
 
 **Ad-Hoc Development:**
 - Review before merge

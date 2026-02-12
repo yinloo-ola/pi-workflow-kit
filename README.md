@@ -14,7 +14,13 @@ Your coding agent doesn't just know the rules — it follows them. Skills teach 
 - **Workflow Monitor** — enforces TDD discipline, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
 - **Plan Tracker** — tracks task progress with a TUI widget.
 
-**After installation**, any time the agent writes a source file without a failing test, it gets a warning injected into the tool result. Any time it tries to `git commit` without passing tests, it gets blocked. The agent sees these warnings as part of its normal tool output — no configuration needed.
+**After installation**:
+- Any time the agent writes a source file without a failing test, it gets a warning injected into the tool result.
+- Any time it tries to `git commit` / `git push` / `gh pr create` without passing tests, it gets gated.
+- On the first tool output of a session (inside a git repo), the agent is shown the **current git branch (or detached HEAD short SHA)**.
+- On the first write/edit of a session (inside a git repo), the agent is warned to **confirm it’s on the correct branch/worktree** before continuing.
+
+The agent sees these warnings as part of its normal tool output — no configuration needed.
 
 ## Install
 
@@ -37,6 +43,61 @@ Or add to `.pi/settings.json` (project-level) or `~/.pi/agent/config.json` (glob
 ```
 
 No configuration required. Skills and extensions activate automatically.
+
+## Upgrading from `pi-superpowers`
+
+If you’re currently using [`pi-superpowers`](https://github.com/coctostan/pi-superpowers), `pi-superpowers-plus` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
+
+### What stays the same
+- The same core workflow skills (e.g. `/skill:brainstorming`, `/skill:writing-plans`, `/skill:executing-plans`, etc.)
+- The same “structured workflow” idea and phase order
+
+### What’s new in `pi-superpowers-plus`
+- **Workflow Monitor extension** that observes tool calls/results and injects warnings directly into output
+- **TDD discipline warnings** when writing source code without a failing test first
+- **Debug enforcement** escalation after repeated failing tests
+- **Verification gating** for `git commit` / `git push` / `gh pr create` until passing tests are run
+- **Workflow tracking + boundary prompts** (and `/workflow-next` handoff)
+- **Branch safety reminders** (first tool result shows current branch/SHA; first write/edit warns to confirm branch/worktree)
+- **Finish-phase reminder prefill** (docs + learnings)
+- **Plan Tracker tool** (`plan_tracker`) for task lists + TUI progress
+
+### Migration
+Replace `pi-superpowers` with `pi-superpowers-plus` in your config:
+
+```json
+{
+  "packages": ["npm:pi-superpowers-plus"]
+}
+```
+
+Notes:
+- If you keep both packages enabled, you may get duplicate/competing skill guidance.
+- `pi-superpowers-plus` is more “opinionated” at runtime: it will inject warnings into tool output and may gate shipping commands until verification has passed.
+
+### How the skills were cleaned up (leveraging pi)
+
+A core goal of `pi-superpowers-plus` is to keep **skill instructions short and action-oriented**, and rely on pi’s runtime capabilities for the “heavy lifting”:
+- **Extensions** enforce behavior *while you work* (TDD/Debug/Verification monitors, branch safety notices), instead of relying on long written reminders.
+- The **TUI** can show state (workflow/TDD) and prompt at boundaries, reducing repeated prose in skills.
+- Tools like **`plan_tracker`** store execution state outside the prompt, so skills don’t need to carry as much bookkeeping text.
+
+To make this concrete, here’s the size of each skill’s `SKILL.md` compared to the original [`coctostan/pi-superpowers`](https://github.com/coctostan/pi-superpowers) (approximate KB, at time of writing). Across the shared skills, total `SKILL.md` content went from **67.5KB → 55.8KB** (**-11.6KB**, ~**-17%**).
+
+| Skill | pi-superpowers SKILL.md (KB) | pi-superpowers-plus SKILL.md (KB) | Δ (KB) |
+|---|---:|---:|---:|
+| `brainstorming` | 2.5 | 2.8 | +0.2 |
+| `dispatching-parallel-agents` | 6.2 | 6.2 | -0.0 |
+| `executing-plans` | 2.7 | 3.3 | +0.6 |
+| `finishing-a-development-branch` | 4.3 | 4.4 | +0.1 |
+| `receiving-code-review` | 6.2 | 5.9 | -0.3 |
+| `requesting-code-review` | 2.9 | 3.0 | +0.1 |
+| `subagent-driven-development` | 10.2 | 9.6 | -0.5 |
+| `systematic-debugging` | 9.8 | 5.1 | -4.7 |
+| `test-driven-development` | 9.8 | 3.4 | -6.4 |
+| `using-git-worktrees` | 5.5 | 6.1 | +0.7 |
+| `verification-before-completion` | 4.1 | 2.6 | -1.5 |
+| `writing-plans` | 3.3 | 3.5 | +0.2 |
 
 ## The Workflow
 
@@ -105,6 +166,14 @@ Activates after **2 consecutive failing test runs** (excluding intentional TDD r
 
 Blocks `git commit`, `git push`, and `gh pr create` when the agent hasn't run passing tests. Requires a fresh passing test run before shipping. Automatically clears after successful verification.
 
+#### Branch Safety (informational)
+
+Inside a git repo, the workflow monitor also tries to prevent "oops I just edited main" mistakes:
+- On the **first tool result** of a session, it injects `📌 Current branch: <branch-or-sha>`.
+- On the **first write/edit** of a session, it injects a warning reminding the agent to confirm the branch/worktree with the user.
+
+Outside a git repo, it stays silent.
+
 #### Workflow Tracker
 
 Tracks which workflow phase the agent is in and shows a phase strip in the TUI widget. Detection signals:
@@ -118,6 +187,8 @@ At phase boundaries, prompts the agent once (non-enforcing) with options:
 2. **Fresh session** — hand off to a new session via `/workflow-next`
 3. **Skip** — skip the next phase
 4. **Discuss** — keep chatting
+
+When transitioning into **finish**, the monitor pre-fills the editor with a reminder to consider documentation updates and to capture learnings before merging/shipping.
 
 The `/workflow-next` command starts a new session with artifact context:
 ```
@@ -211,6 +282,7 @@ pi-superpowers-plus/
 │       ├── heuristics.ts             # File classification (test vs source)
 │       ├── test-runner.ts            # Test command/result detection
 │       ├── investigation.ts          # Investigation signal detection
+│       ├── git.ts                    # Git branch/SHA detection (branch safety)
 │       ├── warnings.ts              # Violation warning content
 │       └── reference-tool.ts        # On-demand reference loading
 ├── skills/                           # 12 workflow skills (24 markdown files)
@@ -226,7 +298,7 @@ pi-superpowers-plus/
 │   ├── dispatching-parallel-agents/
 │   ├── using-git-worktrees/
 │   └── finishing-a-development-branch/
-└── tests/                            # 173 unit tests across 16 files
+└── tests/                            # 184 unit tests across 18 files
 ```
 
 ## Development

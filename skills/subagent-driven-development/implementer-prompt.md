@@ -29,8 +29,8 @@ Dispatch a subagent with this prompt:
     ## Your Job
 
     Once you're clear on requirements:
-    1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
+    1. Follow TDD for production code: write failing test first, verify it fails, then implement minimal code to pass
+    2. Implement exactly what the task specifies
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
@@ -62,7 +62,7 @@ Dispatch a subagent with this prompt:
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
+    - Did I follow TDD (failing test first for all production code)?
     - Are tests comprehensive?
 
     If you find issues during self-review, fix them now before reporting.

@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import workflowMonitorExtension from "../../../extensions/workflow-monitor";
 import {
+  WORKFLOW_TRACKER_ENTRY_TYPE,
   WorkflowTracker,
   computeBoundaryToPrompt,
 } from "../../../extensions/workflow-monitor/workflow-tracker";
@@ -175,5 +176,69 @@ describe("boundary prompting", () => {
 
     await onAgentEnd({}, ctx);
     expect(selectCalls).toBe(1);
+  });
+
+  test("finish transition pre-fills docs + learnings reminder", async () => {
+    const fake = createFakePi();
+    workflowMonitorExtension(fake.api as any);
+
+    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
+
+    const editorTexts: string[] = [];
+
+    const ctx = {
+      hasUI: true,
+      sessionManager: {
+        getBranch: () => [
+          {
+            type: "custom",
+            customType: WORKFLOW_TRACKER_ENTRY_TYPE,
+            data: {
+              phases: {
+                brainstorm: "complete",
+                plan: "complete",
+                execute: "complete",
+                verify: "complete",
+                review: "complete",
+                finish: "active",
+              },
+              currentPhase: "finish",
+              artifacts: {
+                brainstorm: null,
+                plan: null,
+                execute: null,
+                verify: null,
+                review: null,
+                finish: null,
+              },
+              prompted: {
+                brainstorm: true,
+                plan: true,
+                execute: true,
+                verify: true,
+                review: false,
+                finish: false,
+              },
+            },
+          },
+        ],
+      },
+      ui: {
+        setWidget: () => {},
+        select: async () => "next",
+        setEditorText: (text: string) => editorTexts.push(text),
+        notify: () => {},
+      },
+    };
+
+    await onSessionSwitch({}, ctx);
+    await onAgentEnd({}, ctx);
+
+    const text = editorTexts.at(-1) ?? "";
+    expect(text).toContain("Before finishing:");
+    expect(text).toContain("documentation updates");
+    expect(text).toContain("What was learned");
+    expect(text).toContain("/skill:finishing-a-development-branch");
   });
 });

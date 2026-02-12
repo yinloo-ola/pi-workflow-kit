@@ -68,6 +68,13 @@ describe("workflow-monitor extension lifecycle", () => {
       ctx
     );
 
-    expect(result).toBeUndefined();
+    if (result) {
+      const text = result.content
+        .filter((c: any) => c.type === "text")
+        .map((c: any) => c.text)
+        .join("\n");
+      expect(text).not.toContain("TDD/Debug policy violation detected");
+      expect(text).not.toContain("Fix attempt");
+    }
   });
 });

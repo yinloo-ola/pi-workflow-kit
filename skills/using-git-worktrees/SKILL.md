@@ -143,6 +143,17 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
+## Keeping a Worktree Current
+
+For longer-running work, the base branch may advance. If upstream changes cause test failures or you need new code from main:
+
+```bash
+git fetch origin
+git rebase origin/main   # or git merge origin/main
+```
+
+Re-run tests after rebasing. Prefer rebase for clean history unless the branch is shared.
+
 ## Quick Reference
 
 | Situation | Action |
@@ -211,9 +222,11 @@ Ready to implement auth feature
 
 **Called by:**
 - **`/skill:brainstorming`** - When design is approved and implementation follows
-- **`/skill:subagent-driven-development`** - REQUIRED before executing any tasks
-- **`/skill:executing-plans`** - REQUIRED before executing any tasks
+- **`/skill:subagent-driven-development`** - Recommended before executing any tasks
+- **`/skill:executing-plans`** - Recommended before executing any tasks
 - Any skill needing isolated workspace
+
+**Note:** For small changes, branching in the current directory is acceptable with human approval. Worktrees are the default for larger work.
 
 **Pairs with:**
 - **`/skill:finishing-a-development-branch`** - REQUIRED for cleanup after work complete

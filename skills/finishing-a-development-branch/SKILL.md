@@ -37,7 +37,14 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1.5.
+
+### Step 1.5: Documentation and Learnings
+
+Before presenting options, ask two questions:
+
+1. **"Does this work require documentation updates?"** (README, CHANGELOG, API docs, inline docs) — If yes, make the updates before proceeding.
+2. **"What was learned during this implementation?"** (surprises, codebase-specific knowledge, things to do differently next time) — Capture anything worth remembering using the memory tool's learnings file.
 
 ### Step 2: Determine Base Branch
 
@@ -85,6 +92,8 @@ git merge <feature-branch>
 # If tests pass
 git branch -d <feature-branch>
 ```
+
+**If merge conflicts:** Abort the merge (`git merge --abort`) and suggest switching to Option 2 (PR) so the user can resolve conflicts manually. Don't attempt conflict resolution without explicit user approval.
 
 Then: Cleanup worktree (Step 5)
 
@@ -160,37 +169,13 @@ git worktree remove <worktree-path>
 | 3. Keep as-is | - | - | ✓ | - |
 | 4. Discard | - | - | - | ✓ (force) |
 
-## Common Mistakes
+## Rules
 
-**Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
-
-**Open-ended questions**
-- **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
-
-**Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
-
-**No confirmation for discard**
-- **Problem:** Accidentally delete work
-- **Fix:** Require typed "discard" confirmation
-
-## Red Flags
-
-**Never:**
-- Proceed with failing tests
-- Merge without verifying tests on result
-- Delete work without confirmation
-- Force-push without explicit request
-
-**Always:**
-- Verify tests before offering options
-- Present exactly 4 options
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Always verify tests before offering options — never merge or PR with failing tests
+- Present exactly 4 structured options — no open-ended "what next?"
+- Require typed "discard" confirmation for Option 4
+- Only cleanup worktree for Options 1 and 4
+- Never force-push without explicit request
 
 ## Integration
 
