@@ -677,6 +677,7 @@ export default function (pi: ExtensionAPI) {
       // TDD phase
       if (tddPhase !== "IDLE") {
         const colorMap: Record<string, string> = {
+          "RED-PENDING": "error",
           RED: "error",
           GREEN: "success",
           REFACTOR: "accent",

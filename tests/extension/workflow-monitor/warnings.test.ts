@@ -22,8 +22,13 @@ describe("getTddViolationWarning", () => {
 
   test("returns source-during-red warning", () => {
     const warning = getTddViolationWarning("source-during-red", "src/utils.ts");
-    expect(warning).toContain("RED phase");
-    expect(warning).toContain("Run your failing test");
+    expect(warning).toContain("RED-PENDING phase");
+    expect(warning).toContain("Run the test suite now");
+  });
+
+  test("source-during-red warning mentions running the test first", () => {
+    const warning = getTddViolationWarning("source-during-red", "src/foo.ts");
+    expect(warning).toContain("Run your new test before editing source code");
   });
 
   test("warning is concise (under 15 lines)", () => {

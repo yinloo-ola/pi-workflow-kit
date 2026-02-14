@@ -21,13 +21,13 @@ Delete the production code. Write the test. Watch it fail. Then implement.
 
   if (type === "source-during-red") {
     return `
-⚠️ TDD VIOLATION: You wrote production code (${file}) during RED phase.
+⚠️ TDD VIOLATION: You wrote production code (${file}) during RED-PENDING phase.
 
-You wrote a test but haven't run it yet. Run your failing test first.
+Run your new test before editing source code.
 
 The TDD cycle: Write test → Run it (RED) → Write code → Run it (GREEN)
 
-You're in RED. Run the test. Watch it fail. THEN write the production code.
+You wrote a test but haven't run it yet. Run the test suite now. Watch the new test fail. THEN write the production code.
 `.trim();
   }
 
