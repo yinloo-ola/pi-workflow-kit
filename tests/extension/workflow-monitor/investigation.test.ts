@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isInvestigationCommand } from "../../../extensions/workflow-monitor/investigation";
+import { isInvestigationCommand, isInvestigationToolCall } from "../../../extensions/workflow-monitor/investigation";
 
 describe("isInvestigationCommand", () => {
   // grep variants
@@ -66,5 +66,59 @@ describe("isInvestigationCommand", () => {
   });
   test("does not match git add", () => {
     expect(isInvestigationCommand("git add .")).toBe(false);
+  });
+});
+
+describe("isInvestigationToolCall", () => {
+  test("matches LSP definition action", () => {
+    expect(isInvestigationToolCall("lsp", { action: "definition" })).toBe(true);
+  });
+
+  test("matches LSP references action", () => {
+    expect(isInvestigationToolCall("lsp", { action: "references" })).toBe(true);
+  });
+
+  test("matches LSP hover action", () => {
+    expect(isInvestigationToolCall("lsp", { action: "hover" })).toBe(true);
+  });
+
+  test("matches LSP symbols action", () => {
+    expect(isInvestigationToolCall("lsp", { action: "symbols" })).toBe(true);
+  });
+
+  test("does not match LSP rename action", () => {
+    expect(isInvestigationToolCall("lsp", { action: "rename" })).toBe(false);
+  });
+
+  test("matches kota_search", () => {
+    expect(isInvestigationToolCall("kota_search", {})).toBe(true);
+  });
+
+  test("matches kota_deps", () => {
+    expect(isInvestigationToolCall("kota_deps", {})).toBe(true);
+  });
+
+  test("matches kota_usages", () => {
+    expect(isInvestigationToolCall("kota_usages", {})).toBe(true);
+  });
+
+  test("matches kota_impact", () => {
+    expect(isInvestigationToolCall("kota_impact", {})).toBe(true);
+  });
+
+  test("matches web_search", () => {
+    expect(isInvestigationToolCall("web_search", {})).toBe(true);
+  });
+
+  test("matches fetch_content", () => {
+    expect(isInvestigationToolCall("fetch_content", {})).toBe(true);
+  });
+
+  test("does not match write tool", () => {
+    expect(isInvestigationToolCall("write", {})).toBe(false);
+  });
+
+  test("does not match edit tool", () => {
+    expect(isInvestigationToolCall("edit", {})).toBe(false);
   });
 });

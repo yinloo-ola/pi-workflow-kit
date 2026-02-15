@@ -1,7 +1,7 @@
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 import { DebugMonitor, type DebugViolation } from "./debug-monitor";
 import { isSourceFile } from "./heuristics";
-import { isInvestigationCommand } from "./investigation";
+import { isInvestigationCommand, isInvestigationToolCall } from "./investigation";
 import { TddMonitor, type TddPhase, type TddViolation } from "./tdd-monitor";
 import { parseTestCommand, parseTestResult } from "./test-runner";
 import { VerificationMonitor, type VerificationViolation } from "./verification-monitor";
@@ -47,6 +47,11 @@ export function createWorkflowHandler(): WorkflowHandler {
 
   return {
     handleToolCall(toolName: string, input: Record<string, unknown>): ToolCallResult {
+      // Track investigation from tool calls (LSP, kota, web search)
+      if (isInvestigationToolCall(toolName, input)) {
+        debug.onInvestigation();
+      }
+
       if (toolName === "write" || toolName === "edit") {
         const path = input.path as string | undefined;
         if (path) {
