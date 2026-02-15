@@ -143,8 +143,8 @@ describe("boundary prompting", () => {
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.plan).toBe("skipped");
-    expect(latest.currentPhase).toBe("execute");
+    expect(latest.workflow.phases.plan).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("execute");
     expect(editorTexts.at(-1)).toBe("/skill:executing-plans");
   });
 
@@ -205,8 +205,8 @@ describe("boundary prompting", () => {
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.finish).toBe("skipped");
-    expect(latest.currentPhase).toBe("review");
+    expect(latest.workflow.phases.finish).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("review");
     expect(editorTexts).toHaveLength(0);
   });
 

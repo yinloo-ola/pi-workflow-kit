@@ -2,6 +2,7 @@ import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
   parseSkillName,
+  SKILL_TO_PHASE,
   WORKFLOW_PHASES,
   WorkflowTracker,
 } from "../../../extensions/workflow-monitor/workflow-tracker";
@@ -97,6 +98,18 @@ function custom(data: any): SessionEntry {
 }
 
 describe("WorkflowTracker detection helpers", () => {
+  test("SKILL_TO_PHASE exposes expected skill mappings", () => {
+    expect(SKILL_TO_PHASE).toEqual({
+      brainstorming: "brainstorm",
+      "writing-plans": "plan",
+      "executing-plans": "execute",
+      "subagent-driven-development": "execute",
+      "verification-before-completion": "verify",
+      "requesting-code-review": "review",
+      "finishing-a-development-branch": "finish",
+    });
+  });
+
   test('parseSkillName extracts /skill and <skill name="...">', () => {
     expect(parseSkillName("/skill:writing-plans blah")).toBe("writing-plans");
     expect(parseSkillName('  <skill name="brainstorming" location="/x">')).toBe("brainstorming");
@@ -147,6 +160,25 @@ describe("WorkflowTracker detection helpers", () => {
     const tracker = new WorkflowTracker();
     const changed = tracker.onInputText("please run /skill:writing-plans draft initial breakdown");
     expect(changed).toBe(false);
+    expect(tracker.getState().currentPhase).toBeNull();
+  });
+
+  test("onSkillFileRead advances phase for recognized skill file paths", () => {
+    const tracker = new WorkflowTracker();
+
+    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md");
+
+    expect(changed).toBe(true);
+    expect(tracker.getState().currentPhase).toBe("plan");
+  });
+
+  test("onSkillFileRead returns false for non-skill paths", () => {
+    const tracker = new WorkflowTracker();
+
+    expect(tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/README.md")).toBe(
+      false,
+    );
+    expect(tracker.onSkillFileRead("docs/plans/2026-02-11-foo-implementation.md")).toBe(false);
     expect(tracker.getState().currentPhase).toBeNull();
   });
 

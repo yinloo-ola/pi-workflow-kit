@@ -16,6 +16,21 @@ export class DebugMonitor {
   private fixAttempts_ = 0;
   private sourceWrittenSinceLastTest = false;
 
+  getState(): { active: boolean; investigated: boolean; fixAttempts: number } {
+    return {
+      active: this.active,
+      investigated: this.investigated,
+      fixAttempts: this.fixAttempts_,
+    };
+  }
+
+  setState(state: { active: boolean; investigated: boolean; fixAttempts: number }): void {
+    this.active = state.active;
+    this.investigated = state.investigated;
+    this.fixAttempts_ = state.fixAttempts;
+    this.sourceWrittenSinceLastTest = false;
+  }
+
   isActive(): boolean {
     return this.active;
   }

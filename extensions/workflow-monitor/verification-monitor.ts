@@ -11,6 +11,18 @@ export class VerificationMonitor {
   private verified = false;
   private verificationWaived = false;
 
+  getState(): { verified: boolean; verificationWaived: boolean } {
+    return {
+      verified: this.verified,
+      verificationWaived: this.verificationWaived,
+    };
+  }
+
+  setState(state: { verified: boolean; verificationWaived: boolean }): void {
+    this.verified = state.verified;
+    this.verificationWaived = state.verificationWaived;
+  }
+
   recordVerification(): void {
     this.verified = true;
   }

@@ -154,7 +154,7 @@ describe("completion-action gating on bash commands", () => {
 
     // Verify should be marked skipped
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.verify).toBe("skipped");
+    expect(latest.workflow.phases.verify).toBe("skipped");
 
     // The verification warning should NOT be injected for this same call
     // (waiver recorded). Let's check tool_result doesn't inject verification warning.
@@ -207,8 +207,8 @@ describe("completion-action gating on bash commands", () => {
     expect(result?.blocked).not.toBe(true);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.verify).toBe("skipped");
-    expect(latest.phases.review).toBe("skipped");
+    expect(latest.workflow.phases.verify).toBe("skipped");
+    expect(latest.workflow.phases.review).toBe("skipped");
   });
 
   test("interactive gh pr create with unresolved verify+review -> cancel blocks command", async () => {

@@ -24,11 +24,12 @@ import {
   getTddViolationWarning,
   getVerificationViolationWarning,
 } from "./workflow-monitor/warnings";
-import { createWorkflowHandler, type Violation } from "./workflow-monitor/workflow-handler";
+import { createWorkflowHandler, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
 import {
   computeBoundaryToPrompt,
   type Phase,
   parseSkillName,
+  SKILL_TO_PHASE,
   type TransitionBoundary,
   WORKFLOW_PHASES,
   WORKFLOW_TRACKER_ENTRY_TYPE,
@@ -47,6 +48,34 @@ async function selectValue<T extends string>(
   const pickedLabel = await ctx.ui.select(title, labels);
   const picked = options.find((o) => o.label === pickedLabel);
   return (picked?.value ?? "cancel") as T;
+}
+
+const SUPERPOWERS_STATE_ENTRY_TYPE = "superpowers_state";
+
+export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler) {
+  handler.resetState();
+
+  const entries = ctx.sessionManager.getBranch();
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i];
+    // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+    if (entry.type === "custom" && (entry as any).customType === SUPERPOWERS_STATE_ENTRY_TYPE) {
+      // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+      handler.setFullState((entry as any).data);
+      return;
+    }
+    // Migration fallback: old-format workflow-only entries
+    // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+    if (entry.type === "custom" && (entry as any).customType === WORKFLOW_TRACKER_ENTRY_TYPE) {
+      handler.setFullState({
+        // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+        workflow: (entry as any).data,
+      });
+      return;
+    }
+  }
+  // No entries found — reset to fresh defaults
+  handler.setFullState({});
 }
 
 export default function (pi: ExtensionAPI) {
@@ -91,8 +120,8 @@ export default function (pi: ExtensionAPI) {
   let branchNoticeShown = false;
   let branchConfirmed = false;
 
-  const persistWorkflowState = () => {
-    pi.appendEntry(WORKFLOW_TRACKER_ENTRY_TYPE, handler.getWorkflowState());
+  const persistState = () => {
+    pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, handler.getFullState());
   };
 
   const phaseToSkill: Record<string, string> = {
@@ -104,16 +133,6 @@ export default function (pi: ExtensionAPI) {
     finish: "finishing-a-development-branch",
   };
 
-  const skillToPhase: Record<string, Phase> = {
-    brainstorming: "brainstorm",
-    "writing-plans": "plan",
-    "executing-plans": "execute",
-    "subagent-driven-development": "execute",
-    "verification-before-completion": "verify",
-    "requesting-code-review": "review",
-    "finishing-a-development-branch": "finish",
-  };
-
   function parseTargetPhase(text: string): Phase | null {
     const lines = text.split(/\r?\n/);
     let furthest: Phase | null = null;
@@ -122,7 +141,7 @@ export default function (pi: ExtensionAPI) {
     for (const line of lines) {
       const skill = parseSkillName(line);
       if (!skill) continue;
-      const phase = skillToPhase[skill] ?? null;
+      const phase = SKILL_TO_PHASE[skill] ?? null;
       if (!phase) continue;
       const idx = WORKFLOW_PHASES.indexOf(phase);
       if (idx > furthestIdx) {
@@ -145,8 +164,7 @@ export default function (pi: ExtensionAPI) {
   // --- State reconstruction on session events ---
   for (const event of ["session_start", "session_switch", "session_fork", "session_tree"] as const) {
     pi.on(event, async (_event, ctx) => {
-      handler.resetState();
-      handler.restoreWorkflowStateFromBranch(ctx.sessionManager.getBranch());
+      reconstructState(ctx, handler);
       pendingViolations.clear();
       pendingVerificationViolations.clear();
       pendingBranchGates.clear();
@@ -171,7 +189,7 @@ export default function (pi: ExtensionAPI) {
     // If no UI or no target phase, just track and proceed
     if (!ctx.hasUI || !targetPhase) {
       if (handler.handleInputText(text)) {
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
       }
       return;
@@ -180,7 +198,7 @@ export default function (pi: ExtensionAPI) {
     const currentState = handler.getWorkflowState();
     if (!currentState) {
       if (handler.handleInputText(text)) {
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
       }
       return;
@@ -190,7 +208,7 @@ export default function (pi: ExtensionAPI) {
 
     if (unresolved.length === 0) {
       if (handler.handleInputText(text)) {
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
       }
       return;
@@ -210,7 +228,7 @@ export default function (pi: ExtensionAPI) {
       if (choice === "skip") {
         handler.skipWorkflowPhases([missing]);
         handler.handleInputText(text);
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
         return;
       } else if (choice === "do_now") {
@@ -237,7 +255,7 @@ export default function (pi: ExtensionAPI) {
     if (summaryChoice === "skip_all") {
       handler.skipWorkflowPhases(unresolved);
       handler.handleInputText(text);
-      persistWorkflowState();
+      persistState();
       updateWidget(ctx);
       return;
     } else if (summaryChoice === "cancel") {
@@ -256,7 +274,7 @@ export default function (pi: ExtensionAPI) {
 
       if (choice === "skip") {
         handler.skipWorkflowPhases([phase]);
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
       } else if (choice === "do_now") {
         ctx.ui.setEditorText(`/skill:${skill}`);
@@ -269,7 +287,7 @@ export default function (pi: ExtensionAPI) {
 
     // All individually reviewed (all skipped) - allow transition
     handler.handleInputText(text);
-    persistWorkflowState();
+    persistState();
     updateWidget(ctx);
   });
 
@@ -288,7 +306,7 @@ export default function (pi: ExtensionAPI) {
 
       if (choice === "skip") {
         handler.skipWorkflowPhases([missing]);
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
         return "allowed";
       } else if (choice === "do_now") {
@@ -313,7 +331,7 @@ export default function (pi: ExtensionAPI) {
 
     if (summaryChoice === "skip_all") {
       handler.skipWorkflowPhases(unresolved);
-      persistWorkflowState();
+      persistState();
       updateWidget(ctx);
       return "allowed";
     } else if (summaryChoice === "cancel") {
@@ -332,7 +350,7 @@ export default function (pi: ExtensionAPI) {
 
       if (choice === "skip") {
         handler.skipWorkflowPhases([phase]);
-        persistWorkflowState();
+        persistState();
         updateWidget(ctx);
       } else if (choice === "do_now") {
         ctx.ui.setEditorText(`/skill:${skill}`);
@@ -390,6 +408,7 @@ export default function (pi: ExtensionAPI) {
             }
             if (unresolved.includes("verify")) {
               handler.recordVerificationWaiver();
+              persistState();
             }
           }
         }
@@ -422,6 +441,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       pendingViolations.set(toolCallId, result.violation);
+      persistState();
     }
 
     let changed = false;
@@ -476,7 +496,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     if (changed) {
-      persistWorkflowState();
+      persistState();
       updateWidget(ctx);
     }
   });
@@ -485,10 +505,12 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_result", async (event, ctx) => {
     const toolCallId = event.toolCallId;
 
-    // Handle read tool as investigation signal
     if (event.toolName === "read") {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK event input type
       const path = ((event.input as Record<string, any>).path as string) ?? "";
+      if (handler.handleSkillFileRead(path)) {
+        persistState();
+      }
       handler.handleReadOrInvestigation("read", path);
     }
 
@@ -531,6 +553,7 @@ export default function (pi: ExtensionAPI) {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK event details type
       const exitCode = (event.details as any)?.exitCode as number | undefined;
       handler.handleBashResult(command, output, exitCode);
+      persistState();
 
       const isTestCommand = parseTestCommand(command);
       const passed = isTestCommand ? parseTestResult(output, exitCode) : null;
@@ -538,7 +561,7 @@ export default function (pi: ExtensionAPI) {
         const state = handler.getWorkflowState();
         if (state?.currentPhase === "verify" && state.phases.verify === "active") {
           if (handler.completeCurrentWorkflowPhase()) {
-            persistWorkflowState();
+            persistState();
           }
         }
       }
@@ -589,7 +612,7 @@ export default function (pi: ExtensionAPI) {
 
     const marked = handler.markWorkflowPrompted(boundaryPhase);
     if (marked) {
-      persistWorkflowState();
+      persistState();
       updateWidget(ctx);
     }
 
@@ -616,7 +639,7 @@ export default function (pi: ExtensionAPI) {
         handler.advanceWorkflowTo(phaseAfterSkip);
       }
 
-      persistWorkflowState();
+      persistState();
       updateWidget(ctx);
 
       if (phaseAfterSkip) {

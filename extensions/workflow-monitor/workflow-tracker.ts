@@ -60,6 +60,16 @@ export function parseSkillName(line: string): string | null {
   return slashMatch?.[1] ?? xmlMatch?.[1] ?? null;
 }
 
+export const SKILL_TO_PHASE: Record<string, Phase> = {
+  brainstorming: "brainstorm",
+  "writing-plans": "plan",
+  "executing-plans": "execute",
+  "subagent-driven-development": "execute",
+  "verification-before-completion": "verify",
+  "requesting-code-review": "review",
+  "finishing-a-development-branch": "finish",
+};
+
 const PLANS_DIR_RE = /^docs\/plans\//;
 const DESIGN_RE = /-design\.md$/;
 const IMPLEMENTATION_RE = /-implementation\.md$/;
@@ -142,20 +152,20 @@ export class WorkflowTracker {
     for (const line of lines) {
       const skill = parseSkillName(line);
       if (!skill) continue;
-      let phase: Phase | null = null;
-
-      if (skill === "brainstorming") phase = "brainstorm";
-      else if (skill === "writing-plans") phase = "plan";
-      else if (skill === "executing-plans" || skill === "subagent-driven-development") {
-        phase = "execute";
-      } else if (skill === "verification-before-completion") phase = "verify";
-      else if (skill === "requesting-code-review") phase = "review";
-      else if (skill === "finishing-a-development-branch") phase = "finish";
+      const phase = SKILL_TO_PHASE[skill] ?? null;
 
       if (phase && this.advanceTo(phase)) changed = true;
     }
 
     return changed;
+  }
+
+  onSkillFileRead(path: string): boolean {
+    const match = path.match(/\/skills\/([^/]+)\/SKILL\.md$/);
+    if (!match) return false;
+    const phase = SKILL_TO_PHASE[match[1]];
+    if (!phase) return false;
+    return this.advanceTo(phase);
   }
 
   onFileWritten(path: string): boolean {

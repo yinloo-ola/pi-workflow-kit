@@ -5,13 +5,61 @@ import { isInvestigationCommand, isInvestigationToolCall } from "./investigation
 import { TddMonitor, type TddPhase, type TddViolation } from "./tdd-monitor";
 import { parseTestCommand, parseTestResult } from "./test-runner";
 import { VerificationMonitor, type VerificationViolation } from "./verification-monitor";
-import { type Phase, WorkflowTracker, type WorkflowTrackerState } from "./workflow-tracker";
+import { type Phase, type PhaseStatus, WorkflowTracker, type WorkflowTrackerState } from "./workflow-tracker";
 
 export type Violation = TddViolation | DebugViolation;
 
 export interface ToolCallResult {
   violation: Violation | null;
 }
+
+export interface SuperpowersStateSnapshot {
+  workflow: WorkflowTrackerState;
+  tdd: {
+    phase: TddPhase;
+    testFiles: string[];
+    sourceFiles: string[];
+    redVerificationPending: boolean;
+  };
+  debug: {
+    active: boolean;
+    investigated: boolean;
+    fixAttempts: number;
+  };
+  verification: {
+    verified: boolean;
+    verificationWaived: boolean;
+  };
+}
+
+export type SuperpowersStatePatch = {
+  workflow?: Partial<WorkflowTrackerState> & {
+    phases?: Partial<Record<Phase, PhaseStatus>>;
+    artifacts?: Partial<Record<Phase, string | null>>;
+    prompted?: Partial<Record<Phase, boolean>>;
+  };
+  tdd?: Partial<SuperpowersStateSnapshot["tdd"]>;
+  debug?: Partial<SuperpowersStateSnapshot["debug"]>;
+  verification?: Partial<SuperpowersStateSnapshot["verification"]>;
+};
+
+export const TDD_DEFAULTS = {
+  phase: "idle" as TddPhase,
+  testFiles: [] as string[],
+  sourceFiles: [] as string[],
+  redVerificationPending: false,
+};
+
+export const DEBUG_DEFAULTS = {
+  active: false,
+  investigated: false,
+  fixAttempts: 0,
+};
+
+export const VERIFICATION_DEFAULTS = {
+  verified: false,
+  verificationWaived: false,
+};
 
 export interface WorkflowHandler {
   handleToolCall(toolName: string, input: Record<string, unknown>): ToolCallResult;
@@ -31,11 +79,14 @@ export interface WorkflowHandler {
   handleFileWritten(path: string): boolean;
   handlePlanTrackerToolCall(input: Record<string, unknown>): boolean;
   getWorkflowState(): WorkflowTrackerState | null;
+  getFullState(): SuperpowersStateSnapshot;
+  setFullState(snapshot: SuperpowersStatePatch): void;
   restoreWorkflowStateFromBranch(branch: SessionEntry[]): void;
   markWorkflowPrompted(phase: Phase): boolean;
   completeCurrentWorkflowPhase(): boolean;
   advanceWorkflowTo(phase: Phase): boolean;
   skipWorkflowPhases(phases: Phase[]): boolean;
+  handleSkillFileRead(path: string): boolean;
   resetState(): void;
 }
 
@@ -187,6 +238,39 @@ export function createWorkflowHandler(): WorkflowHandler {
       return tracker.getState();
     },
 
+    getFullState() {
+      return {
+        workflow: tracker.getState(),
+        tdd: tdd.getState(),
+        debug: debug.getState(),
+        verification: verification.getState(),
+      };
+    },
+
+    setFullState(snapshot: SuperpowersStatePatch) {
+      if (snapshot.workflow) {
+        const defaultWorkflow = new WorkflowTracker().getState();
+        tracker.setState({
+          ...defaultWorkflow,
+          ...snapshot.workflow,
+          phases: { ...defaultWorkflow.phases, ...snapshot.workflow.phases },
+          artifacts: { ...defaultWorkflow.artifacts, ...snapshot.workflow.artifacts },
+          prompted: { ...defaultWorkflow.prompted, ...snapshot.workflow.prompted },
+        });
+      }
+      if (snapshot.tdd) {
+        const tddState = { ...TDD_DEFAULTS, ...snapshot.tdd };
+        tdd.setState(tddState.phase, tddState.testFiles, tddState.sourceFiles, tddState.redVerificationPending);
+      }
+      if (snapshot.debug) {
+        debug.setState({ ...DEBUG_DEFAULTS, ...snapshot.debug });
+      }
+      if (snapshot.verification) {
+        verification.setState({ ...VERIFICATION_DEFAULTS, ...snapshot.verification });
+      }
+      debugFailStreak = 0;
+    },
+
     restoreWorkflowStateFromBranch(branch: SessionEntry[]) {
       const state = WorkflowTracker.reconstructFromBranch(branch);
       if (state) {
@@ -210,12 +294,28 @@ export function createWorkflowHandler(): WorkflowHandler {
       return tracker.skipPhases(phases);
     },
 
+    handleSkillFileRead(path: string) {
+      return tracker.onSkillFileRead(path);
+    },
+
     resetState() {
+      const freshState: SuperpowersStateSnapshot = {
+        workflow: new WorkflowTracker().getState(),
+        tdd: { ...TDD_DEFAULTS, testFiles: [], sourceFiles: [] },
+        debug: { ...DEBUG_DEFAULTS },
+        verification: { ...VERIFICATION_DEFAULTS },
+      };
+
+      tracker.setState(freshState.workflow);
+      tdd.setState(
+        freshState.tdd.phase,
+        freshState.tdd.testFiles,
+        freshState.tdd.sourceFiles,
+        freshState.tdd.redVerificationPending,
+      );
+      debug.setState(freshState.debug);
+      verification.setState(freshState.verification);
       debugFailStreak = 0;
-      tdd.onCommit();
-      debug.onCommit();
-      verification.reset();
-      tracker.setState(new WorkflowTracker().getState());
     },
   };
 }

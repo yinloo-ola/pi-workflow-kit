@@ -161,9 +161,9 @@ describe("skip-confirmation gating on /skill transitions", () => {
 
     // Plan should be skipped in persisted state
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.plan).toBe("skipped");
+    expect(latest.workflow.phases.plan).toBe("skipped");
     // Should have advanced to execute
-    expect(latest.currentPhase).toBe("execute");
+    expect(latest.workflow.currentPhase).toBe("execute");
   });
 
   test("single unresolved + do now: blocks transition, sets editor to missing phase skill", async () => {
@@ -204,7 +204,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
 
     // State should NOT advance to execute
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest?.currentPhase).not.toBe("execute");
+    expect(latest?.workflow.currentPhase).not.toBe("execute");
   });
 
   test("single unresolved + cancel: blocks transition", async () => {
@@ -270,9 +270,9 @@ describe("skip-confirmation gating on /skill transitions", () => {
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.brainstorm).toBe("skipped");
-    expect(latest.phases.plan).toBe("skipped");
-    expect(latest.currentPhase).toBe("execute");
+    expect(latest.workflow.phases.brainstorm).toBe("skipped");
+    expect(latest.workflow.phases.plan).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("execute");
   });
 
   test("multi unresolved + cancel: blocks transition", async () => {
@@ -341,9 +341,9 @@ describe("skip-confirmation gating on /skill transitions", () => {
     expect(ctx.ui.select).toHaveBeenCalledTimes(3);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.brainstorm).toBe("skipped");
-    expect(latest.phases.plan).toBe("skipped");
-    expect(latest.currentPhase).toBe("execute");
+    expect(latest.workflow.phases.brainstorm).toBe("skipped");
+    expect(latest.workflow.phases.plan).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("execute");
   });
 
   test("multi unresolved + review one-by-one + do_now on first: blocks transition", async () => {
@@ -452,9 +452,9 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
     expect(ctx.ui.select).toHaveBeenCalled();
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.phases.plan).toBe("skipped");
-    expect(latest.phases.execute).toBe("skipped");
-    expect(latest.currentPhase).toBe("verify");
+    expect(latest.workflow.phases.plan).toBe("skipped");
+    expect(latest.workflow.phases.execute).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("verify");
   });
 
   test("single-line earlier skill does not silently bypass gate for later phases", async () => {
