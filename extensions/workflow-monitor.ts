@@ -748,6 +748,18 @@ export default function (pi: ExtensionAPI) {
     });
   }
 
+  pi.registerCommand("workflow-reset", {
+    description: "Reset workflow tracker to fresh state for a new task",
+    async handler(_args, ctx) {
+      handler.resetState();
+      persistState();
+      updateWidget(ctx);
+      if (ctx.hasUI) {
+        ctx.ui.notify("Workflow reset. Ready for a new task.", "info");
+      }
+    },
+  });
+
   pi.registerCommand("workflow-next", {
     description: "Start a fresh session for the next workflow phase (optionally referencing an artifact path)",
     async handler(args, ctx) {
