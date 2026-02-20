@@ -85,6 +85,10 @@ export class WorkflowTracker {
     this.state = cloneState(state);
   }
 
+  reset(): void {
+    this.state = emptyState();
+  }
+
   advanceTo(phase: Phase): boolean {
     const current = this.state.currentPhase;
     const nextIdx = WORKFLOW_PHASES.indexOf(phase);

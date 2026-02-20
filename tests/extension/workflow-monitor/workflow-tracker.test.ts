@@ -84,6 +84,20 @@ describe("WorkflowTracker", () => {
     tracker.recordArtifact("brainstorm", "docs/plans/2026-02-10-x-design.md");
     expect(tracker.getState().artifacts.brainstorm).toBe("docs/plans/2026-02-10-x-design.md");
   });
+
+  test("reset() restores tracker to empty state regardless of prior state", () => {
+    tracker.advanceTo("execute");
+    tracker.recordArtifact("plan", "docs/plans/2026-02-20-foo.md");
+    tracker.markPrompted("brainstorm");
+
+    tracker.reset();
+
+    const s = tracker.getState();
+    expect(s.currentPhase).toBeNull();
+    for (const p of WORKFLOW_PHASES) expect(s.phases[p]).toBe("pending");
+    for (const p of WORKFLOW_PHASES) expect(s.artifacts[p]).toBeNull();
+    for (const p of WORKFLOW_PHASES) expect(s.prompted[p]).toBe(false);
+  });
 });
 
 function custom(data: any): SessionEntry {
