@@ -30,21 +30,22 @@ function createState(overrides: Partial<Record<Phase, PhaseStatus>>): WorkflowTr
 }
 
 describe("skip-confirmation helpers", () => {
-  test("treats pending and active as unresolved statuses", () => {
+  test("treats only pending as unresolved; active, complete, skipped are resolved", () => {
     expect(isPhaseUnresolved("pending")).toBe(true);
-    expect(isPhaseUnresolved("active")).toBe(true);
+    expect(isPhaseUnresolved("active")).toBe(false);
     expect(isPhaseUnresolved("complete")).toBe(false);
     expect(isPhaseUnresolved("skipped")).toBe(false);
   });
 
-  test("returns unresolved phases strictly before target", () => {
+  test("returns unresolved phases strictly before target (active is not unresolved)", () => {
     const state = createState({
       plan: "pending",
       execute: "active",
       verify: "pending",
     });
 
-    expect(getUnresolvedPhasesBefore("verify", state)).toEqual(["plan", "execute"]);
+    // execute is "active" (already engaged) so not unresolved; only plan is
+    expect(getUnresolvedPhasesBefore("verify", state)).toEqual(["plan"]);
   });
 
   test("returns empty list for brainstorm boundary target", () => {
@@ -53,7 +54,7 @@ describe("skip-confirmation helpers", () => {
     expect(getUnresolvedPhasesBefore("brainstorm", state)).toEqual([]);
   });
 
-  test("returns only unresolved phases before finish", () => {
+  test("returns only unresolved phases before finish (active is not unresolved)", () => {
     const state = createState({
       brainstorm: "pending",
       plan: "complete",
@@ -61,7 +62,8 @@ describe("skip-confirmation helpers", () => {
       finish: "pending",
     });
 
-    expect(getUnresolvedPhasesBefore("finish", state)).toEqual(["brainstorm", "review"]);
+    // review is "active" (engaged), so only brainstorm is unresolved
+    expect(getUnresolvedPhasesBefore("finish", state)).toEqual(["brainstorm"]);
   });
 
   test("returns empty list when no prior phases are unresolved", () => {
@@ -76,14 +78,15 @@ describe("skip-confirmation helpers", () => {
     expect(getUnresolvedPhasesBefore("finish", state)).toEqual([]);
   });
 
-  test("excludes unresolved target phase itself", () => {
+  test("excludes active and target phase — only pending phases before target are unresolved", () => {
     const state = createState({
       brainstorm: "active",
       plan: "pending",
       execute: "pending",
     });
 
-    expect(getUnresolvedPhasesBefore("execute", state)).toEqual(["brainstorm", "plan"]);
+    // brainstorm is "active" (engaged); only pending plan is unresolved
+    expect(getUnresolvedPhasesBefore("execute", state)).toEqual(["plan"]);
   });
 
   test("returns empty list for runtime-invalid target value", () => {
@@ -107,13 +110,14 @@ describe("skip-confirmation helpers", () => {
     expect(getUnresolvedPhases(["brainstorm", "plan", "execute"], state)).toEqual(["plan"]);
   });
 
-  test("filters unresolved phases from required set in input order", () => {
+  test("filters unresolved phases from required set in input order (active is not unresolved)", () => {
     const state = createState({
       review: "active",
       finish: "pending",
       plan: "complete",
     });
 
-    expect(getUnresolvedPhases(["review", "finish", "plan"], state)).toEqual(["review", "finish"]);
+    // review is "active" (engaged), so only finish (pending) is unresolved
+    expect(getUnresolvedPhases(["review", "finish", "plan"], state)).toEqual(["finish"]);
   });
 });

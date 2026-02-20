@@ -1,7 +1,7 @@
 import { type Phase, type PhaseStatus, WORKFLOW_PHASES, type WorkflowTrackerState } from "./workflow-tracker";
 
 export function isPhaseUnresolved(status: PhaseStatus): boolean {
-  return status === "pending" || status === "active";
+  return status === "pending";
 }
 
 export function getUnresolvedPhasesBefore(target: Phase, state: WorkflowTrackerState): Phase[] {
