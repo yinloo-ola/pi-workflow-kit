@@ -123,6 +123,17 @@ To:
 - If plan execution is in progress → suppress prompt, default to verification ON
 - If plan execution is complete → prompt as normal (once, at the end)
 
+### 8. Update Subagent Profiles
+
+Both `agents/implementer.md` and `agents/worker.md` have `extensions: ../extensions/tdd-guard.ts` in their frontmatter. Since `tdd-guard.ts` is being deleted, these must be updated:
+
+- **Remove** the `extensions:` frontmatter line (the guard no longer exists)
+- **Expand system prompts** with the condensed TDD guidance (three scenarios + warning interpretation). This is where the "subagent TDD prompt injection" from Section 4 actually lives — baked into the agent profiles rather than dynamically injected at dispatch time.
+
+This is simpler than runtime injection: the agent profiles are the natural place for standing instructions, and it means we don't need to modify the subagent dispatch extension at all.
+
+**Note:** This supersedes Section 4's "auto-injection at dispatch time" approach. The profiles handle it statically.
+
 ## Files Changed
 
 | File | Action | Description |
@@ -136,7 +147,9 @@ To:
 | `skills/verification-before-completion/SKILL.md` | **Modify** | Restore common failures, rationalization prevention, trigger list |
 | `skills/subagent-driven-development/SKILL.md` | **Modify** | Update TDD integration section |
 | `skills/writing-plans/SKILL.md` | **Modify** | Add TDD scenario hint to plan template |
-| `extensions/subagent/` | **Modify** | Add auto-injection of TDD prompt to implementation subagent tasks |
+| `agents/implementer.md` | **Modify** | Remove tdd-guard extension, expand TDD prompt with three scenarios |
+| `agents/worker.md` | **Modify** | Remove tdd-guard extension, expand TDD prompt with three scenarios |
+| `tests/extension/tdd-guard/` | **Delete** | Tests for removed extension |
 
 ## Testing
 
