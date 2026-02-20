@@ -348,6 +348,39 @@ describe("completion-action gating on bash commands", () => {
     expect(result?.blocked).not.toBe(true);
   });
 
+  test("git commit during active execution is not gated (suppressed while executing)", async () => {
+    // Regression: when execute phase is "active" (plan is mid-execution), the
+    // completion action gate must be suppressed — no prompt, no block.
+    const state = createWorkflowState(
+      {
+        brainstorm: "complete",
+        plan: "complete",
+        execute: "active",
+        verify: "pending",
+        review: "pending",
+        finish: "pending",
+      },
+      "execute",
+    );
+    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { ctx } = createCtx(state, true);
+
+    await onSessionSwitch({}, ctx);
+
+    const result = await onToolCall(
+      {
+        toolCallId: "tc1",
+        toolName: "bash",
+        input: { command: "git commit -m 'wip: partial progress during execution'" },
+      },
+      ctx,
+    );
+
+    // While execute is active, the gate must not fire
+    expect(ctx.ui.select).not.toHaveBeenCalled();
+    expect(result?.blocked).not.toBe(true);
+  });
+
   test("completion gate prompts with string labels (not objects)", async () => {
     const state = createWorkflowState(
       {
