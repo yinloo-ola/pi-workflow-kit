@@ -54,7 +54,7 @@ describe("practice escalation", () => {
     // If we get here without throwing, the guard worked
   });
 
-  test("'allow all for this session' suppresses further prompts", async () => {
+  test("TDD violations never prompt in interactive mode — warnings only", async () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
@@ -75,49 +75,44 @@ describe("practice escalation", () => {
       },
     };
 
-    // 1st violation: warning (no prompt yet)
+    // Multiple TDD violations — no prompts should ever fire
     await onToolCall({ toolCallId: "t1", toolName: "write", input: { path: "src/a.ts", content: "x" } }, ctx);
-    // 2nd violation: prompt → user picks "allow all for this session"
     await onToolCall({ toolCallId: "t2", toolName: "write", input: { path: "src/b.ts", content: "y" } }, ctx);
-    expect(promptCount).toBe(1);
-
-    // 3rd and 4th violations: should NOT prompt again
     await onToolCall({ toolCallId: "t3", toolName: "write", input: { path: "src/c.ts", content: "z" } }, ctx);
     await onToolCall({ toolCallId: "t4", toolName: "write", input: { path: "src/d.ts", content: "w" } }, ctx);
-    expect(promptCount).toBe(1);
+
+    expect(promptCount).toBe(0);
   });
 
-  test("second TDD violation blocks the write (interactive)", async () => {
+  test("TDD violations never block writes — tool call always proceeds", async () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
 
-    let promptCount = 0;
     const ctx = {
       hasUI: true,
       sessionManager: { getBranch: () => [] },
       ui: {
         setWidget: () => {},
-        select: async () => {
-          promptCount += 1;
-          return "No, stop";
-        },
+        select: async () => "No, stop",
         setEditorText: () => {},
         notify: () => {},
       },
     };
 
-    // 1st TDD violation: allowed (warn later in tool_result)
-    await onToolCall({ toolCallId: "t1", toolName: "write", input: { path: "src/a.ts", content: "x" } }, ctx);
+    // First TDD violation: should not block
+    const res1 = await onToolCall(
+      { toolCallId: "t1", toolName: "write", input: { path: "src/a.ts", content: "x" } },
+      ctx,
+    );
+    expect(res1).not.toEqual({ blocked: true });
 
-    // 2nd TDD violation: should block
-    const res = await onToolCall(
+    // Second TDD violation: should also not block
+    const res2 = await onToolCall(
       { toolCallId: "t2", toolName: "write", input: { path: "src/b.ts", content: "y" } },
       ctx,
     );
-
-    expect(promptCount).toBe(1);
-    expect(res).toEqual({ blocked: true });
+    expect(res2).not.toEqual({ blocked: true });
   });
 });

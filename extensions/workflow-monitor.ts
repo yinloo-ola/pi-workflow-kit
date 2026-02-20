@@ -459,20 +459,6 @@ export default function (pi: ExtensionAPI) {
     const input = event.input as Record<string, any>;
     const result = handler.handleToolCall(event.toolName, input);
     if (result.violation) {
-      const state = handler.getWorkflowState();
-      const phase = state?.currentPhase;
-      const isThinkingPhase = phase === "brainstorm" || phase === "plan";
-
-      // During brainstorm/plan, practice escalation is intentionally skipped.
-      // Process violations already block non-plan writes in thinking phases,
-      // making practice escalation redundant and noisy.
-      if (!isThinkingPhase) {
-        const escalation = await maybeEscalate("practice", ctx);
-        if (escalation === "block") {
-          return { blocked: true };
-        }
-      }
-
       pendingViolations.set(toolCallId, result.violation);
       persistState();
     }
