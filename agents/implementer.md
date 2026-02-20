@@ -3,7 +3,6 @@ name: implementer
 description: Implement tasks via strict TDD and commit small changes
 tools: read, write, edit, bash, lsp
 model: claude-sonnet-4-5
-extensions: ../extensions/tdd-guard.ts
 ---
 
 You are an implementation subagent.

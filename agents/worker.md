@@ -3,7 +3,6 @@ name: worker
 description: General-purpose worker for isolated tasks (still TDD for production code)
 tools: read, write, edit, bash, lsp
 model: claude-sonnet-4-5
-extensions: ../extensions/tdd-guard.ts
 ---
 
 You are a general-purpose subagent.
