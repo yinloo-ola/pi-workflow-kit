@@ -244,7 +244,7 @@ describe("branch safety monitor", () => {
       .map((c) => c.text)
       .join("\n");
 
-    expect(text).toContain("⚠️ TDD VIOLATION");
+    expect(text).toContain("⚠️ TDD");
   });
 
   test("does not inject branch notices or first-write gate outside git repos", async () => {

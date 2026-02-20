@@ -8,44 +8,45 @@ import {
 describe("getTddViolationWarning", () => {
   test("returns warning for source-before-test violation", () => {
     const warning = getTddViolationWarning("source-before-test", "src/utils.ts");
-    expect(warning).toContain("TDD VIOLATION");
+    expect(warning).toContain("⚠️ TDD");
     expect(warning).toContain("src/utils.ts");
-    expect(warning).toContain("Delete");
-    expect(warning).toContain("failing test");
+    expect(warning).toContain("without a failing test");
   });
 
-  test("includes anti-rationalization content", () => {
+  test("mentions that existing tests may already cover the change", () => {
     const warning = getTddViolationWarning("source-before-test", "src/utils.ts");
-    expect(warning).toContain("Too simple to test");
-    expect(warning).toContain("I'll test after");
+    expect(warning).toContain("existing tests");
   });
 
-  test("uses gentler wording during verify phase", () => {
-    const warning = getTddViolationWarning("source-before-test", "src/utils.ts", "verify");
-    expect(warning).toContain("Add a test");
+  test("uses same wording regardless of phase", () => {
+    const withVerify = getTddViolationWarning("source-before-test", "src/utils.ts", "verify");
+    const withImplement = getTddViolationWarning("source-before-test", "src/utils.ts", "implement");
+    const withNone = getTddViolationWarning("source-before-test", "src/utils.ts");
+    expect(withVerify).toEqual(withImplement);
+    expect(withVerify).toEqual(withNone);
+  });
+
+  test("does not include Delete directive or Iron Law language", () => {
+    const warning = getTddViolationWarning("source-before-test", "src/utils.ts");
     expect(warning).not.toContain("Delete");
-  });
-
-  test("uses standard wording during implement phase", () => {
-    const warning = getTddViolationWarning("source-before-test", "src/utils.ts", "implement");
-    expect(warning).toContain("Delete");
-    expect(warning).toContain("failing test");
+    expect(warning).not.toContain("Iron Law");
   });
 
   test("uses standard wording when no phase provided", () => {
     const warning = getTddViolationWarning("source-before-test", "src/utils.ts");
-    expect(warning).toContain("Delete");
+    expect(warning).toContain("without a failing test");
   });
 
   test("returns source-during-red warning", () => {
     const warning = getTddViolationWarning("source-during-red", "src/utils.ts");
-    expect(warning).toContain("RED-PENDING phase");
-    expect(warning).toContain("Run the test suite now");
+    expect(warning).toContain("before running your new test");
+    expect(warning).toContain("Run the test suite");
   });
 
   test("source-during-red warning mentions running the test first", () => {
     const warning = getTddViolationWarning("source-during-red", "src/foo.ts");
-    expect(warning).toContain("Run your new test before editing source code");
+    expect(warning).toContain("before running your new test");
+    expect(warning).toContain("src/foo.ts");
   });
 
   test("warning is concise (under 15 lines)", () => {

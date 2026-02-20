@@ -1,49 +1,15 @@
 export type TddViolationType = "source-before-test" | "source-during-red";
 
-export function getTddViolationWarning(type: TddViolationType, file: string, phase?: string): string {
+export function getTddViolationWarning(type: TddViolationType, file: string, _phase?: string): string {
   if (type === "source-before-test") {
-    if (phase === "verify" || phase === "review") {
-      return `
-⚠️ TDD VIOLATION: You modified production code (${file}) without a failing test first.
-
-The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
-
-Add a test for this change before modifying the source.
-
-Run the test. Watch it fail. Then update the production code.
-`.trim();
-    }
-
-    return `
-⚠️ TDD VIOLATION: You wrote production code (${file}) without a failing test first.
-
-The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
-
-Delete this code. Write the failing test first. Then implement.
-
-Common rationalizations (all wrong):
-- "Too simple to test" → Simple code breaks. Test takes 30 seconds.
-- "I'll test after" → Tests passing immediately prove nothing.
-- "Need to explore first" → Fine. Throw away exploration, start with TDD.
-- "Deleting this work is wasteful" → Sunk cost fallacy. Keeping unverified code is debt.
-
-Delete the production code. Write the test. Watch it fail. Then implement.
-`.trim();
+    return `⚠️ TDD: Writing source code (${file}) without a failing test. Consider whether this change needs a test first, or if existing tests already cover it.`;
   }
 
   if (type === "source-during-red") {
-    return `
-⚠️ TDD VIOLATION: You wrote production code (${file}) during RED-PENDING phase.
-
-Run your new test before editing source code.
-
-The TDD cycle: Write test → Run it (RED) → Write code → Run it (GREEN)
-
-You wrote a test but haven't run it yet. Run the test suite now. Watch the new test fail. THEN write the production code.
-`.trim();
+    return `⚠️ TDD: Writing source code (${file}) before running your new test. Run the test suite to verify your test fails, then implement.`;
   }
 
-  return `⚠️ TDD WARNING: Unexpected violation type "${type}" for ${file}`;
+  return `⚠️ TDD: Unexpected violation type "${type}" for ${file}`;
 }
 
 export type DebugViolationType = "fix-without-investigation" | "excessive-fix-attempts";
