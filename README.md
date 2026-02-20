@@ -4,14 +4,14 @@
 
 Structured workflow skills and active enforcement extensions for [pi](https://github.com/badlogic/pi-mono).
 
-Your coding agent doesn't just know the rules - it follows them. Skills teach the agent *what* to do (brainstorm before building, write tests before code, verify before claiming done). Extensions enforce it in real time (the TDD monitor watches every file write and warns when you skip the test).
+Your coding agent doesn't just know the rules - it follows them. Skills teach the agent *what* to do (brainstorm before building, write tests before code, verify before claiming done). Extensions enforce it in real time (the workflow monitor watches every file write and warns when you skip the test).
 
 ## What You Get When You Install This
 
 **12 workflow skills** that guide the agent through a structured development process - from brainstorming ideas through shipping code.
 
 **3 extensions** that run silently in the background:
-- **Workflow Monitor** — enforces TDD discipline, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
+- **Workflow Monitor** — warns on TDD violations, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
 - **Subagent** — registers a `subagent` tool for dispatching implementation and review work to isolated subprocess agents, with bundled agent definitions and structured results.
 - **Plan Tracker** — tracks task progress with a TUI widget.
 
@@ -19,7 +19,6 @@ Your coding agent doesn't just know the rules - it follows them. Skills teach th
 - Any time the agent writes a source file without a failing test, it gets a warning injected into the tool result.
 - Any time it tries to `git commit` / `git push` / `gh pr create` without passing tests, it gets gated.
 - During **Brainstorm**/**Plan**, writes are restricted to `docs/plans/` (writes elsewhere trigger a process violation).
-- Repeated violations **escalate**: skill boundary → soft warning → hard block (interactive) → explicit user override.
 - On the first tool output of a session (inside a git repo), the agent is shown the **current git branch (or detached HEAD short SHA)**.
 - On the first write/edit of a session (inside a git repo), the agent is warned to **confirm it's on the correct branch/worktree** before continuing.
 
@@ -69,9 +68,10 @@ If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-sup
 
 ### What's new in `pi-superpowers-plus`
 - **Workflow Monitor extension** that observes tool calls/results and injects warnings directly into output
-- **TDD discipline warnings** when writing source code without a failing test first
+- **TDD discipline warnings** when writing source code without a failing test (advisory, not blocking)
+- **Three-scenario TDD model** — new feature (full TDD), modifying tested code (run existing tests), trivial change (judgment) — applied consistently across skills, agent profiles, and plan templates
 - **Debug enforcement** escalation after repeated failing tests
-- **Verification gating** for `git commit` / `git push` / `gh pr create` until passing tests are run
+- **Verification gating** for `git commit` / `git push` / `gh pr create` until passing tests are run (suppressed during active plan execution)
 - **Workflow tracking + boundary prompts** (and `/workflow-next` handoff)
 - **Branch safety reminders** (first tool result shows current branch/SHA; first write/edit warns to confirm branch/worktree)
 - **Finish-phase reminder prefill** (docs + learnings)
@@ -90,29 +90,31 @@ Notes:
 - If you keep both packages enabled, you may get duplicate/competing skill guidance.
 - `pi-superpowers-plus` is more "opinionated" at runtime: it will inject warnings into tool output and may gate shipping commands until verification has passed.
 
-### How the skills were cleaned up (leveraging pi)
+### How the skills differ (leveraging pi)
 
-A core goal of `pi-superpowers-plus` is to keep **skill instructions short and action-oriented**, and rely on pi's runtime capabilities for the "heavy lifting":
-- **Extensions** enforce behavior *while you work* (TDD/Debug/Verification monitors, branch safety notices), instead of relying on long written reminders.
-- The **TUI** can show state (workflow/TDD) and prompt at boundaries, reducing repeated prose in skills.
-- Tools like **`plan_tracker`** store execution state outside the prompt, so skills don't need to carry as much bookkeeping text.
+`pi-superpowers-plus` uses pi's runtime capabilities alongside skill content:
+- **Extensions** enforce behavior *while you work* (TDD/Debug/Verification monitors, branch safety notices) — runtime warnings complement inline skill guidance.
+- **Three-scenario TDD** — skills, agent profiles, and plan templates all use the same model: new feature (full TDD), modifying tested code (run existing tests), trivial change (use judgment). Runtime warnings are advisory nudges, not hard blocks.
+- The **TUI** shows state (workflow/TDD) and prompts at boundaries.
+- Tools like **`plan_tracker`** store execution state outside the prompt.
+- **`workflow_reference`** provides extended detail on demand, keeping skill files focused while making deep guidance available when the agent needs it.
 
-To make this concrete, here's the size of each skill's `SKILL.md` compared to the original [`coctostan/pi-superpowers`](https://github.com/coctostan/pi-superpowers) (approximate KB, at time of writing). Across the shared skills, total `SKILL.md` content went from **67.5KB → 55.8KB** (~**-17%**).
+To make this concrete, here's the size of each skill's `SKILL.md` compared to the original [`coctostan/pi-superpowers`](https://github.com/coctostan/pi-superpowers) (approximate KB, at time of writing). Across the shared skills, total `SKILL.md` content went from **67.5KB → 66.5KB**. Skills that shrank moved content into on-demand `workflow_reference` topics; skills that grew restored inline red flags, rationalizations, and verification checklists for self-contained guidance.
 
 | Skill | pi-superpowers (KB) | pi-superpowers-plus (KB) | Change |
 |---|---:|---:|---:|
-| `brainstorming` | 2.5 | 2.8 | +10% |
-| `dispatching-parallel-agents` | 6.2 | 6.2 | 0% |
-| `executing-plans` | 2.7 | 3.3 | +21% |
+| `brainstorming` | 2.5 | 2.9 | +16% |
+| `dispatching-parallel-agents` | 6.2 | 6.1 | -2% |
+| `executing-plans` | 2.7 | 3.5 | +30% |
 | `finishing-a-development-branch` | 4.3 | 4.4 | +2% |
-| `receiving-code-review` | 6.2 | 5.9 | -5% |
-| `requesting-code-review` | 2.9 | 3.0 | +2% |
-| `subagent-driven-development` | 10.2 | 9.6 | -5% |
-| `systematic-debugging` | 9.8 | 5.1 | -48% |
-| `test-driven-development` | 9.8 | 3.4 | -65% |
-| `using-git-worktrees` | 5.5 | 6.1 | +12% |
-| `verification-before-completion` | 4.1 | 2.6 | -38% |
-| `writing-plans` | 3.3 | 3.5 | +7% |
+| `receiving-code-review` | 6.2 | 5.8 | -6% |
+| `requesting-code-review` | 2.9 | 3.0 | +3% |
+| `subagent-driven-development` | 10.2 | 11.3 | +11% |
+| `systematic-debugging` | 9.8 | 7.2 | -27% |
+| `test-driven-development` | 9.8 | 8.1 | -17% |
+| `using-git-worktrees` | 5.5 | 6.1 | +11% |
+| `verification-before-completion` | 4.1 | 4.3 | +5% |
+| `writing-plans` | 3.3 | 3.8 | +15% |
 
 ## The Workflow
 
@@ -159,7 +161,7 @@ Runs in the background observing every tool call and result. Zero configuration.
 
 #### TDD Enforcement
 
-Detects when the agent writes production code without a failing test first and injects a violation warning into the tool result. The agent sees it immediately as part of its normal output.
+Detects when the agent writes production code without a failing test and injects a warning into the tool result. The warning is advisory — a nudge to consider whether a test is needed, not a hard block. The agent's skill instructions and agent profiles include three-scenario TDD guidance (new feature → full TDD, modifying tested code → run existing tests, trivial change → use judgment).
 
 **Tracks the TDD cycle:** RED → GREEN → REFACTOR → idle. Resets on `git commit`.
 
@@ -179,7 +181,7 @@ Activates after **2 consecutive failing test runs** (excluding intentional TDD r
 
 #### Verification Gating
 
-Blocks `git commit`, `git push`, and `gh pr create` when the agent hasn't run passing tests. Requires a fresh passing test run before shipping. Automatically clears after successful verification.
+Warns on `git commit`, `git push`, and `gh pr create` when the agent hasn't run passing tests. Requires a fresh passing test run before shipping. Automatically clears after successful verification. During active plan execution, verification prompts are suppressed to avoid disrupting flow.
 
 #### Branch Safety (informational)
 
@@ -250,9 +252,9 @@ Skills are markdown files the agent reads to learn *what* to do. Extensions are 
 
 | Agent Behavior | Skill (teaches) | Extension (enforces) |
 |---|---|---|
-| Write test before code | `test-driven-development` | TDD monitor warns on violation |
+| Write test before code | `test-driven-development` (three-scenario) | TDD monitor warns on violation (advisory) |
 | Investigate before fixing | `systematic-debugging` | Debug monitor warns on fix-without-investigation |
-| Run tests before claiming done | `verification-before-completion` | Verification gate blocks commit/push/PR |
+| Run tests before claiming done | `verification-before-completion` | Verification gate warns on commit/push/PR |
 | Follow workflow phases | All skills cross-reference each other | Workflow tracker detects phases, prompts at boundaries |
 | Dispatch implementation work | `subagent-driven-development` | Subagent extension spawns isolated agents |
 | Review before merge | `requesting-code-review` | Subagent dispatches code-reviewer agent |
@@ -320,16 +322,16 @@ Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, po
 | | [Superpowers](https://github.com/obra/superpowers) | [pi-superpowers](https://github.com/coctostan/pi-superpowers) | **pi-superpowers-plus** |
 |---|---|---|---|
 | **Platform** | Claude Code | pi | pi |
-| **Skills** | 12 workflow skills | Same 12 skills (pi port) | Same 12 skills (leaner TDD & debug) |
+| **Skills** | 12 workflow skills | Same 12 skills (pi port) | Same 12 skills (three-scenario TDD, restored inline guidance) |
 | **TDD enforcement** | Skill tells agent the rules | Skill tells agent the rules | Extension *watches* and injects warnings |
 | **TDD widget** | — | — | TUI: RED → GREEN → REFACTOR |
 | **Debug enforcement** | Manual discipline | Manual discipline | Extension escalates after repeated failures |
 | **Verification gating** | — | — | Blocks commit/push/PR until tests pass |
 | **Workflow tracking** | — | — | Phase strip, boundary prompts, `/workflow-next` |
 | **Subagent dispatch** | — | — | Bundled `subagent` tool + 4 agent definitions |
-| **TDD in subagents** | — | — | Subagent-driven-development skill enforces TDD via agent system prompts |
+| **TDD in subagents** | — | — | Three-scenario TDD instructions in agent profiles + prompt templates + runtime warnings |
 | **Structured results** | — | — | filesChanged, testsRan per agent |
-| **Reference content** | Everything in SKILL.md | Everything in SKILL.md | Lean skill + on-demand `workflow_reference` tool |
+| **Reference content** | Everything in SKILL.md | Everything in SKILL.md | Inline guidance + on-demand `workflow_reference` tool for extended detail |
 | **Plan tracker** | — | — | `plan_tracker` tool with TUI progress widget |
 
 ## Architecture
@@ -362,7 +364,7 @@ pi-superpowers-plus/
 │   └── subagent/
 │       ├── index.ts                   # Subagent tool registration + execution
 │       └── agents.ts                  # Agent discovery + frontmatter parsing
-├── skills/                           # 12 workflow skills (26 markdown files)
+├── skills/                           # 12 workflow skills (24 markdown files)
 │   ├── brainstorming/
 │   ├── writing-plans/
 │   ├── executing-plans/
@@ -375,7 +377,7 @@ pi-superpowers-plus/
 │   ├── dispatching-parallel-agents/
 │   ├── using-git-worktrees/
 │   └── finishing-a-development-branch/
-└── tests/                            # 338 tests across 37 files
+└── tests/                            # 373 tests across 39 files
 ```
 
 ## Development
