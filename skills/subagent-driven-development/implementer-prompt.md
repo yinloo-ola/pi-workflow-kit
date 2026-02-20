@@ -29,7 +29,10 @@ Dispatch a subagent with this prompt:
     ## Your Job
 
     Once you're clear on requirements:
-    1. Follow TDD for production code: write failing test first, verify it fails, then implement minimal code to pass
+    1. Determine TDD scenario for this task:
+       - New code → full TDD (failing test first)
+       - Modifying tested code → run existing tests before and after
+       - Trivial change → use judgment, run tests after
     2. Implement exactly what the task specifies
     3. Verify implementation works
     4. Commit your work
@@ -61,8 +64,10 @@ Dispatch a subagent with this prompt:
     - Did I follow existing patterns in the codebase?
 
     **Testing:**
+    - Did I follow the appropriate TDD scenario for this task?
+    - For new code: did I write a failing test first?
+    - For modified code: did I run existing tests before and after my change?
     - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD (failing test first for all production code)?
     - Are tests comprehensive?
 
     If you find issues during self-review, fix them now before reporting.
