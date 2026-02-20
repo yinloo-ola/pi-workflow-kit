@@ -20,6 +20,13 @@ Start by understanding the current project context, then ask questions one at a 
 
 ## The Process
 
+**Before anything else — check git state:**
+- Run `git status` and `git log --oneline -5`
+- If on a feature branch with uncommitted or unmerged work, ask the user:
+  - "You're on `<branch>` with uncommitted changes. Want to finish/merge that first, stash it, or continue here?"
+- Require exactly one of: finish prior work, stash, or explicitly continue here
+- If the topic is new, suggest creating a new branch before brainstorming
+
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - Check if the codebase or ecosystem already solves this before designing from scratch
