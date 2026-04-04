@@ -109,21 +109,8 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, mark the planning phase complete: call `plan_tracker` with `{action: "update", status: "complete"}` for the current phase.
 
-Then offer execution choice:
+Then offer execution:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Ready to execute with `/skill:executing-tasks`."**
 
-**1. Subagent-Driven (this session)** - Fresh subagent per task with two-stage review. Better for plans with many independent tasks.
-
-**2. Parallel Session (separate)** - Batch execution with human review checkpoints. Better when tasks are tightly coupled or you want more control between batches.
-
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use `/skill:subagent-driven-development`
-- Stay in this session
-- Fresh subagent per task + code review
-
-**If Parallel Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses `/skill:executing-plans`
+The executing-tasks skill handles the full per-task lifecycle (define → approve → execute → verify → review → fix) with human gates and bounded retry loops.
