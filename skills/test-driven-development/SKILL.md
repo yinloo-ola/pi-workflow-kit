@@ -3,7 +3,7 @@ name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
 ---
 
-> **Related skills:** Before claiming done, use `/skill:verification-before-completion` to verify tests actually pass.
+> **Related skills:** Before claiming done, use `/skill:executing-tasks` to verify tests actually pass.
 
 # Test-Driven Development (TDD)
 

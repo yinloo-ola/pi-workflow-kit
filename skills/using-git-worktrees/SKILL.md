@@ -3,7 +3,7 @@ name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
 ---
 
-> **Related skills:** Set up after `/skill:brainstorming`. Execute with `/skill:executing-plans` or `/skill:subagent-driven-development`. Clean up with `/skill:finishing-a-development-branch`.
+> **Related skills:** Set up after `/skill:brainstorming`. Execute with `/skill:executing-tasks`. Clean up with `/skill:executing-tasks`.
 
 # Using Git Worktrees
 
@@ -222,11 +222,10 @@ Ready to implement auth feature
 
 **Called by:**
 - **`/skill:brainstorming`** - When design is approved and implementation follows
-- **`/skill:subagent-driven-development`** - Recommended before executing any tasks
-- **`/skill:executing-plans`** - Recommended before executing any tasks
+- **`/skill:executing-tasks`** - Execute tasks in isolated workspace
 - Any skill needing isolated workspace
 
 **Note:** For small changes, branching in the current directory is acceptable with human approval. Worktrees are the default for larger work.
 
 **Pairs with:**
-- **`/skill:finishing-a-development-branch`** - REQUIRED for cleanup after work complete
+- **`/skill:executing-tasks`** - REQUIRED for cleanup after work complete

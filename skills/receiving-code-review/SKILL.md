@@ -3,7 +3,7 @@ name: receiving-code-review
 description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
 ---
 
-> **Related skills:** Verify each fix with `/skill:verification-before-completion`. Use `/skill:test-driven-development` for regression tests.
+> **Related skills:** Verify each fix with `/skill:executing-tasks`. Use `/skill:test-driven-development` for regression tests.
 
 # Code Review Reception
 

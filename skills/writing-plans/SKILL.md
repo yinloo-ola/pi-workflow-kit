@@ -3,7 +3,7 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
-> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-plans` or `/skill:subagent-driven-development`.
+> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-tasks` or `/skill:executing-tasks`.
 
 # Writing Plans
 
@@ -40,7 +40,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **REQUIRED SUB-SKILL:** Use the executing-plans skill to implement this plan task-by-task.
+> **REQUIRED SUB-SKILL:** Use the executing-tasks skill to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 

@@ -8,7 +8,7 @@ Your coding agent doesn't just know the rules - it follows them. Skills teach th
 
 ## What You Get When You Install This
 
-**12 workflow skills** that guide the agent through a structured development process - from brainstorming ideas through shipping code.
+**8 workflow skills** that guide the agent through a structured development process - from brainstorming ideas through shipping code.
 
 **3 extensions** that run silently in the background:
 - **Workflow Monitor** — warns on TDD violations, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
@@ -63,7 +63,7 @@ No configuration required. Skills and extensions activate automatically.
 If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-superpowers), `pi-superpowers-plus` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
 
 ### What stays the same
-- The same core workflow skills (e.g. `/skill:brainstorming`, `/skill:writing-plans`, `/skill:executing-plans`, etc.)
+- The same core workflow skills (e.g. `/skill:brainstorming`, `/skill:writing-plans`, `/skill:executing-tasks`, etc.)
 - The same "structured workflow" idea and phase order
 
 ### What's new in `pi-superpowers-plus`
@@ -99,44 +99,38 @@ Notes:
 - Tools like **`plan_tracker`** store execution state outside the prompt.
 - **`workflow_reference`** provides extended detail on demand, keeping skill files focused while making deep guidance available when the agent needs it.
 
-To make this concrete, here's the size of each skill's `SKILL.md` compared to the original [`coctostan/pi-superpowers`](https://github.com/coctostan/pi-superpowers) (approximate KB, at time of writing). Across the shared skills, total `SKILL.md` content went from **67.5KB → 66.5KB**. Skills that shrank moved content into on-demand `workflow_reference` topics; skills that grew restored inline red flags, rationalizations, and verification checklists for self-contained guidance.
+The workflow has been simplified to **4 phases** with **8 skills**. The `executing-tasks` skill replaces 5 separate execution-phase skills with a unified per-task lifecycle.
 
-| Skill | pi-superpowers (KB) | pi-superpowers-plus (KB) | Change |
-|---|---:|---:|---:|
-| `brainstorming` | 2.5 | 2.9 | +16% |
-| `dispatching-parallel-agents` | 6.2 | 6.1 | -2% |
-| `executing-plans` | 2.7 | 3.5 | +30% |
-| `finishing-a-development-branch` | 4.3 | 4.4 | +2% |
-| `receiving-code-review` | 6.2 | 5.8 | -6% |
-| `requesting-code-review` | 2.9 | 3.0 | +3% |
-| `subagent-driven-development` | 10.2 | 11.3 | +11% |
-| `systematic-debugging` | 9.8 | 7.2 | -27% |
-| `test-driven-development` | 9.8 | 8.1 | -17% |
-| `using-git-worktrees` | 5.5 | 6.1 | +11% |
-| `verification-before-completion` | 4.1 | 4.3 | +5% |
-| `writing-plans` | 3.3 | 3.8 | +15% |
+| Skill | Size (KB) | Note |
+|---|---:|---|
+| `brainstorming` | 2.9 | Unchanged |
+| `dispatching-parallel-agents` | 6.1 | Unchanged |
+| `executing-tasks` | 6.7 | **New** — replaces 5 skills |
+| `receiving-code-review` | 5.8 | Unchanged |
+| `systematic-debugging` | 7.2 | Unchanged |
+| `test-driven-development` | 8.1 | Unchanged |
+| `using-git-worktrees` | 6.1 | Unchanged |
+| `writing-plans` | 3.8 | Updated — added task type + acceptance criteria |
 
 ## The Workflow
 
 The skills guide the agent through a consistent development cycle:
 
 ```
-Brainstorm → Plan → Execute → Verify → Review → Finish
+Brainstorm → Plan → Execute → Finalize
 ```
 
 | Phase | Skill | What Happens |
 |-------|-------|--------------|
 | **Brainstorm** | `/skill:brainstorming` | Refines your idea into a design document via Socratic dialogue |
 | **Plan** | `/skill:writing-plans` | Breaks the design into bite-sized TDD tasks with exact file paths and code |
-| **Execute** | `/skill:executing-plans` or `/skill:subagent-driven-development` | Works through tasks in batches with review checkpoints |
-| **Verify** | `/skill:verification-before-completion` | Runs tests and proves everything works - evidence before claims |
-| **Review** | `/skill:requesting-code-review` | Dispatches a reviewer subagent to catch issues before merge |
-| **Finish** | `/skill:finishing-a-development-branch` | Presents merge/PR/keep/discard options and cleans up |
+| **Execute** | `/skill:executing-tasks` | Per-task lifecycle: define → approve → execute → verify → review → fix |
+| **Finalize** | `/skill:executing-tasks` | PR, archive planning docs, update repo docs, clean up |
 
 The **workflow tracker** shows progress in the TUI status bar as the agent moves through phases:
 
 ```
--brainstorm → ✓plan → [execute] → verify → review → finish
+-brainstorm → ✓plan → [execute] → finalize
 ```
 
 Phases are detected automatically from skill invocations, artifact writes under `docs/plans/`, and plan tracker initialization. At phase boundaries, the agent is prompted (once) with options to continue, start a fresh session, skip, or discuss.
@@ -205,16 +199,16 @@ At phase boundaries, prompts the agent once (non-enforcing) with options:
 3. **Skip** - skip the next phase
 4. **Discuss** - keep chatting
 
-When transitioning into **finish**, the monitor pre-fills the editor with a reminder to consider documentation updates and to capture learnings before merging/shipping.
+When transitioning into **finalize**, the monitor pre-fills the editor with a reminder to consider documentation updates and to capture learnings before merging/shipping.
 
 The `/workflow-next` command starts a new session with artifact context:
 ```
 /workflow-next plan docs/plans/2026-02-10-my-feature-design.md
 /workflow-next execute docs/plans/2026-02-11-my-feature-implementation.md
-/workflow-next verify
+/workflow-next finalize
 ```
 
-Valid phases: `brainstorm`, `plan`, `execute`, `verify`, `review`, `finish`.
+Valid phases: `brainstorm`, `plan`, `execute`, `finalize`.
 
 #### Reference Tool
 
@@ -242,6 +236,8 @@ Tasks: ✓✓→○○ (2/5)  Task 3: Recovery modes
 ```
 plan_tracker({ action: "init", tasks: ["Task 1: Setup", "Task 2: Core", ...] })
 plan_tracker({ action: "update", index: 0, status: "complete" })
+plan_tracker({ action: "update", index: 1, phase: "execute", executeAttempts: 1 })
+plan_tracker({ action: "update", index: 2, phase: "fix", fixAttempts: 1 })
 plan_tracker({ action: "status" })
 plan_tracker({ action: "clear" })
 ```
@@ -254,10 +250,8 @@ Skills are markdown files the agent reads to learn *what* to do. Extensions are 
 |---|---|---|
 | Write test before code | `test-driven-development` (three-scenario) | TDD monitor warns on violation (advisory) |
 | Investigate before fixing | `systematic-debugging` | Debug monitor warns on fix-without-investigation |
-| Run tests before claiming done | `verification-before-completion` | Verification gate warns on commit/push/PR |
+| Follow per-task lifecycle | `executing-tasks` | Plan tracker tracks per-task phase and attempts |
 | Follow workflow phases | All skills cross-reference each other | Workflow tracker detects phases, prompts at boundaries |
-| Dispatch implementation work | `subagent-driven-development` | Subagent extension spawns isolated agents |
-| Review before merge | `requesting-code-review` | Subagent dispatches code-reviewer agent |
 The orchestrating agent's enforcement is advisory (warnings injected into tool results).
 
 ## Subagent Dispatch
@@ -322,7 +316,7 @@ Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, po
 | | [Superpowers](https://github.com/obra/superpowers) | [pi-superpowers](https://github.com/coctostan/pi-superpowers) | **pi-superpowers-plus** |
 |---|---|---|---|
 | **Platform** | Claude Code | pi | pi |
-| **Skills** | 12 workflow skills | Same 12 skills (pi port) | Same 12 skills (three-scenario TDD, restored inline guidance) |
+| **Skills** | 8 workflow skills | Same 12 skills (pi port) → now 8 skills (simplified workflow) | **8 skills** (simplified: 4-phase workflow with unified executing-tasks) |
 | **TDD enforcement** | Skill tells agent the rules | Skill tells agent the rules | Extension *watches* and injects warnings |
 | **TDD widget** | — | — | TUI: RED → GREEN → REFACTOR |
 | **Debug enforcement** | Manual discipline | Manual discipline | Extension escalates after repeated failures |
@@ -364,20 +358,16 @@ pi-superpowers-plus/
 │   └── subagent/
 │       ├── index.ts                   # Subagent tool registration + execution
 │       └── agents.ts                  # Agent discovery + frontmatter parsing
-├── skills/                           # 12 workflow skills (24 markdown files)
+├── skills/                           # 8 workflow skills
 │   ├── brainstorming/
 │   ├── writing-plans/
-│   ├── executing-plans/
-│   ├── subagent-driven-development/
+│   ├── executing-tasks/
 │   ├── test-driven-development/
 │   ├── systematic-debugging/
-│   ├── verification-before-completion/
-│   ├── requesting-code-review/
 │   ├── receiving-code-review/
 │   ├── dispatching-parallel-agents/
-│   ├── using-git-worktrees/
-│   └── finishing-a-development-branch/
-└── tests/                            # 373 tests across 39 files
+│   └── using-git-worktrees/
+└── tests/                            # 388 tests across 41 files
 ```
 
 ## Development
