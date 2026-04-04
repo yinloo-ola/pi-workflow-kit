@@ -1,6 +1,6 @@
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 
-export const WORKFLOW_PHASES = ["brainstorm", "plan", "execute", "verify", "review", "finish"] as const;
+export const WORKFLOW_PHASES = ["brainstorm", "plan", "execute", "finalize"] as const;
 
 export type Phase = (typeof WORKFLOW_PHASES)[number];
 export type PhaseStatus = "pending" | "active" | "complete" | "skipped";
@@ -12,12 +12,7 @@ export interface WorkflowTrackerState {
   prompted: Record<Phase, boolean>;
 }
 
-export type TransitionBoundary =
-  | "design_committed"
-  | "plan_ready"
-  | "execution_complete"
-  | "verification_passed"
-  | "review_complete";
+export type TransitionBoundary = "design_committed" | "plan_ready" | "execution_complete";
 
 export function computeBoundaryToPrompt(state: WorkflowTrackerState): TransitionBoundary | null {
   if (state.phases.brainstorm === "complete" && !state.prompted.brainstorm) {
@@ -28,12 +23,6 @@ export function computeBoundaryToPrompt(state: WorkflowTrackerState): Transition
   }
   if (state.phases.execute === "complete" && !state.prompted.execute) {
     return "execution_complete";
-  }
-  if (state.phases.verify === "complete" && !state.prompted.verify) {
-    return "verification_passed";
-  }
-  if (state.phases.review === "complete" && !state.prompted.review) {
-    return "review_complete";
   }
   return null;
 }
@@ -63,11 +52,8 @@ export function parseSkillName(line: string): string | null {
 export const SKILL_TO_PHASE: Record<string, Phase> = {
   brainstorming: "brainstorm",
   "writing-plans": "plan",
-  "executing-plans": "execute",
-  "subagent-driven-development": "execute",
-  "verification-before-completion": "verify",
-  "requesting-code-review": "review",
-  "finishing-a-development-branch": "finish",
+  "executing-tasks": "execute",
+  "using-git-worktrees": "execute",
 };
 
 const PLANS_DIR_RE = /^docs\/plans\//;

@@ -140,11 +140,8 @@ describe("WorkflowTracker detection helpers", () => {
     expect(SKILL_TO_PHASE).toEqual({
       brainstorming: "brainstorm",
       "writing-plans": "plan",
-      "executing-plans": "execute",
-      "subagent-driven-development": "execute",
-      "verification-before-completion": "verify",
-      "requesting-code-review": "review",
-      "finishing-a-development-branch": "finish",
+      "executing-tasks": "execute",
+      "using-git-worktrees": "execute",
     });
   });
 
@@ -170,19 +167,19 @@ describe("WorkflowTracker detection helpers", () => {
 
   test("detects /skill token on later indented line in multi-line input", () => {
     const tracker = new WorkflowTracker();
-    const changed = tracker.onInputText("first line\n  /skill:verification-before-completion run checks");
+    const changed = tracker.onInputText("first line\n  /skill:executing-tasks run tasks");
     expect(changed).toBe(true);
-    expect(tracker.getState().currentPhase).toBe("verify");
+    expect(tracker.getState().currentPhase).toBe("execute");
   });
 
   test("continues scanning when first recognized /skill line is a no-op and later line advances", () => {
     const tracker = new WorkflowTracker();
     tracker.advanceTo("plan");
 
-    const changed = tracker.onInputText("/skill:brainstorming\n/skill:verification-before-completion run checks");
+    const changed = tracker.onInputText("/skill:brainstorming\n/skill:executing-tasks run tasks");
 
     expect(changed).toBe(true);
-    expect(tracker.getState().currentPhase).toBe("verify");
+    expect(tracker.getState().currentPhase).toBe("execute");
   });
 
   test("ignores unknown /skill line and advances on later valid /skill line", () => {
