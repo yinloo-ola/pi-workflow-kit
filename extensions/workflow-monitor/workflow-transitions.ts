@@ -38,24 +38,8 @@ export function getTransitionPrompt(boundary: TransitionBoundary, artifactPath: 
     case "execution_complete":
       return {
         boundary,
-        title: "Execution complete. What next?",
-        nextPhase: "verify",
-        artifactPath,
-        options: BASE_OPTIONS,
-      };
-    case "verification_passed":
-      return {
-        boundary,
-        title: "Verification passed. What next?",
-        nextPhase: "review",
-        artifactPath,
-        options: BASE_OPTIONS,
-      };
-    case "review_complete":
-      return {
-        boundary,
-        title: "Review complete. What next?",
-        nextPhase: "finish",
+        title: "All tasks complete. What next?",
+        nextPhase: "finalize",
         artifactPath,
         options: BASE_OPTIONS,
       };

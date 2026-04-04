@@ -8,4 +8,11 @@ describe("workflow transitions", () => {
     expect(p.nextPhase).toBe("plan");
     expect(p.options).toHaveLength(4);
   });
+
+  test("execution-complete prompt targets finalize", () => {
+    const p = getTransitionPrompt("execution_complete", "docs/plans/x-implementation.md");
+    expect(p.title).toMatch(/All tasks complete/i);
+    expect(p.nextPhase).toBe("finalize");
+    expect(p.options).toHaveLength(4);
+  });
 });
