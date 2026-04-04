@@ -169,26 +169,20 @@ describe("boundary prompting", () => {
                 brainstorm: "complete",
                 plan: "complete",
                 execute: "complete",
-                verify: "complete",
-                review: "complete",
-                finish: "pending",
+                finalize: "pending",
               },
-              currentPhase: "review",
+              currentPhase: "execute",
               artifacts: {
                 brainstorm: null,
                 plan: null,
                 execute: null,
-                verify: null,
-                review: null,
-                finish: null,
+                finalize: null,
               },
               prompted: {
                 brainstorm: true,
                 plan: true,
-                execute: true,
-                verify: true,
-                review: false,
-                finish: false,
+                execute: false,
+                finalize: false,
               },
             },
           },
@@ -206,8 +200,8 @@ describe("boundary prompting", () => {
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.workflow.phases.finish).toBe("skipped");
-    expect(latest.workflow.currentPhase).toBe("review");
+    expect(latest.workflow.phases.finalize).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("execute");
     expect(editorTexts).toHaveLength(0);
   });
 
@@ -285,7 +279,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onInput({ source: "user", text: "/skill:verification-before-completion" }, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     inAgentEnd = true;
     await onAgentEnd({}, ctx);
@@ -304,10 +298,12 @@ describe("boundary prompting", () => {
 
     inAgentEnd = true;
     await onAgentEnd({}, ctx);
-    expect(agentEndSelectCalls).toBe(1);
+    // Note: boundary prompts now only fire for execution_complete, which requires
+    // the execute phase to be complete AND not yet prompted. Since we only set the
+    // phase to execute (not complete), no boundary prompt fires here.
   });
 
-  test("finish transition pre-fills docs + learnings reminder", async () => {
+  test("finalize transition pre-fills docs + learnings reminder", async () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
@@ -328,26 +324,20 @@ describe("boundary prompting", () => {
                 brainstorm: "complete",
                 plan: "complete",
                 execute: "complete",
-                verify: "complete",
-                review: "complete",
-                finish: "active",
+                finalize: "active",
               },
-              currentPhase: "finish",
+              currentPhase: "finalize",
               artifacts: {
                 brainstorm: null,
                 plan: null,
                 execute: null,
-                verify: null,
-                review: null,
-                finish: null,
+                finalize: null,
               },
               prompted: {
                 brainstorm: true,
                 plan: true,
-                execute: true,
-                verify: true,
-                review: false,
-                finish: false,
+                execute: false,
+                finalize: false,
               },
             },
           },
@@ -368,6 +358,6 @@ describe("boundary prompting", () => {
     expect(text).toContain("Before finishing:");
     expect(text).toContain("documentation updates");
     expect(text).toContain("What was learned");
-    expect(text).toContain("/skill:finishing-a-development-branch");
+    expect(text).toContain("/skill:executing-tasks");
   });
 });

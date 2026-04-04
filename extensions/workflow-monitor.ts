@@ -160,10 +160,8 @@ export default function (pi: ExtensionAPI) {
   const phaseToSkill: Record<string, string> = {
     brainstorm: "brainstorming",
     plan: "writing-plans",
-    execute: "executing-plans",
-    verify: "verification-before-completion",
-    review: "requesting-code-review",
-    finish: "finishing-a-development-branch",
+    execute: "executing-tasks",
+    finalize: "executing-tasks",
   };
 
   function parseTargetPhase(text: string): Phase | null {
@@ -190,8 +188,6 @@ export default function (pi: ExtensionAPI) {
     design_committed: "brainstorm",
     plan_ready: "plan",
     execution_complete: "execute",
-    verification_passed: "verify",
-    review_complete: "review",
   };
 
   // --- State reconstruction on session events ---
@@ -402,19 +398,15 @@ export default function (pi: ExtensionAPI) {
   const PR_RE = /\bgh\s+pr\s+create\b/;
 
   function getCompletionActionTarget(command: string): Phase | null {
-    if (COMMIT_RE.test(command)) return "verify";
-    if (PUSH_RE.test(command)) return "review";
-    if (PR_RE.test(command)) return "review";
+    if (COMMIT_RE.test(command)) return "finalize";
+    if (PUSH_RE.test(command)) return "finalize";
+    if (PR_RE.test(command)) return "finalize";
     return null;
   }
 
   function getUnresolvedPhasesForAction(target: Phase, state: WorkflowTrackerState): Phase[] {
-    if (target === "verify") {
-      // For commit: check verify itself
-      return getUnresolvedPhases(["verify"], state);
-    }
-    // For push/pr: check verify + review
-    return getUnresolvedPhases(["verify", "review"], state);
+    // For all completion actions, check that finalize is complete
+    return getUnresolvedPhases(["finalize"], state);
   }
 
   // --- Tool call observation (detect file writes + verification gate) ---
@@ -427,12 +419,12 @@ export default function (pi: ExtensionAPI) {
 
       const state = handler.getWorkflowState();
       const phaseIdx = state?.currentPhase ? WORKFLOW_PHASES.indexOf(state.currentPhase) : -1;
-      const executeIdx = WORKFLOW_PHASES.indexOf("execute");
+      const finalizeIdx = WORKFLOW_PHASES.indexOf("finalize");
 
-      // Completion action gating (interactive only, execute+ phases)
+      // Completion action gating (interactive only, finalize phase)
       // Suppress during active plan execution — prompts only fire after execution completes
       const isExecuting = state?.currentPhase === "execute" && state.phases.execute === "active";
-      if (ctx.hasUI && state && phaseIdx >= executeIdx && !isExecuting) {
+      if (ctx.hasUI && state && phaseIdx >= finalizeIdx && !isExecuting) {
         const actionTarget = getCompletionActionTarget(command);
         if (actionTarget) {
           const unresolved = getUnresolvedPhasesForAction(actionTarget, state);
@@ -441,7 +433,7 @@ export default function (pi: ExtensionAPI) {
             if (gateResult === "blocked") {
               return { blocked: true };
             }
-            if (unresolved.includes("verify")) {
+            if (unresolved.length > 0) {
               handler.recordVerificationWaiver();
               persistState();
             }
@@ -449,6 +441,7 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
+      const executeIdx = WORKFLOW_PHASES.indexOf("execute");
       if (phaseIdx >= executeIdx) {
         const verificationViolation = handler.checkCommitGate(command);
         if (verificationViolation) {
@@ -578,14 +571,6 @@ export default function (pi: ExtensionAPI) {
 
       const isTestCommand = parseTestCommand(command);
       const passed = isTestCommand ? parseTestResult(output, exitCode) : null;
-      if (passed === true) {
-        const state = handler.getWorkflowState();
-        if (state?.currentPhase === "verify" && state.phases.verify === "active") {
-          if (handler.completeCurrentWorkflowPhase()) {
-            persistState();
-          }
-        }
-      }
 
       const verificationViolation = pendingVerificationViolations.get(toolCallId);
       if (verificationViolation) {
@@ -646,9 +631,9 @@ export default function (pi: ExtensionAPI) {
       "- What was learned during this implementation? (surprises, codebase knowledge, things to do differently)\n\n";
 
     if (selected === "next") {
-      ctx.ui.setEditorText(prompt.nextPhase === "finish" ? finishReminder + nextInSession : nextInSession);
+      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + nextInSession : nextInSession);
     } else if (selected === "fresh") {
-      ctx.ui.setEditorText(prompt.nextPhase === "finish" ? finishReminder + fresh : fresh);
+      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + fresh : fresh);
     } else if (selected === "skip") {
       // Explicit user-confirmed skip: mark the next phase as skipped, then move on.
       handler.skipWorkflowPhases([prompt.nextPhase]);
@@ -769,10 +754,10 @@ export default function (pi: ExtensionAPI) {
       }
 
       const [phase, artifact] = args.trim().split(/\s+/, 2);
-      const validPhases = new Set(["brainstorm", "plan", "execute", "verify", "review", "finish"]);
+      const validPhases = new Set(["brainstorm", "plan", "execute", "finalize"]);
       if (!phase || !validPhases.has(phase)) {
         ctx.ui.notify(
-          "Usage: /workflow-next <phase> [artifact-path]  (phase: brainstorm|plan|execute|verify|review|finish)",
+          "Usage: /workflow-next <phase> [artifact-path]  (phase: brainstorm|plan|execute|finalize)",
           "error",
         );
         return;
@@ -788,13 +773,9 @@ export default function (pi: ExtensionAPI) {
       if (phase === "plan") {
         lines.push("Use /skill:writing-plans to create the implementation plan.");
       } else if (phase === "execute") {
-        lines.push("Use /skill:executing-plans (or /skill:subagent-driven-development) to execute the plan.");
-      } else if (phase === "verify") {
-        lines.push("Use /skill:verification-before-completion to verify before finishing.");
-      } else if (phase === "review") {
-        lines.push("Use /skill:requesting-code-review to get review.");
-      } else if (phase === "finish") {
-        lines.push("Use /skill:finishing-a-development-branch to integrate/ship.");
+        lines.push("Use /skill:executing-tasks to execute the plan.");
+      } else if (phase === "finalize") {
+        lines.push("Use /skill:executing-tasks to finalize (PR, cleanup, archive).");
       }
 
       ctx.ui.setEditorText(lines.join("\n"));

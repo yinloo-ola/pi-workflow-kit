@@ -16,7 +16,7 @@ describe("WorkflowHandler workflow-tracker integration", () => {
 
   test("marks prompted state for boundary phase (not current phase)", () => {
     handler.handleInputText("/skill:writing-plans");
-    handler.handleInputText("/skill:executing-plans");
+    handler.handleInputText("/skill:executing-tasks");
 
     const stateBefore = handler.getWorkflowState()!;
     expect(stateBefore.currentPhase).toBe("execute");
