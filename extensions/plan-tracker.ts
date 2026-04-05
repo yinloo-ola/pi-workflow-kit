@@ -69,7 +69,7 @@ const PlanTrackerParams = Type.Object({
   attempts: Type.Optional(
     Type.Integer({
       minimum: 0,
-      description: "Attempt count — increments executeAttempts or fixAttempts depending on current phase (for update)",
+      description: "Set attempt count for executeAttempts or fixAttempts depending on current phase (for update)",
     }),
   ),
 });
@@ -93,7 +93,7 @@ function phaseIcon(status: TaskStatus, phase: TaskPhase): string {
   if (phase === "define") return "📝";
   if (phase === "approve") return "👀";
   if (phase === "execute") return "⚙";
-  if (phase === "verify") return "✓";
+  if (phase === "verify") return "🔎";
   if (phase === "review") return "🔍";
   if (phase === "fix") return "🔧";
   if (status === "in_progress") return "→";
@@ -155,15 +155,8 @@ function formatStatus(tasks: Task[]): string {
   return lines.join("\n");
 }
 
-function statusToPhase(status: TaskStatus): TaskPhase {
-  switch (status) {
-    case "complete":
-      return "complete";
-    case "blocked":
-      return "blocked";
-    default:
-      return undefined as unknown as TaskPhase;
-  }
+function statusToPhase(status: "complete" | "blocked"): TaskPhase {
+  return status;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -171,13 +164,16 @@ export default function (pi: ExtensionAPI) {
 
   const reconstructState = (ctx: ExtensionContext) => {
     tasks = [];
-    for (const entry of ctx.sessionManager.getBranch()) {
+    const entries = ctx.sessionManager.getBranch();
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
       if (entry.type !== "message") continue;
       const msg = entry.message;
       if (msg.role !== "toolResult" || msg.toolName !== "plan_tracker") continue;
       const details = msg.details as PlanTrackerDetails | undefined;
       if (details && !details.error) {
         tasks = details.tasks;
+        break;
       }
     }
   };
@@ -274,26 +270,40 @@ export default function (pi: ExtensionAPI) {
           const task = tasks[params.index];
           const updates: string[] = [];
 
-          // Update status (backward compatible)
-          if (params.status) {
-            task.status = params.status;
-            // Auto-sync phase from terminal statuses
-            if (params.status === "complete" || params.status === "blocked") {
-              task.phase = statusToPhase(params.status);
-            } else if (params.status === "in_progress" && task.phase === "pending") {
-              task.phase = "define";
-            }
-            updates.push(`status → ${params.status}`);
+          // Compute target status and phase from explicit params first,
+          // then auto-sync only the fields that weren't explicitly set.
+          // This prevents one param from silently overriding the other.
+          const explicitStatus: TaskStatus | undefined = params.status;
+          const explicitPhase: TaskPhase | undefined = params.phase;
+
+          // Apply explicit status
+          if (explicitStatus) {
+            task.status = explicitStatus;
+            updates.push(`status → ${explicitStatus}`);
           }
 
-          // Update phase
-          if (params.phase) {
-            task.phase = params.phase;
-            // Auto-sync status from phase
-            if (params.phase === "complete") task.status = "complete";
-            else if (params.phase === "blocked") task.status = "blocked";
-            else if (params.status !== "in_progress") task.status = "in_progress";
-            updates.push(`phase → ${params.phase}`);
+          // Apply explicit phase
+          if (explicitPhase) {
+            task.phase = explicitPhase;
+            updates.push(`phase → ${explicitPhase}`);
+          }
+
+          // Auto-sync: derive phase from status (only if phase wasn't explicitly set)
+          if (explicitStatus && !explicitPhase) {
+            if (explicitStatus === "complete" || explicitStatus === "blocked") {
+              task.phase = explicitStatus;
+            } else if (explicitStatus === "in_progress" && task.phase === "pending") {
+              task.phase = "define";
+            }
+          }
+
+          // Auto-sync: derive status from phase (only if status wasn't explicitly set)
+          if (explicitPhase && !explicitStatus) {
+            if (explicitPhase === "complete" || explicitPhase === "blocked") {
+              task.status = explicitPhase;
+            } else {
+              task.status = "in_progress";
+            }
           }
 
           // Update type
