@@ -29,12 +29,12 @@
   },
   "debug": {
     "active": false,
-    "investigated": true,
+    "investigated": false,
     "fixAttempts": 0
   },
   "verification": {
     "verified": false,
     "verificationWaived": false
   },
-  "savedAt": 1775745158853
+  "savedAt": 1775745537405
 }

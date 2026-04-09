@@ -10,13 +10,11 @@ Date: 2026-04-09
 
 3. **`/workflow-next` tab completions lose the phase word:** When selecting a file artifact completion (e.g. `docs/plans/2026-04-09-foo-design.md`), pi replaces the entire argument prefix including the phase word. `/workflow-next plan des` → select file → `/workflow-next docs/plans/...` ("plan" gone).
 
-4. **Phase completions lack trailing space:** Tab-completing a phase gives `/workflow-next plan` with no trailing space, requiring a manual space before artifact suggestions appear.
-
 Note: Tab key does not trigger slash command argument completions at all (pi-side behavior — falls through to file path completion when `force=true`). Argument suggestions only appear on typing. This cannot be fixed on our side.
 
 ## Scope
 
-Four changes:
+Three changes:
 
 ### 1. Remove `superpowers-state.json` legacy fallback
 
@@ -44,25 +42,10 @@ Four changes:
   - `label: "docs/plans/2026-04-09-foo-design.md"` (display stays clean)
 - Applies to all phases with artifacts: plan, execute, finalize
 
-### 4. Add trailing space to phase completions
-
-**`extensions/workflow-monitor/workflow-next-completions.ts`:**
-- In `getPhaseCompletions`, add trailing space to `item.value`:
-  - `value: "plan "` (after tab: `/workflow-next plan_` with cursor after space)
-  - `label: "plan"` (display stays clean)
-- Applies to all four phases (brainstorm has no artifacts but trailing space is harmless)
-- The handler already parses correctly: `args.trim().split(/\s+/, 2)`
-
-**`extensions/workflow-monitor.ts`:**
-- Replace the `maybeEscalate("process", ctx)` call + `pendingProcessWarnings.set(...)` with an immediate `{ blocked: true, reason: ... }` return that includes a reminder about what the agent should be doing instead
-- Remove `"process"` from `ViolationBucket` type and `strikes` record (only `"practice"` remains, still used by TDD)
-- Remove `pendingProcessWarnings` map (no longer needed)
-
 ### Tests
 
 **`tests/extension/workflow-monitor/workflow-next-completions.test.ts`:**
 - Update artifact completion tests to expect `value` with phase prefix (e.g. `"plan docs/plans/..."`)
-- Update phase completion tests to expect trailing space in `value`
 
 ## What stays the same
 
