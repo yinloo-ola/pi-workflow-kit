@@ -220,7 +220,7 @@ describe("WorkflowTracker detection helpers", () => {
     tracker.advanceTo("finalize");
     expect(tracker.getState().currentPhase).toBe("finalize");
 
-    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/executing-tasks/SKILL.md");
+    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-workflow-kit/skills/executing-tasks/SKILL.md");
 
     expect(changed).toBe(false);
     const s = tracker.getState();
@@ -262,7 +262,7 @@ describe("WorkflowTracker detection helpers", () => {
   test("onSkillFileRead advances phase for recognized skill file paths", () => {
     const tracker = new WorkflowTracker();
 
-    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md");
+    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-workflow-kit/skills/writing-plans/SKILL.md");
 
     expect(changed).toBe(true);
     expect(tracker.getState().currentPhase).toBe("plan");
@@ -271,9 +271,7 @@ describe("WorkflowTracker detection helpers", () => {
   test("onSkillFileRead returns false for non-skill paths", () => {
     const tracker = new WorkflowTracker();
 
-    expect(tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/README.md")).toBe(
-      false,
-    );
+    expect(tracker.onSkillFileRead("/home/pi/workspace/pi-workflow-kit/skills/writing-plans/README.md")).toBe(false);
     expect(tracker.onSkillFileRead("docs/plans/2026-02-11-foo-implementation.md")).toBe(false);
     expect(tracker.getState().currentPhase).toBeNull();
   });
@@ -305,7 +303,7 @@ describe("WorkflowTracker detection helpers", () => {
     tracker.advanceTo("execute");
     tracker.completeCurrent();
 
-    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/executing-tasks/SKILL.md");
+    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-workflow-kit/skills/executing-tasks/SKILL.md");
 
     expect(changed).toBe(true);
     expect(tracker.getState().currentPhase).toBe("finalize");

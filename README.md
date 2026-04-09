@@ -90,7 +90,7 @@ No configuration required after install. Skills and extensions activate automati
 
 ## Upgrading from `pi-superpowers`
 
-If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-superpowers), `@tianhai/pi-workflow-kit` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
+If you're currently using `pi-superpowers`, `@tianhai/pi-workflow-kit` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
 
 ### What stays the same
 - The same core workflow skills (e.g. `/skill:brainstorming`, `/skill:writing-plans`, `/skill:executing-tasks`, etc.)
@@ -376,9 +376,9 @@ If a bundled reviewer or worker unexpectedly asks for the wrong provider credent
 
 ## Compared to Superpowers
 
-Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, ported to pi as [pi-superpowers](https://github.com/coctostan/pi-superpowers), then extended with active enforcement.
+Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, ported to pi as `pi-superpowers`, then extended with active enforcement.
 
-| | [Superpowers](https://github.com/obra/superpowers) | [pi-superpowers](https://github.com/coctostan/pi-superpowers) | **pi-workflow-kit** |
+| | [Superpowers](https://github.com/obra/superpowers) | `pi-superpowers` | **pi-workflow-kit** |
 |---|---|---|---|
 | **Platform** | Claude Code | pi | pi |
 | **Skills** | 8 workflow skills | Same 12 skills (pi port) → now 8 skills (simplified workflow) | **8 skills** (simplified: 4-phase workflow with unified executing-tasks) |
@@ -509,7 +509,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 ## Attribution
 
-Skill content adapted from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). This package builds on [pi-superpowers](https://github.com/coctostan/pi-superpowers) with active enforcement extensions, leaner skill files, on-demand reference content, and workflow tracking.
+Skill content adapted from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). This package builds on `pi-superpowers` with active enforcement extensions, leaner skill files, on-demand reference content, and workflow tracking.
 
 ## Migration from `@yinlootan/pi-superpowers-plus`
 

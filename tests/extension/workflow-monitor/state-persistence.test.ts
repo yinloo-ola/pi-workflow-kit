@@ -223,7 +223,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
   test("handleSkillFileRead delegates to workflow tracker", () => {
     const handler = createWorkflowHandler();
 
-    const changed = handler.handleSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md");
+    const changed = handler.handleSkillFileRead("/home/pi/workspace/pi-workflow-kit/skills/writing-plans/SKILL.md");
 
     expect(changed).toBe(true);
     expect(handler.getWorkflowState()?.currentPhase).toBe("plan");
@@ -492,7 +492,7 @@ describe("state file rename to .pi/workflow-kit-state.json with legacy fallback"
       {
         toolCallId: "call-persist-new",
         toolName: "read",
-        input: { path: "/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md" },
+        input: { path: "/home/pi/workspace/pi-workflow-kit/skills/writing-plans/SKILL.md" },
         content: [{ type: "text", text: "ok" }],
         details: {},
       },
@@ -691,7 +691,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
       {
         toolCallId: "call-1",
         toolName: "read",
-        input: { path: "/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md" },
+        input: { path: "/home/pi/workspace/pi-workflow-kit/skills/writing-plans/SKILL.md" },
         content: [{ type: "text", text: "ok" }],
         details: {},
       },

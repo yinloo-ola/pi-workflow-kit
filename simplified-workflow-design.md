@@ -91,7 +91,7 @@ After all tasks complete (or are explicitly accepted by human):
 2. **Create PR** — push branch, create PR with summary of all tasks
 3. **Archive planning docs** — move all artifacts from `docs/plans/` to `docs/plans/completed/`
 4. **Update repo docs** — CHANGELOG, README, inline docs as needed
-5. **Update pi-superpowers-plus README** — document the new workflow, updated skill list, architecture changes
+5. **Update README** — document the new workflow, updated skill list, architecture changes
 6. **Clean up worktree** if one was used
 
 ---
@@ -251,5 +251,5 @@ Update the repo README to reflect:
 - New `executing-tasks` skill description
 - Per-task lifecycle explanation
 - Updated architecture section
-- Updated comparison table with pi-superpowers
+- Updated comparison table with pi-workflow-kit
 - Updated phase tracking documentation

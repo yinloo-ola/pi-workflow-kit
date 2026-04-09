@@ -438,7 +438,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 ## Migration note
 
-If you previously installed `@yinlootan/pi-superpowers-plus`, replace it with:
+If you previously installed `@yinlootan/pi-superpowers-plus`, replace it with `@tianhai/pi-workflow-kit`:
 
 ```json
 {
