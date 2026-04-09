@@ -1,5 +1,8 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { describe, expect, test } from "vitest";
 import workflowMonitorExtension from "../../../extensions/workflow-monitor";
+import { withTempCwd } from "./test-helpers";
 
 function getWorkflowNextCommand() {
   let command: any;
@@ -97,6 +100,42 @@ describe("/workflow-next", () => {
     const items = await command.getArgumentCompletions("pla docs/plans/");
 
     expect(items).toEqual([{ value: "plan", label: "plan" }]);
+  });
+
+  test("suggests only design artifacts for plan phase", async () => {
+    const tempDir = withTempCwd();
+    const plansDir = path.join(tempDir, "docs", "plans");
+    fs.mkdirSync(plansDir, { recursive: true });
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-design.md"), "");
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-implementation.md"), "");
+
+    const command = getWorkflowNextCommand();
+    const items = await command.getArgumentCompletions("plan ");
+
+    expect(items).toEqual([
+      {
+        value: "docs/plans/2026-04-09-alpha-design.md",
+        label: "docs/plans/2026-04-09-alpha-design.md",
+      },
+    ]);
+  });
+
+  test("filters plan artifact suggestions by typed prefix", async () => {
+    const tempDir = withTempCwd();
+    const plansDir = path.join(tempDir, "docs", "plans");
+    fs.mkdirSync(plansDir, { recursive: true });
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-design.md"), "");
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-beta-design.md"), "");
+
+    const command = getWorkflowNextCommand();
+    const items = await command.getArgumentCompletions("plan docs/plans/2026-04-09-al");
+
+    expect(items).toEqual([
+      {
+        value: "docs/plans/2026-04-09-alpha-design.md",
+        label: "docs/plans/2026-04-09-alpha-design.md",
+      },
+    ]);
   });
 
   test("rejects invalid phase values", async () => {
