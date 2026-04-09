@@ -18,6 +18,7 @@ import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 import { log } from "./lib/logging.js";
 import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
+import { getWorkflowNextCompletions } from "./workflow-monitor/workflow-next-completions";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
 import type { VerificationViolation } from "./workflow-monitor/verification-monitor";
@@ -812,6 +813,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerCommand("workflow-next", {
     description: "Start a fresh session for the next workflow phase (optionally referencing an artifact path)",
+    getArgumentCompletions: getWorkflowNextCompletions,
     async handler(args, ctx) {
       if (!ctx.hasUI) {
         ctx.ui.notify("workflow-next requires interactive mode", "error");

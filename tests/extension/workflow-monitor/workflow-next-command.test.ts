@@ -1,6 +1,22 @@
 import { describe, expect, test } from "vitest";
 import workflowMonitorExtension from "../../../extensions/workflow-monitor";
 
+function getWorkflowNextCommand() {
+  let command: any;
+  const fakePi: any = {
+    on() {},
+    registerTool() {},
+    appendEntry() {},
+    registerCommand(name: string, opts: any) {
+      if (name === "workflow-next") command = opts;
+    },
+  };
+
+  workflowMonitorExtension(fakePi);
+  expect(command).toBeTruthy();
+  return command;
+}
+
 describe("/workflow-next", () => {
   test("creates new session and prefills kickoff message", async () => {
     let handler: any;
@@ -62,6 +78,25 @@ describe("/workflow-next", () => {
     expect(calls[0][1]).toContain("Continue from artifact: docs/plans/2026-02-10-x-implementation.md");
     expect(calls[0][1]).toContain("/skill:executing-tasks");
     expect(calls[0][1]).toContain("Finalize the completed work");
+  });
+
+  test("returns all workflow phases when no args are typed", async () => {
+    const command = getWorkflowNextCommand();
+    const items = await command.getArgumentCompletions("");
+
+    expect(items).toEqual([
+      { value: "brainstorm", label: "brainstorm" },
+      { value: "plan", label: "plan" },
+      { value: "execute", label: "execute" },
+      { value: "finalize", label: "finalize" },
+    ]);
+  });
+
+  test("keeps suggesting phases until the first arg is an exact valid phase", async () => {
+    const command = getWorkflowNextCommand();
+    const items = await command.getArgumentCompletions("pla docs/plans/");
+
+    expect(items).toEqual([{ value: "plan", label: "plan" }]);
   });
 
   test("rejects invalid phase values", async () => {
