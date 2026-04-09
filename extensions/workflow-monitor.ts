@@ -19,6 +19,7 @@ import { log } from "./lib/logging.js";
 import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
 import { getWorkflowNextCompletions } from "./workflow-monitor/workflow-next-completions";
+import { validateNextWorkflowPhase, deriveWorkflowHandoffState } from "./workflow-monitor/workflow-next-state";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
 import type { VerificationViolation } from "./workflow-monitor/verification-monitor";
@@ -28,7 +29,7 @@ import {
   getTddViolationWarning,
   getVerificationViolationWarning,
 } from "./workflow-monitor/warnings";
-import { createWorkflowHandler, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
+import { createWorkflowHandler, DEBUG_DEFAULTS, TDD_DEFAULTS, VERIFICATION_DEFAULTS, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
 import {
   computeBoundaryToPrompt,
   type Phase,
@@ -830,8 +831,38 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
+      // Validate handoff against current workflow state
+      const currentWorkflowState = handler.getWorkflowState();
+      if (currentWorkflowState && currentWorkflowState.currentPhase) {
+        const validationError = validateNextWorkflowPhase(currentWorkflowState, phase as Phase);
+        if (validationError) {
+          ctx.ui.notify(validationError, "error");
+          return;
+        }
+      }
+
+      // Derive handoff state for session seeding
+      const derivedWorkflow = currentWorkflowState
+        ? deriveWorkflowHandoffState(currentWorkflowState, phase as Phase)
+        : undefined;
+
       const parentSession = ctx.sessionManager.getSessionFile();
-      const res = await ctx.newSession({ parentSession });
+      const res = await ctx.newSession({
+        parentSession,
+        setup: derivedWorkflow
+          ? async (sm) => {
+              const fullState = handler.getFullState();
+              sm.appendCustomEntry(SUPERPOWERS_STATE_ENTRY_TYPE, {
+                ...fullState,
+                workflow: derivedWorkflow,
+                tdd: { ...TDD_DEFAULTS, testFiles: [], sourceFiles: [] },
+                debug: { ...DEBUG_DEFAULTS },
+                verification: { ...VERIFICATION_DEFAULTS },
+                savedAt: Date.now(),
+              });
+            }
+          : undefined,
+      });
       if (res.cancelled) return;
 
       const lines: string[] = [];

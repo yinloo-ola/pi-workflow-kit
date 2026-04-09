@@ -33,6 +33,7 @@ function getWorkflowNextCommand() {
  * along with a base ctx for further customization.
  */
 function setupWithState(seedState: Partial<SuperpowersStateSnapshot> = {}) {
+  withTempCwd();
   const appendedEntries: Array<{ customType: string; data: any }> = [];
   let workflowNextHandler: any;
   const handlers = new Map<string, any[]>();
