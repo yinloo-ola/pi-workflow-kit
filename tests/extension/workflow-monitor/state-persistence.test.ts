@@ -431,25 +431,22 @@ describe("state file rename to .pi/workflow-kit-state.json with legacy fallback"
         artifacts: { brainstorm: "docs/plans/old-design.md", plan: null, execute: null, finalize: null },
         prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
       },
-      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      tdd: {
+        phase: "red",
+        testFiles: ["tests/old.test.ts"],
+        sourceFiles: [],
+        redVerificationPending: false,
+        nonCodeMode: false,
+      },
       debug: { active: true, investigated: true, fixAttempts: 2 },
       verification: { verified: true, verificationWaived: false },
     };
 
     fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
-    fs.writeFileSync(
-      path.join(tempDir, ".pi", "workflow-kit-state.json"),
-      JSON.stringify(newSnapshot, null, 2),
-    );
-    fs.writeFileSync(
-      path.join(tempDir, ".pi", "superpowers-state.json"),
-      JSON.stringify(legacySnapshot, null, 2),
-    );
+    fs.writeFileSync(path.join(tempDir, ".pi", "workflow-kit-state.json"), JSON.stringify(newSnapshot, null, 2));
+    fs.writeFileSync(path.join(tempDir, ".pi", "superpowers-state.json"), JSON.stringify(legacySnapshot, null, 2));
 
-    reconstructState(
-      { sessionManager: { getBranch: () => [] } } as any,
-      handler,
-    );
+    reconstructState({ sessionManager: { getBranch: () => [] } } as any, handler);
 
     expect(handler.getFullState()).toEqual(newSnapshot);
   });
@@ -465,21 +462,21 @@ describe("state file rename to .pi/workflow-kit-state.json with legacy fallback"
         artifacts: { brainstorm: "docs/plans/legacy-design.md", plan: null, execute: null, finalize: null },
         prompted: { brainstorm: true, plan: false, execute: false, finalize: false },
       },
-      tdd: { phase: "green", testFiles: ["tests/legacy.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      tdd: {
+        phase: "green",
+        testFiles: ["tests/legacy.test.ts"],
+        sourceFiles: [],
+        redVerificationPending: false,
+        nonCodeMode: false,
+      },
       debug: { active: false, investigated: false, fixAttempts: 0 },
       verification: { verified: false, verificationWaived: true },
     };
 
     fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
-    fs.writeFileSync(
-      path.join(tempDir, ".pi", "superpowers-state.json"),
-      JSON.stringify(legacySnapshot, null, 2),
-    );
+    fs.writeFileSync(path.join(tempDir, ".pi", "superpowers-state.json"), JSON.stringify(legacySnapshot, null, 2));
 
-    reconstructState(
-      { sessionManager: { getBranch: () => [] } } as any,
-      handler,
-    );
+    reconstructState({ sessionManager: { getBranch: () => [] } } as any, handler);
 
     expect(handler.getFullState()).toEqual(legacySnapshot);
   });

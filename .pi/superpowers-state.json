@@ -1,12 +1,12 @@
 {
   "workflow": {
     "phases": {
-      "brainstorm": "skipped",
-      "plan": "complete",
-      "execute": "skipped",
-      "finalize": "active"
+      "brainstorm": "pending",
+      "plan": "pending",
+      "execute": "pending",
+      "finalize": "pending"
     },
-    "currentPhase": "finalize",
+    "currentPhase": null,
     "artifacts": {
       "brainstorm": null,
       "plan": null,
@@ -15,7 +15,7 @@
     },
     "prompted": {
       "brainstorm": false,
-      "plan": true,
+      "plan": false,
       "execute": false,
       "finalize": false
     }
@@ -33,8 +33,8 @@
     "fixAttempts": 0
   },
   "verification": {
-    "verified": true,
+    "verified": false,
     "verificationWaived": false
   },
-  "savedAt": 1775742699120
+  "savedAt": 1775743248614
 }

@@ -18,8 +18,6 @@ import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 import { log } from "./lib/logging.js";
 import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
-import { getWorkflowNextCompletions } from "./workflow-monitor/workflow-next-completions";
-import { validateNextWorkflowPhase, deriveWorkflowHandoffState } from "./workflow-monitor/workflow-next-state";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
 import type { VerificationViolation } from "./workflow-monitor/verification-monitor";
@@ -29,7 +27,16 @@ import {
   getTddViolationWarning,
   getVerificationViolationWarning,
 } from "./workflow-monitor/warnings";
-import { createWorkflowHandler, DEBUG_DEFAULTS, TDD_DEFAULTS, VERIFICATION_DEFAULTS, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
+import {
+  createWorkflowHandler,
+  DEBUG_DEFAULTS,
+  TDD_DEFAULTS,
+  VERIFICATION_DEFAULTS,
+  type Violation,
+  type WorkflowHandler,
+} from "./workflow-monitor/workflow-handler";
+import { getWorkflowNextCompletions } from "./workflow-monitor/workflow-next-completions";
+import { deriveWorkflowHandoffState, validateNextWorkflowPhase } from "./workflow-monitor/workflow-next-state";
 import {
   computeBoundaryToPrompt,
   type Phase,
@@ -844,7 +851,7 @@ export default function (pi: ExtensionAPI) {
 
       // Validate handoff against current workflow state
       const currentWorkflowState = handler.getWorkflowState();
-      if (currentWorkflowState && currentWorkflowState.currentPhase) {
+      if (currentWorkflowState?.currentPhase) {
         const validationError = validateNextWorkflowPhase(currentWorkflowState, phase as Phase);
         if (validationError) {
           ctx.ui.notify(validationError, "error");

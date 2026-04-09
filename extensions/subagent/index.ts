@@ -212,7 +212,9 @@ function buildModelArgs(selection: ResolvedModelSelection): string[] {
   return args;
 }
 
-function formatModelSelection(result: Pick<SingleResult, "model" | "modelProvider" | "modelSource">): string | undefined {
+function formatModelSelection(
+  result: Pick<SingleResult, "model" | "modelProvider" | "modelSource">,
+): string | undefined {
   if (!result.model) return undefined;
   const modelLabel = result.modelProvider ? `${result.modelProvider}/${result.model}` : result.model;
   switch (result.modelSource) {
@@ -737,7 +739,9 @@ export default function (pi: ExtensionAPI) {
           const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
           if (isError) {
             return {
-              content: [{ type: "text", text: buildFailureMessage(`Chain stopped at step ${i + 1} (${step.agent})`, result) }],
+              content: [
+                { type: "text", text: buildFailureMessage(`Chain stopped at step ${i + 1} (${step.agent})`, result) },
+              ],
               details: makeDetails("chain")(results),
               isError: true,
             };

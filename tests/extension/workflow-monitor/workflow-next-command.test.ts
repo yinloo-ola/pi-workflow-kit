@@ -8,8 +8,7 @@ import {
   VERIFICATION_DEFAULTS,
   type SuperpowersStateSnapshot,
 } from "../../../extensions/workflow-monitor/workflow-handler";
-import { type WorkflowTrackerState } from "../../../extensions/workflow-monitor/workflow-tracker";
-import { createFakePi, getSingleHandler, withTempCwd } from "./test-helpers";
+import { withTempCwd } from "./test-helpers";
 
 function getWorkflowNextCommand() {
   let command: any;
@@ -68,9 +67,7 @@ function setupWithState(seedState: Partial<SuperpowersStateSnapshot> = {}) {
     verification: seedState.verification ?? { ...VERIFICATION_DEFAULTS },
   };
 
-  const sessionEntries = [
-    { type: "custom", customType: "superpowers_state", data: snapshot },
-  ];
+  const sessionEntries = [{ type: "custom", customType: "superpowers_state", data: snapshot }];
 
   // Trigger session_start to reconstruct state into the internal handler
   const sessionStartHandlers = handlers.get("session_start") ?? [];
@@ -307,7 +304,7 @@ describe("/workflow-next handoff validation", () => {
       },
     });
 
-    let newSessionCalls: Array<{ parentSession: string; setup: any }> = [];
+    const newSessionCalls: Array<{ parentSession: string; setup: any }> = [];
     const ctx: any = {
       ...baseCtx,
       ui: { ...baseCtx.ui, notify: () => {}, setEditorText: () => {} },
@@ -347,7 +344,11 @@ describe("/workflow-next handoff validation", () => {
     const notifications: Array<[string, string]> = [];
     const ctx: any = {
       ...baseCtx,
-      ui: { ...baseCtx.ui, notify: (msg: string, level: string) => notifications.push([msg, level]), setEditorText: () => {} },
+      ui: {
+        ...baseCtx.ui,
+        notify: (msg: string, level: string) => notifications.push([msg, level]),
+        setEditorText: () => {},
+      },
       newSession: async () => {
         newSessionCalls += 1;
         return { cancelled: false };
@@ -386,7 +387,11 @@ describe("/workflow-next handoff validation", () => {
     const notifications: Array<[string, string]> = [];
     const ctx: any = {
       ...baseCtx,
-      ui: { ...baseCtx.ui, notify: (msg: string, level: string) => notifications.push([msg, level]), setEditorText: () => {} },
+      ui: {
+        ...baseCtx.ui,
+        notify: (msg: string, level: string) => notifications.push([msg, level]),
+        setEditorText: () => {},
+      },
       newSession: async () => {
         newSessionCalls += 1;
         return { cancelled: false };
@@ -425,7 +430,11 @@ describe("/workflow-next handoff validation", () => {
     const notifications: Array<[string, string]> = [];
     const ctx: any = {
       ...baseCtx,
-      ui: { ...baseCtx.ui, notify: (msg: string, level: string) => notifications.push([msg, level]), setEditorText: () => {} },
+      ui: {
+        ...baseCtx.ui,
+        notify: (msg: string, level: string) => notifications.push([msg, level]),
+        setEditorText: () => {},
+      },
       newSession: async () => {
         newSessionCalls += 1;
         return { cancelled: false };
@@ -464,7 +473,11 @@ describe("/workflow-next handoff validation", () => {
     const notifications: Array<[string, string]> = [];
     const ctx: any = {
       ...baseCtx,
-      ui: { ...baseCtx.ui, notify: (msg: string, level: string) => notifications.push([msg, level]), setEditorText: () => {} },
+      ui: {
+        ...baseCtx.ui,
+        notify: (msg: string, level: string) => notifications.push([msg, level]),
+        setEditorText: () => {},
+      },
       newSession: async () => {
         newSessionCalls += 1;
         return { cancelled: false };

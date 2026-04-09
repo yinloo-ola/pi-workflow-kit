@@ -5,7 +5,7 @@
  * making them straightforward to test and reason about.
  */
 
-import { WORKFLOW_PHASES, type Phase, type PhaseStatus, type WorkflowTrackerState } from "./workflow-tracker";
+import { type Phase, type PhaseStatus, WORKFLOW_PHASES, type WorkflowTrackerState } from "./workflow-tracker";
 
 /** Map of each phase to its immediate next phase (null for finalize). */
 const NEXT_PHASE: Record<Phase, Phase | null> = {
@@ -25,10 +25,7 @@ const NEXT_PHASE: Record<Phase, Phase | null> = {
  *
  * Returns `null` if the handoff is valid, or an error message string.
  */
-export function validateNextWorkflowPhase(
-  currentState: WorkflowTrackerState,
-  requestedPhase: Phase,
-): string | null {
+export function validateNextWorkflowPhase(currentState: WorkflowTrackerState, requestedPhase: Phase): string | null {
   const current = currentState.currentPhase;
 
   if (!current) {
