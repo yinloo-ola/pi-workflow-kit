@@ -1,7 +1,7 @@
 ---
 name: worker
 description: General-purpose worker for isolated tasks
-tools: read, write, edit, bash, lsp
+tools: read, write, edit, bash
 model: claude-sonnet-4-5
 ---
 

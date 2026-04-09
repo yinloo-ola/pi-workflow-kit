@@ -3,7 +3,7 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
-> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-tasks` or `/skill:executing-tasks`.
+> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-tasks`.
 
 # Writing Plans
 

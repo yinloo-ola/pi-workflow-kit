@@ -69,8 +69,13 @@ Each agent gets:
 
 Use the `subagent` tool in parallel mode:
 
+> **Agent scope:** The built-in agents (`worker`, `implementer`, `code-reviewer`, `spec-reviewer`)
+> are bundled with this package. To use them, set `agentScope: "both"`. The default scope `"user"`
+> only loads agents from `~/.pi/agent/agents/`.
+
 ```ts
 subagent({
+  agentScope: "both",   // include bundled agents (worker, implementer, etc.)
   tasks: [
     { agent: "worker", task: "Fix agent-tool-abort.test.ts failures" },
     { agent: "worker", task: "Fix batch-completion-behavior.test.ts failures" },
@@ -154,6 +159,7 @@ Return: Summary of what you found and what you fixed.
 **Dispatch:**
 ```ts
 subagent({
+  agentScope: "both",   // include bundled agents (worker, implementer, etc.)
   tasks: [
     { agent: "worker", task: "Fix agent-tool-abort.test.ts" },
     { agent: "worker", task: "Fix batch-completion-behavior.test.ts" },

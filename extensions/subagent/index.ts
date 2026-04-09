@@ -16,7 +16,7 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentToolResult } from "@mariozechner/pi-agent-core";
+import type { AgentToolResult } from "@mariozechner/pi-coding-agent";
 import type { Message } from "@mariozechner/pi-ai";
 import { StringEnum } from "@mariozechner/pi-ai";
 import { type ExtensionAPI, getMarkdownTheme } from "@mariozechner/pi-coding-agent";
@@ -145,7 +145,7 @@ interface UsageStats {
 
 interface SingleResult {
   agent: string;
-  agentSource: "user" | "project" | "unknown";
+  agentSource: "user" | "project" | "bundled" | "unknown";
   task: string;
   exitCode: number;
   messages: Message[];
@@ -540,7 +540,7 @@ const ChainItem = Type.Object({
 });
 
 const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
-  description: 'Which agent directories to use. Default: "user". Use "both" to include project-local agents.',
+  description: 'Which agent directories to use. Default: "user". Use "both" to include bundled and project-local agents.',
   default: "user",
 });
 
@@ -569,7 +569,8 @@ export default function (pi: ExtensionAPI) {
       "Delegate tasks to specialized subagents with isolated context.",
       "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
       'Default agent scope is "user" (from ~/.pi/agent/agents).',
-      'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
+      'Bundled agents (worker, implementer, code-reviewer, spec-reviewer) require agentScope: "both" or "project".',
+      'To also include project-local agents in .pi/agents, set agentScope: "both".',
     ].join(" "),
     parameters: SubagentParams,
 

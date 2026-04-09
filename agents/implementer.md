@@ -1,7 +1,7 @@
 ---
 name: implementer
 description: Implement tasks via TDD and commit small changes
-tools: read, write, edit, bash, lsp
+tools: read, write, edit, bash
 model: claude-sonnet-4-5
 ---
 

@@ -127,6 +127,11 @@ If failures detected:
 - Subagent checks: correctness, edge cases, code quality, test coverage
 - Subagent reports findings
 
+  Use `agentScope: "both"` to access the bundled `code-reviewer` agent:
+  ```
+  subagent({ agent: "code-reviewer", task: "Review implementation of task N against spec", agentScope: "both" })
+  ```
+
 **Layer 2 — Human sign-off:**
 - Present the subagent review + test results to the human
 - Summarize what was done, what passed, any concerns
@@ -207,10 +212,10 @@ mv docs/plans/<plan-file> docs/plans/completed/
 - Update README if API/surface changed
 - Update inline documentation as needed
 
-### 5. Update pi-superpowers-plus README
-- Document new workflow phases
-- Update skill list (8 skills instead of 12)
-- Note architecture changes
+### 5. Update Project Documentation
+- Update README if project overview has changed
+- Update CONTRIBUTING or architecture docs if structure changed
+- Note any new patterns or conventions introduced
 
 ### 6. Clean Up
 - Remove worktree if one was used

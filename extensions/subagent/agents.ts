@@ -18,7 +18,7 @@ export interface AgentConfig {
   extensions?: string[];
   model?: string;
   systemPrompt: string;
-  source: "user" | "project";
+  source: "user" | "project" | "bundled";
   filePath: string;
 }
 
@@ -27,7 +27,7 @@ export interface AgentDiscoveryResult {
   projectAgentsDir: string | null;
 }
 
-export function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig[] {
+export function loadAgentsFromDir(dir: string, source: "user" | "project" | "bundled"): AgentConfig[] {
   const agents: AgentConfig[] = [];
 
   if (!fs.existsSync(dir)) {
@@ -115,7 +115,7 @@ export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryRe
 
   const userAgents = scope === "project" ? [] : loadAgentsFromDir(userDir, "user");
   const projectAgents = scope === "user" || !projectAgentsDir ? [] : loadAgentsFromDir(projectAgentsDir, "project");
-  const bundledAgents = scope === "user" ? [] : loadAgentsFromDir(bundledAgentsDir, "project");
+  const bundledAgents = scope === "user" ? [] : loadAgentsFromDir(bundledAgentsDir, "bundled");
 
   const agentMap = new Map<string, AgentConfig>();
 
