@@ -48,10 +48,8 @@ describe("buildSubagentEnv", () => {
 
   test("includes PI_ prefixed vars", () => {
     process.env.PI_CUSTOM_CONFIG = "value";
-    process.env.PI_TDD_GUARD_VIOLATIONS_FILE = "/tmp/violations.txt";
     const env = buildSubagentEnv();
     expect(env.PI_CUSTOM_CONFIG).toBe("value");
-    expect(env.PI_TDD_GUARD_VIOLATIONS_FILE).toBe("/tmp/violations.txt");
   });
 
   test("includes NODE_ prefixed vars", () => {
@@ -122,13 +120,13 @@ describe("buildSubagentEnv", () => {
   });
 
   test("merges extra vars passed as argument", () => {
-    const env = buildSubagentEnv({ PI_TDD_GUARD_VIOLATIONS_FILE: "/tmp/v.txt" });
-    expect(env.PI_TDD_GUARD_VIOLATIONS_FILE).toBe("/tmp/v.txt");
+    const env = buildSubagentEnv({ MY_EXTRA_VAR: "/tmp/v.txt" });
+    expect(env.MY_EXTRA_VAR).toBe("/tmp/v.txt");
   });
 
   test("extra vars override filtered env", () => {
-    process.env.PI_TDD_GUARD_VIOLATIONS_FILE = "/old/path";
-    const env = buildSubagentEnv({ PI_TDD_GUARD_VIOLATIONS_FILE: "/new/path" });
-    expect(env.PI_TDD_GUARD_VIOLATIONS_FILE).toBe("/new/path");
+    process.env.MY_EXTRA_VAR = "/old/path";
+    const env = buildSubagentEnv({ MY_EXTRA_VAR: "/new/path" });
+    expect(env.MY_EXTRA_VAR).toBe("/new/path");
   });
 });

@@ -55,7 +55,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     let agentEndSelectCalls = 0;
@@ -93,7 +93,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
     await onAgentEnd({}, ctx);
 
@@ -104,7 +104,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -139,7 +139,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
@@ -153,7 +153,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -196,7 +196,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
@@ -209,7 +209,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const ctx = {
@@ -246,7 +246,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
   });
 
@@ -307,7 +307,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -351,7 +351,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const text = editorTexts.at(-1) ?? "";

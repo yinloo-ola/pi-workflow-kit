@@ -8,7 +8,7 @@ describe("verification gate phase-awareness", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
@@ -36,7 +36,7 @@ describe("verification gate phase-awareness", () => {
       ui: { setWidget: () => {} },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall({ toolCallId: "c1", toolName: "bash", input: { command: "git commit -m 'docs'" } }, ctx);
 

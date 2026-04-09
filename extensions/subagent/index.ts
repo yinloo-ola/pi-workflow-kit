@@ -154,7 +154,6 @@ interface SingleResult {
   model?: string;
   stopReason?: string;
   errorMessage?: string;
-  tddViolations?: number;
   step?: number;
 }
 
@@ -298,9 +297,6 @@ async function runSingleAgent(
 
   let tmpDir: string | null = null;
   let tmpPromptPath: string | null = null;
-  let tddViolationsPath: string | null = null;
-  let tddViolations = 0;
-
   const currentResult: SingleResult = {
     agent: agentName,
     agentSource: agent.source,
@@ -328,7 +324,6 @@ async function runSingleAgent(
   const release = await semaphore.acquire();
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-subagent-"));
-    tddViolationsPath = path.join(tmpDir, "tdd-violations.txt");
     if (agent.systemPrompt.trim()) {
       const tmp = writePromptToTempFile(tmpDir, agent.name, agent.systemPrompt);
       tmpPromptPath = tmp.filePath;
@@ -366,7 +361,7 @@ async function runSingleAgent(
         cwd: resolvedCwd,
         shell: false,
         stdio: ["ignore", "pipe", "pipe"],
-        env: buildSubagentEnv(tddViolationsPath ? { PI_TDD_GUARD_VIOLATIONS_FILE: tddViolationsPath } : undefined),
+        env: buildSubagentEnv(),
       });
       processTracker.add(proc);
       let buffer = "";
@@ -511,12 +506,6 @@ async function runSingleAgent(
     });
 
     currentResult.exitCode = exitCode;
-    if (tddViolationsPath && fs.existsSync(tddViolationsPath)) {
-      const raw = fs.readFileSync(tddViolationsPath, "utf-8").trim();
-      const parsed = Number.parseInt(raw || "0", 10);
-      tddViolations = Number.isFinite(parsed) ? parsed : 0;
-    }
-    currentResult.tddViolations = tddViolations;
     if (wasAborted) throw new Error("Subagent was aborted");
     return currentResult;
   } finally {
@@ -804,7 +793,6 @@ export default function (pi: ExtensionAPI) {
           result: getFinalOutput(result.messages),
           filesChanged: summary.filesChanged,
           testsRan: summary.testsRan,
-          tddViolations: result.tddViolations ?? 0,
         };
         const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
         if (isError) {

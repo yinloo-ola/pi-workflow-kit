@@ -107,7 +107,7 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, mark the planning phase complete: call `plan_tracker` with `{action: "update", status: "complete"}` for the current phase.
+After saving the plan, the workflow monitor automatically tracks phase transitions when you invoke skills.
 
 Then offer execution:
 

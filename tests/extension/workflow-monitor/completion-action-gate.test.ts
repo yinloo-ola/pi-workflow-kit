@@ -52,11 +52,11 @@ async function setupExtension(_state: WorkflowTrackerState) {
   const fake = createFakePi({ withAppendEntry: true });
   workflowMonitorExtension(fake.api as any);
 
-  const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+  const onSessionStart = getSingleHandler(fake.handlers, "session_start");
   const onToolCall = getSingleHandler(fake.handlers, "tool_call");
   const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
-  return { fake, onSessionSwitch, onToolCall, onToolResult };
+  return { fake, onSessionStart, onToolCall, onToolResult };
 }
 
 describe("completion-action gating on bash commands", () => {
@@ -66,10 +66,10 @@ describe("completion-action gating on bash commands", () => {
       "brainstorm",
     );
 
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Do finalize now"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'docs: brainstorm'" } },
@@ -89,10 +89,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx, editorTexts } = createCtx(state, true, ["Do finalize now"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: done'" } },
@@ -115,10 +115,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall, onToolResult } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall, onToolResult } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const toolCallResult = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: done'" } },
@@ -159,10 +159,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git push origin main" } },
@@ -185,10 +185,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Cancel"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "gh pr create --title 'feat'" } },
@@ -208,10 +208,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall, onToolResult } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall, onToolResult } = await setupExtension(state);
     const { ctx } = createCtx(state, false);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const toolCallResult = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: stuff'" } },
@@ -248,10 +248,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "finalize",
     );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "ls -la" } },
@@ -272,10 +272,10 @@ describe("completion-action gating on bash commands", () => {
       },
       "execute",
     );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'final'" } },
@@ -291,10 +291,10 @@ describe("completion-action gating on bash commands", () => {
       { brainstorm: "complete", plan: "complete", execute: "active" },
       "execute",
     );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
       { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'wip'" } },
@@ -316,10 +316,10 @@ describe("completion-action gating on bash commands", () => {
       "finalize",
     );
 
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall({ toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'x'" } }, ctx);
 

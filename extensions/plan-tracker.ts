@@ -190,12 +190,17 @@ export default function (pi: ExtensionAPI) {
   };
 
   // Reconstruct state + widget on session events
-  for (const event of ["session_start", "session_switch", "session_fork", "session_tree"] as const) {
-    pi.on(event, async (_event, ctx) => {
-      reconstructState(ctx);
-      updateWidget(ctx);
-    });
-  }
+  // session_start covers startup, reload, new, resume, fork (pi v0.65.0+)
+  pi.on("session_start", async (_event, ctx) => {
+    reconstructState(ctx);
+    updateWidget(ctx);
+  });
+
+  // session_tree for /tree navigation where a different session branch is loaded
+  pi.on("session_tree", async (_event, ctx) => {
+    reconstructState(ctx);
+    updateWidget(ctx);
+  });
 
   pi.registerTool({
     name: "plan_tracker",

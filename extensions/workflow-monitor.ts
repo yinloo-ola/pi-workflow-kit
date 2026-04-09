@@ -191,22 +191,25 @@ export default function (pi: ExtensionAPI) {
   };
 
   // --- State reconstruction on session events ---
-  for (const event of ["session_start", "session_switch", "session_fork", "session_tree"] as const) {
-    pi.on(event, async (_event, ctx) => {
-      reconstructState(ctx, handler);
-      pendingViolations.clear();
-      pendingVerificationViolations.clear();
-      pendingBranchGates.clear();
-      pendingProcessWarnings.clear();
-      strikes.process = 0;
-      strikes.practice = 0;
-      delete sessionAllowed.process;
-      delete sessionAllowed.practice;
-      branchNoticeShown = false;
-      branchConfirmed = false;
-      updateWidget(ctx);
-    });
+  function resetSessionState(ctx: ExtensionContext) {
+    reconstructState(ctx, handler);
+    pendingViolations.clear();
+    pendingVerificationViolations.clear();
+    pendingBranchGates.clear();
+    pendingProcessWarnings.clear();
+    strikes.process = 0;
+    strikes.practice = 0;
+    delete sessionAllowed.process;
+    delete sessionAllowed.practice;
+    branchNoticeShown = false;
+    branchConfirmed = false;
+    updateWidget(ctx);
   }
+
+  // session_start covers startup, reload, new, resume, fork (pi v0.65.0+)
+  pi.on("session_start", async (_event, ctx) => { resetSessionState(ctx); });
+  // session_tree for /tree navigation where a different session branch is loaded
+  pi.on("session_tree", async (_event, ctx) => { resetSessionState(ctx); });
 
   // --- Input observation (skill detection + skip-confirmation gate) ---
   pi.on("input", async (event, ctx) => {
