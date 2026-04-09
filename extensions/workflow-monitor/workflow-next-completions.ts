@@ -42,7 +42,7 @@ function listArtifactsForPhase(phase: WorkflowNextPhase, typedPrefix: string): A
       .filter((name) => name.endsWith(suffix))
       .map((name) => path.join("docs", "plans", name))
       .filter((relPath) => relPath.startsWith(typedPrefix))
-      .map((relPath) => ({ value: relPath, label: relPath }));
+      .map((relPath) => ({ value: `${phase} ${relPath}`, label: relPath }));
 
     return items.length > 0 ? items : null;
   } catch {

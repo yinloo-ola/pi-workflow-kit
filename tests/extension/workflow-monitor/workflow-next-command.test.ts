@@ -181,7 +181,7 @@ describe("/workflow-next", () => {
 
     expect(items).toEqual([
       {
-        value: "docs/plans/2026-04-09-alpha-design.md",
+        value: "plan docs/plans/2026-04-09-alpha-design.md",
         label: "docs/plans/2026-04-09-alpha-design.md",
       },
     ]);
@@ -199,7 +199,7 @@ describe("/workflow-next", () => {
 
     expect(items).toEqual([
       {
-        value: "docs/plans/2026-04-09-alpha-design.md",
+        value: "plan docs/plans/2026-04-09-alpha-design.md",
         label: "docs/plans/2026-04-09-alpha-design.md",
       },
     ]);
@@ -216,14 +216,14 @@ describe("/workflow-next", () => {
 
     await expect(command.getArgumentCompletions("execute ")).resolves.toEqual([
       {
-        value: "docs/plans/2026-04-09-alpha-implementation.md",
+        value: "execute docs/plans/2026-04-09-alpha-implementation.md",
         label: "docs/plans/2026-04-09-alpha-implementation.md",
       },
     ]);
 
     await expect(command.getArgumentCompletions("finalize ")).resolves.toEqual([
       {
-        value: "docs/plans/2026-04-09-alpha-implementation.md",
+        value: "finalize docs/plans/2026-04-09-alpha-implementation.md",
         label: "docs/plans/2026-04-09-alpha-implementation.md",
       },
     ]);
