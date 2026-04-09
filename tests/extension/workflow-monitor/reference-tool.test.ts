@@ -15,6 +15,10 @@ describe("REFERENCE_TOPICS", () => {
     expect(REFERENCE_TOPICS).toContain("debug-defense-in-depth");
     expect(REFERENCE_TOPICS).toContain("debug-condition-waiting");
   });
+
+  test("includes executing-tasks-guide", () => {
+    expect(REFERENCE_TOPICS).toContain("executing-tasks-guide");
+  });
 });
 
 describe("loadReference", () => {
@@ -60,6 +64,12 @@ describe("loadReference", () => {
   test("loads debug-condition-waiting topic", async () => {
     const content = await loadReference("debug-condition-waiting");
     expect(content).toContain("condition");
+    expect(content).not.toContain("file not found");
+  });
+
+  test("loads executing-tasks-guide", async () => {
+    const content = await loadReference("executing-tasks-guide");
+    expect(content).toContain("executing-tasks");
     expect(content).not.toContain("file not found");
   });
 

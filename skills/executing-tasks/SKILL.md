@@ -44,7 +44,6 @@ For each task in the plan:
 
 Update plan_tracker:
 ```
-plan_tracker({ action: "update", index: N, status: "in_progress" })
 plan_tracker({ action: "update", index: N, phase: "define" })
 ```
 
@@ -86,7 +85,7 @@ For each attempt:
 
 ```
 plan_tracker({ action: "update", index: N, phase: "execute" })
-plan_tracker({ action: "update", index: N, executeAttempts: 1 })  // after each attempt
+plan_tracker({ action: "update", index: N, attempts: 1 })  // after each attempt (routes to executeAttempts based on phase)
 ```
 
 **Escalation on budget exhaustion:**
@@ -152,7 +151,7 @@ If issues found → move to Fix.
 
 ```
 plan_tracker({ action: "update", index: N, phase: "fix" })
-plan_tracker({ action: "update", index: N, fixAttempts: 1 })
+plan_tracker({ action: "update", index: N, attempts: 1 })  // routes to fixAttempts based on phase
 ```
 
 **Escalation on budget exhaustion:**

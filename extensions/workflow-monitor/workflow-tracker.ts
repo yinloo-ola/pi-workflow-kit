@@ -152,8 +152,13 @@ export class WorkflowTracker {
       const skill = parseSkillName(line);
       if (!skill) continue;
       const phase = SKILL_TO_PHASE[skill] ?? null;
-
-      if (phase && this.advanceTo(phase)) changed = true;
+      if (!phase) continue;
+      // Guard against backward navigation: skills shared across phases (e.g. executing-tasks
+      // covers both execute and finalize) must not reset state when re-invoked in a later phase.
+      const currentIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+      const targetIdx = WORKFLOW_PHASES.indexOf(phase);
+      if (targetIdx < currentIdx) continue;
+      if (this.advanceTo(phase)) changed = true;
     }
 
     return changed;
@@ -164,6 +169,13 @@ export class WorkflowTracker {
     if (!match) return false;
     const phase = SKILL_TO_PHASE[match[1]];
     if (!phase) return false;
+    // Guard against backward navigation: some skills (e.g. executing-tasks) serve
+    // multiple phases. Re-reading their SKILL.md during a later phase (e.g. finalize)
+    // must not reset workflow state. Rely on plan_tracker init or explicit /workflow-reset
+    // to restart from scratch.
+    const currentIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+    const targetIdx = WORKFLOW_PHASES.indexOf(phase);
+    if (targetIdx < currentIdx) return false;
     return this.advanceTo(phase);
   }
 

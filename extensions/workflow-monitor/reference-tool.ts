@@ -17,6 +17,7 @@ const TOPIC_MAP: Record<string, string> = {
   "debug-condition-waiting": "skills/systematic-debugging/condition-based-waiting.md",
   "brainstorming-guide": "skills/brainstorming/SKILL.md",
   "writing-plans-guide": "skills/writing-plans/SKILL.md",
+  "executing-tasks-guide": "skills/executing-tasks/SKILL.md",
   "dispatching-agents-guide": "skills/dispatching-parallel-agents/SKILL.md",
   "receiving-review-guide": "skills/receiving-code-review/SKILL.md",
   "worktree-guide": "skills/using-git-worktrees/SKILL.md",
