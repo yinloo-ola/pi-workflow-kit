@@ -153,6 +153,8 @@ interface SingleResult {
   stderr: string;
   usage: UsageStats;
   model?: string;
+  modelProvider?: string;
+  modelSource?: "agent" | "parent" | "default";
   stopReason?: string;
   errorMessage?: string;
   step?: number;
@@ -165,6 +167,32 @@ interface SubagentDetails {
   results: SingleResult[];
 }
 
+interface ParentModelInfo {
+  id: string;
+  provider: string;
+}
+
+interface ResolvedModelSelection {
+  model: string;
+  provider?: string;
+  source: "agent" | "parent" | "default";
+}
+
+function resolveModelSelection(
+  agentModel: string | undefined,
+  parentModel: ParentModelInfo | undefined,
+): ResolvedModelSelection {
+  if (agentModel) {
+    return { model: agentModel, provider: undefined, source: "agent" };
+  }
+
+  if (parentModel?.id) {
+    return { model: parentModel.id, provider: parentModel.provider, source: "parent" };
+  }
+
+  return { model: DEFAULT_MODEL, provider: undefined, source: "default" };
+}
+
 function getFinalOutput(messages: Message[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
@@ -175,6 +203,34 @@ function getFinalOutput(messages: Message[]): string {
     }
   }
   return "";
+}
+
+function buildModelArgs(selection: ResolvedModelSelection): string[] {
+  const args: string[] = [];
+  if (selection.provider) args.push("--provider", selection.provider);
+  args.push("--model", selection.model);
+  return args;
+}
+
+function formatModelSelection(result: Pick<SingleResult, "model" | "modelProvider" | "modelSource">): string | undefined {
+  if (!result.model) return undefined;
+  const modelLabel = result.modelProvider ? `${result.modelProvider}/${result.model}` : result.model;
+  switch (result.modelSource) {
+    case "parent":
+      return `${modelLabel} (inherited from parent session)`;
+    case "agent":
+      return `${modelLabel} (pinned by agent config)`;
+    case "default":
+      return `${modelLabel} (default fallback)`;
+    default:
+      return modelLabel;
+  }
+}
+
+function buildFailureMessage(prefix: string, result: SingleResult): string {
+  const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
+  const modelSelection = formatModelSelection(result);
+  return modelSelection ? `${prefix}: ${errorMsg}\nModel: ${modelSelection}` : `${prefix}: ${errorMsg}`;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: pi SDK message content type
@@ -227,7 +283,7 @@ function collectSummary(messages: Message[]): { filesChanged: string[]; testsRan
   return { filesChanged: Array.from(files), testsRan };
 }
 
-export const __internal = { collectSummary };
+export const __internal = { collectSummary, resolveModelSelection };
 
 async function mapWithConcurrencyLimit<TIn, TOut>(
   items: TIn[],
@@ -265,6 +321,7 @@ async function runSingleAgent(
   task: string,
   cwd: string | undefined,
   step: number | undefined,
+  parentModel: ParentModelInfo | undefined,
   signal: AbortSignal | undefined,
   onUpdate: OnUpdateCallback | undefined,
   makeDetails: (results: SingleResult[]) => SubagentDetails,
@@ -288,8 +345,8 @@ async function runSingleAgent(
   }
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
-  if (agent.model) args.push("--model", agent.model);
-  else args.push("--model", DEFAULT_MODEL);
+  const selectedModel = resolveModelSelection(agent.model, parentModel);
+  args.push(...buildModelArgs(selectedModel));
   if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
   if (agent.extensions) {
     for (const ext of agent.extensions) {
@@ -307,7 +364,9 @@ async function runSingleAgent(
     messages: [],
     stderr: "",
     usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
-    model: agent.model,
+    model: selectedModel.model,
+    modelProvider: selectedModel.provider,
+    modelSource: selectedModel.source,
     step,
   };
 
@@ -596,6 +655,7 @@ export default function (pi: ExtensionAPI) {
           projectAgentsDir: discovery.projectAgentsDir,
           results,
         });
+      const parentModel = ctx.model ? { id: ctx.model.id, provider: ctx.model.provider } : undefined;
 
       if (modeCount !== 1) {
         const available = agents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
@@ -665,6 +725,7 @@ export default function (pi: ExtensionAPI) {
             taskWithContext,
             step.cwd,
             i + 1,
+            parentModel,
             signal,
             chainUpdate,
             makeDetails("chain"),
@@ -675,9 +736,8 @@ export default function (pi: ExtensionAPI) {
 
           const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
           if (isError) {
-            const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
             return {
-              content: [{ type: "text", text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}` }],
+              content: [{ type: "text", text: buildFailureMessage(`Chain stopped at step ${i + 1} (${step.agent})`, result) }],
               details: makeDetails("chain")(results),
               isError: true,
             };
@@ -737,6 +797,7 @@ export default function (pi: ExtensionAPI) {
             t.task,
             t.cwd,
             undefined,
+            parentModel,
             signal,
             // Per-task update callback
             (partial) => {
@@ -779,6 +840,7 @@ export default function (pi: ExtensionAPI) {
           params.task,
           params.cwd,
           undefined,
+          parentModel,
           signal,
           onUpdate,
           makeDetails("single"),
@@ -800,9 +862,8 @@ export default function (pi: ExtensionAPI) {
         };
         const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
         if (isError) {
-          const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
           return {
-            content: [{ type: "text", text: `Agent ${result.stopReason || "failed"}: ${errorMsg}` }],
+            content: [{ type: "text", text: buildFailureMessage(`Agent ${result.stopReason || "failed"}`, result) }],
             details: stableDetails,
             isError: true,
           };

@@ -306,6 +306,16 @@ A bundled `subagent` tool lets the orchestrating agent spawn isolated subprocess
 
 Agent definitions live in `agents/*.md` and use YAML frontmatter to declare tools, model, extensions, and a system prompt body.
 
+### Model Selection Precedence
+
+When the `subagent` tool launches a child `pi` process, it resolves the model in this order:
+
+1. Agent frontmatter `model:`
+2. The parent session's current provider + model
+3. Bundled fallback `DEFAULT_MODEL`
+
+If a subagent inherits the parent session model, Pi passes both `--provider` and `--model` to the child process to avoid ambiguous cross-provider lookups.
+
 ### Single Agent
 
 ```ts
@@ -349,6 +359,12 @@ extensions: ../extensions/my-guard.ts
 
 System prompt body here.
 ```
+
+If `model:` is omitted, the agent will inherit the parent session's current model when available, and only fall back to the bundled default if there is no active session model.
+
+### Troubleshooting
+
+If a bundled reviewer or worker unexpectedly asks for the wrong provider credentials, check whether the agent is explicitly pinned with `model:`. Unpinned agents now inherit the parent session's current model, which avoids cases where a non-Anthropic session accidentally launched a Claude-based subagent and failed with an Anthropic API key error.
 
 ## Compared to Superpowers
 
