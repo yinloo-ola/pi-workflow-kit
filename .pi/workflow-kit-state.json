@@ -1,0 +1,43 @@
+{
+  "workflow": {
+    "phases": {
+      "brainstorm": "pending",
+      "plan": "pending",
+      "execute": "pending",
+      "finalize": "pending"
+    },
+    "currentPhase": null,
+    "artifacts": {
+      "brainstorm": null,
+      "plan": null,
+      "execute": null,
+      "finalize": null
+    },
+    "prompted": {
+      "brainstorm": false,
+      "plan": false,
+      "execute": false,
+      "finalize": false
+    }
+  },
+  "tdd": {
+    "phase": "idle",
+    "testFiles": [],
+    "sourceFiles": [
+      "src/a.ts",
+      "src/b.ts"
+    ],
+    "redVerificationPending": false,
+    "nonCodeMode": false
+  },
+  "debug": {
+    "active": false,
+    "investigated": false,
+    "fixAttempts": 0
+  },
+  "verification": {
+    "verified": false,
+    "verificationWaived": false
+  },
+  "savedAt": 1775742487850
+}
