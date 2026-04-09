@@ -3,6 +3,12 @@ import * as path from "node:path";
 import type { AutocompleteItem } from "@mariozechner/pi-tui";
 
 const WORKFLOW_NEXT_PHASES = ["brainstorm", "plan", "execute", "finalize"] as const;
+const ARTIFACT_SUFFIX_BY_PHASE = {
+  brainstorm: null,
+  plan: "-design.md",
+  execute: "-implementation.md",
+  finalize: "-implementation.md",
+} as const;
 
 type WorkflowNextPhase = (typeof WORKFLOW_NEXT_PHASES)[number];
 
@@ -23,31 +29,39 @@ function getPhaseCompletions(prefix: string): AutocompleteItem[] | null {
   return null;
 }
 
-function listPlanArtifacts(suffix: string, typedPrefix: string): AutocompleteItem[] | null {
+function listArtifactsForPhase(phase: WorkflowNextPhase, typedPrefix: string): AutocompleteItem[] | null {
+  const suffix = ARTIFACT_SUFFIX_BY_PHASE[phase];
+  if (!suffix) return null;
+
   const plansDir = path.join(process.cwd(), "docs", "plans");
   if (!fs.existsSync(plansDir)) return null;
 
-  const items = fs
-    .readdirSync(plansDir)
-    .filter((name) => name.endsWith(suffix))
-    .map((name) => path.join("docs", "plans", name))
-    .filter((relPath) => relPath.startsWith(typedPrefix))
-    .map((relPath) => ({ value: relPath, label: relPath }));
+  try {
+    const items = fs
+      .readdirSync(plansDir)
+      .filter((name) => name.endsWith(suffix))
+      .map((name) => path.join("docs", "plans", name))
+      .filter((relPath) => relPath.startsWith(typedPrefix))
+      .map((relPath) => ({ value: relPath, label: relPath }));
 
-  return items.length > 0 ? items : null;
+    return items.length > 0 ? items : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getWorkflowNextCompletions(prefix: string): Promise<AutocompleteItem[] | null> {
   const phaseCompletions = getPhaseCompletions(prefix);
   if (phaseCompletions) return phaseCompletions;
 
-  const match = prefix.replace(/^\s+/, "").match(/^(\S+)(?:\s+(.*))?$/);
-  const phase = match?.[1] ?? "";
+  const normalized = prefix.replace(/^\s+/, "");
+  const match = normalized.match(/^(\S+)(?:\s+(.*))?$/);
+  const phase = match?.[1] as WorkflowNextPhase | undefined;
   const artifactPrefix = match?.[2] ?? "";
   const startingSecondArg = /\s$/.test(prefix) || artifactPrefix.length > 0;
 
-  if (phase === "plan" && startingSecondArg) {
-    return listPlanArtifacts("-design.md", artifactPrefix);
+  if (phase && WORKFLOW_NEXT_PHASES.includes(phase) && startingSecondArg) {
+    return listArtifactsForPhase(phase, artifactPrefix);
   }
 
   return null;

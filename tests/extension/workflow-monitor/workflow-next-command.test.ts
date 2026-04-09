@@ -138,6 +138,47 @@ describe("/workflow-next", () => {
     ]);
   });
 
+  test("suggests only implementation artifacts for execute and finalize", async () => {
+    const tempDir = withTempCwd();
+    const plansDir = path.join(tempDir, "docs", "plans");
+    fs.mkdirSync(plansDir, { recursive: true });
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-design.md"), "");
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-implementation.md"), "");
+
+    const command = getWorkflowNextCommand();
+
+    await expect(command.getArgumentCompletions("execute ")).resolves.toEqual([
+      {
+        value: "docs/plans/2026-04-09-alpha-implementation.md",
+        label: "docs/plans/2026-04-09-alpha-implementation.md",
+      },
+    ]);
+
+    await expect(command.getArgumentCompletions("finalize ")).resolves.toEqual([
+      {
+        value: "docs/plans/2026-04-09-alpha-implementation.md",
+        label: "docs/plans/2026-04-09-alpha-implementation.md",
+      },
+    ]);
+  });
+
+  test("returns null for brainstorm artifact completion", async () => {
+    const command = getWorkflowNextCommand();
+
+    await expect(command.getArgumentCompletions("brainstorm ")).resolves.toBeNull();
+  });
+
+  test("returns null when docs/plans is missing or has no matching files", async () => {
+    withTempCwd();
+    const command = getWorkflowNextCommand();
+    await expect(command.getArgumentCompletions("execute ")).resolves.toBeNull();
+
+    const plansDir = path.join(process.cwd(), "docs", "plans");
+    fs.mkdirSync(plansDir, { recursive: true });
+    fs.writeFileSync(path.join(plansDir, "2026-04-09-alpha-design.md"), "");
+    await expect(command.getArgumentCompletions("execute ")).resolves.toBeNull();
+  });
+
   test("rejects invalid phase values", async () => {
     let handler: any;
     const fakePi: any = {
