@@ -1,6 +1,6 @@
 # Roadmap
 
-Short-term priorities for `pi-superpowers-plus`:
+Short-term priorities for `pi-workflow-kit`:
 
 - keep the simplified 4-phase workflow coherent across skills, extensions, and docs
 - improve `executing-tasks` ergonomics for real feature delivery

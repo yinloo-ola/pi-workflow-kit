@@ -1,6 +1,6 @@
-# pi-superpowers-plus
+# pi-workflow-kit
 
-![pi-superpowers-plus banner](banner-plus.jpg)
+![pi-workflow-kit banner](banner-plus.jpg)
 
 Structured workflow skills and active enforcement extensions for [pi](https://github.com/badlogic/pi-mono).
 
@@ -13,7 +13,7 @@ Your coding agent doesn't just know the rules - it follows them. Skills teach th
 **3 extensions** that run silently in the background:
 - **Workflow Monitor** — warns on TDD violations, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
 - **Subagent** — registers a `subagent` tool for dispatching implementation and review work to isolated subprocess agents, with bundled agent definitions and structured results.
-- **Plan Tracker** — tracks per-task progress, type, phase, and attempt counts with a TUI widget.
+- **Task Tracker** — tracks per-task progress, type, phase, and attempt counts with a TUI widget.
 
 **After installation**:
 - Any time the agent writes a source file without a failing test, it gets a warning injected into the tool result.
@@ -30,43 +30,73 @@ More detail:
 
 ## Install
 
-```bash
-pi install npm:pi-superpowers-plus
-```
-
-Or from git:
+### From npm
 
 ```bash
-pi install git:github.com/coctostan/pi-superpowers-plus
+pi install npm:@tianhai/pi-workflow-kit
 ```
 
-Or add to `.pi/settings.json` (project-level) or `~/.pi/agent/config.json` (global):
+### From a git repository
+
+```bash
+pi install git:github.com/yinloo-ola/pi-workflow-kit.git
+```
+
+### From **your own maintained repo or fork**
+
+If you want to maintain your own version of this package, install directly from your repository instead of the upstream one. For this repo, the maintained git install target is:
+
+```bash
+pi install git:github.com/yinloo-ola/pi-workflow-kit.git
+```
+
+For a different fork/repo, use:
+
+```bash
+pi install git:github.com/<your-user>/<your-repo>.git
+```
+
+Examples:
+
+```bash
+pi install git:github.com/acme/pi-workflow-kit.git
+pi install git:github.com/yinloo-ola/pi-workflow-kit.git
+```
+
+You can also point Pi config at your repo instead of the npm package.
+
+Project-level `.pi/settings.json` or global `~/.pi/agent/config.json`:
 
 ```json
 {
-  "packages": ["npm:pi-superpowers-plus"]
+  "packages": ["git:github.com/yinloo-ola/pi-workflow-kit.git"]
 }
 ```
 
-No configuration required. Skills and extensions activate automatically.
+Use this when:
+- you maintain custom skills/extensions in your own repo
+- you do not want to depend on upstream releases
+- you want your team to install the exact version you control
+
+No configuration required after install. Skills and extensions activate automatically.
 
 ## Support
 
-- Questions / support: https://github.com/coctostan/pi-superpowers-plus/discussions
-- Bugs: https://github.com/coctostan/pi-superpowers-plus/issues/new/choose
-- Feature requests: https://github.com/coctostan/pi-superpowers-plus/issues/new/choose
+- Questions / support: https://github.com/yinloo-ola/pi-workflow-kit/discussions
+- Bugs: https://github.com/yinloo-ola/pi-workflow-kit/issues/new/choose
+- Feature requests: https://github.com/yinloo-ola/pi-workflow-kit/issues/new/choose
 - Roadmap: [`ROADMAP.md`](ROADMAP.md)
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## Upgrading from `pi-superpowers`
 
-If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-superpowers), `pi-superpowers-plus` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
+If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-superpowers), `@tianhai/pi-workflow-kit` is intended as a drop-in upgrade: you keep the same skill names and workflow, but you also get **active, runtime enforcement** via extensions.
 
 ### What stays the same
 - The same core workflow skills (e.g. `/skill:brainstorming`, `/skill:writing-plans`, `/skill:executing-tasks`, etc.)
 - The same "structured workflow" idea and phase order
 
-### What's new in `pi-superpowers-plus`
+### What's new in `pi-workflow-kit`
 - **Workflow Monitor extension** that observes tool calls/results and injects warnings directly into output
 - **TDD discipline warnings** when writing source code without a failing test (advisory, not blocking)
 - **Three-scenario TDD model** — new feature (full TDD), modifying tested code (run existing tests), trivial change (judgment) — applied consistently across skills, agent profiles, and plan templates
@@ -75,24 +105,24 @@ If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-sup
 - **Workflow tracking + boundary prompts** (and `/workflow-next` handoff)
 - **Branch safety reminders** (first tool result shows current branch/SHA; first write/edit warns to confirm branch/worktree)
 - **Finalize reminder prefill** (docs + learnings)
-- **Plan Tracker tool** (`plan_tracker`) for typed task lists + TUI progress
+- **Task Tracker tool** (`plan_tracker`) for typed task lists + TUI progress
 
 ### Migration
-Replace `pi-superpowers` with `pi-superpowers-plus` in your config:
+Replace `pi-superpowers` with `@tianhai/pi-workflow-kit` in your config:
 
 ```json
 {
-  "packages": ["npm:pi-superpowers-plus"]
+  "packages": ["npm:@tianhai/pi-workflow-kit"]
 }
 ```
 
 Notes:
 - If you keep both packages enabled, you may get duplicate/competing skill guidance.
-- `pi-superpowers-plus` is more "opinionated" at runtime: it will inject warnings into tool output and may gate shipping commands until verification has passed.
+- `pi-workflow-kit` is more "opinionated" at runtime: it will inject warnings into tool output and may gate shipping commands until verification has passed.
 
 ### How the skills differ (leveraging pi)
 
-`pi-superpowers-plus` uses pi's runtime capabilities alongside skill content:
+`pi-workflow-kit` uses pi's runtime capabilities alongside skill content:
 - **Extensions** enforce behavior *while you work* (TDD/Debug/Verification monitors, branch safety notices) — runtime warnings complement inline skill guidance.
 - **Three-scenario TDD** — skills, agent profiles, and plan templates all use the same model: new feature (full TDD), modifying tested code (run existing tests), trivial change (use judgment). Runtime warnings are advisory nudges, not hard blocks.
 - The **TUI** shows state (workflow/TDD) and prompts at boundaries.
@@ -226,7 +256,7 @@ workflow_reference({ topic: "debug-defense-in-depth" })   - Multi-layer validati
 workflow_reference({ topic: "debug-condition-waiting" })  - Replace timeouts with conditions
 ```
 
-### Plan Tracker
+### Task Tracker
 
 The `plan_tracker` tool stores task state in the session and shows progress in the TUI:
 
@@ -324,7 +354,7 @@ System prompt body here.
 
 Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, ported to pi as [pi-superpowers](https://github.com/coctostan/pi-superpowers), then extended with active enforcement.
 
-| | [Superpowers](https://github.com/obra/superpowers) | [pi-superpowers](https://github.com/coctostan/pi-superpowers) | **pi-superpowers-plus** |
+| | [Superpowers](https://github.com/obra/superpowers) | [pi-superpowers](https://github.com/coctostan/pi-superpowers) | **pi-workflow-kit** |
 |---|---|---|---|
 | **Platform** | Claude Code | pi | pi |
 | **Skills** | 8 workflow skills | Same 12 skills (pi port) → now 8 skills (simplified workflow) | **8 skills** (simplified: 4-phase workflow with unified executing-tasks) |
@@ -337,12 +367,12 @@ Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, po
 | **TDD in subagents** | — | — | Three-scenario TDD instructions in agent profiles + prompt templates + runtime warnings |
 | **Structured results** | — | — | filesChanged, testsRan per agent |
 | **Reference content** | Everything in SKILL.md | Everything in SKILL.md | Inline guidance + on-demand `workflow_reference` tool for extended detail |
-| **Plan tracker** | — | — | `plan_tracker` tool with TUI progress widget |
+| **Task tracker** | — | — | `plan_tracker` tool with TUI progress widget |
 
 ## Architecture
 
 ```
-pi-superpowers-plus/
+pi-workflow-kit/
 ├── agents/                            # Bundled agent definitions + shared config
 │   ├── implementer.md                 # Strict TDD implementation agent
 │   ├── worker.md                      # General-purpose task agent
@@ -395,9 +425,84 @@ npm test                    # Run all tests
 npx vitest run tests/extension/workflow-monitor/tdd-monitor.test.ts   # Run one file
 ```
 
+## Publishing releases
+
+Package name:
+
+```text
+@tianhai/pi-workflow-kit
+```
+
+Publish the rebranded package as:
+
+```bash
+npm publish --access public
+```
+
+Typical release flow:
+
+```bash
+npm run check
+npm version patch
+git push origin main --follow-tags
+```
+
+### Release checklist
+
+- [ ] `package.json` has the correct name: `@tianhai/pi-workflow-kit`
+- [ ] `repository.url` points to `https://github.com/yinloo-ola/pi-workflow-kit.git`
+- [ ] `npm run check` passes locally
+- [ ] `npm pack --dry-run` shows the expected files
+- [ ] you are logged into npm with an account that can publish the package
+- [ ] npm trusted publishing is configured for this GitHub repo, or you are publishing manually
+- [ ] the version bump matches the release scope (`patch`, `minor`, or `major`)
+- [ ] the git tag created by `npm version` is pushed with `--follow-tags`
+- [ ] install instructions in the README still match the package name
+
+### Manual publish
+
+```bash
+npm run check
+npm pack --dry-run
+npm publish --access public
+```
+
+### GitHub Actions publish
+
+If GitHub trusted publishing is configured for this repo, pushing a `v*` tag will trigger `.github/workflows/publish.yml`.
+
+```bash
+npm run check
+npm version patch
+git push origin main --follow-tags
+```
+
+Users should then install with:
+
+```bash
+pi install npm:@tianhai/pi-workflow-kit
+```
+
 ## Attribution
 
 Skill content adapted from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). This package builds on [pi-superpowers](https://github.com/coctostan/pi-superpowers) with active enforcement extensions, leaner skill files, on-demand reference content, and workflow tracking.
+
+## Migration from `@yinlootan/pi-superpowers-plus`
+
+Replace the old package name with:
+
+```json
+{
+  "packages": ["npm:@tianhai/pi-workflow-kit"]
+}
+```
+
+Runtime contracts remain unchanged in this rebrand:
+- `plan_tracker`
+- `workflow_reference`
+- `/workflow-next`
+- `/workflow-reset`
+- existing skill names
 
 ## License
 

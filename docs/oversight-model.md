@@ -1,6 +1,6 @@
 # Oversight Model
 
-`pi-superpowers-plus` combines **skills** and **extensions**.
+`pi-workflow-kit` combines **skills** and **extensions**.
 
 ## Skills
 

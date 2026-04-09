@@ -1,5 +1,5 @@
 /**
- * Workflow Monitor Extension
+ * Workflow Kit monitor extension.
  *
  * Observes tool_call and tool_result events to:
  * - Track TDD phase (RED→GREEN→REFACTOR) and inject warnings on violations
@@ -855,7 +855,7 @@ export default function (pi: ExtensionAPI) {
   // --- Reference Tool ---
   pi.registerTool({
     name: "workflow_reference",
-    label: "Workflow Reference",
+    label: "Workflow Guide",
     description: `Detailed guidance for workflow skills. Topics: ${REFERENCE_TOPICS.join(", ")}`,
     parameters: Type.Object({
       topic: StringEnum(REFERENCE_TOPICS as unknown as readonly [string, ...string[]], {

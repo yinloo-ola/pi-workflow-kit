@@ -1,7 +1,7 @@
 {
-  "name": "pi-superpowers-plus",
+  "name": "@tianhai/pi-workflow-kit",
   "version": "0.4.1",
-  "description": "Superpowers workflow skills adapted for pi",
+  "description": "Workflow skills and enforcement extensions for pi",
   "keywords": [
     "pi-package"
   ],
@@ -11,10 +11,10 @@
     "check": "biome check . && vitest run"
   },
   "license": "MIT",
-  "author": "coctostan",
+  "author": "yinloo-ola",
   "repository": {
     "type": "git",
-    "url": "https://github.com/coctostan/pi-superpowers-plus.git"
+    "url": "https://github.com/yinloo-ola/pi-workflow-kit.git"
   },
   "files": [
     "extensions/",

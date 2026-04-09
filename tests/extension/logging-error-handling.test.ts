@@ -32,7 +32,7 @@ describe("logging error handling", () => {
     log.info("should fail");
 
     expect(stderrSpy).toHaveBeenCalledTimes(1);
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-superpowers-plus"));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-workflow-kit"));
   });
 
   test("stderr fallback fires only once even with repeated failures", () => {
@@ -72,7 +72,7 @@ describe("logging error handling", () => {
     log.info("should trigger rotation failure");
 
     expect(stderrSpy).toHaveBeenCalledTimes(1);
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-superpowers-plus"));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-workflow-kit"));
   });
 
   test("logger works normally when filesystem is healthy", () => {

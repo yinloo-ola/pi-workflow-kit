@@ -1,6 +1,6 @@
 # Workflow Phases
 
-`pi-superpowers-plus` tracks four global phases:
+`pi-workflow-kit` tracks four global phases:
 
 ```text
 brainstorm → plan → execute → finalize

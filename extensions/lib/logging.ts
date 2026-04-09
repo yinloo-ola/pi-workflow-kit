@@ -1,8 +1,9 @@
 /**
- * File-based logger for pi-superpowers-plus.
+ * File-based logger for pi-workflow-kit.
  *
- * Default singleton writes to ~/.pi/logs/superpowers-plus.log.
- * Info/warn/error always write. Debug writes only when PI_SUPERPOWERS_DEBUG=1.
+ * Default singleton writes to ~/.pi/logs/workflow-kit.log.
+ * Info/warn/error always write. Debug writes when PI_WORKFLOW_KIT_DEBUG=1.
+ * The legacy PI_SUPERPOWERS_DEBUG env var is also honored for compatibility.
  * One-deep rotation when file exceeds 5 MB.
  */
 
@@ -70,7 +71,7 @@ export function createLogger(logPath: string, options?: LoggerOptions): Logger {
     stderrFallbackFired = true;
     const detail = err instanceof Error ? err.message : String(err);
     process.stderr.write(
-      `[pi-superpowers-plus] Logger ${context} failed: ${detail}. Further log errors will be silenced.\n`,
+      `[pi-workflow-kit] Logger ${context} failed: ${detail}. Further log errors will be silenced.\n`,
     );
   }
 
@@ -130,8 +131,8 @@ export function createLogger(logPath: string, options?: LoggerOptions): Logger {
 }
 
 /** Default singleton logger used across all extensions. */
-const LOG_PATH = path.join(os.homedir(), ".pi", "logs", "superpowers-plus.log");
+const LOG_PATH = path.join(os.homedir(), ".pi", "logs", "workflow-kit.log");
 
 export const log: Logger = createLogger(LOG_PATH, {
-  verbose: process.env.PI_SUPERPOWERS_DEBUG === "1",
+  verbose: process.env.PI_WORKFLOW_KIT_DEBUG === "1" || process.env.PI_SUPERPOWERS_DEBUG === "1",
 });

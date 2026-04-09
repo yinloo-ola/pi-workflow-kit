@@ -1,5 +1,5 @@
 /**
- * Plan Tracker Extension
+ * Task Tracker Extension
  *
  * A native pi tool for tracking plan progress with per-task phase and attempt tracking.
  * State is stored in tool result details for proper branching support.
@@ -245,7 +245,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerTool({
     name: PLAN_TRACKER_TOOL_NAME,
-    label: "Plan Tracker",
+    label: "Task Tracker",
     description:
       "Track implementation plan progress with per-task phase and attempt tracking. Actions: init (set task list), update (change task status/phase/type/attempts), status (show current state), clear (remove plan).",
     parameters: PlanTrackerParams,
