@@ -275,7 +275,7 @@ describe("file-based state persistence", () => {
     withTempCwd();
 
     const result = getStateFilePath();
-    expect(result).toMatch(/\.pi\/superpowers-state\.json$/);
+    expect(result).toMatch(/\.pi\/workflow-kit-state\.json$/);
   });
 
   test("reconstructState reads from file when it exists", () => {
@@ -705,7 +705,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
     expect(fake.appendedEntries[0]?.customType).toBe("superpowers_state");
     expect(fake.appendedEntries[0]?.data.workflow.currentPhase).toBe("plan");
 
-    const statePath = path.join(tempDir, ".pi", "superpowers-state.json");
+    const statePath = path.join(tempDir, ".pi", "workflow-kit-state.json");
     expect(fs.existsSync(statePath)).toBe(true);
 
     const persisted = JSON.parse(fs.readFileSync(statePath, "utf-8"));
