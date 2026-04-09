@@ -64,10 +64,6 @@ async function selectValue<T extends string>(
 
 const SUPERPOWERS_STATE_ENTRY_TYPE = "superpowers_state";
 
-function getLegacyStateFilePath(): string {
-  return path.join(process.cwd(), ".pi", "superpowers-state.json");
-}
-
 export function getStateFilePath(): string {
   return path.join(process.cwd(), ".pi", "workflow-kit-state.json");
 }
@@ -81,17 +77,10 @@ export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler
 
   if (stateFilePath !== false) {
     try {
-      const newPath = stateFilePath ?? getStateFilePath();
-      if (fs.existsSync(newPath)) {
-        const raw = fs.readFileSync(newPath, "utf-8");
+      const statePath = stateFilePath ?? getStateFilePath();
+      if (fs.existsSync(statePath)) {
+        const raw = fs.readFileSync(statePath, "utf-8");
         fileData = JSON.parse(raw);
-      } else if (stateFilePath === undefined) {
-        // Legacy fallback: try the old filename only when no explicit path is given.
-        const legacyPath = getLegacyStateFilePath();
-        if (fs.existsSync(legacyPath)) {
-          const raw = fs.readFileSync(legacyPath, "utf-8");
-          fileData = JSON.parse(raw);
-        }
       }
     } catch (err) {
       log.warn(
