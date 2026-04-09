@@ -1,6 +1,6 @@
 {
   "name": "@tianhai/pi-workflow-kit",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Workflow skills and enforcement extensions for pi",
   "keywords": [
     "pi-package"
