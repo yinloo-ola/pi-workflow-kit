@@ -7,3 +7,9 @@
  * This tool id intentionally remains unchanged across the rebrand.
  */
 export const PLAN_TRACKER_TOOL_NAME = "plan_tracker";
+
+/**
+ * Custom entry type written by workflow-monitor's /workflow-reset so that
+ * plan-tracker's reconstructState picks up an empty task list.
+ */
+export const PLAN_TRACKER_CLEARED_TYPE = "plan_tracker_cleared";

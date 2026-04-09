@@ -10,7 +10,7 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { type Static, Type } from "@sinclair/typebox";
-import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
+import { PLAN_TRACKER_CLEARED_TYPE, PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 
 export type TaskStatus = "pending" | "in_progress" | "complete" | "blocked";
 export type TaskPhase =
@@ -208,6 +208,12 @@ export default function (pi: ExtensionAPI) {
     const entries = ctx.sessionManager.getBranch();
     for (let i = entries.length - 1; i >= 0; i--) {
       const entry = entries[i];
+      // Check for explicit clear signal (written by /workflow-reset)
+      // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+      if (entry.type === "custom" && (entry as any).customType === PLAN_TRACKER_CLEARED_TYPE) {
+        tasks = [];
+        break;
+      }
       if (entry.type !== "message") continue;
       const msg = entry.message;
       if (msg.role !== "toolResult" || msg.toolName !== PLAN_TRACKER_TOOL_NAME) continue;

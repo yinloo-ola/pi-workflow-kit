@@ -1,8 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { describe, expect, test, vi } from "vitest";
-import * as logging from "../../../extensions/lib/logging";
-import workflowMonitorExtension, { getStateFilePath, reconstructState } from "../../../extensions/workflow-monitor";
+import { describe, expect, test } from "vitest";
+import workflowMonitorExtension, { reconstructState } from "../../../extensions/workflow-monitor";
 import { DebugMonitor } from "../../../extensions/workflow-monitor/debug-monitor";
 import {
   createWorkflowHandler,
@@ -270,90 +269,8 @@ describe("WorkflowHandler aggregated state persistence", () => {
   });
 });
 
-describe("file-based state persistence", () => {
-  test("getStateFilePath returns .pi/workflow-kit-state.json in cwd", () => {
-    withTempCwd();
-
-    const result = getStateFilePath();
-    expect(result).toMatch(/\.pi\/workflow-kit-state\.json$/);
-  });
-
-  test("reconstructState reads from file when it exists", () => {
-    const tempDir = withTempCwd();
-    const handler = createWorkflowHandler();
-    const snapshot: SuperpowersStateSnapshot = {
-      workflow: {
-        phases: {
-          brainstorm: "complete",
-          plan: "active",
-          execute: "pending",
-          finalize: "pending",
-        },
-        currentPhase: "plan",
-        artifacts: {
-          brainstorm: "docs/plans/file-design.md",
-          plan: null,
-          execute: null,
-          finalize: null,
-        },
-        prompted: {
-          brainstorm: true,
-          plan: false,
-          execute: false,
-          finalize: false,
-        },
-      },
-      tdd: {
-        phase: "green",
-        testFiles: ["tests/file.test.ts"],
-        sourceFiles: ["src/file.ts"],
-        redVerificationPending: false,
-        nonCodeMode: false,
-      },
-      debug: { active: true, investigated: true, fixAttempts: 2 },
-      verification: { verified: true, verificationWaived: false },
-    };
-
-    fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
-    fs.writeFileSync(path.join(tempDir, ".pi", "workflow-kit-state.json"), JSON.stringify(snapshot, null, 2));
-
-    reconstructState(
-      {
-        sessionManager: {
-          getBranch: () => [{ type: "custom", customType: "superpowers_state", data: { workflow: null } }],
-        },
-      } as any,
-      handler,
-    );
-
-    expect(handler.getFullState()).toEqual(snapshot);
-  });
-
-  test("reconstructState logs warning when state file has invalid JSON", () => {
-    const tempDir = withTempCwd();
-    const handler = createWorkflowHandler();
-
-    fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
-    fs.writeFileSync(path.join(tempDir, ".pi", "workflow-kit-state.json"), "not valid json{{{");
-
-    const warnSpy = vi.spyOn(logging.log, "warn");
-
-    reconstructState(
-      {
-        sessionManager: {
-          getBranch: () => [],
-        },
-      } as any,
-      handler,
-    );
-
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to read state file"));
-    warnSpy.mockRestore();
-  });
-
-  test("reconstructState falls back to session entries when file does not exist", () => {
-    withTempCwd();
-
+describe("session-only state persistence", () => {
+  test("reconstructState restores from session branch entries", () => {
     const handler = createWorkflowHandler();
     const snapshot: SuperpowersStateSnapshot = {
       workflow: {
@@ -444,7 +361,6 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         },
       } as any,
       handler,
-      false,
     );
 
     expect(handler.getFullState()).toEqual(snapshot);
@@ -465,7 +381,6 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         },
       } as any,
       handler,
-      false,
     );
 
     expect(handler.getFullState()).toEqual({
@@ -489,7 +404,6 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         },
       } as any,
       handler,
-      false,
     );
 
     expect(handler.getFullState()).toEqual({
@@ -565,7 +479,6 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         },
       } as any,
       handler,
-      false,
     );
 
     expect(handler.getFullState()).toEqual(newer);
@@ -593,10 +506,8 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
     expect(fake.appendedEntries[0]?.customType).toBe("superpowers_state");
     expect(fake.appendedEntries[0]?.data.workflow.currentPhase).toBe("plan");
 
+    // State is persisted to session branch only — no file-based persistence.
     const statePath = path.join(tempDir, ".pi", "workflow-kit-state.json");
-    expect(fs.existsSync(statePath)).toBe(true);
-
-    const persisted = JSON.parse(fs.readFileSync(statePath, "utf-8"));
-    expect(persisted.workflow.currentPhase).toBe("plan");
+    expect(fs.existsSync(statePath)).toBe(false);
   });
 });

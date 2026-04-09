@@ -8,14 +8,12 @@
  * - Register workflow_reference tool for on-demand reference content
  */
 
-import * as fs from "node:fs";
 import * as path from "node:path";
 import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
-import { log } from "./lib/logging.js";
+import { PLAN_TRACKER_CLEARED_TYPE, PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
@@ -64,64 +62,32 @@ async function selectValue<T extends string>(
 
 const SUPERPOWERS_STATE_ENTRY_TYPE = "superpowers_state";
 
-export function getStateFilePath(): string {
-  return path.join(process.cwd(), ".pi", "workflow-kit-state.json");
-}
-
-export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler, stateFilePath?: string | false) {
+export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler) {
   handler.resetState();
 
-  // Read both file-based and session-based state, then pick the newer one.
-  let fileData: (Record<string, unknown> & { savedAt?: number }) | null = null;
-  let sessionData: (Record<string, unknown> & { savedAt?: number }) | null = null;
-
-  if (stateFilePath !== false) {
-    try {
-      const statePath = stateFilePath ?? getStateFilePath();
-      if (fs.existsSync(statePath)) {
-        const raw = fs.readFileSync(statePath, "utf-8");
-        fileData = JSON.parse(raw);
-      }
-    } catch (err) {
-      log.warn(
-        `Failed to read state file, falling back to session entries: ${err instanceof Error ? err.message : err}`,
-      );
-    }
-  }
-
-  // Scan session branch for most recent superpowers state entry
+  // Scan session branch for most recent superpowers state entry.
+  // The session branch IS the single source of truth — no file-based
+  // persistence needed since pi's journal survives restarts and reloads.
   const entries = ctx.sessionManager.getBranch();
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === SUPERPOWERS_STATE_ENTRY_TYPE) {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-      sessionData = (entry as any).data;
-      break;
+      handler.setFullState((entry as any).data);
+      return;
     }
     // Migration fallback: old-format workflow-only entries
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === WORKFLOW_TRACKER_ENTRY_TYPE) {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-      sessionData = { workflow: (entry as any).data };
-      break;
+      handler.setFullState({ workflow: (entry as any).data });
+      return;
     }
   }
 
-  // Pick the newer source when both are available; otherwise use whichever exists.
-  if (fileData && sessionData) {
-    const fileSavedAt = fileData.savedAt ?? 0;
-    const sessionSavedAt = sessionData.savedAt ?? 0;
-    const winner = fileSavedAt >= sessionSavedAt ? fileData : sessionData;
-    handler.setFullState(winner);
-  } else if (fileData) {
-    handler.setFullState(fileData);
-  } else if (sessionData) {
-    handler.setFullState(sessionData);
-  } else {
-    // No entries found — reset to fresh defaults
-    handler.setFullState({});
-  }
+  // No entries found — reset to fresh defaults
+  handler.setFullState({});
 }
 
 export default function (pi: ExtensionAPI) {
@@ -168,14 +134,6 @@ export default function (pi: ExtensionAPI) {
   const persistState = () => {
     const stateWithTimestamp = { ...handler.getFullState(), savedAt: Date.now() };
     pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, stateWithTimestamp);
-    // Also persist to file for cross-session survival
-    try {
-      const statePath = getStateFilePath();
-      fs.mkdirSync(path.dirname(statePath), { recursive: true });
-      fs.writeFileSync(statePath, JSON.stringify(stateWithTimestamp, null, 2));
-    } catch (err) {
-      log.warn(`Failed to persist state file: ${err instanceof Error ? err.message : err}`);
-    }
   };
 
   const phaseToSkill: Record<string, string> = {
@@ -798,6 +756,8 @@ export default function (pi: ExtensionAPI) {
     description: "Reset workflow tracker to fresh state for a new task",
     async handler(_args, ctx) {
       handler.resetState();
+      // Emit a clear signal so plan-tracker also reconstructs to empty.
+      pi.appendEntry(PLAN_TRACKER_CLEARED_TYPE, { clearedAt: Date.now() });
       persistState();
       updateWidget(ctx);
       if (ctx.hasUI) {

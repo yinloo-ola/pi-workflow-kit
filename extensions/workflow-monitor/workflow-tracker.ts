@@ -194,15 +194,37 @@ export class WorkflowTracker {
     if (!PLANS_DIR_RE.test(path)) return false;
 
     if (DESIGN_RE.test(path)) {
-      const changedArtifact = this.recordArtifact("brainstorm", path);
-      const changedPhase = this.advanceTo("brainstorm");
-      return changedArtifact || changedPhase;
+      // Only advance if we haven't already passed the brainstorm phase.
+      // Writing a design doc during plan/execute/finalize (e.g., updating
+      // the plan) must NOT reset workflow state.
+      const curIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+      if (curIdx > WORKFLOW_PHASES.indexOf("brainstorm")) {
+        return this.recordArtifact("brainstorm", path);
+      }
+      let changed = false;
+      changed = this.recordArtifact("brainstorm", path) || changed;
+      // Activating and immediately completing: the design doc is the
+      // deliverable that signals brainstorm is done. Do NOT mark prompted
+      // so the agent_end boundary prompt still fires to offer session handoff.
+      changed = this.advanceTo("brainstorm") || changed;
+      changed = this.completeCurrent() || changed;
+      return changed;
     }
 
     if (IMPLEMENTATION_RE.test(path)) {
-      const changedArtifact = this.recordArtifact("plan", path);
-      const changedPhase = this.advanceTo("plan");
-      return changedArtifact || changedPhase;
+      // Only advance if we haven't already passed the plan phase.
+      const curIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+      if (curIdx > WORKFLOW_PHASES.indexOf("plan")) {
+        return this.recordArtifact("plan", path);
+      }
+      let changed = false;
+      changed = this.recordArtifact("plan", path) || changed;
+      // Activating and immediately completing: the implementation plan
+      // is the deliverable that signals plan phase is done. Do NOT mark
+      // prompted so the agent_end boundary prompt still fires.
+      changed = this.advanceTo("plan") || changed;
+      changed = this.completeCurrent() || changed;
+      return changed;
     }
 
     return false;
