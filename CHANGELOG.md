@@ -43,7 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Project rebranded from `pi-superpowers-plus` to `@tianhai/pi-workflow-kit`.
-- Local state file renamed from `.pi/superpowers-state.json` to `.pi/workflow-kit-state.json` with legacy fallback for existing users.
+- Local state file renamed from `.pi/superpowers-state.json` to `.pi/workflow-kit-state.json`.
 - Removed 5 obsolete skills (creating-specs, implementing-plans, self-review, shipping-work, receiving-feedback) replaced by the unified `executing-tasks` skill.
 - Updated writing-plans skill with task type and acceptance criteria support.
 - Consolidated plan-tracker status/phase sync and backward branch search.
