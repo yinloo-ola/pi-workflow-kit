@@ -120,10 +120,9 @@ Invoke skills directly in the Pi session:
 
 ### Workflow handoff
 
-Start a fresh session for the next phase:
+Start a fresh session for the next phase. `/workflow-next` enforces immediate-next-only transitions and preserves prior completed workflow history (phases, artifacts, prompted flags) across the handoff:
 
 ```text
-/workflow-next brainstorm
 /workflow-next plan docs/plans/2026-04-09-feature-design.md
 /workflow-next execute docs/plans/2026-04-09-feature-implementation.md
 /workflow-next finalize docs/plans/2026-04-09-feature-implementation.md
@@ -426,7 +425,7 @@ pi install npm:@tianhai/pi-workflow-kit
 - Let `plan_tracker` reflect the real lifecycle instead of keeping state only in chat
 - Use `subagent(..., agentScope: "both")` when you want bundled agents
 - Treat workflow monitor warnings as signals to correct process, not as noise
-- Use `/workflow-next` when handing off between large phases or sessions
+- Use `/workflow-next` when handing off between sequential workflow phases
 
 ## Common mistakes to avoid
 

@@ -232,7 +232,8 @@ At phase boundaries, prompts the agent once (non-enforcing) with options:
 
 When transitioning into **finalize**, the monitor pre-fills the editor with a reminder to consider documentation updates and to capture learnings before merging/shipping.
 
-The `/workflow-next` command starts a new session with artifact context:
+The `/workflow-next` command starts a new session with artifact context and enforces immediate-next-only handoff:
+
 ```
 /workflow-next plan docs/plans/2026-02-10-my-feature-design.md
 /workflow-next execute docs/plans/2026-02-11-my-feature-implementation.md
@@ -240,6 +241,13 @@ The `/workflow-next` command starts a new session with artifact context:
 ```
 
 Valid phases: `brainstorm`, `plan`, `execute`, `finalize`.
+
+Handoff rules:
+- Only the **immediate next** phase is allowed (e.g. `plan → execute`, `execute → finalize`).
+- The current phase must be **complete** before handing off.
+- Same-phase, backward, and direct-jump transitions are rejected.
+- Prior completed phases, artifacts, and prompted flags are **preserved** in the new session.
+- TDD, debug, and verification state start **fresh** in the new session.
 
 #### Reference Tool
 
