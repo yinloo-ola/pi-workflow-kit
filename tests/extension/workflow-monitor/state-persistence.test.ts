@@ -515,7 +515,13 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         artifacts: { brainstorm: null, plan: null, execute: null, finalize: null },
         prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
       },
-      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      tdd: {
+        phase: "red",
+        testFiles: ["tests/old.test.ts"],
+        sourceFiles: [],
+        redVerificationPending: false,
+        nonCodeMode: false,
+      },
       debug: { active: false, investigated: false, fixAttempts: 0 },
       verification: { verified: false, verificationWaived: false },
     };

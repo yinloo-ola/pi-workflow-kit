@@ -14,12 +14,12 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { log } from "./lib/logging.js";
 import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
+import { log } from "./lib/logging.js";
+import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
-import { parseTestCommand, parseTestResult } from "./workflow-monitor/test-runner";
 import type { VerificationViolation } from "./workflow-monitor/verification-monitor";
 import {
   type DebugViolationType,
@@ -32,7 +32,7 @@ import {
   computeBoundaryToPrompt,
   type Phase,
   parseSkillName,
-  SKILL_TO_PHASE,
+  resolveSkillPhase,
   type TransitionBoundary,
   WORKFLOW_PHASES,
   WORKFLOW_TRACKER_ENTRY_TYPE,
@@ -181,11 +181,12 @@ export default function (pi: ExtensionAPI) {
     const lines = text.split(/\r?\n/);
     let furthest: Phase | null = null;
     let furthestIdx = -1;
+    const workflowState = handler.getWorkflowState();
 
     for (const line of lines) {
       const skill = parseSkillName(line);
       if (!skill) continue;
-      const phase = SKILL_TO_PHASE[skill] ?? null;
+      const phase = resolveSkillPhase(skill, workflowState);
       if (!phase) continue;
       const idx = WORKFLOW_PHASES.indexOf(phase);
       if (idx > furthestIdx) {
@@ -220,9 +221,13 @@ export default function (pi: ExtensionAPI) {
   }
 
   // session_start covers startup, reload, new, resume, fork (pi v0.65.0+)
-  pi.on("session_start", async (_event, ctx) => { resetSessionState(ctx); });
+  pi.on("session_start", async (_event, ctx) => {
+    resetSessionState(ctx);
+  });
   // session_tree for /tree navigation where a different session branch is loaded
-  pi.on("session_tree", async (_event, ctx) => { resetSessionState(ctx); });
+  pi.on("session_tree", async (_event, ctx) => {
+    resetSessionState(ctx);
+  });
 
   // --- Input observation (skill detection + skip-confirmation gate) ---
   pi.on("input", async (event, ctx) => {
@@ -420,7 +425,7 @@ export default function (pi: ExtensionAPI) {
     return null;
   }
 
-  function getUnresolvedPhasesForAction(target: Phase, state: WorkflowTrackerState): Phase[] {
+  function getUnresolvedPhasesForAction(_target: Phase, state: WorkflowTrackerState): Phase[] {
     // For all completion actions, check that finalize is complete
     return getUnresolvedPhases(["finalize"], state);
   }
@@ -545,6 +550,14 @@ export default function (pi: ExtensionAPI) {
       handler.handleReadOrInvestigation("read", path);
     }
 
+    if (
+      event.toolName === PLAN_TRACKER_TOOL_NAME &&
+      handler.handlePlanTrackerToolResult(event.details as PlanTrackerDetails | undefined)
+    ) {
+      persistState();
+      updateWidget(ctx);
+    }
+
     const injected: string[] = [];
 
     // Layer 1: announce current branch on first tool result in session.
@@ -602,9 +615,6 @@ export default function (pi: ExtensionAPI) {
       const exitCode = (event.details as any)?.exitCode as number | undefined;
       handler.handleBashResult(command, output, exitCode);
       persistState();
-
-      const isTestCommand = parseTestCommand(command);
-      const passed = isTestCommand ? parseTestResult(output, exitCode) : null;
 
       const verificationViolation = pendingVerificationViolations.get(toolCallId);
       if (verificationViolation) {
@@ -665,8 +675,18 @@ export default function (pi: ExtensionAPI) {
       "- What was learned during this implementation? (surprises, codebase knowledge, things to do differently)\n\n";
 
     if (selected === "next") {
+      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
+      if (advanced) {
+        persistState();
+        updateWidget(ctx);
+      }
       ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + nextInSession : nextInSession);
     } else if (selected === "fresh") {
+      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
+      if (advanced) {
+        persistState();
+        updateWidget(ctx);
+      }
       ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + fresh : fresh);
     } else if (selected === "skip") {
       // Explicit user-confirmed skip: mark the next phase as skipped, then move on.
@@ -815,12 +835,16 @@ export default function (pi: ExtensionAPI) {
       const lines: string[] = [];
       if (artifact) lines.push(`Continue from artifact: ${artifact}`);
 
-      if (phase === "plan") {
-        lines.push("Use /skill:writing-plans to create the implementation plan.");
+      if (phase === "brainstorm") {
+        lines.push("/skill:brainstorming");
+      } else if (phase === "plan") {
+        lines.push("/skill:writing-plans");
       } else if (phase === "execute") {
-        lines.push("Use /skill:executing-tasks to execute the plan.");
+        lines.push("/skill:executing-tasks");
+        lines.push("Execute the approved plan task-by-task.");
       } else if (phase === "finalize") {
-        lines.push("Use /skill:executing-tasks to finalize (PR, cleanup, archive).");
+        lines.push("/skill:executing-tasks");
+        lines.push("Finalize the completed work (review, PR, docs, archive, cleanup).");
       }
 
       ctx.ui.setEditorText(lines.join("\n"));

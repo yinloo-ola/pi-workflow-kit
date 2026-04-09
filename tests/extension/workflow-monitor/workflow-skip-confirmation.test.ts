@@ -545,10 +545,7 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
     await onSessionStart({}, ctx);
 
     // Input with XML skill that targets review phase — brainstorm/plan/execute/verify are unresolved
-    await onInput(
-      { source: "user", text: '<skill name="executing-tasks" location="/path">\ncontent\n</skill>' },
-      ctx,
-    );
+    await onInput({ source: "user", text: '<skill name="executing-tasks" location="/path">\ncontent\n</skill>' }, ctx);
 
     // The gate should have fired because there are unresolved phases before "execute"
     expect(selectCalled).toBe(true);
@@ -588,5 +585,37 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
 
     expect(ctx.ui.select).toHaveBeenCalled();
     expect(result).toEqual({ blocked: true });
+  });
+
+  test("executing-tasks targets finalize once execute is complete", async () => {
+    const state = createWorkflowState(
+      { brainstorm: "complete", plan: "complete", execute: "complete", finalize: "pending" },
+      "execute",
+    );
+    const { onSessionStart, onInput } = setupWithState(state);
+
+    const ctx = {
+      hasUI: true,
+      sessionManager: {
+        getBranch: () => [
+          {
+            type: "custom",
+            customType: WORKFLOW_TRACKER_ENTRY_TYPE,
+            data: state,
+          },
+        ],
+      },
+      ui: {
+        setWidget: () => {},
+        select: vi.fn(),
+        setEditorText: vi.fn(),
+        notify: () => {},
+      },
+    };
+
+    await onSessionStart({}, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
+
+    expect(ctx.ui.select).not.toHaveBeenCalled();
   });
 });

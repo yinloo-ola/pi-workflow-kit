@@ -16,15 +16,15 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentToolResult } from "@mariozechner/pi-coding-agent";
 import type { Message } from "@mariozechner/pi-ai";
 import { StringEnum } from "@mariozechner/pi-ai";
+import type { AgentToolResult } from "@mariozechner/pi-coding-agent";
 import { type ExtensionAPI, getMarkdownTheme } from "@mariozechner/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
+import { DEFAULT_MODEL } from "../../agents/config.js";
 import { log } from "../lib/logging.js";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
-import { DEFAULT_MODEL } from "../../agents/config.js";
 import { getSubagentConcurrency, Semaphore } from "./concurrency.js";
 import { buildSubagentEnv } from "./env.js";
 import { ProcessTracker } from "./lifecycle.js";
@@ -542,7 +542,8 @@ const ChainItem = Type.Object({
 });
 
 const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
-  description: 'Which agent directories to use. Default: "user". Use "both" to include bundled and project-local agents.',
+  description:
+    'Which agent directories to use. Default: "user". Use "both" to include bundled and project-local agents.',
   default: "user",
 });
 

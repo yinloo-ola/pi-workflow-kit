@@ -20,9 +20,11 @@
     "extensions/",
     "agents/",
     "skills/",
+    "docs/",
     "banner.jpg",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "ROADMAP.md"
   ],
   "pi": {
     "extensions": [

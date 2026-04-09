@@ -12,11 +12,20 @@ import { Text } from "@mariozechner/pi-tui";
 import { type Static, Type } from "@sinclair/typebox";
 import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 
-type TaskStatus = "pending" | "in_progress" | "complete" | "blocked";
-type TaskPhase = "pending" | "define" | "approve" | "execute" | "verify" | "review" | "fix" | "complete" | "blocked";
-type TaskType = "code" | "non-code";
+export type TaskStatus = "pending" | "in_progress" | "complete" | "blocked";
+export type TaskPhase =
+  | "pending"
+  | "define"
+  | "approve"
+  | "execute"
+  | "verify"
+  | "review"
+  | "fix"
+  | "complete"
+  | "blocked";
+export type TaskType = "code" | "non-code";
 
-interface Task {
+export interface PlanTrackerTask {
   name: string;
   status: TaskStatus;
   phase: TaskPhase;
@@ -25,14 +34,27 @@ interface Task {
   fixAttempts: number;
 }
 
-interface PlanTrackerDetails {
+export interface PlanTrackerTaskInit {
+  name: string;
+  type?: TaskType;
+}
+
+export interface PlanTrackerDetails {
   action: "init" | "update" | "status" | "clear";
-  tasks: Task[];
+  tasks: PlanTrackerTask[];
   error?: string;
 }
 
 const TASK_PHASES: readonly string[] = [
-  "pending", "define", "approve", "execute", "verify", "review", "fix", "complete", "blocked",
+  "pending",
+  "define",
+  "approve",
+  "execute",
+  "verify",
+  "review",
+  "fix",
+  "complete",
+  "blocked",
 ] as const;
 
 const TASK_STATUSES: readonly string[] = ["pending", "in_progress", "complete", "blocked"] as const;
@@ -42,9 +64,22 @@ const PlanTrackerParams = Type.Object({
     description: "Action to perform",
   }),
   tasks: Type.Optional(
-    Type.Array(Type.String(), {
-      description: "Task names (for init)",
-    }),
+    Type.Array(
+      Type.Union([
+        Type.String(),
+        Type.Object({
+          name: Type.String({ description: "Task name" }),
+          type: Type.Optional(
+            StringEnum(["code", "non-code"] as const, {
+              description: "Task type",
+            }),
+          ),
+        }),
+      ]),
+      {
+        description: "Task names or typed task objects (for init)",
+      },
+    ),
   ),
   index: Type.Optional(
     Type.Integer({
@@ -77,12 +112,13 @@ const PlanTrackerParams = Type.Object({
 
 export type PlanTrackerInput = Static<typeof PlanTrackerParams>;
 
-function createDefaultTask(name: string): Task {
+function createDefaultTask(input: string | PlanTrackerTaskInit): PlanTrackerTask {
+  const task = typeof input === "string" ? { name: input } : input;
   return {
-    name,
+    name: task.name,
     status: "pending",
     phase: "pending",
-    type: "code",
+    type: task.type ?? "code",
     executeAttempts: 0,
     fixAttempts: 0,
   };
@@ -101,38 +137,43 @@ function phaseIcon(status: TaskStatus, phase: TaskPhase): string {
   return "○";
 }
 
-function formatWidget(tasks: Task[], theme: Theme): string {
+function formatWidget(tasks: PlanTrackerTask[], theme: Theme): string {
   if (tasks.length === 0) return "";
 
   const complete = tasks.filter((t) => t.status === "complete").length;
   const blocked = tasks.filter((t) => t.status === "blocked").length;
-  const icons = tasks.map((t) => {
-    switch (t.status) {
-      case "complete":
-        return theme.fg("success", "✓");
-      case "blocked":
-        return theme.fg("error", "⛔");
-      case "in_progress":
-        return theme.fg("warning", "→");
-      default:
-        return theme.fg("dim", "○");
-    }
-  }).join("");
+  const icons = tasks
+    .map((t) => {
+      switch (t.status) {
+        case "complete":
+          return theme.fg("success", "✓");
+        case "blocked":
+          return theme.fg("error", "⛔");
+        case "in_progress":
+          return theme.fg("warning", "→");
+        default:
+          return theme.fg("dim", "○");
+      }
+    })
+    .join("");
 
   const summary = theme.fg("muted", `(${complete}/${tasks.length})`);
   const blockedNote = blocked > 0 ? ` ${theme.fg("error", `${blocked} blocked`)}` : "";
 
   // Show current task with phase
   const current = tasks.find((t) => t.status === "in_progress") ?? tasks.find((t) => t.status === "pending");
-  const currentInfo = current && current.status === "in_progress"
-    ? `  ${theme.fg("muted", current.name)} — ${theme.fg("dim", current.phase)}${current.phase === "fix" || current.phase === "execute" ? ` (${current.phase === "fix" ? current.fixAttempts : current.executeAttempts}/3)` : ""}`
-    : current ? `  ${theme.fg("muted", current.name)}`
-    : "";
+  const currentType = current?.type === "non-code" ? ` ${theme.fg("warning", "📋")}` : "";
+  const currentInfo =
+    current && current.status === "in_progress"
+      ? `  ${theme.fg("muted", current.name)}${currentType} — ${theme.fg("dim", current.phase)}${current.phase === "fix" || current.phase === "execute" ? ` (${current.phase === "fix" ? current.fixAttempts : current.executeAttempts}/3)` : ""}`
+      : current
+        ? `  ${theme.fg("muted", current.name)}${currentType}`
+        : "";
 
   return `${theme.fg("muted", "Tasks:")} ${icons} ${summary}${blockedNote}${currentInfo}`;
 }
 
-function formatStatus(tasks: Task[]): string {
+function formatStatus(tasks: PlanTrackerTask[]): string {
   if (tasks.length === 0) return "No plan active.";
 
   const complete = tasks.filter((t) => t.status === "complete").length;
@@ -141,27 +182,26 @@ function formatStatus(tasks: Task[]): string {
   const blocked = tasks.filter((t) => t.status === "blocked").length;
 
   const lines: string[] = [];
-  lines.push(`Plan: ${complete}/${tasks.length} complete (${inProgress} in progress, ${pending} pending${blocked > 0 ? `, ${blocked} blocked` : ""})`);
+  lines.push(
+    `Plan: ${complete}/${tasks.length} complete (${inProgress} in progress, ${pending} pending${blocked > 0 ? `, ${blocked} blocked` : ""})`,
+  );
   lines.push("");
   for (let i = 0; i < tasks.length; i++) {
     const t = tasks[i];
     const icon = phaseIcon(t.status, t.phase);
     const phaseStr = t.status === "in_progress" ? ` [${t.phase}]` : "";
-    const attemptsStr = t.status === "in_progress" && (t.phase === "execute" || t.phase === "fix")
-      ? ` (${t.phase === "fix" ? t.fixAttempts : t.executeAttempts}/3)`
-      : "";
+    const attemptsStr =
+      t.status === "in_progress" && (t.phase === "execute" || t.phase === "fix")
+        ? ` (${t.phase === "fix" ? t.fixAttempts : t.executeAttempts}/3)`
+        : "";
     const typeStr = t.type === "non-code" ? " 📋" : "";
     lines.push(`  ${icon} [${i}] ${t.name}${typeStr}${phaseStr}${attemptsStr}`);
   }
   return lines.join("\n");
 }
 
-function statusToPhase(status: "complete" | "blocked"): TaskPhase {
-  return status;
-}
-
 export default function (pi: ExtensionAPI) {
-  let tasks: Task[] = [];
+  let tasks: PlanTrackerTask[] = [];
 
   const reconstructState = (ctx: ExtensionContext) => {
     tasks = [];
@@ -223,7 +263,7 @@ export default function (pi: ExtensionAPI) {
               } as PlanTrackerDetails,
             };
           }
-          tasks = params.tasks.map((name) => createDefaultTask(name));
+          tasks = params.tasks.map((task) => createDefaultTask(task));
           updateWidget(ctx);
           return {
             content: [

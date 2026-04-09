@@ -1,4 +1,5 @@
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
+import type { PlanTrackerDetails, PlanTrackerTask } from "../plan-tracker.js";
 import { DebugMonitor, type DebugViolation } from "./debug-monitor";
 import { isSourceFile } from "./heuristics";
 import { isInvestigationCommand, isInvestigationToolCall } from "./investigation";
@@ -80,6 +81,7 @@ export interface WorkflowHandler {
   handleInputText(text: string): boolean;
   handleFileWritten(path: string): boolean;
   handlePlanTrackerToolCall(input: Record<string, unknown>): boolean;
+  handlePlanTrackerToolResult(details: PlanTrackerDetails | undefined): boolean;
   getWorkflowState(): WorkflowTrackerState | null;
   getFullState(): SuperpowersStateSnapshot;
   setFullState(snapshot: SuperpowersStatePatch): void;
@@ -90,6 +92,15 @@ export interface WorkflowHandler {
   skipWorkflowPhases(phases: Phase[]): boolean;
   handleSkillFileRead(path: string): boolean;
   resetState(): void;
+}
+
+function deriveNonCodeMode(tasks: PlanTrackerTask[]): boolean {
+  const activeTask = tasks.find((task) => task.status === "in_progress");
+  return activeTask?.type === "non-code";
+}
+
+function areAllTasksTerminal(tasks: PlanTrackerTask[]): boolean {
+  return tasks.length > 0 && tasks.every((task) => task.status === "complete" || task.status === "blocked");
 }
 
 export function createWorkflowHandler(): WorkflowHandler {
@@ -234,15 +245,24 @@ export function createWorkflowHandler(): WorkflowHandler {
         tdd.setNonCodeMode(false);
         return tracker.onPlanTrackerInit();
       }
-      if (input.action === "update") {
-        if (input.type === "non-code") {
-          tdd.setNonCodeMode(true);
-        }
-        if (input.status === "complete") {
-          tdd.setNonCodeMode(false);
-        }
-      }
       return false;
+    },
+
+    handlePlanTrackerToolResult(details: PlanTrackerDetails | undefined) {
+      if (!details) return false;
+
+      let changed = false;
+      const nextNonCodeMode = deriveNonCodeMode(details.tasks);
+      if (tdd.getState().nonCodeMode !== nextNonCodeMode) {
+        tdd.setNonCodeMode(nextNonCodeMode);
+        changed = true;
+      }
+
+      if (areAllTasksTerminal(details.tasks) && tracker.getState().currentPhase === "execute") {
+        changed = tracker.completeCurrent() || changed;
+      }
+
+      return changed;
     },
 
     getWorkflowState() {
@@ -271,7 +291,13 @@ export function createWorkflowHandler(): WorkflowHandler {
       }
       if (snapshot.tdd) {
         const tddState = { ...TDD_DEFAULTS, ...snapshot.tdd };
-        tdd.setState(tddState.phase, tddState.testFiles, tddState.sourceFiles, tddState.redVerificationPending, tddState.nonCodeMode);
+        tdd.setState(
+          tddState.phase,
+          tddState.testFiles,
+          tddState.sourceFiles,
+          tddState.redVerificationPending,
+          tddState.nonCodeMode,
+        );
       }
       if (snapshot.debug) {
         debug.setState({ ...DEBUG_DEFAULTS, ...snapshot.debug });

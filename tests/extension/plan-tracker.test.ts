@@ -21,7 +21,9 @@ function createFakePi() {
   let executeFn: ToolExecuteFn | undefined;
 
   return {
-    get executeFn() { return executeFn!; },
+    get executeFn() {
+      return executeFn!;
+    },
     api: {
       on() {},
       registerTool(opts: any) {
@@ -46,11 +48,7 @@ function createFakeCtx() {
 }
 
 /** Call execute with minimal boilerplate. */
-async function callExecute(
-  fake: ReturnType<typeof createFakePi>,
-  ctx: any,
-  params: PlanTrackerInput,
-) {
+async function callExecute(fake: ReturnType<typeof createFakePi>, ctx: any, params: PlanTrackerInput) {
   return fake.executeFn!("test-id", params, new AbortController().signal, () => {}, ctx);
 }
 
@@ -117,6 +115,26 @@ describe("plan-tracker init", () => {
     expect(widgetCalls).toHaveLength(1);
     expect(widgetCalls[0][0]).toBe("plan_tracker");
     expect(widgetCalls[0][1]).toBeDefined(); // renderer function
+  });
+
+  test("accepts typed task objects on init", async () => {
+    const fake = createFakePi();
+    planTrackerExtension(fake.api);
+
+    const { ctx } = createFakeCtx();
+    const result = await callExecute(fake, ctx, {
+      action: "init",
+      tasks: [
+        { name: "Implement API", type: "code" },
+        { name: "Update docs", type: "non-code" },
+      ],
+    });
+
+    const tasks = parseTasks(result);
+    expect(tasks[0].type).toBe("code");
+    expect(tasks[1].type).toBe("non-code");
+    expect(result.content[0].text).toContain("Update docs");
+    expect(result.content[0].text).toContain("📋");
   });
 });
 
@@ -237,7 +255,7 @@ describe("plan-tracker update", () => {
 
     const tasks = parseTasks(result);
     expect(tasks[0].status).toBe("in_progress"); // caller's explicit value
-    expect(tasks[0].phase).toBe("execute");      // caller's explicit value
+    expect(tasks[0].phase).toBe("execute"); // caller's explicit value
   });
 
   test("BUG FIX: phase complete + status in_progress — status takes priority (no override)", async () => {

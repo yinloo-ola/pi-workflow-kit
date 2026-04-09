@@ -61,10 +61,7 @@ async function setupExtension(_state: WorkflowTrackerState) {
 
 describe("completion-action gating on bash commands", () => {
   test("commit during brainstorm does not prompt completion gate", async () => {
-    const state = createWorkflowState(
-      { brainstorm: "active" },
-      "brainstorm",
-    );
+    const state = createWorkflowState({ brainstorm: "active" }, "brainstorm");
 
     const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Do finalize now"]);
@@ -253,10 +250,7 @@ describe("completion-action gating on bash commands", () => {
 
     await onSessionStart({}, ctx);
 
-    const result = await onToolCall(
-      { toolCallId: "tc1", toolName: "bash", input: { command: "ls -la" } },
-      ctx,
-    );
+    const result = await onToolCall({ toolCallId: "tc1", toolName: "bash", input: { command: "ls -la" } }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
     expect(result?.blocked).not.toBe(true);
@@ -287,10 +281,7 @@ describe("completion-action gating on bash commands", () => {
   });
 
   test("git commit during active execution is not gated (suppressed while executing)", async () => {
-    const state = createWorkflowState(
-      { brainstorm: "complete", plan: "complete", execute: "active" },
-      "execute",
-    );
+    const state = createWorkflowState({ brainstorm: "complete", plan: "complete", execute: "active" }, "execute");
     const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 

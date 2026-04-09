@@ -53,9 +53,14 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Task Structure
 
+Every task must declare its type explicitly so `executing-tasks` can initialize `plan_tracker` with the correct metadata.
+
+### Code task template
+
 ```markdown
 ### Task N: [Component Name]
 
+**Type:** code
 **TDD scenario:** [New feature — full TDD cycle | Modifying tested code — run existing tests first | Trivial change — use judgment]
 
 **Files:**
@@ -96,8 +101,36 @@ git commit -m "feat: add specific feature"
 ```
 ```
 
+### Non-code task template
+
+```markdown
+### Task N: [Documentation / rollout / analysis task]
+
+**Type:** non-code
+
+**Files:**
+- Modify: `README.md`
+- Modify: `docs/architecture.md`
+
+**Acceptance criteria:**
+- Criterion 1: [Specific, observable outcome]
+- Criterion 2: [Specific, observable outcome]
+- Criterion 3: [Specific, observable outcome]
+
+**Implementation notes:**
+- Update the listed files only.
+- Keep terminology consistent with the rest of the repo.
+- Reference the relevant code paths or docs where useful.
+
+**Verification:**
+- Review each acceptance criterion one-by-one.
+- Confirm the updated docs match the implemented behavior.
+```
+
 ## Remember
 - Exact file paths always
+- Every task must include `**Type:** code` or `**Type:** non-code`
+- Non-code tasks must include explicit `**Acceptance criteria:**`
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - Reference relevant skills

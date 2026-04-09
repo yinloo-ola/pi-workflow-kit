@@ -2,6 +2,7 @@ import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 import { beforeEach, describe, expect, test } from "vitest";
 import {
   parseSkillName,
+  resolveSkillPhase,
   SKILL_TO_PHASE,
   WORKFLOW_PHASES,
   WorkflowTracker,
@@ -136,7 +137,7 @@ function custom(data: any): SessionEntry {
 }
 
 describe("WorkflowTracker detection helpers", () => {
-  test("SKILL_TO_PHASE exposes expected skill mappings", () => {
+  test("SKILL_TO_PHASE exposes expected base skill mappings", () => {
     expect(SKILL_TO_PHASE).toEqual({
       brainstorming: "brainstorm",
       "writing-plans": "plan",
@@ -147,6 +148,14 @@ describe("WorkflowTracker detection helpers", () => {
       "test-driven-development": "execute",
       "receiving-code-review": "finalize",
     });
+  });
+
+  test("resolveSkillPhase maps executing-tasks to finalize once execute is complete", () => {
+    const tracker = new WorkflowTracker();
+    tracker.advanceTo("execute");
+    tracker.completeCurrent();
+
+    expect(resolveSkillPhase("executing-tasks", tracker.getState())).toBe("finalize");
   });
 
   test('parseSkillName extracts /skill and <skill name="...">', () => {
@@ -220,8 +229,21 @@ describe("WorkflowTracker detection helpers", () => {
     expect(s.phases.finalize).toBe("active");
   });
 
-  test("onInputText does not reset state when re-invoking a skill used in an earlier phase (finalize scenario)", () => {
-    // Typing /skill:executing-tasks while in finalize phase must NOT trigger a backward reset.
+  test("onInputText advances executing-tasks to finalize once execute is complete", () => {
+    const tracker = new WorkflowTracker();
+    tracker.advanceTo("execute");
+    tracker.completeCurrent();
+
+    const changed = tracker.onInputText("/skill:executing-tasks to finalize (PR, cleanup, archive).");
+
+    expect(changed).toBe(true);
+    const s = tracker.getState();
+    expect(s.currentPhase).toBe("finalize");
+    expect(s.phases.execute).toBe("complete");
+    expect(s.phases.finalize).toBe("active");
+  });
+
+  test("onInputText does not reset state when re-invoking a skill in the current finalize phase", () => {
     const tracker = new WorkflowTracker();
     tracker.advanceTo("execute");
     tracker.completeCurrent();
@@ -276,6 +298,17 @@ describe("WorkflowTracker detection helpers", () => {
     const tracker = new WorkflowTracker();
     tracker.onPlanTrackerInit();
     expect(tracker.getState().currentPhase).toBe("execute");
+  });
+
+  test("onSkillFileRead advances executing-tasks to finalize once execute is complete", () => {
+    const tracker = new WorkflowTracker();
+    tracker.advanceTo("execute");
+    tracker.completeCurrent();
+
+    const changed = tracker.onSkillFileRead("/home/pi/workspace/pi-superpowers-plus/skills/executing-tasks/SKILL.md");
+
+    expect(changed).toBe(true);
+    expect(tracker.getState().currentPhase).toBe("finalize");
   });
 
   test("reconstructFromBranch returns last saved state", () => {

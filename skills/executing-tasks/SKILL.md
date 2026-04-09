@@ -20,10 +20,16 @@ Before starting, verify:
 
 ## Initialization
 
-1. Read the plan file and extract all tasks
-2. Initialize plan_tracker:
+1. Read the plan file and extract all tasks, including each task's `Type:` field
+2. Initialize plan_tracker with structured task metadata:
    ```
-   plan_tracker({ action: "init", tasks: ["Task 1 name", "Task 2 name", ...] })
+   plan_tracker({
+     action: "init",
+     tasks: [
+       { name: "Task 1 name", type: "code" },
+       { name: "Task 2 name", type: "non-code" },
+     ],
+   })
    ```
 3. Mark the execute phase as active
 
@@ -37,10 +43,12 @@ For each task in the plan:
 - Create test files that exercise the new/modified behavior
 - Tests must be specific, deterministic, and fail before implementation
 - Include edge cases and error conditions
+- Apply TDD-specific guidance only to code tasks
 
-**Non-code task →** Write natural language acceptance criteria:
+**Non-code task →** Reuse and refine the plan's acceptance criteria:
 - List specific, measurable conditions
 - Each criterion must be independently verifiable
+- Treat these criteria as the basis for approval and verification
 
 Update plan_tracker:
 ```
@@ -57,7 +65,7 @@ Present the test cases or acceptance criteria to the human:
 - Ask: "Do these test cases cover the requirements? Approve, revise, or reject?"
 
 **For non-code tasks:**
-- Show the acceptance criteria list
+- Show the acceptance criteria list from the plan
 - Ask: "Do these criteria capture the intent? Approve, revise, or reject?"
 
 **No execution begins until approved.**
@@ -228,7 +236,9 @@ mv docs/plans/<plan-file> docs/plans/completed/
 
 ## Remember
 - Always present test cases/criteria for human approval before executing
+- Extract each task's `Type:` from the plan and preserve it in `plan_tracker`
 - Track per-task phase and attempts in plan_tracker
+- Code tasks use TDD; non-code tasks use acceptance criteria during define, approve, and verify
 - Escalate immediately on budget exhaustion — never silently skip or continue
 - Verify does not auto-fix — always flag to human
 - Review has two layers (subagent first, then human)

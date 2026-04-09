@@ -1,6 +1,6 @@
 # Simplified Workflow Design
 
-> **REQUIRED SUB-SKILL:** Use the executing-plans skill to implement this plan task-by-task.
+> **REQUIRED SUB-SKILL:** Use the executing-tasks skill to implement this plan task-by-task.
 
 **Goal:** Simplify the workflow from 6 global phases to 4 global phases, with a per-task lifecycle that includes human gates and bounded retry loops.
 

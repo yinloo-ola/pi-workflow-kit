@@ -303,6 +303,62 @@ describe("boundary prompting", () => {
     // phase to execute (not complete), no boundary prompt fires here.
   });
 
+  test("execution-complete next advances workflow into finalize before prefilling finalize skill", async () => {
+    const fake = createFakePi({ withAppendEntry: true });
+    workflowMonitorExtension(fake.api as any);
+
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
+    const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
+
+    const editorTexts: string[] = [];
+    const ctx = {
+      hasUI: true,
+      sessionManager: {
+        getBranch: () => [
+          {
+            type: "custom",
+            customType: WORKFLOW_TRACKER_ENTRY_TYPE,
+            data: {
+              phases: {
+                brainstorm: "complete",
+                plan: "complete",
+                execute: "complete",
+                finalize: "pending",
+              },
+              currentPhase: "execute",
+              artifacts: {
+                brainstorm: null,
+                plan: "docs/plans/x-implementation.md",
+                execute: null,
+                finalize: null,
+              },
+              prompted: {
+                brainstorm: true,
+                plan: true,
+                execute: false,
+                finalize: false,
+              },
+            },
+          },
+        ],
+      },
+      ui: {
+        setWidget: () => {},
+        select: async () => "Next step (this session)",
+        setEditorText: (text: string) => editorTexts.push(text),
+        notify: () => {},
+      },
+    };
+
+    await onSessionStart({}, ctx);
+    await onAgentEnd({}, ctx);
+
+    const latest = fake.appendedEntries.at(-1)?.data;
+    expect(latest.workflow.currentPhase).toBe("finalize");
+    expect(latest.workflow.phases.finalize).toBe("active");
+    expect(editorTexts.at(-1)).toContain("/skill:executing-tasks");
+  });
+
   test("finalize transition pre-fills docs + learnings reminder", async () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);

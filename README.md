@@ -4,7 +4,7 @@
 
 Structured workflow skills and active enforcement extensions for [pi](https://github.com/badlogic/pi-mono).
 
-Your coding agent doesn't just know the rules - it follows them. Skills teach the agent *what* to do (brainstorm before building, write tests before code, verify before claiming done). Extensions enforce it in real time (the workflow monitor watches every file write and warns when you skip the test).
+Your coding agent doesn't just know the rules - it follows them. Skills teach the agent *what* to do (brainstorm before building, write tests before code, verify before claiming done). Extensions reinforce that workflow in real time with warnings, prompts, state tracking, and shipping-time verification checks.
 
 ## What You Get When You Install This
 
@@ -13,12 +13,12 @@ Your coding agent doesn't just know the rules - it follows them. Skills teach th
 **3 extensions** that run silently in the background:
 - **Workflow Monitor** — warns on TDD violations, tracks debug cycles, gates commits on verification, tracks workflow phase, and serves reference content on demand.
 - **Subagent** — registers a `subagent` tool for dispatching implementation and review work to isolated subprocess agents, with bundled agent definitions and structured results.
-- **Plan Tracker** — tracks task progress with a TUI widget.
+- **Plan Tracker** — tracks per-task progress, type, phase, and attempt counts with a TUI widget.
 
 **After installation**:
 - Any time the agent writes a source file without a failing test, it gets a warning injected into the tool result.
-- Any time it tries to `git commit` / `git push` / `gh pr create` without passing tests, it gets gated.
-- During **Brainstorm**/**Plan**, writes are restricted to `docs/plans/` (writes elsewhere trigger a process violation).
+- Any time it tries to `git commit` / `git push` / `gh pr create` without passing tests, it gets a verification warning and, in interactive finalize flows, may be gated for confirmation.
+- During **Brainstorm**/**Plan**, writes outside `docs/plans/` trigger a process warning and may escalate to an interactive stop.
 - On the first tool output of a session (inside a git repo), the agent is shown the **current git branch (or detached HEAD short SHA)**.
 - On the first write/edit of a session (inside a git repo), the agent is warned to **confirm it's on the correct branch/worktree** before continuing.
 
@@ -70,12 +70,12 @@ If you're currently using [`pi-superpowers`](https://github.com/coctostan/pi-sup
 - **Workflow Monitor extension** that observes tool calls/results and injects warnings directly into output
 - **TDD discipline warnings** when writing source code without a failing test (advisory, not blocking)
 - **Three-scenario TDD model** — new feature (full TDD), modifying tested code (run existing tests), trivial change (judgment) — applied consistently across skills, agent profiles, and plan templates
-- **Debug enforcement** escalation after repeated failing tests
+- **Debug enforcement** escalation after failing tests activate investigation-first mode
 - **Verification gating** for `git commit` / `git push` / `gh pr create` until passing tests are run (suppressed during active plan execution)
 - **Workflow tracking + boundary prompts** (and `/workflow-next` handoff)
 - **Branch safety reminders** (first tool result shows current branch/SHA; first write/edit warns to confirm branch/worktree)
-- **Finish-phase reminder prefill** (docs + learnings)
-- **Plan Tracker tool** (`plan_tracker`) for task lists + TUI progress
+- **Finalize reminder prefill** (docs + learnings)
+- **Plan Tracker tool** (`plan_tracker`) for typed task lists + TUI progress
 
 ### Migration
 Replace `pi-superpowers` with `pi-superpowers-plus` in your config:
@@ -133,7 +133,7 @@ The **workflow tracker** shows progress in the TUI status bar as the agent moves
 -brainstorm → ✓plan → [execute] → finalize
 ```
 
-Phases are detected automatically from skill invocations, artifact writes under `docs/plans/`, and plan tracker initialization. At phase boundaries, the agent is prompted (once) with options to continue, start a fresh session, skip, or discuss.
+Phases are detected automatically from skill invocations, artifact writes under `docs/plans/`, `plan_tracker` initialization, and completion of all tracked tasks. At phase boundaries, the agent is prompted (once) with options to continue, start a fresh session, skip, or discuss.
 
 ### Supporting Skills
 
@@ -168,7 +168,7 @@ TDD: REFACTOR     (accent)
 
 #### Debug Enforcement
 
-Activates after **2 consecutive failing test runs** (excluding intentional TDD red verification). When active:
+Activates after a **non-TDD failing test run** and switches the agent into investigation-first mode. When active:
 - Warns if the agent writes a fix without reading code first (investigation required)
 - Counts fix attempts and escalates warnings at 3+
 - Resets on test pass or commit
@@ -191,7 +191,8 @@ Tracks which workflow phase the agent is in and shows a phase strip in the TUI w
 - Skill invocations (`/skill:brainstorming`, `/skill:writing-plans`, etc.)
 - Artifact writes under `docs/plans/` (`*-design.md` → brainstorm, `*-implementation.md` → plan)
 - `plan_tracker` init calls → execute phase
-- Passing test runs during verify phase → verify complete
+- all tracked tasks reaching a terminal state (`complete` or `blocked`) → execution-complete boundary
+- accepting the execution-complete handoff → finalize phase
 
 At phase boundaries, prompts the agent once (non-enforcing) with options:
 1. **Next step** - continue in the current session
@@ -230,14 +231,20 @@ workflow_reference({ topic: "debug-condition-waiting" })  - Replace timeouts wit
 The `plan_tracker` tool stores task state in the session and shows progress in the TUI:
 
 ```
-Tasks: ✓✓→○○ (2/5)  Task 3: Recovery modes
+Tasks: ✓✓→○○ (2/5)  Update docs 📋 — verify
 ```
 
 ```
-plan_tracker({ action: "init", tasks: ["Task 1: Setup", "Task 2: Core", ...] })
+plan_tracker({
+  action: "init",
+  tasks: [
+    { name: "Task 1: Setup", type: "code" },
+    { name: "Task 2: Docs", type: "non-code" },
+  ],
+})
 plan_tracker({ action: "update", index: 0, status: "complete" })
-plan_tracker({ action: "update", index: 1, phase: "execute", executeAttempts: 1 })
-plan_tracker({ action: "update", index: 2, phase: "fix", fixAttempts: 1 })
+plan_tracker({ action: "update", index: 1, phase: "execute", attempts: 1 })
+plan_tracker({ action: "update", index: 1, phase: "fix", attempts: 1 })
 plan_tracker({ action: "status" })
 plan_tracker({ action: "clear" })
 ```
@@ -262,17 +269,21 @@ A bundled `subagent` tool lets the orchestrating agent spawn isolated subprocess
 
 | Agent | Purpose | Tools | Extensions |
 |-------|---------|-------|------------|
-| `implementer` | Strict TDD implementation | read, write, edit, bash, lsp | — |
-| `worker` | General-purpose task execution | read, write, edit, bash, lsp | — |
-| `code-reviewer` | Production readiness review | read, bash (read-only) | — |
-| `spec-reviewer` | Plan/spec compliance check | read, bash (read-only) | — |
+| `implementer` | Strict TDD implementation | read, write, edit, bash, plan_tracker, workflow_reference | workflow-monitor, plan-tracker |
+| `worker` | General-purpose task execution | read, write, edit, bash, plan_tracker, workflow_reference | workflow-monitor, plan-tracker |
+| `code-reviewer` | Production readiness review | read, bash, find, grep, ls | — |
+| `spec-reviewer` | Plan/spec compliance check | read, bash, find, grep, ls | — |
 
 Agent definitions live in `agents/*.md` and use YAML frontmatter to declare tools, model, extensions, and a system prompt body.
 
 ### Single Agent
 
 ```ts
-subagent({ agent: "implementer", task: "Implement the retry logic per docs/plans/retry-plan.md Task 3" })
+subagent({
+  agent: "implementer",
+  task: "Implement the retry logic per docs/plans/retry-plan.md Task 3",
+  agentScope: "both",
+})
 ```
 
 ### Parallel Tasks
@@ -295,7 +306,7 @@ Single-agent results include:
 
 ### Custom Agents
 
-Add `.md` files to an `agents/` directory at your project root. They override bundled agents of the same name. Frontmatter fields:
+Add `.md` files to a `.pi/agents/` directory in your project. They override bundled agents of the same name when `agentScope` includes project agents. Frontmatter fields:
 
 ```yaml
 ---
@@ -320,7 +331,7 @@ Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, po
 | **TDD enforcement** | Skill tells agent the rules | Skill tells agent the rules | Extension *watches* and injects warnings |
 | **TDD widget** | — | — | TUI: RED → GREEN → REFACTOR |
 | **Debug enforcement** | Manual discipline | Manual discipline | Extension escalates after repeated failures |
-| **Verification gating** | — | — | Blocks commit/push/PR until tests pass |
+| **Verification gating** | — | — | Warns and gates commit/push/PR flows until tests pass |
 | **Workflow tracking** | — | — | Phase strip, boundary prompts, `/workflow-next` |
 | **Subagent dispatch** | — | — | Bundled `subagent` tool + 4 agent definitions |
 | **TDD in subagents** | — | — | Three-scenario TDD instructions in agent profiles + prompt templates + runtime warnings |
@@ -332,33 +343,40 @@ Based on [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent, po
 
 ```
 pi-superpowers-plus/
-├── agents/                            # Bundled agent definitions (4 agents)
+├── agents/                            # Bundled agent definitions + shared config
 │   ├── implementer.md                 # Strict TDD implementation agent
 │   ├── worker.md                      # General-purpose task agent
 │   ├── code-reviewer.md               # Production readiness reviewer
-│   └── spec-reviewer.md               # Plan/spec compliance reviewer
+│   ├── spec-reviewer.md               # Plan/spec compliance reviewer
+│   └── config.ts                      # Shared bundled-agent defaults
+├── docs/                              # Repo documentation referenced by README
 ├── extensions/
-│   ├── logging.ts                     # File-based diagnostic logger (10KB truncation, time-based rotation)
+│   ├── lib/
+│   │   └── logging.ts                 # File-based diagnostic logger
 │   ├── plan-tracker.ts                # Task tracking tool + TUI widget
 │   ├── workflow-monitor.ts            # Extension entry point (event wiring)
 │   ├── workflow-monitor/
 │   │   ├── tdd-monitor.ts             # TDD phase state machine
 │   │   ├── debug-monitor.ts           # Debug mode escalation
-│   │   ├── verification-monitor.ts    # Commit/push/PR gating
-│   │   ├── workflow-tracker.ts        # Workflow phase tracking + parseSkillName
+│   │   ├── verification-monitor.ts    # Commit/push/PR checks
+│   │   ├── workflow-tracker.ts        # Workflow phase tracking + skill resolution
 │   │   ├── workflow-transitions.ts    # Phase boundary prompt definitions
 │   │   ├── workflow-handler.ts        # Testable core logic (combines monitors)
-│   │   ├── heuristics.ts             # File classification (test vs source)
-│   │   ├── test-runner.ts            # Test command/result detection
-│   │   ├── investigation.ts          # Investigation signal detection
-│   │   ├── git.ts                    # Git branch/SHA detection (branch safety)
-│   │   ├── warnings.ts              # Violation warning content
-│   │   ├── skip-confirmation.ts      # Phase-skip confirmation logic
-│   │   └── reference-tool.ts        # On-demand reference loading
+│   │   ├── heuristics.ts              # File classification (test vs source)
+│   │   ├── test-runner.ts             # Test command/result detection
+│   │   ├── investigation.ts           # Investigation signal detection
+│   │   ├── git.ts                     # Git branch/SHA detection (branch safety)
+│   │   ├── warnings.ts                # Violation warning content
+│   │   ├── skip-confirmation.ts       # Phase-skip confirmation logic
+│   │   └── reference-tool.ts          # On-demand reference loading
 │   └── subagent/
 │       ├── index.ts                   # Subagent tool registration + execution
-│       └── agents.ts                  # Agent discovery + frontmatter parsing
-├── skills/                           # 8 workflow skills
+│       ├── agents.ts                  # Agent discovery + frontmatter parsing
+│       ├── concurrency.ts             # Parallelism limits
+│       ├── env.ts                     # Subprocess environment shaping
+│       ├── lifecycle.ts               # Child-process cleanup tracking
+│       └── timeout.ts                 # Timeout resolution
+├── skills/                            # 8 workflow skills
 │   ├── brainstorming/
 │   ├── writing-plans/
 │   ├── executing-tasks/
@@ -367,7 +385,7 @@ pi-superpowers-plus/
 │   ├── receiving-code-review/
 │   ├── dispatching-parallel-agents/
 │   └── using-git-worktrees/
-└── tests/                            # 388 tests across 41 files
+└── tests/                             # 434 tests across 42 files
 ```
 
 ## Development

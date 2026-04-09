@@ -30,6 +30,38 @@ describe("/workflow-next", () => {
 
     expect(calls[0][0]).toBe("setEditorText");
     expect(calls[0][1]).toMatch(/Continue from artifact: docs\/plans\/2026-02-10-x-design\.md/);
+    expect(calls[0][1]).toContain("/skill:writing-plans");
+  });
+
+  test("prefills actionable finalize kickoff", async () => {
+    let handler: any;
+    const fakePi: any = {
+      on() {},
+      registerTool() {},
+      appendEntry() {},
+      registerCommand(_name: string, opts: any) {
+        handler = opts.handler;
+      },
+    };
+
+    workflowMonitorExtension(fakePi);
+
+    const calls: any[] = [];
+    const ctx: any = {
+      hasUI: true,
+      sessionManager: { getSessionFile: () => "/tmp/session.jsonl" },
+      ui: {
+        setEditorText: (t: string) => calls.push(["setEditorText", t]),
+        notify: () => {},
+      },
+      newSession: async () => ({ cancelled: false }),
+    };
+
+    await handler("finalize docs/plans/2026-02-10-x-implementation.md", ctx);
+
+    expect(calls[0][1]).toContain("Continue from artifact: docs/plans/2026-02-10-x-implementation.md");
+    expect(calls[0][1]).toContain("/skill:executing-tasks");
+    expect(calls[0][1]).toContain("Finalize the completed work");
   });
 
   test("rejects invalid phase values", async () => {
