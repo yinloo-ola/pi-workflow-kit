@@ -3,7 +3,7 @@ name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code
 ---
 
-> **Related skills:** Before claiming done, use `/skill:verification-before-completion` to verify tests actually pass.
+> **Related skills:** Before claiming done, use `/skill:executing-tasks` to verify tests actually pass.
 
 # Test-Driven Development (TDD)
 
@@ -57,6 +57,17 @@ For typo fixes, config tweaks, string changes, renames:
 - Don't write a new test for a string literal change
 
 **Be honest:** If the change touches logic, it's not trivial. Use Scenario 1 or 2.
+
+### Scenario 4: If You See a ⚠️ TDD Warning
+
+The workflow monitor detected a potential TDD violation. Pause and assess:
+
+1. **Identify your scenario** — which of 1, 2, or 3 applies to this change?
+2. **Scenario 1 (new file):** If no test exists yet, stop, delete any written source code, write a failing test first, then re-implement.
+3. **Scenario 2 (existing tests):** Run the existing tests now. Confirm they're green. Then proceed with your change. Run them again after.
+4. **Scenario 3 (trivial):** If the change truly is trivial, run relevant tests after and continue.
+
+The warning is a signal to think, not a hard stop. But if you can't clearly identify which scenario applies, default to Scenario 1.
 
 ## Interpreting Runtime Warnings
 
@@ -252,4 +263,4 @@ Trivial change → relevant tests run after (Scenario 3)
 
 No exceptions without your human partner's permission.
 
-When the TDD implementation cycle is complete (all tests green, code committed), mark the implement phase complete: call `plan_tracker` with `{action: "update", status: "complete"}` for the current phase.
+When the TDD implementation cycle is complete (all tests green, code committed), the orchestrating agent updates `plan_tracker` for the current task as part of the executing-tasks lifecycle.

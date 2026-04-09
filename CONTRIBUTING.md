@@ -5,10 +5,10 @@ Thanks for taking the time to contribute!
 ## Where to post what (strict)
 
 - **Questions / support:** use **GitHub Discussions**
-  - https://github.com/coctostan/pi-superpowers-plus/discussions
+  - https://github.com/yinloo-ola/pi-workflow-kit/discussions
 - **Bugs:** open a **GitHub Issue**
 - **Feature requests:** open a **GitHub Issue**
-  - https://github.com/coctostan/pi-superpowers-plus/issues/new/choose
+  - https://github.com/yinloo-ola/pi-workflow-kit/issues/new/choose
 
 If a question/support request is opened as an Issue, it may be **closed** and redirected to Discussions.
 

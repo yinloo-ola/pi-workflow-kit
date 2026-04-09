@@ -54,6 +54,19 @@ describe("getTddViolationWarning", () => {
     const lines = warning.split("\n").filter((l) => l.trim().length > 0);
     expect(lines.length).toBeLessThanOrEqual(15);
   });
+
+  test("returns existing-tests-not-run-before-change warning", () => {
+    const warning = getTddViolationWarning("existing-tests-not-run-before-change", "src/utils.ts");
+    expect(warning).toContain("TDD SCENARIO 2");
+    expect(warning).toContain("src/utils.ts");
+    expect(warning).toContain("without running existing tests first");
+  });
+
+  test("existing-tests-not-run-before-change warning instructs to run tests first", () => {
+    const warning = getTddViolationWarning("existing-tests-not-run-before-change", "src/foo.ts");
+    expect(warning).toContain("Run the tests");
+    expect(warning).toContain("THEN make your change");
+  });
 });
 
 describe("getDebugViolationWarning", () => {

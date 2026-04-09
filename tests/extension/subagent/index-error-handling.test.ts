@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { createMockLogger } from "../../helpers/mock-logger.js";
-import * as logging from "../../../extensions/logging.js";
+import * as logging from "../../../extensions/lib/logging.js";
 
 const { spawnMock, discoverAgentsMock, unlinkSyncMock, rmSyncMock } = vi.hoisted(() => ({
   spawnMock: vi.fn(),
@@ -31,7 +31,7 @@ vi.mock("../../../extensions/subagent/agents.js", () => ({
   discoverAgents: discoverAgentsMock,
 }));
 
-vi.mock("../../../extensions/logging.js", async (importOriginal) => {
+vi.mock("../../../extensions/lib/logging.js", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof logging;
   return { ...actual, log: createMockLogger() };
 });

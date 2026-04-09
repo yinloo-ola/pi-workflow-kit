@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, expect, test, vi } from "vitest";
-import * as logging from "../../../extensions/logging";
+import * as logging from "../../../extensions/lib/logging";
 import workflowMonitorExtension, { getStateFilePath, reconstructState } from "../../../extensions/workflow-monitor";
 import { DebugMonitor } from "../../../extensions/workflow-monitor/debug-monitor";
 import {
@@ -96,6 +96,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: ["tests/foo.test.ts"],
         sourceFiles: ["src/foo.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: true,
@@ -117,26 +118,20 @@ describe("WorkflowHandler aggregated state persistence", () => {
           brainstorm: "complete",
           plan: "active",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "plan",
         artifacts: {
           brainstorm: "docs/plans/2026-02-15-feature-design.md",
           plan: null,
           execute: null,
-          verify: null,
-          review: null,
-          finish: null,
+          finalize: null,
         },
         prompted: {
           brainstorm: true,
           plan: false,
           execute: false,
-          verify: false,
-          review: false,
-          finish: false,
+          finalize: false,
         },
       },
       tdd: {
@@ -144,6 +139,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: ["tests/a.test.ts"],
         sourceFiles: ["src/a.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: true,
@@ -259,6 +255,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: [],
         sourceFiles: [],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: false,
@@ -278,7 +275,7 @@ describe("file-based state persistence", () => {
     withTempCwd();
 
     const result = getStateFilePath();
-    expect(result).toMatch(/\.pi\/superpowers-state\.json$/);
+    expect(result).toMatch(/\.pi\/workflow-kit-state\.json$/);
   });
 
   test("reconstructState reads from file when it exists", () => {
@@ -290,26 +287,20 @@ describe("file-based state persistence", () => {
           brainstorm: "complete",
           plan: "active",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "plan",
         artifacts: {
           brainstorm: "docs/plans/file-design.md",
           plan: null,
           execute: null,
-          verify: null,
-          review: null,
-          finish: null,
+          finalize: null,
         },
         prompted: {
           brainstorm: true,
           plan: false,
           execute: false,
-          verify: false,
-          review: false,
-          finish: false,
+          finalize: false,
         },
       },
       tdd: {
@@ -317,6 +308,7 @@ describe("file-based state persistence", () => {
         testFiles: ["tests/file.test.ts"],
         sourceFiles: ["src/file.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 2 },
       verification: { verified: true, verificationWaived: false },
@@ -369,26 +361,20 @@ describe("file-based state persistence", () => {
           brainstorm: "complete",
           plan: "active",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "plan",
         artifacts: {
           brainstorm: "docs/plans/session-design.md",
           plan: null,
           execute: null,
-          verify: null,
-          review: null,
-          finish: null,
+          finalize: null,
         },
         prompted: {
           brainstorm: true,
           plan: false,
           execute: false,
-          verify: false,
-          review: false,
-          finish: false,
+          finalize: false,
         },
       },
       tdd: {
@@ -396,6 +382,7 @@ describe("file-based state persistence", () => {
         testFiles: ["tests/session.test.ts"],
         sourceFiles: ["src/session.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 1 },
       verification: { verified: false, verificationWaived: true },
@@ -414,6 +401,118 @@ describe("file-based state persistence", () => {
   });
 });
 
+describe("state file rename to .pi/workflow-kit-state.json with legacy fallback", () => {
+  test("getStateFilePath returns .pi/workflow-kit-state.json", () => {
+    withTempCwd();
+    const result = getStateFilePath();
+    expect(result).toMatch(/\.pi\/workflow-kit-state\.json$/);
+  });
+
+  test("reconstructState prefers .pi/workflow-kit-state.json when both files exist", () => {
+    const tempDir = withTempCwd();
+    const handler = createWorkflowHandler();
+
+    const newSnapshot: SuperpowersStateSnapshot = {
+      workflow: {
+        phases: { brainstorm: "complete", plan: "active", execute: "pending", finalize: "pending" },
+        currentPhase: "plan",
+        artifacts: { brainstorm: "docs/plans/new-design.md", plan: null, execute: null, finalize: null },
+        prompted: { brainstorm: true, plan: false, execute: false, finalize: false },
+      },
+      tdd: { phase: "green", testFiles: [], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      debug: { active: false, investigated: false, fixAttempts: 0 },
+      verification: { verified: false, verificationWaived: false },
+    };
+
+    const legacySnapshot: SuperpowersStateSnapshot = {
+      workflow: {
+        phases: { brainstorm: "active", plan: "pending", execute: "pending", finalize: "pending" },
+        currentPhase: "brainstorm",
+        artifacts: { brainstorm: "docs/plans/old-design.md", plan: null, execute: null, finalize: null },
+        prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
+      },
+      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      debug: { active: true, investigated: true, fixAttempts: 2 },
+      verification: { verified: true, verificationWaived: false },
+    };
+
+    fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, ".pi", "workflow-kit-state.json"),
+      JSON.stringify(newSnapshot, null, 2),
+    );
+    fs.writeFileSync(
+      path.join(tempDir, ".pi", "superpowers-state.json"),
+      JSON.stringify(legacySnapshot, null, 2),
+    );
+
+    reconstructState(
+      { sessionManager: { getBranch: () => [] } } as any,
+      handler,
+    );
+
+    expect(handler.getFullState()).toEqual(newSnapshot);
+  });
+
+  test("reconstructState falls back to .pi/superpowers-state.json when new file is absent", () => {
+    const tempDir = withTempCwd();
+    const handler = createWorkflowHandler();
+
+    const legacySnapshot: SuperpowersStateSnapshot = {
+      workflow: {
+        phases: { brainstorm: "complete", plan: "active", execute: "pending", finalize: "pending" },
+        currentPhase: "plan",
+        artifacts: { brainstorm: "docs/plans/legacy-design.md", plan: null, execute: null, finalize: null },
+        prompted: { brainstorm: true, plan: false, execute: false, finalize: false },
+      },
+      tdd: { phase: "green", testFiles: ["tests/legacy.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
+      debug: { active: false, investigated: false, fixAttempts: 0 },
+      verification: { verified: false, verificationWaived: true },
+    };
+
+    fs.mkdirSync(path.join(tempDir, ".pi"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, ".pi", "superpowers-state.json"),
+      JSON.stringify(legacySnapshot, null, 2),
+    );
+
+    reconstructState(
+      { sessionManager: { getBranch: () => [] } } as any,
+      handler,
+    );
+
+    expect(handler.getFullState()).toEqual(legacySnapshot);
+  });
+
+  test("extension persistence writes only .pi/workflow-kit-state.json (not the legacy filename)", async () => {
+    const fake = createFakePi({ withAppendEntry: true });
+    const tempDir = process.cwd();
+    workflowMonitorExtension(fake.api as any);
+
+    const onToolResult = getSingleHandler(fake.handlers, "tool_result");
+
+    await onToolResult(
+      {
+        toolCallId: "call-persist-new",
+        toolName: "read",
+        input: { path: "/home/pi/workspace/pi-superpowers-plus/skills/writing-plans/SKILL.md" },
+        content: [{ type: "text", text: "ok" }],
+        details: {},
+      },
+      { hasUI: false, sessionManager: { getBranch: () => [] }, ui: { setWidget: () => {} } },
+    );
+
+    const newPath = path.join(tempDir, ".pi", "workflow-kit-state.json");
+    const legacyPath = path.join(tempDir, ".pi", "superpowers-state.json");
+
+    expect(fs.existsSync(newPath)).toBe(true);
+    expect(fs.existsSync(legacyPath)).toBe(false);
+
+    const persisted = JSON.parse(fs.readFileSync(newPath, "utf-8"));
+    expect(persisted.workflow.currentPhase).toBe("plan");
+  });
+});
+
 describe("workflow-monitor state reconstruction + persistence wiring", () => {
   test("reconstructs full state from superpowers_state entry", () => {
     const handler = createWorkflowHandler();
@@ -423,26 +522,20 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
           brainstorm: "complete",
           plan: "active",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "plan",
         artifacts: {
           brainstorm: "docs/plans/2026-02-15-feature-design.md",
           plan: null,
           execute: null,
-          verify: null,
-          review: null,
-          finish: null,
+          finalize: null,
         },
         prompted: {
           brainstorm: true,
           plan: false,
           execute: false,
-          verify: false,
-          review: false,
-          finish: false,
+          finalize: false,
         },
       },
       tdd: {
@@ -450,6 +543,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         testFiles: ["tests/x.test.ts"],
         sourceFiles: ["src/x.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 2 },
       verification: { verified: false, verificationWaived: true },
@@ -527,15 +621,19 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
           brainstorm: "active",
           plan: "pending",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "brainstorm",
-        artifacts: { brainstorm: null, plan: null, execute: null, verify: null, review: null, finish: null },
-        prompted: { brainstorm: false, plan: false, execute: false, verify: false, review: false, finish: false },
+        artifacts: { brainstorm: null, plan: null, execute: null, finalize: null },
+        prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
       },
-      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false },
+      tdd: {
+        phase: "red",
+        testFiles: ["tests/old.test.ts"],
+        sourceFiles: [],
+        redVerificationPending: false,
+        nonCodeMode: false,
+      },
       debug: { active: false, investigated: false, fixAttempts: 0 },
       verification: { verified: false, verificationWaived: false },
     };
@@ -546,26 +644,23 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
           brainstorm: "complete",
           plan: "active",
           execute: "pending",
-          verify: "pending",
-          review: "pending",
-          finish: "pending",
+          finalize: "pending",
         },
         currentPhase: "plan",
         artifacts: {
           brainstorm: "docs/plans/new-design.md",
           plan: null,
           execute: null,
-          verify: null,
-          review: null,
-          finish: null,
+          finalize: null,
         },
-        prompted: { brainstorm: true, plan: false, execute: false, verify: false, review: false, finish: false },
+        prompted: { brainstorm: true, plan: false, execute: false, finalize: false },
       },
       tdd: {
         phase: "green",
         testFiles: ["tests/new.test.ts"],
         sourceFiles: ["src/new.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 1 },
       verification: { verified: true, verificationWaived: false },
@@ -610,7 +705,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
     expect(fake.appendedEntries[0]?.customType).toBe("superpowers_state");
     expect(fake.appendedEntries[0]?.data.workflow.currentPhase).toBe("plan");
 
-    const statePath = path.join(tempDir, ".pi", "superpowers-state.json");
+    const statePath = path.join(tempDir, ".pi", "workflow-kit-state.json");
     expect(fs.existsSync(statePath)).toBe(true);
 
     const persisted = JSON.parse(fs.readFileSync(statePath, "utf-8"));

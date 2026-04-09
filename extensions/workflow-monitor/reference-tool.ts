@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { log } from "../logging.js";
+import { log } from "../lib/logging.js";
 
 // extensions/workflow-monitor/reference-tool.ts is 2 levels below package root
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -15,6 +15,12 @@ const TOPIC_MAP: Record<string, string> = {
   "debug-tracing": "skills/systematic-debugging/root-cause-tracing.md",
   "debug-defense-in-depth": "skills/systematic-debugging/defense-in-depth.md",
   "debug-condition-waiting": "skills/systematic-debugging/condition-based-waiting.md",
+  "brainstorming-guide": "skills/brainstorming/SKILL.md",
+  "writing-plans-guide": "skills/writing-plans/SKILL.md",
+  "executing-tasks-guide": "skills/executing-tasks/SKILL.md",
+  "dispatching-agents-guide": "skills/dispatching-parallel-agents/SKILL.md",
+  "receiving-review-guide": "skills/receiving-code-review/SKILL.md",
+  "worktree-guide": "skills/using-git-worktrees/SKILL.md",
 };
 
 export const REFERENCE_TOPICS = Object.keys(TOPIC_MAP);

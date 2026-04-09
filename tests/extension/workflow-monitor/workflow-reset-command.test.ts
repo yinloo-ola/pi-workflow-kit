@@ -61,7 +61,7 @@ describe("/workflow-reset command", () => {
     // Workflow should be empty
     const wf = lastEntry.data.workflow;
     expect(wf.currentPhase).toBeNull();
-    for (const phase of ["brainstorm", "plan", "execute", "verify", "review", "finish"]) {
+    for (const phase of ["brainstorm", "plan", "execute", "finalize"]) {
       expect(wf.phases[phase]).toBe("pending");
     }
 

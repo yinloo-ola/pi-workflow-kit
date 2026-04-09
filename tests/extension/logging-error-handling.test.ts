@@ -3,7 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { createLogger } from "../../extensions/logging.js";
+import { createLogger } from "../../extensions/lib/logging.js";
 
 describe("logging error handling", () => {
   let tmpDir: string;
@@ -32,7 +32,7 @@ describe("logging error handling", () => {
     log.info("should fail");
 
     expect(stderrSpy).toHaveBeenCalledTimes(1);
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-superpowers-plus"));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-workflow-kit"));
   });
 
   test("stderr fallback fires only once even with repeated failures", () => {
@@ -72,7 +72,7 @@ describe("logging error handling", () => {
     log.info("should trigger rotation failure");
 
     expect(stderrSpy).toHaveBeenCalledTimes(1);
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-superpowers-plus"));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("pi-workflow-kit"));
   });
 
   test("logger works normally when filesystem is healthy", () => {

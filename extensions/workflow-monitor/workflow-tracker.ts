@@ -1,6 +1,6 @@
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
 
-export const WORKFLOW_PHASES = ["brainstorm", "plan", "execute", "verify", "review", "finish"] as const;
+export const WORKFLOW_PHASES = ["brainstorm", "plan", "execute", "finalize"] as const;
 
 export type Phase = (typeof WORKFLOW_PHASES)[number];
 export type PhaseStatus = "pending" | "active" | "complete" | "skipped";
@@ -12,12 +12,7 @@ export interface WorkflowTrackerState {
   prompted: Record<Phase, boolean>;
 }
 
-export type TransitionBoundary =
-  | "design_committed"
-  | "plan_ready"
-  | "execution_complete"
-  | "verification_passed"
-  | "review_complete";
+export type TransitionBoundary = "design_committed" | "plan_ready" | "execution_complete";
 
 export function computeBoundaryToPrompt(state: WorkflowTrackerState): TransitionBoundary | null {
   if (state.phases.brainstorm === "complete" && !state.prompted.brainstorm) {
@@ -28,12 +23,6 @@ export function computeBoundaryToPrompt(state: WorkflowTrackerState): Transition
   }
   if (state.phases.execute === "complete" && !state.prompted.execute) {
     return "execution_complete";
-  }
-  if (state.phases.verify === "complete" && !state.prompted.verify) {
-    return "verification_passed";
-  }
-  if (state.phases.review === "complete" && !state.prompted.review) {
-    return "review_complete";
   }
   return null;
 }
@@ -63,12 +52,24 @@ export function parseSkillName(line: string): string | null {
 export const SKILL_TO_PHASE: Record<string, Phase> = {
   brainstorming: "brainstorm",
   "writing-plans": "plan",
-  "executing-plans": "execute",
-  "subagent-driven-development": "execute",
-  "verification-before-completion": "verify",
-  "requesting-code-review": "review",
-  "finishing-a-development-branch": "finish",
+  "using-git-worktrees": "plan", // pre-execute worktree setup belongs to plan
+  "executing-tasks": "execute",
+  "systematic-debugging": "execute", // used within execute phase
+  "dispatching-parallel-agents": "execute", // used within execute phase
+  "test-driven-development": "execute", // makes TDD skill phase-aware
+  "receiving-code-review": "finalize", // post-PR external review
 };
+
+export function resolveSkillPhase(skill: string, state: WorkflowTrackerState | null | undefined): Phase | null {
+  if (skill === "executing-tasks") {
+    if (state?.currentPhase === "finalize" || state?.phases.execute === "complete") {
+      return "finalize";
+    }
+    return "execute";
+  }
+
+  return SKILL_TO_PHASE[skill] ?? null;
+}
 
 const PLANS_DIR_RE = /^docs\/plans\//;
 const DESIGN_RE = /-design\.md$/;
@@ -161,9 +162,14 @@ export class WorkflowTracker {
     for (const line of lines) {
       const skill = parseSkillName(line);
       if (!skill) continue;
-      const phase = SKILL_TO_PHASE[skill] ?? null;
-
-      if (phase && this.advanceTo(phase)) changed = true;
+      const phase = resolveSkillPhase(skill, this.state);
+      if (!phase) continue;
+      // Guard against backward navigation: skills shared across phases (e.g. executing-tasks
+      // covers both execute and finalize) must not reset state when re-invoked in a later phase.
+      const currentIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+      const targetIdx = WORKFLOW_PHASES.indexOf(phase);
+      if (targetIdx <= currentIdx) continue;
+      if (this.advanceTo(phase)) changed = true;
     }
 
     return changed;
@@ -172,8 +178,15 @@ export class WorkflowTracker {
   onSkillFileRead(path: string): boolean {
     const match = path.match(/\/skills\/([^/]+)\/SKILL\.md$/);
     if (!match) return false;
-    const phase = SKILL_TO_PHASE[match[1]];
+    const phase = resolveSkillPhase(match[1], this.state);
     if (!phase) return false;
+    // Guard against backward navigation: some skills (e.g. executing-tasks) serve
+    // multiple phases. Re-reading their SKILL.md during a later phase (e.g. finalize)
+    // must not reset workflow state. Rely on plan_tracker init or explicit /workflow-reset
+    // to restart from scratch.
+    const currentIdx = this.state.currentPhase ? WORKFLOW_PHASES.indexOf(this.state.currentPhase) : -1;
+    const targetIdx = WORKFLOW_PHASES.indexOf(phase);
+    if (targetIdx <= currentIdx) return false;
     return this.advanceTo(phase);
   }
 

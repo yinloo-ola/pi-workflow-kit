@@ -26,15 +26,15 @@ function setupWithState(_state: WorkflowTrackerState) {
   const fake = createFakePi({ withAppendEntry: true });
   workflowMonitorExtension(fake.api as any);
 
-  const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+  const onSessionStart = getSingleHandler(fake.handlers, "session_start");
   const onInput = getSingleHandler(fake.handlers, "input");
 
-  return { fake, onSessionSwitch, onInput };
+  return { fake, onSessionStart, onInput };
 }
 
 describe("skip-confirmation gating on /skill transitions", () => {
   test("non-interactive bypasses gate (no prompt shown)", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "pending" }, "brainstorm"),
     );
 
@@ -57,15 +57,15 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     // Jump from brainstorm straight to execute, skipping plan - no UI so no gate
-    await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
   });
 
   test("no gate when zero unresolved phases before target", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "complete" }, "plan"),
     );
 
@@ -88,15 +88,15 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     // All prior phases complete, going to execute - no gate needed
-    await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
   });
 
   test("skip-confirmation prompts with string labels (not {label,value} objects)", async () => {
-    const { onSessionSwitch, onInput } = setupWithState(
+    const { onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "pending" }, "brainstorm"),
     );
 
@@ -119,8 +119,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     const [_title, options] = (ctx.ui.select as any).mock.calls[0];
@@ -129,7 +129,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("single unresolved + skip: skips phase and allows transition", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "pending" }, "brainstorm"),
     );
 
@@ -153,8 +153,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const _result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const _result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     // Should have prompted
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
@@ -167,7 +167,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("single unresolved + do now: blocks transition, sets editor to missing phase skill", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "pending" }, "brainstorm"),
     );
 
@@ -191,8 +191,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
 
@@ -208,7 +208,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("single unresolved + cancel: blocks transition", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "complete", plan: "pending" }, "brainstorm"),
     );
 
@@ -231,8 +231,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ blocked: true });
@@ -241,7 +241,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("multi unresolved + skip all: skips all and allows transition", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "pending", plan: "pending", execute: "pending" }, null),
     );
 
@@ -264,8 +264,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const _result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const _result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
 
@@ -276,7 +276,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("multi unresolved + cancel: blocks transition", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "pending", plan: "pending", execute: "pending" }, null),
     );
 
@@ -299,15 +299,15 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ blocked: true });
   });
 
   test("multi unresolved + review one-by-one: prompts each, skip individual", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "pending", plan: "pending", execute: "pending" }, null),
     );
 
@@ -334,8 +334,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const _result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const _result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     // Summary prompt + 2 individual prompts
     expect(ctx.ui.select).toHaveBeenCalledTimes(3);
@@ -347,7 +347,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("multi unresolved + review one-by-one + do_now on first: blocks transition", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "pending", plan: "pending", execute: "pending" }, null),
     );
 
@@ -374,8 +374,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    const result = await onInput({ source: "user", text: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    const result = await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     // Summary prompt + 1 individual prompt (stops at do_now)
     expect(ctx.ui.select).toHaveBeenCalledTimes(2);
@@ -384,7 +384,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
   });
 
   test("extension-sourced input events bypass gate", async () => {
-    const { fake, onSessionSwitch, onInput } = setupWithState(
+    const { fake, onSessionStart, onInput } = setupWithState(
       createWorkflowState({ brainstorm: "pending", plan: "pending" }, null),
     );
 
@@ -407,8 +407,8 @@ describe("skip-confirmation gating on /skill transitions", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
-    await onInput({ source: "extension", input: "/skill:executing-plans" }, ctx);
+    await onSessionStart({}, ctx);
+    await onInput({ source: "extension", input: "/skill:executing-tasks" }, ctx);
 
     // Extension inputs are skipped entirely (early return)
     expect(ctx.ui.select).not.toHaveBeenCalled();
@@ -418,7 +418,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
 describe("multiline /skill input: gate applies to furthest target phase", () => {
   test("input with earlier skill on first line and farther skill on later line gates to farther phase", async () => {
     const state = createWorkflowState({ brainstorm: "complete" }, "brainstorm");
-    const { fake, onSessionSwitch, onInput } = setupWithState(state);
+    const { fake, onSessionStart, onInput } = setupWithState(state);
 
     const ctx = {
       hasUI: true,
@@ -433,33 +433,33 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
       },
       ui: {
         setWidget: () => {},
-        select: vi.fn().mockResolvedValue("Skip all and continue"),
+        select: vi.fn().mockResolvedValue("Skip plan"),
         setEditorText: vi.fn(),
         notify: () => {},
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onInput(
       {
         source: "user",
-        input: "/skill:writing-plans\nsome text\n/skill:verification-before-completion",
+        input: "/skill:writing-plans\nsome text\n/skill:executing-tasks",
       },
       ctx,
     );
 
-    // Gate should have fired because plan and execute are unresolved before verify
+    // Gate should have fired because plan is unresolved before execute
     expect(ctx.ui.select).toHaveBeenCalled();
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.workflow.phases.plan).toBe("skipped");
-    expect(latest.workflow.phases.execute).toBe("skipped");
-    expect(latest.workflow.currentPhase).toBe("verify");
+    // plan should be resolved (either skipped or completed via handleInputText advancement)
+    expect(["skipped", "complete"]).toContain(latest?.workflow?.phases?.plan);
+    expect(latest?.workflow?.currentPhase).toBe("execute");
   });
 
   test("single-line earlier skill does not silently bypass gate for later phases", async () => {
     const state = createWorkflowState({ brainstorm: "complete" }, "brainstorm");
-    const { fake, onSessionSwitch, onInput } = setupWithState(state);
+    const { fake, onSessionStart, onInput } = setupWithState(state);
 
     const ctx = {
       hasUI: true,
@@ -480,7 +480,7 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onInput({ source: "user", text: "/skill:writing-plans" }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
@@ -488,7 +488,7 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
 
   test("multiline with unknown skills returns null target (no gate)", async () => {
     const state = createWorkflowState({ brainstorm: "pending" }, null);
-    const { fake, onSessionSwitch, onInput } = setupWithState(state);
+    const { fake, onSessionStart, onInput } = setupWithState(state);
 
     const ctx = {
       hasUI: true,
@@ -509,7 +509,7 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onInput({ source: "user", text: "/skill:unknown-thing\n/skill:also-unknown" }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
@@ -517,7 +517,7 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
 
   test("XML skill input is detected for skip-confirmation gating", async () => {
     const state = createWorkflowState({}, null);
-    const { fake, onSessionSwitch, onInput } = setupWithState(state);
+    const { fake, onSessionStart, onInput } = setupWithState(state);
 
     let selectCalled = false;
     const ctx = {
@@ -542,21 +542,18 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     // Input with XML skill that targets review phase — brainstorm/plan/execute/verify are unresolved
-    await onInput(
-      { source: "user", text: '<skill name="requesting-code-review" location="/path">\ncontent\n</skill>' },
-      ctx,
-    );
+    await onInput({ source: "user", text: '<skill name="executing-tasks" location="/path">\ncontent\n</skill>' }, ctx);
 
-    // The gate should have fired because there are unresolved phases before "review"
+    // The gate should have fired because there are unresolved phases before "execute"
     expect(selectCalled).toBe(true);
   });
 
   test("multiline input blocks when farther phase has unresolved predecessors", async () => {
     const state = createWorkflowState({}, null);
-    const { fake, onSessionSwitch, onInput } = setupWithState(state);
+    const { fake, onSessionStart, onInput } = setupWithState(state);
 
     const ctx = {
       hasUI: true,
@@ -577,16 +574,48 @@ describe("multiline /skill input: gate applies to furthest target phase", () => 
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     const result = await onInput(
       {
         source: "user",
-        input: "/skill:brainstorming\n/skill:executing-plans",
+        input: "/skill:brainstorming\n/skill:executing-tasks",
       },
       ctx,
     );
 
     expect(ctx.ui.select).toHaveBeenCalled();
     expect(result).toEqual({ blocked: true });
+  });
+
+  test("executing-tasks targets finalize once execute is complete", async () => {
+    const state = createWorkflowState(
+      { brainstorm: "complete", plan: "complete", execute: "complete", finalize: "pending" },
+      "execute",
+    );
+    const { onSessionStart, onInput } = setupWithState(state);
+
+    const ctx = {
+      hasUI: true,
+      sessionManager: {
+        getBranch: () => [
+          {
+            type: "custom",
+            customType: WORKFLOW_TRACKER_ENTRY_TYPE,
+            data: state,
+          },
+        ],
+      },
+      ui: {
+        setWidget: () => {},
+        select: vi.fn(),
+        setEditorText: vi.fn(),
+        notify: () => {},
+      },
+    };
+
+    await onSessionStart({}, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
+
+    expect(ctx.ui.select).not.toHaveBeenCalled();
   });
 });

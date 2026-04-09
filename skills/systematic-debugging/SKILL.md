@@ -3,7 +3,7 @@ name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
 ---
 
-> **Related skills:** Write a failing test for the bug with `/skill:test-driven-development`. Verify the fix with `/skill:verification-before-completion`.
+> **Related skills:** Write a failing test for the bug with `/skill:test-driven-development`. Verify the fix with `/skill:executing-tasks`.
 
 # Systematic Debugging
 

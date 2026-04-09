@@ -16,13 +16,14 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentToolResult } from "@mariozechner/pi-agent-core";
 import type { Message } from "@mariozechner/pi-ai";
 import { StringEnum } from "@mariozechner/pi-ai";
+import type { AgentToolResult } from "@mariozechner/pi-coding-agent";
 import { type ExtensionAPI, getMarkdownTheme } from "@mariozechner/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { log } from "../logging.js";
+import { DEFAULT_MODEL } from "../../agents/config.js";
+import { log } from "../lib/logging.js";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
 import { getSubagentConcurrency, Semaphore } from "./concurrency.js";
 import { buildSubagentEnv } from "./env.js";
@@ -145,16 +146,17 @@ interface UsageStats {
 
 interface SingleResult {
   agent: string;
-  agentSource: "user" | "project" | "unknown";
+  agentSource: "user" | "project" | "bundled" | "unknown";
   task: string;
   exitCode: number;
   messages: Message[];
   stderr: string;
   usage: UsageStats;
   model?: string;
+  modelProvider?: string;
+  modelSource?: "agent" | "parent" | "default";
   stopReason?: string;
   errorMessage?: string;
-  tddViolations?: number;
   step?: number;
 }
 
@@ -163,6 +165,32 @@ interface SubagentDetails {
   agentScope: AgentScope;
   projectAgentsDir: string | null;
   results: SingleResult[];
+}
+
+interface ParentModelInfo {
+  id: string;
+  provider: string;
+}
+
+interface ResolvedModelSelection {
+  model: string;
+  provider?: string;
+  source: "agent" | "parent" | "default";
+}
+
+function resolveModelSelection(
+  agentModel: string | undefined,
+  parentModel: ParentModelInfo | undefined,
+): ResolvedModelSelection {
+  if (agentModel) {
+    return { model: agentModel, provider: undefined, source: "agent" };
+  }
+
+  if (parentModel?.id) {
+    return { model: parentModel.id, provider: parentModel.provider, source: "parent" };
+  }
+
+  return { model: DEFAULT_MODEL, provider: undefined, source: "default" };
 }
 
 function getFinalOutput(messages: Message[]): string {
@@ -175,6 +203,34 @@ function getFinalOutput(messages: Message[]): string {
     }
   }
   return "";
+}
+
+function buildModelArgs(selection: ResolvedModelSelection): string[] {
+  const args: string[] = [];
+  if (selection.provider) args.push("--provider", selection.provider);
+  args.push("--model", selection.model);
+  return args;
+}
+
+function formatModelSelection(result: Pick<SingleResult, "model" | "modelProvider" | "modelSource">): string | undefined {
+  if (!result.model) return undefined;
+  const modelLabel = result.modelProvider ? `${result.modelProvider}/${result.model}` : result.model;
+  switch (result.modelSource) {
+    case "parent":
+      return `${modelLabel} (inherited from parent session)`;
+    case "agent":
+      return `${modelLabel} (pinned by agent config)`;
+    case "default":
+      return `${modelLabel} (default fallback)`;
+    default:
+      return modelLabel;
+  }
+}
+
+function buildFailureMessage(prefix: string, result: SingleResult): string {
+  const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
+  const modelSelection = formatModelSelection(result);
+  return modelSelection ? `${prefix}: ${errorMsg}\nModel: ${modelSelection}` : `${prefix}: ${errorMsg}`;
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: pi SDK message content type
@@ -227,7 +283,7 @@ function collectSummary(messages: Message[]): { filesChanged: string[]; testsRan
   return { filesChanged: Array.from(files), testsRan };
 }
 
-export const __internal = { collectSummary };
+export const __internal = { collectSummary, resolveModelSelection };
 
 async function mapWithConcurrencyLimit<TIn, TOut>(
   items: TIn[],
@@ -265,6 +321,7 @@ async function runSingleAgent(
   task: string,
   cwd: string | undefined,
   step: number | undefined,
+  parentModel: ParentModelInfo | undefined,
   signal: AbortSignal | undefined,
   onUpdate: OnUpdateCallback | undefined,
   makeDetails: (results: SingleResult[]) => SubagentDetails,
@@ -288,7 +345,8 @@ async function runSingleAgent(
   }
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
-  if (agent.model) args.push("--model", agent.model);
+  const selectedModel = resolveModelSelection(agent.model, parentModel);
+  args.push(...buildModelArgs(selectedModel));
   if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
   if (agent.extensions) {
     for (const ext of agent.extensions) {
@@ -298,9 +356,6 @@ async function runSingleAgent(
 
   let tmpDir: string | null = null;
   let tmpPromptPath: string | null = null;
-  let tddViolationsPath: string | null = null;
-  let tddViolations = 0;
-
   const currentResult: SingleResult = {
     agent: agentName,
     agentSource: agent.source,
@@ -309,7 +364,9 @@ async function runSingleAgent(
     messages: [],
     stderr: "",
     usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
-    model: agent.model,
+    model: selectedModel.model,
+    modelProvider: selectedModel.provider,
+    modelSource: selectedModel.source,
     step,
   };
 
@@ -328,7 +385,6 @@ async function runSingleAgent(
   const release = await semaphore.acquire();
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-subagent-"));
-    tddViolationsPath = path.join(tmpDir, "tdd-violations.txt");
     if (agent.systemPrompt.trim()) {
       const tmp = writePromptToTempFile(tmpDir, agent.name, agent.systemPrompt);
       tmpPromptPath = tmp.filePath;
@@ -366,7 +422,7 @@ async function runSingleAgent(
         cwd: resolvedCwd,
         shell: false,
         stdio: ["ignore", "pipe", "pipe"],
-        env: buildSubagentEnv(tddViolationsPath ? { PI_TDD_GUARD_VIOLATIONS_FILE: tddViolationsPath } : undefined),
+        env: buildSubagentEnv(),
       });
       processTracker.add(proc);
       let buffer = "";
@@ -511,12 +567,6 @@ async function runSingleAgent(
     });
 
     currentResult.exitCode = exitCode;
-    if (tddViolationsPath && fs.existsSync(tddViolationsPath)) {
-      const raw = fs.readFileSync(tddViolationsPath, "utf-8").trim();
-      const parsed = Number.parseInt(raw || "0", 10);
-      tddViolations = Number.isFinite(parsed) ? parsed : 0;
-    }
-    currentResult.tddViolations = tddViolations;
     if (wasAborted) throw new Error("Subagent was aborted");
     return currentResult;
   } finally {
@@ -551,7 +601,8 @@ const ChainItem = Type.Object({
 });
 
 const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
-  description: 'Which agent directories to use. Default: "user". Use "both" to include project-local agents.',
+  description:
+    'Which agent directories to use. Default: "user". Use "both" to include bundled and project-local agents.',
   default: "user",
 });
 
@@ -580,7 +631,8 @@ export default function (pi: ExtensionAPI) {
       "Delegate tasks to specialized subagents with isolated context.",
       "Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
       'Default agent scope is "user" (from ~/.pi/agent/agents).',
-      'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
+      'Bundled agents (worker, implementer, code-reviewer, spec-reviewer) require agentScope: "both" or "project".',
+      'To also include project-local agents in .pi/agents, set agentScope: "both".',
     ].join(" "),
     parameters: SubagentParams,
 
@@ -603,6 +655,7 @@ export default function (pi: ExtensionAPI) {
           projectAgentsDir: discovery.projectAgentsDir,
           results,
         });
+      const parentModel = ctx.model ? { id: ctx.model.id, provider: ctx.model.provider } : undefined;
 
       if (modeCount !== 1) {
         const available = agents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
@@ -672,6 +725,7 @@ export default function (pi: ExtensionAPI) {
             taskWithContext,
             step.cwd,
             i + 1,
+            parentModel,
             signal,
             chainUpdate,
             makeDetails("chain"),
@@ -682,9 +736,8 @@ export default function (pi: ExtensionAPI) {
 
           const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
           if (isError) {
-            const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
             return {
-              content: [{ type: "text", text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}` }],
+              content: [{ type: "text", text: buildFailureMessage(`Chain stopped at step ${i + 1} (${step.agent})`, result) }],
               details: makeDetails("chain")(results),
               isError: true,
             };
@@ -744,6 +797,7 @@ export default function (pi: ExtensionAPI) {
             t.task,
             t.cwd,
             undefined,
+            parentModel,
             signal,
             // Per-task update callback
             (partial) => {
@@ -786,6 +840,7 @@ export default function (pi: ExtensionAPI) {
           params.task,
           params.cwd,
           undefined,
+          parentModel,
           signal,
           onUpdate,
           makeDetails("single"),
@@ -804,13 +859,11 @@ export default function (pi: ExtensionAPI) {
           result: getFinalOutput(result.messages),
           filesChanged: summary.filesChanged,
           testsRan: summary.testsRan,
-          tddViolations: result.tddViolations ?? 0,
         };
         const isError = result.exitCode !== 0 || result.stopReason === "error" || result.stopReason === "aborted";
         if (isError) {
-          const errorMsg = result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
           return {
-            content: [{ type: "text", text: `Agent ${result.stopReason || "failed"}: ${errorMsg}` }],
+            content: [{ type: "text", text: buildFailureMessage(`Agent ${result.stopReason || "failed"}`, result) }],
             details: stableDetails,
             isError: true,
           };

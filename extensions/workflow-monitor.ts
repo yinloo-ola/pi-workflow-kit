@@ -1,5 +1,5 @@
 /**
- * Workflow Monitor Extension
+ * Workflow Kit monitor extension.
  *
  * Observes tool_call and tool_result events to:
  * - Track TDD phase (RED→GREEN→REFACTOR) and inject warnings on violations
@@ -14,11 +14,14 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { log } from "./logging.js";
+import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
+import { log } from "./lib/logging.js";
+import type { PlanTrackerDetails } from "./plan-tracker.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
+import { getWorkflowNextCompletions } from "./workflow-monitor/workflow-next-completions";
+import { validateNextWorkflowPhase, deriveWorkflowHandoffState } from "./workflow-monitor/workflow-next-state";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
-import { parseTestCommand, parseTestResult } from "./workflow-monitor/test-runner";
 import type { VerificationViolation } from "./workflow-monitor/verification-monitor";
 import {
   type DebugViolationType,
@@ -26,12 +29,12 @@ import {
   getTddViolationWarning,
   getVerificationViolationWarning,
 } from "./workflow-monitor/warnings";
-import { createWorkflowHandler, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
+import { createWorkflowHandler, DEBUG_DEFAULTS, TDD_DEFAULTS, VERIFICATION_DEFAULTS, type Violation, type WorkflowHandler } from "./workflow-monitor/workflow-handler";
 import {
   computeBoundaryToPrompt,
   type Phase,
   parseSkillName,
-  SKILL_TO_PHASE,
+  resolveSkillPhase,
   type TransitionBoundary,
   WORKFLOW_PHASES,
   WORKFLOW_TRACKER_ENTRY_TYPE,
@@ -54,23 +57,34 @@ async function selectValue<T extends string>(
 
 const SUPERPOWERS_STATE_ENTRY_TYPE = "superpowers_state";
 
-export function getStateFilePath(): string {
+function getLegacyStateFilePath(): string {
   return path.join(process.cwd(), ".pi", "superpowers-state.json");
+}
+
+export function getStateFilePath(): string {
+  return path.join(process.cwd(), ".pi", "workflow-kit-state.json");
 }
 
 export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler, stateFilePath?: string | false) {
   handler.resetState();
 
-  // Try file-based state first (survives across sessions)
-  // Pass false to disable file-based state (for testing)
+  // Read both file-based and session-based state, then pick the newer one.
+  let fileData: (Record<string, unknown> & { savedAt?: number }) | null = null;
+  let sessionData: (Record<string, unknown> & { savedAt?: number }) | null = null;
+
   if (stateFilePath !== false) {
     try {
-      const statePath = stateFilePath ?? getStateFilePath();
-      if (fs.existsSync(statePath)) {
-        const raw = fs.readFileSync(statePath, "utf-8");
-        const data = JSON.parse(raw);
-        handler.setFullState(data);
-        return;
+      const newPath = stateFilePath ?? getStateFilePath();
+      if (fs.existsSync(newPath)) {
+        const raw = fs.readFileSync(newPath, "utf-8");
+        fileData = JSON.parse(raw);
+      } else if (stateFilePath === undefined) {
+        // Legacy fallback: try the old filename only when no explicit path is given.
+        const legacyPath = getLegacyStateFilePath();
+        if (fs.existsSync(legacyPath)) {
+          const raw = fs.readFileSync(legacyPath, "utf-8");
+          fileData = JSON.parse(raw);
+        }
       }
     } catch (err) {
       log.warn(
@@ -79,28 +93,39 @@ export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler
     }
   }
 
-  // Fall back to session branch entries
+  // Scan session branch for most recent superpowers state entry
   const entries = ctx.sessionManager.getBranch();
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === SUPERPOWERS_STATE_ENTRY_TYPE) {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-      handler.setFullState((entry as any).data);
-      return;
+      sessionData = (entry as any).data;
+      break;
     }
     // Migration fallback: old-format workflow-only entries
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === WORKFLOW_TRACKER_ENTRY_TYPE) {
-      handler.setFullState({
-        // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-        workflow: (entry as any).data,
-      });
-      return;
+      // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+      sessionData = { workflow: (entry as any).data };
+      break;
     }
   }
-  // No entries found — reset to fresh defaults
-  handler.setFullState({});
+
+  // Pick the newer source when both are available; otherwise use whichever exists.
+  if (fileData && sessionData) {
+    const fileSavedAt = fileData.savedAt ?? 0;
+    const sessionSavedAt = sessionData.savedAt ?? 0;
+    const winner = fileSavedAt >= sessionSavedAt ? fileData : sessionData;
+    handler.setFullState(winner);
+  } else if (fileData) {
+    handler.setFullState(fileData);
+  } else if (sessionData) {
+    handler.setFullState(sessionData);
+  } else {
+    // No entries found — reset to fresh defaults
+    handler.setFullState({});
+  }
 }
 
 export default function (pi: ExtensionAPI) {
@@ -146,12 +171,13 @@ export default function (pi: ExtensionAPI) {
   let branchConfirmed = false;
 
   const persistState = () => {
-    pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, handler.getFullState());
+    const stateWithTimestamp = { ...handler.getFullState(), savedAt: Date.now() };
+    pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, stateWithTimestamp);
     // Also persist to file for cross-session survival
     try {
       const statePath = getStateFilePath();
       fs.mkdirSync(path.dirname(statePath), { recursive: true });
-      fs.writeFileSync(statePath, JSON.stringify(handler.getFullState(), null, 2));
+      fs.writeFileSync(statePath, JSON.stringify(stateWithTimestamp, null, 2));
     } catch (err) {
       log.warn(`Failed to persist state file: ${err instanceof Error ? err.message : err}`);
     }
@@ -160,21 +186,20 @@ export default function (pi: ExtensionAPI) {
   const phaseToSkill: Record<string, string> = {
     brainstorm: "brainstorming",
     plan: "writing-plans",
-    execute: "executing-plans",
-    verify: "verification-before-completion",
-    review: "requesting-code-review",
-    finish: "finishing-a-development-branch",
+    execute: "executing-tasks",
+    finalize: "executing-tasks",
   };
 
   function parseTargetPhase(text: string): Phase | null {
     const lines = text.split(/\r?\n/);
     let furthest: Phase | null = null;
     let furthestIdx = -1;
+    const workflowState = handler.getWorkflowState();
 
     for (const line of lines) {
       const skill = parseSkillName(line);
       if (!skill) continue;
-      const phase = SKILL_TO_PHASE[skill] ?? null;
+      const phase = resolveSkillPhase(skill, workflowState);
       if (!phase) continue;
       const idx = WORKFLOW_PHASES.indexOf(phase);
       if (idx > furthestIdx) {
@@ -190,27 +215,32 @@ export default function (pi: ExtensionAPI) {
     design_committed: "brainstorm",
     plan_ready: "plan",
     execution_complete: "execute",
-    verification_passed: "verify",
-    review_complete: "review",
   };
 
   // --- State reconstruction on session events ---
-  for (const event of ["session_start", "session_switch", "session_fork", "session_tree"] as const) {
-    pi.on(event, async (_event, ctx) => {
-      reconstructState(ctx, handler);
-      pendingViolations.clear();
-      pendingVerificationViolations.clear();
-      pendingBranchGates.clear();
-      pendingProcessWarnings.clear();
-      strikes.process = 0;
-      strikes.practice = 0;
-      delete sessionAllowed.process;
-      delete sessionAllowed.practice;
-      branchNoticeShown = false;
-      branchConfirmed = false;
-      updateWidget(ctx);
-    });
+  function resetSessionState(ctx: ExtensionContext) {
+    reconstructState(ctx, handler);
+    pendingViolations.clear();
+    pendingVerificationViolations.clear();
+    pendingBranchGates.clear();
+    pendingProcessWarnings.clear();
+    strikes.process = 0;
+    strikes.practice = 0;
+    delete sessionAllowed.process;
+    delete sessionAllowed.practice;
+    branchNoticeShown = false;
+    branchConfirmed = false;
+    updateWidget(ctx);
   }
+
+  // session_start covers startup, reload, new, resume, fork (pi v0.65.0+)
+  pi.on("session_start", async (_event, ctx) => {
+    resetSessionState(ctx);
+  });
+  // session_tree for /tree navigation where a different session branch is loaded
+  pi.on("session_tree", async (_event, ctx) => {
+    resetSessionState(ctx);
+  });
 
   // --- Input observation (skill detection + skip-confirmation gate) ---
   pi.on("input", async (event, ctx) => {
@@ -402,19 +432,15 @@ export default function (pi: ExtensionAPI) {
   const PR_RE = /\bgh\s+pr\s+create\b/;
 
   function getCompletionActionTarget(command: string): Phase | null {
-    if (COMMIT_RE.test(command)) return "verify";
-    if (PUSH_RE.test(command)) return "review";
-    if (PR_RE.test(command)) return "review";
+    if (COMMIT_RE.test(command)) return "finalize";
+    if (PUSH_RE.test(command)) return "finalize";
+    if (PR_RE.test(command)) return "finalize";
     return null;
   }
 
-  function getUnresolvedPhasesForAction(target: Phase, state: WorkflowTrackerState): Phase[] {
-    if (target === "verify") {
-      // For commit: check verify itself
-      return getUnresolvedPhases(["verify"], state);
-    }
-    // For push/pr: check verify + review
-    return getUnresolvedPhases(["verify", "review"], state);
+  function getUnresolvedPhasesForAction(_target: Phase, state: WorkflowTrackerState): Phase[] {
+    // For all completion actions, check that finalize is complete
+    return getUnresolvedPhases(["finalize"], state);
   }
 
   // --- Tool call observation (detect file writes + verification gate) ---
@@ -427,12 +453,12 @@ export default function (pi: ExtensionAPI) {
 
       const state = handler.getWorkflowState();
       const phaseIdx = state?.currentPhase ? WORKFLOW_PHASES.indexOf(state.currentPhase) : -1;
-      const executeIdx = WORKFLOW_PHASES.indexOf("execute");
+      const finalizeIdx = WORKFLOW_PHASES.indexOf("finalize");
 
-      // Completion action gating (interactive only, execute+ phases)
+      // Completion action gating (interactive only, finalize phase)
       // Suppress during active plan execution — prompts only fire after execution completes
       const isExecuting = state?.currentPhase === "execute" && state.phases.execute === "active";
-      if (ctx.hasUI && state && phaseIdx >= executeIdx && !isExecuting) {
+      if (ctx.hasUI && state && phaseIdx >= finalizeIdx && !isExecuting) {
         const actionTarget = getCompletionActionTarget(command);
         if (actionTarget) {
           const unresolved = getUnresolvedPhasesForAction(actionTarget, state);
@@ -441,7 +467,7 @@ export default function (pi: ExtensionAPI) {
             if (gateResult === "blocked") {
               return { blocked: true };
             }
-            if (unresolved.includes("verify")) {
+            if (unresolved.length > 0) {
               handler.recordVerificationWaiver();
               persistState();
             }
@@ -449,6 +475,7 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
+      const executeIdx = WORKFLOW_PHASES.indexOf("execute");
       if (phaseIdx >= executeIdx) {
         const verificationViolation = handler.checkCommitGate(command);
         if (verificationViolation) {
@@ -512,7 +539,8 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
-    if (event.toolName === "plan_tracker") {
+    // plan-tracker init advances workflow phase to execute — intentional integration contract
+    if (event.toolName === PLAN_TRACKER_TOOL_NAME) {
       changed = handler.handlePlanTrackerToolCall(input) || changed;
     }
 
@@ -535,6 +563,14 @@ export default function (pi: ExtensionAPI) {
       handler.handleReadOrInvestigation("read", path);
     }
 
+    if (
+      event.toolName === PLAN_TRACKER_TOOL_NAME &&
+      handler.handlePlanTrackerToolResult(event.details as PlanTrackerDetails | undefined)
+    ) {
+      persistState();
+      updateWidget(ctx);
+    }
+
     const injected: string[] = [];
 
     // Layer 1: announce current branch on first tool result in session.
@@ -552,7 +588,24 @@ export default function (pi: ExtensionAPI) {
     if (event.toolName === "write" || event.toolName === "edit") {
       const violation = pendingViolations.get(toolCallId);
       if (violation) {
-        injected.push(formatViolationWarning(violation));
+        const warningText = formatViolationWarning(violation);
+        injected.push(warningText);
+
+        // Wire practice escalation for TDD violations (post-write, warns but never blocks current call)
+        const isTddViolation =
+          violation.type === "source-before-test" ||
+          violation.type === "source-during-red" ||
+          violation.type === "existing-tests-not-run-before-change";
+        if (isTddViolation) {
+          const escalation = await maybeEscalate("practice", ctx);
+          if (escalation === "block") {
+            injected.push(
+              "🛑 STOP: The agent has repeatedly violated TDD practice guardrails. " +
+                "Do not write any more source code until you have addressed the TDD violations above. " +
+                "Review the test-driven-development skill before proceeding.",
+            );
+          }
+        }
       }
       pendingViolations.delete(toolCallId);
 
@@ -575,17 +628,6 @@ export default function (pi: ExtensionAPI) {
       const exitCode = (event.details as any)?.exitCode as number | undefined;
       handler.handleBashResult(command, output, exitCode);
       persistState();
-
-      const isTestCommand = parseTestCommand(command);
-      const passed = isTestCommand ? parseTestResult(output, exitCode) : null;
-      if (passed === true) {
-        const state = handler.getWorkflowState();
-        if (state?.currentPhase === "verify" && state.phases.verify === "active") {
-          if (handler.completeCurrentWorkflowPhase()) {
-            persistState();
-          }
-        }
-      }
 
       const verificationViolation = pendingVerificationViolations.get(toolCallId);
       if (verificationViolation) {
@@ -646,9 +688,19 @@ export default function (pi: ExtensionAPI) {
       "- What was learned during this implementation? (surprises, codebase knowledge, things to do differently)\n\n";
 
     if (selected === "next") {
-      ctx.ui.setEditorText(prompt.nextPhase === "finish" ? finishReminder + nextInSession : nextInSession);
+      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
+      if (advanced) {
+        persistState();
+        updateWidget(ctx);
+      }
+      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + nextInSession : nextInSession);
     } else if (selected === "fresh") {
-      ctx.ui.setEditorText(prompt.nextPhase === "finish" ? finishReminder + fresh : fresh);
+      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
+      if (advanced) {
+        persistState();
+        updateWidget(ctx);
+      }
+      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + fresh : fresh);
     } else if (selected === "skip") {
       // Explicit user-confirmed skip: mark the next phase as skipped, then move on.
       handler.skipWorkflowPhases([prompt.nextPhase]);
@@ -669,12 +721,23 @@ export default function (pi: ExtensionAPI) {
 
       persistState();
       updateWidget(ctx);
+    } else if (selected === "discuss") {
+      // Don't advance phase. Set editor text to prompt discussion.
+      ctx.ui.setEditorText(
+        `Let's discuss before moving to the next step.\n` +
+          `We're at: ${prompt.title}\n` +
+          `What questions or concerns do you want to work through?`,
+      );
     }
   });
 
   // --- Format violation warning based on type ---
   function formatViolationWarning(violation: Violation): string {
-    if (violation.type === "source-before-test" || violation.type === "source-during-red") {
+    if (
+      violation.type === "source-before-test" ||
+      violation.type === "source-during-red" ||
+      violation.type === "existing-tests-not-run-before-change"
+    ) {
       const phase = handler.getWorkflowState()?.currentPhase;
       return getTddViolationWarning(violation.type, violation.file, phase ?? undefined);
     }
@@ -762,6 +825,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.registerCommand("workflow-next", {
     description: "Start a fresh session for the next workflow phase (optionally referencing an artifact path)",
+    getArgumentCompletions: getWorkflowNextCompletions,
     async handler(args, ctx) {
       if (!ctx.hasUI) {
         ctx.ui.notify("workflow-next requires interactive mode", "error");
@@ -769,32 +833,62 @@ export default function (pi: ExtensionAPI) {
       }
 
       const [phase, artifact] = args.trim().split(/\s+/, 2);
-      const validPhases = new Set(["brainstorm", "plan", "execute", "verify", "review", "finish"]);
+      const validPhases = new Set(["brainstorm", "plan", "execute", "finalize"]);
       if (!phase || !validPhases.has(phase)) {
         ctx.ui.notify(
-          "Usage: /workflow-next <phase> [artifact-path]  (phase: brainstorm|plan|execute|verify|review|finish)",
+          "Usage: /workflow-next <phase> [artifact-path]  (phase: brainstorm|plan|execute|finalize)",
           "error",
         );
         return;
       }
 
+      // Validate handoff against current workflow state
+      const currentWorkflowState = handler.getWorkflowState();
+      if (currentWorkflowState && currentWorkflowState.currentPhase) {
+        const validationError = validateNextWorkflowPhase(currentWorkflowState, phase as Phase);
+        if (validationError) {
+          ctx.ui.notify(validationError, "error");
+          return;
+        }
+      }
+
+      // Derive handoff state for session seeding
+      const derivedWorkflow = currentWorkflowState
+        ? deriveWorkflowHandoffState(currentWorkflowState, phase as Phase)
+        : undefined;
+
       const parentSession = ctx.sessionManager.getSessionFile();
-      const res = await ctx.newSession({ parentSession });
+      const res = await ctx.newSession({
+        parentSession,
+        setup: derivedWorkflow
+          ? async (sm) => {
+              const fullState = handler.getFullState();
+              sm.appendCustomEntry(SUPERPOWERS_STATE_ENTRY_TYPE, {
+                ...fullState,
+                workflow: derivedWorkflow,
+                tdd: { ...TDD_DEFAULTS, testFiles: [], sourceFiles: [] },
+                debug: { ...DEBUG_DEFAULTS },
+                verification: { ...VERIFICATION_DEFAULTS },
+                savedAt: Date.now(),
+              });
+            }
+          : undefined,
+      });
       if (res.cancelled) return;
 
       const lines: string[] = [];
       if (artifact) lines.push(`Continue from artifact: ${artifact}`);
 
-      if (phase === "plan") {
-        lines.push("Use /skill:writing-plans to create the implementation plan.");
+      if (phase === "brainstorm") {
+        lines.push("/skill:brainstorming");
+      } else if (phase === "plan") {
+        lines.push("/skill:writing-plans");
       } else if (phase === "execute") {
-        lines.push("Use /skill:executing-plans (or /skill:subagent-driven-development) to execute the plan.");
-      } else if (phase === "verify") {
-        lines.push("Use /skill:verification-before-completion to verify before finishing.");
-      } else if (phase === "review") {
-        lines.push("Use /skill:requesting-code-review to get review.");
-      } else if (phase === "finish") {
-        lines.push("Use /skill:finishing-a-development-branch to integrate/ship.");
+        lines.push("/skill:executing-tasks");
+        lines.push("Execute the approved plan task-by-task.");
+      } else if (phase === "finalize") {
+        lines.push("/skill:executing-tasks");
+        lines.push("Finalize the completed work (review, PR, docs, archive, cleanup).");
       }
 
       ctx.ui.setEditorText(lines.join("\n"));
@@ -805,7 +899,7 @@ export default function (pi: ExtensionAPI) {
   // --- Reference Tool ---
   pi.registerTool({
     name: "workflow_reference",
-    label: "Workflow Reference",
+    label: "Workflow Guide",
     description: `Detailed guidance for workflow skills. Topics: ${REFERENCE_TOPICS.join(", ")}`,
     parameters: Type.Object({
       topic: StringEnum(REFERENCE_TOPICS as unknown as readonly [string, ...string[]], {

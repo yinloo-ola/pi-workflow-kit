@@ -3,7 +3,7 @@ name: dispatching-parallel-agents
 description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
 ---
 
-> **Related skills:** Debug each problem with `/skill:systematic-debugging`. Verify all fixes with `/skill:verification-before-completion`.
+> **Related skills:** Debug each problem with `/skill:systematic-debugging`. Verify all fixes with `/skill:executing-tasks`.
 
 # Dispatching Parallel Agents
 
@@ -69,8 +69,13 @@ Each agent gets:
 
 Use the `subagent` tool in parallel mode:
 
+> **Agent scope:** The built-in agents (`worker`, `implementer`, `code-reviewer`, `spec-reviewer`)
+> are bundled with this package. To use them, set `agentScope: "both"`. The default scope `"user"`
+> only loads agents from `~/.pi/agent/agents/`.
+
 ```ts
 subagent({
+  agentScope: "both",   // include bundled agents (worker, implementer, etc.)
   tasks: [
     { agent: "worker", task: "Fix agent-tool-abort.test.ts failures" },
     { agent: "worker", task: "Fix batch-completion-behavior.test.ts failures" },
@@ -154,6 +159,7 @@ Return: Summary of what you found and what you fixed.
 **Dispatch:**
 ```ts
 subagent({
+  agentScope: "both",   // include bundled agents (worker, implementer, etc.)
   tasks: [
     { agent: "worker", task: "Fix agent-tool-abort.test.ts" },
     { agent: "worker", task: "Fix batch-completion-behavior.test.ts" },
@@ -178,5 +184,11 @@ After agents return:
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
+
+> **Integration-mode note:** When integrating parallel agent results, run `git stash` if
+> needed before the integration test run to isolate any stash conflicts from true failures.
+> If tests fail during integration, rule out merge conflicts first before treating it as a
+> new bug. Only invoke `workflow_reference debug-rationalizations` if you have confirmed
+> the failure is not from a merge conflict.
 
 

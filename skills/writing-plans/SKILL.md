@@ -3,7 +3,7 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
-> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-plans` or `/skill:subagent-driven-development`.
+> **Related skills:** Did you `/skill:brainstorming` first? Ready to implement? Use `/skill:executing-tasks`.
 
 # Writing Plans
 
@@ -17,7 +17,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-implementation.md`
 
 ## Boundaries
 - Read code and docs: yes
@@ -40,7 +40,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **REQUIRED SUB-SKILL:** Use the executing-plans skill to implement this plan task-by-task.
+> **REQUIRED SUB-SKILL:** Use the executing-tasks skill to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -53,9 +53,14 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Task Structure
 
+Every task must declare its type explicitly so `executing-tasks` can initialize `plan_tracker` with the correct metadata.
+
+### Code task template
+
 ```markdown
 ### Task N: [Component Name]
 
+**Type:** code
 **TDD scenario:** [New feature — full TDD cycle | Modifying tested code — run existing tests first | Trivial change — use judgment]
 
 **Files:**
@@ -96,8 +101,36 @@ git commit -m "feat: add specific feature"
 ```
 ```
 
+### Non-code task template
+
+```markdown
+### Task N: [Documentation / rollout / analysis task]
+
+**Type:** non-code
+
+**Files:**
+- Modify: `README.md`
+- Modify: `docs/architecture.md`
+
+**Acceptance criteria:**
+- Criterion 1: [Specific, observable outcome]
+- Criterion 2: [Specific, observable outcome]
+- Criterion 3: [Specific, observable outcome]
+
+**Implementation notes:**
+- Update the listed files only.
+- Keep terminology consistent with the rest of the repo.
+- Reference the relevant code paths or docs where useful.
+
+**Verification:**
+- Review each acceptance criterion one-by-one.
+- Confirm the updated docs match the implemented behavior.
+```
+
 ## Remember
 - Exact file paths always
+- Every task must include `**Type:** code` or `**Type:** non-code`
+- Non-code tasks must include explicit `**Acceptance criteria:**`
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - Reference relevant skills
@@ -107,23 +140,10 @@ git commit -m "feat: add specific feature"
 
 ## Execution Handoff
 
-After saving the plan, mark the planning phase complete: call `plan_tracker` with `{action: "update", status: "complete"}` for the current phase.
+After saving the plan, the workflow monitor automatically tracks phase transitions when you invoke skills.
 
-Then offer execution choice:
+Then offer execution:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Ready to execute with `/skill:executing-tasks`."**
 
-**1. Subagent-Driven (this session)** - Fresh subagent per task with two-stage review. Better for plans with many independent tasks.
-
-**2. Parallel Session (separate)** - Batch execution with human review checkpoints. Better when tasks are tightly coupled or you want more control between batches.
-
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use `/skill:subagent-driven-development`
-- Stay in this session
-- Fresh subagent per task + code review
-
-**If Parallel Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses `/skill:executing-plans`
+The executing-tasks skill handles the full per-task lifecycle (define → approve → execute → verify → review → fix) with human gates and bounded retry loops.

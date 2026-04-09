@@ -28,11 +28,22 @@ describe("TddMonitor", () => {
     expect(violation?.type).toBe("source-before-test");
   });
 
-  test("does not warn when corresponding test file already exists on disk", () => {
+  test("warns with Scenario 2 violation when corresponding test exists on disk but tests not yet run", () => {
     const monitorWithDiskTests = new TddMonitor(
       (candidatePath) => candidatePath === "src/utils.test.ts" || candidatePath === "tests/utils.test.ts",
     );
 
+    const violation = monitorWithDiskTests.onFileWritten("src/utils.ts");
+    expect(violation).not.toBeNull();
+    expect(violation?.type).toBe("existing-tests-not-run-before-change");
+  });
+
+  test("no violation when corresponding test exists on disk AND tests were run first", () => {
+    const monitorWithDiskTests = new TddMonitor(
+      (candidatePath) => candidatePath === "src/utils.test.ts" || candidatePath === "tests/utils.test.ts",
+    );
+
+    monitorWithDiskTests.onTestResult(true); // run tests first
     const violation = monitorWithDiskTests.onFileWritten("src/utils.ts");
     expect(violation).toBeNull();
   });
@@ -200,5 +211,87 @@ describe("TddMonitor (RED verification semantics)", () => {
 
     const violation = tdd.onFileWritten("extensions/workflow-monitor/foo.ts");
     expect(violation?.type).toBe("source-during-red");
+  });
+});
+
+describe("TddMonitor (non-code mode)", () => {
+  test("suppresses all violations when non-code mode is active", () => {
+    const monitor = new TddMonitor(() => false);
+    monitor.setNonCodeMode(true);
+
+    // Would normally be source-before-test violation
+    const violation = monitor.onFileWritten("src/config.ts");
+    expect(violation).toBeNull();
+  });
+
+  test("returns to normal violation reporting when non-code mode is disabled", () => {
+    const monitor = new TddMonitor(() => false);
+    monitor.setNonCodeMode(true);
+    monitor.setNonCodeMode(false);
+
+    const violation = monitor.onFileWritten("src/config.ts");
+    expect(violation?.type).toBe("source-before-test");
+  });
+
+  test("non-code mode is persisted in getState and restored via setState", () => {
+    const monitor = new TddMonitor(() => false);
+    monitor.setNonCodeMode(true);
+
+    const state = monitor.getState();
+    expect(state.nonCodeMode).toBe(true);
+
+    const monitor2 = new TddMonitor(() => false);
+    monitor2.setState(state.phase, state.testFiles, state.sourceFiles, state.redVerificationPending, state.nonCodeMode);
+    const violation = monitor2.onFileWritten("src/foo.ts");
+    expect(violation).toBeNull();
+  });
+});
+
+describe("TddMonitor (Scenario 2: existing tests not run before change)", () => {
+  test("returns existing-tests-not-run-before-change when existing test found but no test run yet", () => {
+    // disk has the test file
+    const monitor = new TddMonitor((p) => p === "src/utils.test.ts" || p === "tests/utils.test.ts");
+
+    const violation = monitor.onFileWritten("src/utils.ts");
+    expect(violation).not.toBeNull();
+    expect(violation?.type).toBe("existing-tests-not-run-before-change");
+  });
+
+  test("no violation when tests were run before source change", () => {
+    const monitor = new TddMonitor((p) => p === "src/utils.test.ts" || p === "tests/utils.test.ts");
+
+    monitor.onTestResult(true); // tests run before change
+    const violation = monitor.onFileWritten("src/utils.ts");
+    expect(violation).toBeNull();
+  });
+
+  test("violation resets after each source write (next write requires tests run again)", () => {
+    const monitor = new TddMonitor((p) => p.includes(".test.ts"));
+
+    monitor.onTestResult(true); // tests run
+    monitor.onFileWritten("src/utils.ts"); // no violation, testsRunBeforeLastWrite resets
+
+    // Second source write without running tests again
+    const violation = monitor.onFileWritten("src/utils.ts");
+    expect(violation?.type).toBe("existing-tests-not-run-before-change");
+  });
+
+  test("no Scenario 2 violation in non-code mode", () => {
+    const monitor = new TddMonitor((p) => p.includes(".test.ts"));
+    monitor.setNonCodeMode(true);
+
+    const violation = monitor.onFileWritten("src/utils.ts");
+    expect(violation).toBeNull();
+  });
+
+  test("onCommit resets testsRunBeforeLastWrite state", () => {
+    const monitor = new TddMonitor((p) => p.includes(".test.ts"));
+
+    monitor.onTestResult(true);
+    monitor.onCommit();
+
+    // After commit, testsRunBeforeLastWrite is reset — next write needs tests run again
+    const violation = monitor.onFileWritten("src/utils.ts");
+    expect(violation?.type).toBe("existing-tests-not-run-before-change");
   });
 });

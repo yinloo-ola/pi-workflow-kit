@@ -1,4 +1,4 @@
-export type TddViolationType = "source-before-test" | "source-during-red";
+export type TddViolationType = "source-before-test" | "source-during-red" | "existing-tests-not-run-before-change";
 
 export function getTddViolationWarning(type: TddViolationType, file: string, _phase?: string): string {
   if (type === "source-before-test") {
@@ -7,6 +7,10 @@ export function getTddViolationWarning(type: TddViolationType, file: string, _ph
 
   if (type === "source-during-red") {
     return `⚠️ TDD: Writing source code (${file}) before running your new test. Run the test suite to verify your test fails, then implement.`;
+  }
+
+  if (type === "existing-tests-not-run-before-change") {
+    return `⚠️ TDD SCENARIO 2: You modified ${file} without running existing tests first.\nRun the tests, observe their current state, THEN make your change.`;
   }
 
   return `⚠️ TDD: Unexpected violation type "${type}" for ${file}`;

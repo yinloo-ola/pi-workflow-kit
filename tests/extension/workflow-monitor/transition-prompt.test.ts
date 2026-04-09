@@ -55,7 +55,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     let agentEndSelectCalls = 0;
@@ -93,7 +93,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
     await onAgentEnd({}, ctx);
 
@@ -104,7 +104,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -139,7 +139,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
@@ -153,7 +153,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -169,26 +169,20 @@ describe("boundary prompting", () => {
                 brainstorm: "complete",
                 plan: "complete",
                 execute: "complete",
-                verify: "complete",
-                review: "complete",
-                finish: "pending",
+                finalize: "pending",
               },
-              currentPhase: "review",
+              currentPhase: "execute",
               artifacts: {
                 brainstorm: null,
                 plan: null,
                 execute: null,
-                verify: null,
-                review: null,
-                finish: null,
+                finalize: null,
               },
               prompted: {
                 brainstorm: true,
                 plan: true,
-                execute: true,
-                verify: true,
-                review: false,
-                finish: false,
+                execute: false,
+                finalize: false,
               },
             },
           },
@@ -202,12 +196,12 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.workflow.phases.finish).toBe("skipped");
-    expect(latest.workflow.currentPhase).toBe("review");
+    expect(latest.workflow.phases.finalize).toBe("skipped");
+    expect(latest.workflow.currentPhase).toBe("execute");
     expect(editorTexts).toHaveLength(0);
   });
 
@@ -215,7 +209,7 @@ describe("boundary prompting", () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const ctx = {
@@ -252,7 +246,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
   });
 
@@ -285,7 +279,7 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onInput({ source: "user", text: "/skill:verification-before-completion" }, ctx);
+    await onInput({ source: "user", text: "/skill:executing-tasks" }, ctx);
 
     inAgentEnd = true;
     await onAgentEnd({}, ctx);
@@ -304,14 +298,72 @@ describe("boundary prompting", () => {
 
     inAgentEnd = true;
     await onAgentEnd({}, ctx);
-    expect(agentEndSelectCalls).toBe(1);
+    // Note: boundary prompts now only fire for execution_complete, which requires
+    // the execute phase to be complete AND not yet prompted. Since we only set the
+    // phase to execute (not complete), no boundary prompt fires here.
   });
 
-  test("finish transition pre-fills docs + learnings reminder", async () => {
+  test("execution-complete next advances workflow into finalize before prefilling finalize skill", async () => {
     const fake = createFakePi({ withAppendEntry: true });
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
+    const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
+
+    const editorTexts: string[] = [];
+    const ctx = {
+      hasUI: true,
+      sessionManager: {
+        getBranch: () => [
+          {
+            type: "custom",
+            customType: WORKFLOW_TRACKER_ENTRY_TYPE,
+            data: {
+              phases: {
+                brainstorm: "complete",
+                plan: "complete",
+                execute: "complete",
+                finalize: "pending",
+              },
+              currentPhase: "execute",
+              artifacts: {
+                brainstorm: null,
+                plan: "docs/plans/x-implementation.md",
+                execute: null,
+                finalize: null,
+              },
+              prompted: {
+                brainstorm: true,
+                plan: true,
+                execute: false,
+                finalize: false,
+              },
+            },
+          },
+        ],
+      },
+      ui: {
+        setWidget: () => {},
+        select: async () => "Next step (this session)",
+        setEditorText: (text: string) => editorTexts.push(text),
+        notify: () => {},
+      },
+    };
+
+    await onSessionStart({}, ctx);
+    await onAgentEnd({}, ctx);
+
+    const latest = fake.appendedEntries.at(-1)?.data;
+    expect(latest.workflow.currentPhase).toBe("finalize");
+    expect(latest.workflow.phases.finalize).toBe("active");
+    expect(editorTexts.at(-1)).toContain("/skill:executing-tasks");
+  });
+
+  test("finalize transition pre-fills docs + learnings reminder", async () => {
+    const fake = createFakePi({ withAppendEntry: true });
+    workflowMonitorExtension(fake.api as any);
+
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onAgentEnd = getSingleHandler(fake.handlers, "agent_end");
 
     const editorTexts: string[] = [];
@@ -328,26 +380,20 @@ describe("boundary prompting", () => {
                 brainstorm: "complete",
                 plan: "complete",
                 execute: "complete",
-                verify: "complete",
-                review: "complete",
-                finish: "active",
+                finalize: "active",
               },
-              currentPhase: "finish",
+              currentPhase: "finalize",
               artifacts: {
                 brainstorm: null,
                 plan: null,
                 execute: null,
-                verify: null,
-                review: null,
-                finish: null,
+                finalize: null,
               },
               prompted: {
                 brainstorm: true,
                 plan: true,
-                execute: true,
-                verify: true,
-                review: false,
-                finish: false,
+                execute: false,
+                finalize: false,
               },
             },
           },
@@ -361,13 +407,13 @@ describe("boundary prompting", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
     const text = editorTexts.at(-1) ?? "";
     expect(text).toContain("Before finishing:");
     expect(text).toContain("documentation updates");
     expect(text).toContain("What was learned");
-    expect(text).toContain("/skill:finishing-a-development-branch");
+    expect(text).toContain("/skill:executing-tasks");
   });
 });

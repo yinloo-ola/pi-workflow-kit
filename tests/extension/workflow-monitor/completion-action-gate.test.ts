@@ -52,112 +52,81 @@ async function setupExtension(_state: WorkflowTrackerState) {
   const fake = createFakePi({ withAppendEntry: true });
   workflowMonitorExtension(fake.api as any);
 
-  const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+  const onSessionStart = getSingleHandler(fake.handlers, "session_start");
   const onToolCall = getSingleHandler(fake.handlers, "tool_call");
   const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
-  return { fake, onSessionSwitch, onToolCall, onToolResult };
+  return { fake, onSessionStart, onToolCall, onToolResult };
 }
 
 describe("completion-action gating on bash commands", () => {
   test("commit during brainstorm does not prompt completion gate", async () => {
-    const state = createWorkflowState(
-      {
-        brainstorm: "active",
-        plan: "pending",
-        execute: "pending",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
-      },
-      "brainstorm",
-    );
+    const state = createWorkflowState({ brainstorm: "active" }, "brainstorm");
 
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
-    const { ctx } = createCtx(state, true, ["Do verify now"]);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
+    const { ctx } = createCtx(state, true, ["Do finalize now"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'docs: brainstorm'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'docs: brainstorm'" } },
       ctx,
     );
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
   });
 
-  test("interactive commit with unresolved verify -> Do now blocks + editor set to /skill:verification-before-completion", async () => {
+  test("interactive commit with unresolved finalize -> Do now blocks + editor set to /skill:executing-tasks", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
-    const { ctx, editorTexts } = createCtx(state, true, ["Do verify now"]);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
+    const { ctx, editorTexts } = createCtx(state, true, ["Do finalize now"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'feat: done'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: done'" } },
       ctx,
     );
 
     expect(ctx.ui.select).toHaveBeenCalled();
     expect(result).toEqual({ blocked: true });
-    // Editor should be prefilled with verification skill
     expect(editorTexts.length).toBeGreaterThan(0);
-    expect(editorTexts.at(-1)).toBe("/skill:verification-before-completion");
+    expect(editorTexts.at(-1)).toBe("/skill:executing-tasks");
   });
 
-  test("interactive commit with unresolved verify -> Skip allows command, marks verify skipped, and records waiver", async () => {
+  test("interactive commit with unresolved finalize -> Skip allows command, marks finalize skipped, and records waiver", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall, onToolResult } = await setupExtension(state);
-    const { ctx } = createCtx(state, true, ["Skip verify"]);
+    const { fake, onSessionStart, onToolCall, onToolResult } = await setupExtension(state);
+    const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const toolCallResult = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'feat: done'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: done'" } },
       ctx,
     );
 
-    // Should NOT block
     expect(toolCallResult?.blocked).not.toBe(true);
 
-    // Verify should be marked skipped
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.workflow.phases.verify).toBe("skipped");
+    expect(latest.workflow.phases.finalize).toBe("skipped");
 
-    // The verification warning should NOT be injected for this same call
-    // (waiver recorded). Let's check tool_result doesn't inject verification warning.
     const resultEvent = {
       toolCallId: "tc1",
       toolName: "bash",
@@ -167,7 +136,6 @@ describe("completion-action gating on bash commands", () => {
     };
     const toolResultOutput = await onToolResult(resultEvent, ctx);
 
-    // Should NOT contain verification violation warning
     if (toolResultOutput?.content) {
       const allText = toolResultOutput.content
         .filter((c: any) => c.type === "text")
@@ -178,100 +146,78 @@ describe("completion-action gating on bash commands", () => {
     }
   });
 
-  test("interactive push with unresolved verify+review -> Skip all allows and marks both skipped", async () => {
+  test("interactive push with unresolved finalize -> Skip allows and marks finalize skipped", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
-    const { ctx } = createCtx(state, true, ["Skip all and continue"]);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
+    const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git push origin main" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git push origin main" } },
       ctx,
     );
 
     expect(result?.blocked).not.toBe(true);
 
     const latest = fake.appendedEntries.at(-1)?.data;
-    expect(latest.workflow.phases.verify).toBe("skipped");
-    expect(latest.workflow.phases.review).toBe("skipped");
+    expect(latest.workflow.phases.finalize).toBe("skipped");
   });
 
-  test("interactive gh pr create with unresolved verify+review -> cancel blocks command", async () => {
+  test("interactive gh pr create with unresolved finalize -> cancel blocks command", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true, ["Cancel"]);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "gh pr create --title 'feat'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "gh pr create --title 'feat'" } },
       ctx,
     );
 
     expect(result).toEqual({ blocked: true });
   });
 
-  test("non-interactive commit path does not prompt and preserves warning behavior", async () => {
+  test("non-interactive commit does not prompt and preserves warning behavior", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { fake, onSessionSwitch, onToolCall, onToolResult } = await setupExtension(state);
+    const { fake, onSessionStart, onToolCall, onToolResult } = await setupExtension(state);
     const { ctx } = createCtx(state, false);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const toolCallResult = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'feat: stuff'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'feat: stuff'" } },
       ctx,
     );
 
-    // Should NOT prompt (no UI)
     expect(ctx.ui.select).not.toHaveBeenCalled();
-    // Should NOT block
     expect(toolCallResult?.blocked).not.toBe(true);
 
-    // Verification warning should still be injected via tool_result path
     const resultEvent = {
       toolCallId: "tc1",
       toolName: "bash",
@@ -281,7 +227,6 @@ describe("completion-action gating on bash commands", () => {
     };
     const toolResultOutput = await onToolResult(resultEvent, ctx);
 
-    // Should contain verification warning
     expect(toolResultOutput?.content).toBeDefined();
     const allText = toolResultOutput.content
       .filter((c: any) => c.type === "text")
@@ -296,51 +241,38 @@ describe("completion-action gating on bash commands", () => {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
-    const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "ls -la" },
-      },
-      ctx,
-    );
+    const result = await onToolCall({ toolCallId: "tc1", toolName: "bash", input: { command: "ls -la" } }, ctx);
 
     expect(ctx.ui.select).not.toHaveBeenCalled();
     expect(result?.blocked).not.toBe(true);
   });
 
-  test("commit with all phases resolved does not gate", async () => {
+  test("commit during execute phase does not gate (finalize not started yet)", async () => {
     const state = createWorkflowState(
       {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "complete",
-        review: "complete",
-        finish: "pending",
+        finalize: "pending",
       },
-      "verify",
+      "execute",
     );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'final'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'final'" } },
       ctx,
     );
 
@@ -349,34 +281,17 @@ describe("completion-action gating on bash commands", () => {
   });
 
   test("git commit during active execution is not gated (suppressed while executing)", async () => {
-    // Regression: when execute phase is "active" (plan is mid-execution), the
-    // completion action gate must be suppressed — no prompt, no block.
-    const state = createWorkflowState(
-      {
-        brainstorm: "complete",
-        plan: "complete",
-        execute: "active",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
-      },
-      "execute",
-    );
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const state = createWorkflowState({ brainstorm: "complete", plan: "complete", execute: "active" }, "execute");
+    const { onSessionStart, onToolCall } = await setupExtension(state);
     const { ctx } = createCtx(state, true);
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const result = await onToolCall(
-      {
-        toolCallId: "tc1",
-        toolName: "bash",
-        input: { command: "git commit -m 'wip: partial progress during execution'" },
-      },
+      { toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'wip'" } },
       ctx,
     );
 
-    // While execute is active, the gate must not fire
     expect(ctx.ui.select).not.toHaveBeenCalled();
     expect(result?.blocked).not.toBe(true);
   });
@@ -387,23 +302,20 @@ describe("completion-action gating on bash commands", () => {
         brainstorm: "complete",
         plan: "complete",
         execute: "complete",
-        verify: "pending",
-        review: "pending",
-        finish: "pending",
+        finalize: "pending",
       },
-      "execute",
+      "finalize",
     );
 
-    const { onSessionSwitch, onToolCall } = await setupExtension(state);
+    const { onSessionStart, onToolCall } = await setupExtension(state);
+    const { ctx } = createCtx(state, true, ["Skip finalize"]);
 
-    const { ctx } = createCtx(state, true, ["Skip verify"]);
-
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall({ toolCallId: "tc1", toolName: "bash", input: { command: "git commit -m 'x'" } }, ctx);
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     const [_title, options] = (ctx.ui.select as any).mock.calls[0];
-    expect(options).toEqual(["Do verify now", "Skip verify", "Cancel"]);
+    expect(options).toEqual(["Do finalize now", "Skip finalize", "Cancel"]);
   });
 });

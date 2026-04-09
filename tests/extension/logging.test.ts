@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // We'll test the internal createLogger factory, not the singleton,
 // so each test gets its own log file in a temp dir.
-import { createLogger, MAX_MESSAGE_LENGTH } from "../../extensions/logging.js";
+import { createLogger, MAX_MESSAGE_LENGTH } from "../../extensions/lib/logging.js";
 
 describe("logging", () => {
   let tmpDir: string;

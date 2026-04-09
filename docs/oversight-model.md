@@ -1,51 +1,49 @@
-# Oversight Model (Skills + Runtime Enforcement)
+# Oversight Model
 
-pi-superpowers-plus uses **defense in depth**:
+`pi-workflow-kit` combines **skills** and **extensions**.
 
-- **Skills** describe the intended workflow (what to do, in what order).
-- The **workflow-monitor extension** observes tool calls/results and enforces guardrails at runtime (what actually happens).
+## Skills
 
-This is intentional: written instructions are easy to ignore; runtime feedback is harder to miss.
+Skills teach the agent the intended workflow:
 
-## Two Violation Categories
+- `brainstorming`
+- `writing-plans`
+- `executing-tasks`
+- supporting skills such as TDD, debugging, worktrees, and review handling
 
-### 1) Process violations (workflow phase boundaries)
-These are violations of *where you are* in the workflow.
+They explain *what* to do and *when* to do it.
 
-Example:
-- Writing or editing non-plan files while in **Brainstorm** or **Plan** phase.
+## Extensions
 
-In thinking phases, the only allowed writes are to:
-- `docs/plans/`
+Extensions observe runtime behavior and add lightweight enforcement:
 
-### 2) Practice violations (quality practices)
-These are violations of *how you work*.
+- **workflow-monitor** tracks workflow phase, injects TDD/debug/verification warnings, and prompts at phase boundaries
+- **plan-tracker** stores per-task execution state, including task type, phase, and attempt counts
+- **subagent** runs isolated helper agents for implementation and review work
 
-Examples:
-- **TDD** write-order violations (writing production source before a failing test).
-- **Debug** violations (fix-without-investigation, excessive fix attempts).
+## Enforcement style
 
-## Escalation: Warning → Hard Block (with user override)
+The package is intentionally **warning-first**.
 
-For both categories, the extension keeps a **per-session strike counter**.
+- TDD violations are injected into tool results as warnings
+- Debug guardrails escalate after repeated failing cycles
+- Verification checks warn on `git commit`, `git push`, and `gh pr create` when passing tests have not been run recently
+- During brainstorm and plan, writes outside `docs/plans/` trigger process warnings and may escalate to an interactive stop in the TUI
 
-- **1st strike:** warning is injected into tool output.
-- **2nd strike:** in interactive sessions, the extension prompts via `ui.select` and can hard-block the action.
+In interactive sessions, repeated violations can trigger a human decision prompt.
 
-The prompt offers:
-- **Yes, continue** (override): allows the action and resets the strike counter for that category.
-- **No, stop**: blocks the tool call (returns `{ blocked: true }`).
+## Workflow model
 
-### Non-interactive sessions
-If `ctx.hasUI` is false (no UI available), the extension cannot prompt, so it does not hard-block. It still injects warnings.
+Global workflow phases:
 
-## Session lifetime / reset behavior
+```text
+brainstorm → plan → execute → finalize
+```
 
-Strike counters reset when the workflow-monitor session state resets (e.g. on session switch / session clear events). A user override also resets the strike counter for the chosen category.
+Inside **execute**, each task follows the per-task lifecycle tracked by `plan_tracker`:
 
-## Why this exists
+```text
+define → approve → execute → verify → review → fix
+```
 
-The goal is not to punish mistakes; it is to:
-- surface guardrails immediately,
-- prevent repeated violations from becoming the default behavior,
-- and keep the human in control via explicit override when needed.
+This keeps global workflow tracking simple while still reflecting the real per-task feedback loop.

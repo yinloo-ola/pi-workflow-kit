@@ -49,13 +49,13 @@ describe("workflow-monitor extension lifecycle", () => {
     const ctx = { hasUI: false, sessionManager: { getBranch: () => [] } };
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
 
     // Queue a violation from tool_call.
     await onToolCall({ toolName: "write", input: { path: "src/foo.ts" } }, ctx);
 
     // Session change should clear pending state.
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     // If pendingViolation was not cleared, this would inject a stale warning.
     const result = await onToolResult(

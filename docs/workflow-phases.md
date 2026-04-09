@@ -1,70 +1,71 @@
 # Workflow Phases
 
-pi-superpowers-plus tracks a simple workflow state and uses it to provide prompts and guardrails.
+`pi-workflow-kit` tracks four global phases:
 
-The canonical phase order is:
-
-```
-Brainstorm → Plan → Execute → Verify → Review → Finish
+```text
+brainstorm → plan → execute → finalize
 ```
 
-## What each phase permits (high level)
+## brainstorm
 
-### Brainstorm (thinking phase)
-- Goal: turn a vague idea into a design.
-- Writes allowed: **only** `docs/plans/` (design docs / notes).
-- Writes not allowed: source code, tests, config, extensions, etc.
+Primary skill: `/skill:brainstorming`
 
-Recommended skill:
-- `/skill:brainstorming`
+Purpose:
+- explore requirements
+- shape the design
+- produce a design artifact under `docs/plans/`
 
-### Plan (thinking phase)
-- Goal: produce an executable implementation plan.
-- Writes allowed: **only** `docs/plans/` (the plan document).
-- Writes not allowed: source code, tests, config, etc.
+Write boundary:
+- allowed: `docs/plans/`
+- discouraged elsewhere; runtime warnings may be injected
 
-Recommended skill:
-- `/skill:writing-plans`
+## plan
 
-### Execute
-- Goal: implement tasks.
-- Normal code/test edits allowed.
+Primary skill: `/skill:writing-plans`
 
-Recommended skills:
-- `/skill:executing-plans` (batch execution)
-- `/skill:subagent-driven-development` (fresh subagent per task + reviews)
+Purpose:
+- turn the design into a concrete implementation plan
+- define task type (`code` or `non-code`)
+- define code-task steps or non-code acceptance criteria
 
-### Verify
-- Goal: run verification commands and confirm results.
+Write boundary:
+- allowed: `docs/plans/`
+- discouraged elsewhere; runtime warnings may be injected
 
-Recommended skill:
-- `/skill:verification-before-completion`
+## execute
 
-### Review
-- Goal: get a second set of eyes before merging.
+Primary skill: `/skill:executing-tasks`
 
-Recommended skill:
-- `/skill:requesting-code-review`
+Purpose:
+- initialize `plan_tracker`
+- execute tasks one at a time
+- track per-task phase and attempt counts
 
-### Finish
-- Goal: complete a development branch responsibly.
+Per-task phases:
+- `define`
+- `approve`
+- `execute`
+- `verify`
+- `review`
+- `fix`
+- terminal states: `complete`, `blocked`
 
-Recommended skill:
-- `/skill:finishing-a-development-branch`
+## finalize
 
-## Boundary prompts and skipping
+Primary skill: `/skill:executing-tasks`
 
-The workflow-monitor extension can prompt at boundaries (e.g. after `agent_end`) with options like:
-- Next step (this session)
-- Fresh session → next step
-- Skip
-- Discuss
+Purpose:
+- perform holistic review
+- prepare PR / push / cleanup
+- archive planning docs
+- update README / CHANGELOG / other documentation when needed
 
-For some transitions (e.g. attempting to execute without a plan), a **skip-confirmation gate** may appear to ensure skipping is explicit.
+## Detection signals
 
-## Verification gating
+The workflow monitor uses a few practical signals:
 
-During execute+ phases, the workflow-monitor can inject verification warnings when:
-- `git commit`, `git push`, or `gh pr create` runs without a fresh passing test run since the last source edit.
-
-(Verification warnings are gated to **execute+** to avoid noise during brainstorming/planning.)
+- skill invocations such as `/skill:brainstorming` or `/skill:writing-plans`
+- writes to `docs/plans/*-design.md` and `docs/plans/*-implementation.md`
+- `plan_tracker` initialization to enter execute
+- all tracked tasks reaching terminal state to mark execute complete
+- boundary-prompt acceptance to enter finalize

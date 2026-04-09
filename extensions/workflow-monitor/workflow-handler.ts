@@ -1,4 +1,5 @@
 import type { SessionEntry } from "@mariozechner/pi-coding-agent";
+import type { PlanTrackerDetails, PlanTrackerTask } from "../plan-tracker.js";
 import { DebugMonitor, type DebugViolation } from "./debug-monitor";
 import { isSourceFile } from "./heuristics";
 import { isInvestigationCommand, isInvestigationToolCall } from "./investigation";
@@ -20,6 +21,7 @@ export interface SuperpowersStateSnapshot {
     testFiles: string[];
     sourceFiles: string[];
     redVerificationPending: boolean;
+    nonCodeMode: boolean;
   };
   debug: {
     active: boolean;
@@ -48,6 +50,7 @@ export const TDD_DEFAULTS = {
   testFiles: [] as string[],
   sourceFiles: [] as string[],
   redVerificationPending: false,
+  nonCodeMode: false,
 };
 
 export const DEBUG_DEFAULTS = {
@@ -78,6 +81,7 @@ export interface WorkflowHandler {
   handleInputText(text: string): boolean;
   handleFileWritten(path: string): boolean;
   handlePlanTrackerToolCall(input: Record<string, unknown>): boolean;
+  handlePlanTrackerToolResult(details: PlanTrackerDetails | undefined): boolean;
   getWorkflowState(): WorkflowTrackerState | null;
   getFullState(): SuperpowersStateSnapshot;
   setFullState(snapshot: SuperpowersStatePatch): void;
@@ -88,6 +92,15 @@ export interface WorkflowHandler {
   skipWorkflowPhases(phases: Phase[]): boolean;
   handleSkillFileRead(path: string): boolean;
   resetState(): void;
+}
+
+function deriveNonCodeMode(tasks: PlanTrackerTask[]): boolean {
+  const activeTask = tasks.find((task) => task.status === "in_progress");
+  return activeTask?.type === "non-code";
+}
+
+function areAllTasksTerminal(tasks: PlanTrackerTask[]): boolean {
+  return tasks.length > 0 && tasks.every((task) => task.status === "complete" || task.status === "blocked");
 }
 
 export function createWorkflowHandler(): WorkflowHandler {
@@ -162,7 +175,7 @@ export function createWorkflowHandler(): WorkflowHandler {
           } else if (!excludeFromDebug) {
             debugFailStreak += 1;
             const tddPhase = tdd.getPhase();
-            if (debugFailStreak >= 2 && tddPhase === "idle") {
+            if (debugFailStreak >= 1 && tddPhase === "idle") {
               debug.onTestFailed();
             }
           }
@@ -229,9 +242,27 @@ export function createWorkflowHandler(): WorkflowHandler {
 
     handlePlanTrackerToolCall(input: Record<string, unknown>) {
       if (input.action === "init") {
+        tdd.setNonCodeMode(false);
         return tracker.onPlanTrackerInit();
       }
       return false;
+    },
+
+    handlePlanTrackerToolResult(details: PlanTrackerDetails | undefined) {
+      if (!details) return false;
+
+      let changed = false;
+      const nextNonCodeMode = deriveNonCodeMode(details.tasks);
+      if (tdd.getState().nonCodeMode !== nextNonCodeMode) {
+        tdd.setNonCodeMode(nextNonCodeMode);
+        changed = true;
+      }
+
+      if (areAllTasksTerminal(details.tasks) && tracker.getState().currentPhase === "execute") {
+        changed = tracker.completeCurrent() || changed;
+      }
+
+      return changed;
     },
 
     getWorkflowState() {
@@ -260,7 +291,13 @@ export function createWorkflowHandler(): WorkflowHandler {
       }
       if (snapshot.tdd) {
         const tddState = { ...TDD_DEFAULTS, ...snapshot.tdd };
-        tdd.setState(tddState.phase, tddState.testFiles, tddState.sourceFiles, tddState.redVerificationPending);
+        tdd.setState(
+          tddState.phase,
+          tddState.testFiles,
+          tddState.sourceFiles,
+          tddState.redVerificationPending,
+          tddState.nonCodeMode,
+        );
       }
       if (snapshot.debug) {
         debug.setState({ ...DEBUG_DEFAULTS, ...snapshot.debug });

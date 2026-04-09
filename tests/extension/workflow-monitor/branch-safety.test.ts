@@ -107,7 +107,7 @@ describe("branch safety monitor", () => {
     expect(text).toContain("topic/branch");
   });
 
-  test("branch notice is shown again after session_switch resets state", async () => {
+  test("branch notice is shown again after session_start resets state", async () => {
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("git branch")) return Buffer.from("branch-a\n");
       throw new Error("unexpected command");
@@ -117,7 +117,7 @@ describe("branch safety monitor", () => {
     workflowMonitorExtension(fake.api as any);
 
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
 
     const ctx = {
       hasUI: false,
@@ -137,7 +137,7 @@ describe("branch safety monitor", () => {
     );
     expect(res1.content[0].text as string).toContain("branch-a");
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     execSyncMock.mockImplementation((cmd: string) => {
       if (cmd.startsWith("git branch")) return Buffer.from("branch-b\n");

@@ -8,7 +8,7 @@ describe("phase-aware file write enforcement", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
@@ -38,7 +38,7 @@ describe("phase-aware file write enforcement", () => {
       ui: { setWidget: () => {} },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall({ toolCallId: "w1", toolName: "write", input: { path: "extensions/foo.ts", content: "x" } }, ctx);
 
@@ -66,7 +66,7 @@ describe("phase-aware file write enforcement", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
@@ -96,7 +96,7 @@ describe("phase-aware file write enforcement", () => {
       ui: { setWidget: () => {} },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     await onToolCall({ toolCallId: "p1", toolName: "write", input: { path: "./docs/plans/x.md", content: "x" } }, ctx);
 
@@ -123,7 +123,7 @@ describe("phase-aware file write enforcement", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
@@ -153,7 +153,7 @@ describe("phase-aware file write enforcement", () => {
       ui: { setWidget: () => {} },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const plansPath = `${process.cwd()}/docs/plans/design.md`;
 
@@ -182,7 +182,7 @@ describe("phase-aware file write enforcement", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
     const onToolResult = getSingleHandler(fake.handlers, "tool_result");
 
@@ -212,7 +212,7 @@ describe("phase-aware file write enforcement", () => {
       ui: { setWidget: () => {} },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     const evilPath = "/tmp/evil/docs/plans/attack.ts";
 
@@ -241,7 +241,7 @@ describe("phase-aware file write enforcement", () => {
     const fake = createFakePi();
     workflowMonitorExtension(fake.api as any);
 
-    const onSessionSwitch = getSingleHandler(fake.handlers, "session_switch");
+    const onSessionStart = getSingleHandler(fake.handlers, "session_start");
     const onToolCall = getSingleHandler(fake.handlers, "tool_call");
 
     let promptCount = 0;
@@ -280,7 +280,7 @@ describe("phase-aware file write enforcement", () => {
       },
     };
 
-    await onSessionSwitch({}, ctx);
+    await onSessionStart({}, ctx);
 
     // 1st violation: allowed
     await onToolCall({ toolCallId: "w1", toolName: "write", input: { path: "extensions/a.ts", content: "x" } }, ctx);
