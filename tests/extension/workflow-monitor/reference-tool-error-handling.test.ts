@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { createMockLogger } from "../../helpers/mock-logger.js";
-import * as logging from "../../../extensions/logging.js";
+import * as logging from "../../../extensions/lib/logging.js";
 
 const { readFileMock } = vi.hoisted(() => ({
   readFileMock: vi.fn(),
@@ -10,7 +10,7 @@ vi.mock("node:fs/promises", () => ({
   readFile: readFileMock,
 }));
 
-vi.mock("../../../extensions/logging.js", async (importOriginal) => {
+vi.mock("../../../extensions/lib/logging.js", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof logging;
   return { ...actual, log: createMockLogger() };
 });

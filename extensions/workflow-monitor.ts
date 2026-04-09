@@ -14,7 +14,8 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { log } from "./logging.js";
+import { log } from "./lib/logging.js";
+import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 import { getCurrentGitRef } from "./workflow-monitor/git";
 import { loadReference, REFERENCE_TOPICS } from "./workflow-monitor/reference-tool";
 import { getUnresolvedPhases, getUnresolvedPhasesBefore } from "./workflow-monitor/skip-confirmation";
@@ -61,16 +62,16 @@ export function getStateFilePath(): string {
 export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler, stateFilePath?: string | false) {
   handler.resetState();
 
-  // Try file-based state first (survives across sessions)
-  // Pass false to disable file-based state (for testing)
+  // Read both file-based and session-based state, then pick the newer one.
+  let fileData: (Record<string, unknown> & { savedAt?: number }) | null = null;
+  let sessionData: (Record<string, unknown> & { savedAt?: number }) | null = null;
+
   if (stateFilePath !== false) {
     try {
       const statePath = stateFilePath ?? getStateFilePath();
       if (fs.existsSync(statePath)) {
         const raw = fs.readFileSync(statePath, "utf-8");
-        const data = JSON.parse(raw);
-        handler.setFullState(data);
-        return;
+        fileData = JSON.parse(raw);
       }
     } catch (err) {
       log.warn(
@@ -79,28 +80,39 @@ export function reconstructState(ctx: ExtensionContext, handler: WorkflowHandler
     }
   }
 
-  // Fall back to session branch entries
+  // Scan session branch for most recent superpowers state entry
   const entries = ctx.sessionManager.getBranch();
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === SUPERPOWERS_STATE_ENTRY_TYPE) {
       // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-      handler.setFullState((entry as any).data);
-      return;
+      sessionData = (entry as any).data;
+      break;
     }
     // Migration fallback: old-format workflow-only entries
     // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
     if (entry.type === "custom" && (entry as any).customType === WORKFLOW_TRACKER_ENTRY_TYPE) {
-      handler.setFullState({
-        // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
-        workflow: (entry as any).data,
-      });
-      return;
+      // biome-ignore lint/suspicious/noExplicitAny: pi SDK session entry type
+      sessionData = { workflow: (entry as any).data };
+      break;
     }
   }
-  // No entries found — reset to fresh defaults
-  handler.setFullState({});
+
+  // Pick the newer source when both are available; otherwise use whichever exists.
+  if (fileData && sessionData) {
+    const fileSavedAt = fileData.savedAt ?? 0;
+    const sessionSavedAt = sessionData.savedAt ?? 0;
+    const winner = fileSavedAt >= sessionSavedAt ? fileData : sessionData;
+    handler.setFullState(winner);
+  } else if (fileData) {
+    handler.setFullState(fileData);
+  } else if (sessionData) {
+    handler.setFullState(sessionData);
+  } else {
+    // No entries found — reset to fresh defaults
+    handler.setFullState({});
+  }
 }
 
 export default function (pi: ExtensionAPI) {
@@ -146,12 +158,13 @@ export default function (pi: ExtensionAPI) {
   let branchConfirmed = false;
 
   const persistState = () => {
-    pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, handler.getFullState());
+    const stateWithTimestamp = { ...handler.getFullState(), savedAt: Date.now() };
+    pi.appendEntry(SUPERPOWERS_STATE_ENTRY_TYPE, stateWithTimestamp);
     // Also persist to file for cross-session survival
     try {
       const statePath = getStateFilePath();
       fs.mkdirSync(path.dirname(statePath), { recursive: true });
-      fs.writeFileSync(statePath, JSON.stringify(handler.getFullState(), null, 2));
+      fs.writeFileSync(statePath, JSON.stringify(stateWithTimestamp, null, 2));
     } catch (err) {
       log.warn(`Failed to persist state file: ${err instanceof Error ? err.message : err}`);
     }
@@ -508,7 +521,8 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
-    if (event.toolName === "plan_tracker") {
+    // plan-tracker init advances workflow phase to execute — intentional integration contract
+    if (event.toolName === PLAN_TRACKER_TOOL_NAME) {
       changed = handler.handlePlanTrackerToolCall(input) || changed;
     }
 
@@ -548,7 +562,24 @@ export default function (pi: ExtensionAPI) {
     if (event.toolName === "write" || event.toolName === "edit") {
       const violation = pendingViolations.get(toolCallId);
       if (violation) {
-        injected.push(formatViolationWarning(violation));
+        const warningText = formatViolationWarning(violation);
+        injected.push(warningText);
+
+        // Wire practice escalation for TDD violations (post-write, warns but never blocks current call)
+        const isTddViolation =
+          violation.type === "source-before-test" ||
+          violation.type === "source-during-red" ||
+          violation.type === "existing-tests-not-run-before-change";
+        if (isTddViolation) {
+          const escalation = await maybeEscalate("practice", ctx);
+          if (escalation === "block") {
+            injected.push(
+              "🛑 STOP: The agent has repeatedly violated TDD practice guardrails. " +
+                "Do not write any more source code until you have addressed the TDD violations above. " +
+                "Review the test-driven-development skill before proceeding.",
+            );
+          }
+        }
       }
       pendingViolations.delete(toolCallId);
 
@@ -657,12 +688,23 @@ export default function (pi: ExtensionAPI) {
 
       persistState();
       updateWidget(ctx);
+    } else if (selected === "discuss") {
+      // Don't advance phase. Set editor text to prompt discussion.
+      ctx.ui.setEditorText(
+        `Let's discuss before moving to the next step.\n` +
+          `We're at: ${prompt.title}\n` +
+          `What questions or concerns do you want to work through?`,
+      );
     }
   });
 
   // --- Format violation warning based on type ---
   function formatViolationWarning(violation: Violation): string {
-    if (violation.type === "source-before-test" || violation.type === "source-during-red") {
+    if (
+      violation.type === "source-before-test" ||
+      violation.type === "source-during-red" ||
+      violation.type === "existing-tests-not-run-before-change"
+    ) {
       const phase = handler.getWorkflowState()?.currentPhase;
       return getTddViolationWarning(violation.type, violation.file, phase ?? undefined);
     }

@@ -3,7 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { createLogger } from "../../extensions/logging.js";
+import { createLogger } from "../../extensions/lib/logging.js";
 
 describe("logging error handling", () => {
   let tmpDir: string;

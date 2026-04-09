@@ -7,7 +7,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseFrontmatter } from "@mariozechner/pi-coding-agent";
-import { log } from "../logging.js";
+import { log } from "../lib/logging.js";
 
 export type AgentScope = "user" | "project" | "both";
 

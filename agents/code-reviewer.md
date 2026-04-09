@@ -2,7 +2,6 @@
 name: code-reviewer
 description: "Production readiness review: quality, security, testing (read-only)"
 tools: read, bash, find, grep, ls
-model: claude-sonnet-4-5
 ---
 
 You are a code quality reviewer.

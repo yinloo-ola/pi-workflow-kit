@@ -185,4 +185,10 @@ After agents return:
 3. **Run full suite** - Verify all fixes work together
 4. **Spot check** - Agents can make systematic errors
 
+> **Integration-mode note:** When integrating parallel agent results, run `git stash` if
+> needed before the integration test run to isolate any stash conflicts from true failures.
+> If tests fail during integration, rule out merge conflicts first before treating it as a
+> new bug. Only invoke `workflow_reference debug-rationalizations` if you have confirmed
+> the failure is not from a merge conflict.
+
 

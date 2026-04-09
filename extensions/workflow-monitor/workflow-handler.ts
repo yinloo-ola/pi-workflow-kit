@@ -20,6 +20,7 @@ export interface SuperpowersStateSnapshot {
     testFiles: string[];
     sourceFiles: string[];
     redVerificationPending: boolean;
+    nonCodeMode: boolean;
   };
   debug: {
     active: boolean;
@@ -48,6 +49,7 @@ export const TDD_DEFAULTS = {
   testFiles: [] as string[],
   sourceFiles: [] as string[],
   redVerificationPending: false,
+  nonCodeMode: false,
 };
 
 export const DEBUG_DEFAULTS = {
@@ -162,7 +164,7 @@ export function createWorkflowHandler(): WorkflowHandler {
           } else if (!excludeFromDebug) {
             debugFailStreak += 1;
             const tddPhase = tdd.getPhase();
-            if (debugFailStreak >= 2 && tddPhase === "idle") {
+            if (debugFailStreak >= 1 && tddPhase === "idle") {
               debug.onTestFailed();
             }
           }
@@ -229,7 +231,16 @@ export function createWorkflowHandler(): WorkflowHandler {
 
     handlePlanTrackerToolCall(input: Record<string, unknown>) {
       if (input.action === "init") {
+        tdd.setNonCodeMode(false);
         return tracker.onPlanTrackerInit();
+      }
+      if (input.action === "update") {
+        if (input.type === "non-code") {
+          tdd.setNonCodeMode(true);
+        }
+        if (input.status === "complete") {
+          tdd.setNonCodeMode(false);
+        }
       }
       return false;
     },
@@ -260,7 +271,7 @@ export function createWorkflowHandler(): WorkflowHandler {
       }
       if (snapshot.tdd) {
         const tddState = { ...TDD_DEFAULTS, ...snapshot.tdd };
-        tdd.setState(tddState.phase, tddState.testFiles, tddState.sourceFiles, tddState.redVerificationPending);
+        tdd.setState(tddState.phase, tddState.testFiles, tddState.sourceFiles, tddState.redVerificationPending, tddState.nonCodeMode);
       }
       if (snapshot.debug) {
         debug.setState({ ...DEBUG_DEFAULTS, ...snapshot.debug });

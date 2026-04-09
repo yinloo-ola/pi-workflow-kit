@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, expect, test, vi } from "vitest";
-import * as logging from "../../../extensions/logging";
+import * as logging from "../../../extensions/lib/logging";
 import workflowMonitorExtension, { getStateFilePath, reconstructState } from "../../../extensions/workflow-monitor";
 import { DebugMonitor } from "../../../extensions/workflow-monitor/debug-monitor";
 import {
@@ -96,6 +96,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: ["tests/foo.test.ts"],
         sourceFiles: ["src/foo.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: true,
@@ -138,6 +139,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: ["tests/a.test.ts"],
         sourceFiles: ["src/a.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: true,
@@ -253,6 +255,7 @@ describe("WorkflowHandler aggregated state persistence", () => {
         testFiles: [],
         sourceFiles: [],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: {
         active: false,
@@ -305,6 +308,7 @@ describe("file-based state persistence", () => {
         testFiles: ["tests/file.test.ts"],
         sourceFiles: ["src/file.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 2 },
       verification: { verified: true, verificationWaived: false },
@@ -378,6 +382,7 @@ describe("file-based state persistence", () => {
         testFiles: ["tests/session.test.ts"],
         sourceFiles: ["src/session.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 1 },
       verification: { verified: false, verificationWaived: true },
@@ -426,6 +431,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         testFiles: ["tests/x.test.ts"],
         sourceFiles: ["src/x.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 2 },
       verification: { verified: false, verificationWaived: true },
@@ -509,7 +515,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         artifacts: { brainstorm: null, plan: null, execute: null, finalize: null },
         prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
       },
-      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false },
+      tdd: { phase: "red", testFiles: ["tests/old.test.ts"], sourceFiles: [], redVerificationPending: false, nonCodeMode: false },
       debug: { active: false, investigated: false, fixAttempts: 0 },
       verification: { verified: false, verificationWaived: false },
     };
@@ -536,6 +542,7 @@ describe("workflow-monitor state reconstruction + persistence wiring", () => {
         testFiles: ["tests/new.test.ts"],
         sourceFiles: ["src/new.ts"],
         redVerificationPending: false,
+        nonCodeMode: false,
       },
       debug: { active: true, investigated: true, fixAttempts: 1 },
       verification: { verified: true, verificationWaived: false },

@@ -58,6 +58,17 @@ For typo fixes, config tweaks, string changes, renames:
 
 **Be honest:** If the change touches logic, it's not trivial. Use Scenario 1 or 2.
 
+### Scenario 4: If You See a ⚠️ TDD Warning
+
+The workflow monitor detected a potential TDD violation. Pause and assess:
+
+1. **Identify your scenario** — which of 1, 2, or 3 applies to this change?
+2. **Scenario 1 (new file):** If no test exists yet, stop, delete any written source code, write a failing test first, then re-implement.
+3. **Scenario 2 (existing tests):** Run the existing tests now. Confirm they're green. Then proceed with your change. Run them again after.
+4. **Scenario 3 (trivial):** If the change truly is trivial, run relevant tests after and continue.
+
+The warning is a signal to think, not a hard stop. But if you can't clearly identify which scenario applies, default to Scenario 1.
+
 ## Interpreting Runtime Warnings
 
 The workflow monitor tracks your TDD phase and may inject warnings like:

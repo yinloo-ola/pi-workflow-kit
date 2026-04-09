@@ -7,8 +7,8 @@
  * import { vi } from "vitest";
  * import { createMockLogger } from "../../helpers/mock-logger.js";
  *
- * vi.mock("../../../extensions/logging.js", async (importOriginal) => {
- *   const actual = await importOriginal<typeof import("../../../extensions/logging.js")>();
+ * vi.mock("../../../extensions/lib/logging.js", async (importOriginal) => {
+ *   const actual = await importOriginal<typeof import("../../../extensions/lib/logging.js")>();
  *   return { ...actual, log: createMockLogger() };
  * });
  * ```
@@ -17,7 +17,7 @@
  * This helper eliminates the duplicated mock object literal.
  */
 import { vi } from "vitest";
-import type { Logger } from "../../extensions/logging.js";
+import type { Logger } from "../../extensions/lib/logging.js";
 
 export interface MockLogger extends Logger {
   info: ReturnType<typeof vi.fn>;

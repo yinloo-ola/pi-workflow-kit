@@ -2,7 +2,6 @@
 name: spec-reviewer
 description: Verify implementation matches the plan/spec (read-only)
 tools: read, bash, find, grep, ls
-model: claude-sonnet-4-5
 ---
 
 You are a spec compliance reviewer.

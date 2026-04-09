@@ -3,8 +3,10 @@ import { findCorrespondingTestFile, isSourceFile, isTestFile } from "./heuristic
 
 export type TddPhase = "idle" | "red-pending" | "red" | "green" | "refactor";
 
+export type TddViolationType = "source-before-test" | "source-during-red" | "existing-tests-not-run-before-change";
+
 export interface TddViolation {
-  type: "source-before-test" | "source-during-red";
+  type: TddViolationType;
   file: string;
 }
 
@@ -13,6 +15,8 @@ export class TddMonitor {
   private testFilesWritten = new Set<string>();
   private sourceFilesWritten = new Set<string>();
   private redVerificationPending = false;
+  private nonCodeMode = false;
+  private testsRunBeforeLastWrite = false;
   private fileExists: (path: string) => boolean;
 
   constructor(fileExists?: (path: string) => boolean) {
@@ -27,7 +31,13 @@ export class TddMonitor {
     return this.phase === "red-pending" && this.redVerificationPending;
   }
 
+  setNonCodeMode(value: boolean): void {
+    this.nonCodeMode = value;
+  }
+
   onFileWritten(path: string): TddViolation | null {
+    if (this.nonCodeMode) return null;
+
     if (isTestFile(path)) {
       this.testFilesWritten.add(path);
       this.phase = "red-pending";
@@ -38,12 +48,19 @@ export class TddMonitor {
     if (isSourceFile(path)) {
       this.sourceFilesWritten.add(path);
 
+      const wasTestsRun = this.testsRunBeforeLastWrite;
+      this.testsRunBeforeLastWrite = false;
+
       if (this.testFilesWritten.size === 0) {
         const existingTestFile = findCorrespondingTestFile(path).some((candidatePath) =>
           this.fileExists(candidatePath),
         );
         if (!existingTestFile) {
           return { type: "source-before-test", file: path };
+        }
+        // Existing test coverage detected — Scenario 2 check
+        if (!wasTestsRun) {
+          return { type: "existing-tests-not-run-before-change", file: path };
         }
         return null;
       }
@@ -55,7 +72,6 @@ export class TddMonitor {
       if (this.phase === "green") {
         this.phase = "refactor";
       }
-      // red phase: source edits allowed (making the failing test pass), stay in red
       return null;
     }
 
@@ -63,6 +79,8 @@ export class TddMonitor {
   }
 
   onTestResult(passed: boolean): void {
+    this.testsRunBeforeLastWrite = true;
+
     if (this.phase === "red-pending") {
       this.redVerificationPending = false;
       if (passed) {
@@ -83,13 +101,22 @@ export class TddMonitor {
     this.redVerificationPending = false;
     this.testFilesWritten.clear();
     this.sourceFilesWritten.clear();
+    this.testsRunBeforeLastWrite = false;
   }
 
-  setState(phase: TddPhase, testFiles: string[], sourceFiles: string[], redVerificationPending = false): void {
+  setState(
+    phase: TddPhase,
+    testFiles: string[],
+    sourceFiles: string[],
+    redVerificationPending = false,
+    nonCodeMode = false,
+  ): void {
     this.phase = phase;
     this.testFilesWritten = new Set(testFiles);
     this.sourceFilesWritten = new Set(sourceFiles);
     this.redVerificationPending = redVerificationPending;
+    this.nonCodeMode = nonCodeMode;
+    this.testsRunBeforeLastWrite = false;
   }
 
   getState(): {
@@ -97,12 +124,14 @@ export class TddMonitor {
     testFiles: string[];
     sourceFiles: string[];
     redVerificationPending: boolean;
+    nonCodeMode: boolean;
   } {
     return {
       phase: this.phase,
       testFiles: [...this.testFilesWritten],
       sourceFiles: [...this.sourceFilesWritten],
       redVerificationPending: this.redVerificationPending,
+      nonCodeMode: this.nonCodeMode,
     };
   }
 }

@@ -52,8 +52,12 @@ export function parseSkillName(line: string): string | null {
 export const SKILL_TO_PHASE: Record<string, Phase> = {
   brainstorming: "brainstorm",
   "writing-plans": "plan",
+  "using-git-worktrees": "plan",        // pre-execute worktree setup belongs to plan
   "executing-tasks": "execute",
-  "using-git-worktrees": "execute",
+  "systematic-debugging": "execute",     // used within execute phase
+  "dispatching-parallel-agents": "execute", // used within execute phase
+  "test-driven-development": "execute",  // makes TDD skill phase-aware
+  "receiving-code-review": "finalize",   // post-PR external review
 };
 
 const PLANS_DIR_RE = /^docs\/plans\//;

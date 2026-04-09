@@ -1,8 +1,8 @@
 ---
 name: implementer
 description: Implement tasks via TDD and commit small changes
-tools: read, write, edit, bash
-model: claude-sonnet-4-5
+tools: read, write, edit, bash, plan_tracker, workflow_reference
+extensions: ../extensions/workflow-monitor, ../extensions/plan-tracker
 ---
 
 You are an implementation subagent.

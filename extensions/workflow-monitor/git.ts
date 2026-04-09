@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { log } from "../logging.js";
+import { log } from "../lib/logging.js";
 
 /**
  * Returns the current git branch name, or (if detached) the short HEAD SHA.

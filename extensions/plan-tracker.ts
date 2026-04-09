@@ -10,6 +10,7 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
 import { Text } from "@mariozechner/pi-tui";
 import { type Static, Type } from "@sinclair/typebox";
+import { PLAN_TRACKER_TOOL_NAME } from "./constants.js";
 
 type TaskStatus = "pending" | "in_progress" | "complete" | "blocked";
 type TaskPhase = "pending" | "define" | "approve" | "execute" | "verify" | "review" | "fix" | "complete" | "blocked";
@@ -169,7 +170,7 @@ export default function (pi: ExtensionAPI) {
       const entry = entries[i];
       if (entry.type !== "message") continue;
       const msg = entry.message;
-      if (msg.role !== "toolResult" || msg.toolName !== "plan_tracker") continue;
+      if (msg.role !== "toolResult" || msg.toolName !== PLAN_TRACKER_TOOL_NAME) continue;
       const details = msg.details as PlanTrackerDetails | undefined;
       if (details && !details.error) {
         tasks = details.tasks;
@@ -181,9 +182,9 @@ export default function (pi: ExtensionAPI) {
   const updateWidget = (ctx: ExtensionContext) => {
     if (!ctx.hasUI) return;
     if (tasks.length === 0) {
-      ctx.ui.setWidget("plan_tracker", undefined);
+      ctx.ui.setWidget(PLAN_TRACKER_TOOL_NAME, undefined);
     } else {
-      ctx.ui.setWidget("plan_tracker", (_tui, theme) => {
+      ctx.ui.setWidget(PLAN_TRACKER_TOOL_NAME, (_tui, theme) => {
         return new Text(formatWidget(tasks, theme), 0, 0);
       });
     }
@@ -203,7 +204,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerTool({
-    name: "plan_tracker",
+    name: PLAN_TRACKER_TOOL_NAME,
     label: "Plan Tracker",
     description:
       "Track implementation plan progress with per-task phase and attempt tracking. Actions: init (set task list), update (change task status/phase/type/attempts), status (show current state), clear (remove plan).",

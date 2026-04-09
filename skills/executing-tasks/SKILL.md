@@ -187,7 +187,7 @@ git commit -m "feat(task N): <description>"
 
 **No silent skipping. Consistent escalation everywhere.**
 
-## Finalize
+## Finalize Phase
 
 After all tasks complete (or are explicitly accepted by human):
 

@@ -1,8 +1,8 @@
 ---
 name: worker
 description: General-purpose worker for isolated tasks
-tools: read, write, edit, bash
-model: claude-sonnet-4-5
+tools: read, write, edit, bash, plan_tracker, workflow_reference
+extensions: ../extensions/workflow-monitor, ../extensions/plan-tracker
 ---
 
 You are a general-purpose subagent. Follow the task exactly.

@@ -22,8 +22,9 @@ import { StringEnum } from "@mariozechner/pi-ai";
 import { type ExtensionAPI, getMarkdownTheme } from "@mariozechner/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { log } from "../logging.js";
+import { log } from "../lib/logging.js";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.js";
+import { DEFAULT_MODEL } from "../../agents/config.js";
 import { getSubagentConcurrency, Semaphore } from "./concurrency.js";
 import { buildSubagentEnv } from "./env.js";
 import { ProcessTracker } from "./lifecycle.js";
@@ -288,6 +289,7 @@ async function runSingleAgent(
 
   const args: string[] = ["--mode", "json", "-p", "--no-session"];
   if (agent.model) args.push("--model", agent.model);
+  else args.push("--model", DEFAULT_MODEL);
   if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));
   if (agent.extensions) {
     for (const ext of agent.extensions) {

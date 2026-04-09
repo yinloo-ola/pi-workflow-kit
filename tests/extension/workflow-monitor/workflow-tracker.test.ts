@@ -140,8 +140,12 @@ describe("WorkflowTracker detection helpers", () => {
     expect(SKILL_TO_PHASE).toEqual({
       brainstorming: "brainstorm",
       "writing-plans": "plan",
+      "using-git-worktrees": "plan",
       "executing-tasks": "execute",
-      "using-git-worktrees": "execute",
+      "systematic-debugging": "execute",
+      "dispatching-parallel-agents": "execute",
+      "test-driven-development": "execute",
+      "receiving-code-review": "finalize",
     });
   });
 

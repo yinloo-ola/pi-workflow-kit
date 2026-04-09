@@ -3,9 +3,9 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { createMockLogger } from "../../helpers/mock-logger.js";
-import * as logging from "../../../extensions/logging.js";
+import * as logging from "../../../extensions/lib/logging.js";
 
-vi.mock("../../../extensions/logging.js", async (importOriginal) => {
+vi.mock("../../../extensions/lib/logging.js", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof logging;
   return { ...actual, log: createMockLogger() };
 });
