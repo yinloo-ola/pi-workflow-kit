@@ -790,10 +790,13 @@ export default function (pi: ExtensionAPI) {
     description: "Reset workflow tracker to fresh state for a new task",
     async handler(_args, ctx) {
       handler.resetState();
-      // Emit a clear signal so plan-tracker also reconstructs to empty.
+      // Emit a clear signal so plan-tracker also reconstructs to empty on next
+      // session reload. Also invoke plan_tracker clear now so the in-memory
+      // state and widget update immediately.
       pi.appendEntry(PLAN_TRACKER_CLEARED_TYPE, { clearedAt: Date.now() });
       persistState();
       updateWidget(ctx);
+      await pi.callTool(PLAN_TRACKER_TOOL_NAME, { action: "clear" });
       if (ctx.hasUI) {
         ctx.ui.notify("Workflow reset. Ready for a new task.", "info");
       }
