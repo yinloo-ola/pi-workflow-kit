@@ -4,68 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.5.2] - 2026-04-10
+## [0.6.0] - 2026-04-10
 
 ### Changed
-- Bumped version to 0.5.2 for publishing updates.
 
-## [0.5.1] - 2026-04-09
+- **Complete rewrite**: replaced 25 extension files (~4,400 lines), 8 skills (~1,530 lines), 4 agent definitions, 3 custom tools, 2 custom commands, and complex session-based state persistence with 1 extension file (67 lines) and 4 skills (146 lines).
 
-### Fixed
-- **Phase not marked complete on natural transition**: Writing a design doc now immediately marks brainstorm as complete (not just active), enabling `/workflow-next plan` to work correctly. Same fix for implementation plan → plan phase.
-- **Backward-navigation state reset during execute**: Writing plan files during execute/finalize phases (e.g. updating the plan) no longer triggers `advanceTo()` for earlier phases, which previously reset all workflow state to defaults.
-- **`/workflow-reset` now clears plan-tracker tasks**: Emits a `plan_tracker_cleared` custom entry so the plan-tracker extension reconstructs to an empty task list after reset.
-- **`/workflow-reset` now deletes stale state file**: Removes `.pi/workflow-kit-state.json` before re-persisting, preventing stale file-based state from shadowing the reset.
+### Removed
 
-### Changed
-- **Removed file-based state persistence**: The `.pi/workflow-kit-state.json` file is no longer written or read. The session journal (pi's `.jsonl` session files) is now the single source of truth for all workflow state, eliminating the dual-store timestamp-comparison logic that caused stale-state bugs.
-- **Removed `getStateFilePath` export** and all file I/O from `reconstructState`.
-
-## [0.5.0] - 2026-04-08
+- **Workflow monitor extension** (workflow-monitor.ts + 15-module workflow-monitor/ directory) — phase tracking, TDD warnings, debug enforcement, verification gating, branch safety, skip-confirmation gates, boundary prompts, and all session-based state persistence.
+- **Plan tracker extension** (plan-tracker.ts) — per-task progress tool with TUI widget.
+- **Subagent extension** (subagent/ directory, 7 files) — child process spawning for isolated implementation/review.
+- **4 agent definitions** (implementer, worker, code-reviewer, spec-reviewer).
+- **3 custom tools** (`plan_tracker`, `workflow_reference`, `subagent`).
+- **2 custom commands** (`/workflow-next`, `/workflow-reset`).
+- **4 supporting skills**: `test-driven-development`, `systematic-debugging`, `using-git-worktrees`, `receiving-code-review`, `dispatching-parallel-agents`.
+- All 434 existing tests.
 
 ### Added
 
-#### Simplified 4-phase workflow
-- **brainstorm → plan → execute → finalize** workflow phases replacing the previous multi-step per-task lifecycle.
-- Per-task phase and attempt tracking in the plan-tracker extension.
-- Backward phase navigation prevention during skill re-invocation.
-- Workflow monitor enforcement aligned to the 4-phase model (TDD gates, verification gates, skip-confirmation).
+- **workflow-guard extension** (67 lines) — hard-blocks `write`/`edit` outside `docs/plans/` during brainstorm and plan phases. No state persistence. No custom tools.
+- **4 simplified skills**:
+  - `brainstorming` — explore, design, write design doc
+  - `writing-plans` — break design into tasks with TDD scenarios, set up branch/worktree
+  - `executing-tasks` — implement tasks with TDD discipline, handle code review
+  - `finalizing` — archive docs, update changelog, create PR
+- TDD three-scenario guidance merged into `writing-plans` and `executing-tasks` skills.
+- Code review handling guidance merged into `executing-tasks` skill.
+- Git worktree setup guidance merged into `writing-plans` skill.
+- 6 unit tests for the workflow-guard extension.
 
-#### executing-tasks skill
-- New skill with per-task lifecycle: define → approve → execute → verify → review → fix.
-- Bounded retry loops (3 execute attempts, 3 fix attempts) with human escalation.
-- Two-layer review: subagent review + human sign-off.
-- Task type support (`code` / `non-code`) with TDD for code tasks and acceptance criteria for non-code tasks.
+### Design decisions
 
-#### /workflow-next handoff state preservation
-- Completed workflow phases are preserved across `/workflow-next` handoff for the same feature.
-- Earlier-phase artifacts and prompted flags carry over to new sessions.
-- TDD/debug/verification state resets fresh in each new session.
-- Strict immediate-next-only validation — rejects same-phase, backward, and multi-phase jump handoffs.
-- Derived workflow state module (`workflow-next-state.ts`).
+- Skills teach the agent *what* to do. The extension enforces *one* rule: no source writes during thinking phases.
+- You control phases explicitly via `/skill:` commands. No auto-detection, no auto-advancing.
+- `bash` stays available during brainstorm/plan for investigation commands. The theoretical bash-write loophole is accepted.
+- No state persistence — phase resets on reload, you invoke the skill again.
 
-#### /workflow-next autocomplete
-- Phase name autocomplete (brainstorm, plan, execute, finalize).
-- Artifact path autocomplete based on the target phase.
-- `workflow-next-completions.ts` module.
-
-#### Subagent model inheritance
-- Child subagent processes inherit the parent session's provider and model when no pinned model is set.
-- Agent-pinned models remain authoritative over inherited defaults.
-
-#### Testing
-- 461 tests across 44 test files covering all extensions, skills, and workflow transitions.
-- Dedicated test suites for workflow-next validation, handoff state seeding, state-file migration, and model inheritance.
-
-### Changed
-- Project rebranded from `pi-superpowers-plus` to `@tianhai/pi-workflow-kit`.
-- Removed 5 obsolete skills (creating-specs, implementing-plans, self-review, shipping-work, receiving-feedback) replaced by the unified `executing-tasks` skill.
-- Updated writing-plans skill with task type and acceptance criteria support.
-- Consolidated plan-tracker status/phase sync and backward branch search.
-
-### Removed
-- Obsolete planning docs and legacy workflow state files cleaned up.
-
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0
 [0.5.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.5.0

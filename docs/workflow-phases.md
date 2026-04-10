@@ -1,71 +1,57 @@
 # Workflow Phases
 
-`pi-workflow-kit` tracks four global phases:
+`pi-workflow-kit` has 4 phases. You invoke each one explicitly with `/skill:`.
 
-```text
+```
 brainstorm → plan → execute → finalize
 ```
 
 ## brainstorm
 
-Primary skill: `/skill:brainstorming`
+```
+/skill:brainstorming
+```
 
-Purpose:
-- explore requirements
-- shape the design
-- produce a design artifact under `docs/plans/`
+- Explore requirements and shape the design
+- Ask questions one at a time, propose approaches
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md`
 
-Write boundary:
-- allowed: `docs/plans/`
-- discouraged elsewhere; runtime warnings may be injected
+Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 ## plan
 
-Primary skill: `/skill:writing-plans`
+```
+/skill:writing-plans
+```
 
-Purpose:
-- turn the design into a concrete implementation plan
-- define task type (`code` or `non-code`)
-- define code-task steps or non-code acceptance criteria
+- Read the design doc
+- Break into bite-sized tasks with TDD scenarios
+- Optionally set up a branch or worktree
+- Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`
 
-Write boundary:
-- allowed: `docs/plans/`
-- discouraged elsewhere; runtime warnings may be injected
+Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 ## execute
 
-Primary skill: `/skill:executing-tasks`
+```
+/skill:executing-tasks
+```
 
-Purpose:
-- initialize `plan_tracker`
-- execute tasks one at a time
-- track per-task phase and attempt counts
+- Read the implementation plan
+- Implement tasks one at a time: implement → test → fix → commit
+- Handle code review feedback by verifying criticism before implementing
 
-Per-task phases:
-- `define`
-- `approve`
-- `execute`
-- `verify`
-- `review`
-- `fix`
-- terminal states: `complete`, `blocked`
+No write restrictions. All tools available.
 
 ## finalize
 
-Primary skill: `/skill:executing-tasks`
+```
+/skill:finalizing
+```
 
-Purpose:
-- perform holistic review
-- prepare PR / push / cleanup
-- archive planning docs
-- update README / CHANGELOG / other documentation when needed
+- Archive plan docs to `docs/plans/completed/`
+- Update CHANGELOG, README if needed
+- Create PR
+- Clean up worktree if one was used
 
-## Detection signals
-
-The workflow monitor uses a few practical signals:
-
-- skill invocations such as `/skill:brainstorming` or `/skill:writing-plans`
-- writes to `docs/plans/*-design.md` and `docs/plans/*-implementation.md`
-- `plan_tracker` initialization to enter execute
-- all tracked tasks reaching terminal state to mark execute complete
-- boundary-prompt acceptance to enter finalize
+No write restrictions. All tools available.

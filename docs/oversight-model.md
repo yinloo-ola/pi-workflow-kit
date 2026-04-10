@@ -1,49 +1,28 @@
 # Oversight Model
 
-`pi-workflow-kit` combines **skills** and **extensions**.
+`pi-workflow-kit` combines **skills** and **one extension**.
 
 ## Skills
 
-Skills teach the agent the intended workflow:
+Skills teach the agent the workflow. There are 4:
 
-- `brainstorming`
-- `writing-plans`
-- `executing-tasks`
-- supporting skills such as TDD, debugging, worktrees, and review handling
+- **brainstorming** — explore ideas, produce a design doc
+- **writing-plans** — break design into TDD tasks
+- **executing-tasks** — implement tasks, handle code review
+- **finalizing** — archive docs, create PR
 
 They explain *what* to do and *when* to do it.
 
-## Extensions
+## Extension
 
-Extensions observe runtime behavior and add lightweight enforcement:
+The `workflow-guard` extension enforces one rule:
 
-- **workflow-monitor** tracks workflow phase, injects TDD/debug/verification warnings, and prompts at phase boundaries
-- **plan-tracker** stores per-task execution state, including task type, phase, and attempt counts
-- **subagent** runs isolated helper agents for implementation and review work
+> During brainstorm and plan phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
+
+The agent can still use `read` and `bash` for investigation. It literally cannot call `write` or `edit` on source files — the tools are blocked at the extension level.
 
 ## Enforcement style
 
-The package is intentionally **warning-first**.
+Hard block for write boundaries. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked.
 
-- TDD violations are injected into tool results as warnings
-- Debug guardrails escalate after repeated failing cycles
-- Verification checks warn on `git commit`, `git push`, and `gh pr create` when passing tests have not been run recently
-- During brainstorm and plan, writes outside `docs/plans/` trigger process warnings and may escalate to an interactive stop in the TUI
-
-In interactive sessions, repeated violations can trigger a human decision prompt.
-
-## Workflow model
-
-Global workflow phases:
-
-```text
-brainstorm → plan → execute → finalize
-```
-
-Inside **execute**, each task follows the per-task lifecycle tracked by `plan_tracker`:
-
-```text
-define → approve → execute → verify → review → fix
-```
-
-This keeps global workflow tracking simple while still reflecting the real per-task feedback loop.
+TDD, debugging, and code review are guidance in the skill instructions, not runtime-enforced.

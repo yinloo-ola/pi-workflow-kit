@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: "Use this to break a design into an implementation plan with bite-sized TDD tasks. Run after brainstorming, before executing."
+description: "Use this to break a design into an implementation plan with bite-sized TDD tasks. Works with or without a prior brainstorm."
 ---
 
 # Writing Plans
@@ -9,7 +9,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
 ## Process
 
-1. **Read the design doc** — find the latest `docs/plans/*-design.md`.
+1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If none exists, ask the user to describe what they want to build, read relevant code, and create the plan directly.
 2. **Set up workspace** — create a branch for this work. For larger features, use a git worktree for isolation:
    ```
    git worktree add ../<repo>-<feature-name> -b <feature-name>

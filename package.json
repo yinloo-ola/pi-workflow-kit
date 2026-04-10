@@ -18,13 +18,11 @@
   },
   "files": [
     "extensions/",
-    "agents/",
     "skills/",
     "docs/",
     "banner.jpg",
     "LICENSE",
-    "README.md",
-    "ROADMAP.md"
+    "README.md"
   ],
   "pi": {
     "extensions": [
