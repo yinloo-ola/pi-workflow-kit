@@ -84,7 +84,7 @@ describe("WorkflowTracker", () => {
     expect(s.prompted.plan).toBe(false);
   });
 
-  test("advanceTo same phase triggers full reset and reactivates that phase", () => {
+  test("advanceTo same phase is a no-op (prevents accidental resets)", () => {
     tracker.advanceTo("plan");
     tracker.completeCurrent();
     expect(tracker.getState().phases.plan).toBe("complete");
@@ -92,9 +92,9 @@ describe("WorkflowTracker", () => {
     const result = tracker.advanceTo("plan");
 
     const s = tracker.getState();
-    expect(result).toBe(true);
+    expect(result).toBe(false);
     expect(s.currentPhase).toBe("plan");
-    expect(s.phases.plan).toBe("active");
+    expect(s.phases.plan).toBe("complete");
   });
 
   test("completeCurrent marks current phase complete and keeps it as current until next advance", () => {

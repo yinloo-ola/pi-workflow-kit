@@ -55,6 +55,10 @@ export function createFakePi(extra?: { withAppendEntry?: boolean }) {
       appendEntry(customType: string, data: any) {
         if (extra?.withAppendEntry) appendedEntries.push({ customType, data });
       },
+      events: {
+        emit() {},
+        on() {},
+      },
     },
   };
 }

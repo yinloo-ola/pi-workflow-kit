@@ -45,7 +45,7 @@ import {
   WORKFLOW_TRACKER_ENTRY_TYPE,
   type WorkflowTrackerState,
 } from "./workflow-monitor/workflow-tracker";
-import { getTransitionPrompt } from "./workflow-monitor/workflow-transitions";
+import { getTransitionPrompt, isReviewableBoundary } from "./workflow-monitor/workflow-transitions";
 
 type SelectOption<T extends string> = { label: string; value: T };
 
@@ -165,6 +165,8 @@ export default function (pi: ExtensionAPI) {
   }
 
   const boundaryToPhase: Record<TransitionBoundary, keyof typeof phaseToSkill> = {
+    design_reviewable: "brainstorm",
+    plan_reviewable: "plan",
     design_committed: "brainstorm",
     plan_ready: "plan",
     execution_complete: "execute",
@@ -233,12 +235,19 @@ export default function (pi: ExtensionAPI) {
       const missingSkill = phaseToSkill[missing] ?? missing;
       const options = [
         { label: `Do ${missing} now`, value: "do_now" as const },
+        { label: `Mark ${missing} as complete`, value: "mark_complete" as const },
         { label: `Skip ${missing}`, value: "skip" as const },
         { label: "Cancel", value: "cancel" as const },
       ];
       const choice = await selectValue(ctx, `Phase "${missing}" is unresolved. What would you like to do?`, options);
 
-      if (choice === "skip") {
+      if (choice === "mark_complete") {
+        handler.completeWorkflowPhase(missing as Phase);
+        handler.handleInputText(text);
+        persistState();
+        updateWidget(ctx);
+        return;
+      } else if (choice === "skip") {
         handler.skipWorkflowPhases([missing]);
         handler.handleInputText(text);
         persistState();
@@ -280,12 +289,17 @@ export default function (pi: ExtensionAPI) {
       const skill = phaseToSkill[phase] ?? phase;
       const options = [
         { label: `Do ${phase} now`, value: "do_now" as const },
+        { label: `Mark ${phase} as complete`, value: "mark_complete" as const },
         { label: `Skip ${phase}`, value: "skip" as const },
         { label: "Cancel", value: "cancel" as const },
       ];
       const choice = await selectValue(ctx, `Phase "${phase}" is unresolved. What would you like to do?`, options);
 
-      if (choice === "skip") {
+      if (choice === "mark_complete") {
+        handler.completeWorkflowPhase(phase as Phase);
+        persistState();
+        updateWidget(ctx);
+      } else if (choice === "skip") {
         handler.skipWorkflowPhases([phase]);
         persistState();
         updateWidget(ctx);
@@ -312,12 +326,18 @@ export default function (pi: ExtensionAPI) {
       const missingSkill = phaseToSkill[missing] ?? missing;
       const options = [
         { label: `Do ${missing} now`, value: "do_now" as const },
+        { label: `Mark ${missing} as complete`, value: "mark_complete" as const },
         { label: `Skip ${missing}`, value: "skip" as const },
         { label: "Cancel", value: "cancel" as const },
       ];
       const choice = await selectValue(ctx, `Phase "${missing}" is unresolved. What would you like to do?`, options);
 
-      if (choice === "skip") {
+      if (choice === "mark_complete") {
+        handler.completeWorkflowPhase(missing as Phase);
+        persistState();
+        updateWidget(ctx);
+        return "allowed";
+      } else if (choice === "skip") {
         handler.skipWorkflowPhases([missing]);
         persistState();
         updateWidget(ctx);
@@ -356,12 +376,17 @@ export default function (pi: ExtensionAPI) {
       const skill = phaseToSkill[phase] ?? phase;
       const options = [
         { label: `Do ${phase} now`, value: "do_now" as const },
+        { label: `Mark ${phase} as complete`, value: "mark_complete" as const },
         { label: `Skip ${phase}`, value: "skip" as const },
         { label: "Cancel", value: "cancel" as const },
       ];
       const choice = await selectValue(ctx, `Phase "${phase}" is unresolved. What would you like to do?`, options);
 
-      if (choice === "skip") {
+      if (choice === "mark_complete") {
+        handler.completeWorkflowPhase(phase as Phase);
+        persistState();
+        updateWidget(ctx);
+      } else if (choice === "skip") {
         handler.skipWorkflowPhases([phase]);
         persistState();
         updateWidget(ctx);
@@ -608,17 +633,12 @@ export default function (pi: ExtensionAPI) {
 
     const boundaryPhase = boundaryToPhase[boundary];
     const prompt = getTransitionPrompt(boundary, latestState.artifacts[boundaryPhase]);
+    const reviewable = isReviewableBoundary(boundary);
 
     const options = prompt.options.map((o) => o.label);
     const pickedLabel = await ctx.ui.select(prompt.title, options);
 
     const selected = prompt.options.find((o) => o.label === pickedLabel)?.choice ?? null;
-
-    const marked = handler.markWorkflowPrompted(boundaryPhase);
-    if (marked) {
-      persistState();
-      updateWidget(ctx);
-    }
 
     const nextSkill = phaseToSkill[prompt.nextPhase] ?? "writing-plans";
     const nextInSession = `/skill:${nextSkill}`;
@@ -628,42 +648,56 @@ export default function (pi: ExtensionAPI) {
       "- Does this work require documentation updates? (README, CHANGELOG, API docs, inline docs)\n" +
       "- What was learned during this implementation? (surprises, codebase knowledge, things to do differently)\n\n";
 
-    if (selected === "next") {
-      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
-      if (advanced) {
-        persistState();
-        updateWidget(ctx);
+    if (selected === "next" || selected === "fresh") {
+      // For reviewable boundaries: mark current phase complete first.
+      // For committed boundaries: phase is already complete.
+      if (reviewable) {
+        handler.completeCurrentWorkflowPhase();
       }
-      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + nextInSession : nextInSession);
-    } else if (selected === "fresh") {
-      const advanced = prompt.nextPhase === "finalize" ? handler.advanceWorkflowTo("finalize") : false;
-      if (advanced) {
-        persistState();
-        updateWidget(ctx);
+
+      // Advance to the next phase
+      handler.advanceWorkflowTo(prompt.nextPhase);
+      handler.markWorkflowPrompted(boundaryPhase);
+      persistState();
+      updateWidget(ctx);
+
+      if (selected === "next") {
+        ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + nextInSession : nextInSession);
+      } else {
+        ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + fresh : fresh);
       }
-      ctx.ui.setEditorText(prompt.nextPhase === "finalize" ? finishReminder + fresh : fresh);
     } else if (selected === "skip") {
-      // Explicit user-confirmed skip: mark the next phase as skipped, then move on.
-      handler.skipWorkflowPhases([prompt.nextPhase]);
+      if (reviewable) {
+        // Skip the current phase (the one with the artifact) and advance to next.
+        handler.skipWorkflowPhases([boundaryPhase]);
+        handler.advanceWorkflowTo(prompt.nextPhase);
+      } else {
+        // Committed boundary: skip the NEXT phase and advance past it.
+        handler.skipWorkflowPhases([prompt.nextPhase]);
+        const nextIdx = WORKFLOW_PHASES.indexOf(prompt.nextPhase);
+        const phaseAfterSkip = WORKFLOW_PHASES[nextIdx + 1] ?? null;
 
-      const nextIdx = WORKFLOW_PHASES.indexOf(prompt.nextPhase);
-      const phaseAfterSkip = WORKFLOW_PHASES[nextIdx + 1] ?? null;
-
-      if (phaseAfterSkip) {
-        const currentState = handler.getWorkflowState();
-        const currentIdx = currentState?.currentPhase ? WORKFLOW_PHASES.indexOf(currentState.currentPhase) : -1;
-        const afterSkipIdx = WORKFLOW_PHASES.indexOf(phaseAfterSkip);
-        if (afterSkipIdx > currentIdx) {
-          handler.advanceWorkflowTo(phaseAfterSkip);
+        if (phaseAfterSkip && handler.advanceWorkflowTo(phaseAfterSkip)) {
           const skipSkill = phaseToSkill[phaseAfterSkip] ?? "writing-plans";
           ctx.ui.setEditorText(`/skill:${skipSkill}`);
         }
       }
 
+      handler.markWorkflowPrompted(boundaryPhase);
       persistState();
       updateWidget(ctx);
+    } else if (selected === "revise") {
+      // Reviewable only: user wants to keep working. Don't set prompted
+      // so the review prompt fires again at the next agent_end.
+      // Don't advance, don't modify phase state.
     } else if (selected === "discuss") {
-      // Don't advance phase. Set editor text to prompt discussion.
+      // For reviewable: don't set prompted (prompt fires again after discussion).
+      // For committed: set prompted (phase is already done, user just wants to chat).
+      if (!reviewable) {
+        handler.markWorkflowPrompted(boundaryPhase);
+        persistState();
+        updateWidget(ctx);
+      }
       ctx.ui.setEditorText(
         `Let's discuss before moving to the next step.\n` +
           `We're at: ${prompt.title}\n` +
@@ -756,10 +790,13 @@ export default function (pi: ExtensionAPI) {
     description: "Reset workflow tracker to fresh state for a new task",
     async handler(_args, ctx) {
       handler.resetState();
-      // Emit a clear signal so plan-tracker also reconstructs to empty.
+      // Emit a clear signal so plan-tracker also reconstructs to empty on next
+      // session reload. Also notify plan-tracker in real time via the shared
+      // event bus so its in-memory state and widget update immediately.
       pi.appendEntry(PLAN_TRACKER_CLEARED_TYPE, { clearedAt: Date.now() });
       persistState();
       updateWidget(ctx);
+      pi.events.emit("plan_tracker:clear");
       if (ctx.hasUI) {
         ctx.ui.notify("Workflow reset. Ready for a new task.", "info");
       }

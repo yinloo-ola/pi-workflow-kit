@@ -316,6 +316,6 @@ describe("completion-action gating on bash commands", () => {
 
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     const [_title, options] = (ctx.ui.select as any).mock.calls[0];
-    expect(options).toEqual(["Do finalize now", "Skip finalize", "Cancel"]);
+    expect(options).toEqual(["Do finalize now", "Mark finalize as complete", "Skip finalize", "Cancel"]);
   });
 });

@@ -29,6 +29,10 @@ function createFakePi() {
       registerTool(opts: any) {
         executeFn = opts.execute;
       },
+      events: {
+        emit() {},
+        on() {},
+      },
     } as any,
   };
 }

@@ -8,6 +8,7 @@ import workflowMonitorExtension from "../../../extensions/workflow-monitor";
 function setup() {
   const commands = new Map<string, (args: string, ctx: any) => Promise<void>>();
   const appendedEntries: Array<{ customType: string; data: any }> = [];
+  const emittedEvents: Array<[string, any]> = [];
 
   const fakePi: any = {
     on() {},
@@ -18,10 +19,16 @@ function setup() {
     registerCommand(name: string, opts: any) {
       commands.set(name, opts.handler);
     },
+    events: {
+      emit(event: string, data?: any) {
+        emittedEvents.push([event, data]);
+      },
+      on() {},
+    },
   };
 
   workflowMonitorExtension(fakePi);
-  return { commands, appendedEntries };
+  return { commands, appendedEntries, emittedEvents };
 }
 
 describe("/workflow-reset command", () => {
@@ -102,5 +109,20 @@ describe("/workflow-reset command", () => {
     const handler = commands.get("workflow-reset");
     await expect(handler!("", ctx)).resolves.not.toThrow();
     expect(ctx.ui.notify).not.toHaveBeenCalled();
+  });
+
+  test("emits plan_tracker:clear event to immediately update the Tasks widget", async () => {
+    const { commands, emittedEvents } = setup();
+
+    const ctx: any = {
+      hasUI: false,
+      ui: { notify: vi.fn(), setWidget: () => {} },
+    };
+
+    const handler = commands.get("workflow-reset");
+    await handler!("", ctx);
+
+    const clearEvent = emittedEvents.find(([name]) => name === "plan_tracker:clear");
+    expect(clearEvent).toBeDefined();
   });
 });

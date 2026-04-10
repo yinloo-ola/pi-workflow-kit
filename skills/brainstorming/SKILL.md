@@ -1,22 +1,30 @@
 ---
 name: brainstorming
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+allowed-tools: read bash
 ---
 
 > **Related skills:** Consider `/skill:using-git-worktrees` to set up an isolated workspace, then `/skill:writing-plans` for implementation planning.
 
 # Brainstorming Ideas Into Designs
 
+> ⚠️ **BOUNDARY — DO NOT VIOLATE**
+>
+> This skill is **read-only exploration**. You MUST NOT use `edit` or `write` tools.
+> The only tools allowed are `read` and `bash` (for investigation only).
+>
+> - ✅ Read code and docs: yes
+> - ✅ Write to `docs/plans/`: yes (design documents only)
+> - ❌ Edit or create any other files: **absolutely no**
+>
+> If you find yourself reaching for `edit` or `write`, **stop**. Present what
+> you found as a design section and ask the user to approve it first.
+
 ## Overview
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
 Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
-
-## Boundaries
-- Read code and docs: yes
-- Write to docs/plans/: yes
-- Edit or create any other files: no
 
 ## The Process
 

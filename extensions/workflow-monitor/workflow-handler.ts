@@ -88,6 +88,7 @@ export interface WorkflowHandler {
   restoreWorkflowStateFromBranch(branch: SessionEntry[]): void;
   markWorkflowPrompted(phase: Phase): boolean;
   completeCurrentWorkflowPhase(): boolean;
+  completeWorkflowPhase(phase: Phase): boolean;
   advanceWorkflowTo(phase: Phase): boolean;
   skipWorkflowPhases(phases: Phase[]): boolean;
   handleSkillFileRead(path: string): boolean;
@@ -321,6 +322,10 @@ export function createWorkflowHandler(): WorkflowHandler {
 
     completeCurrentWorkflowPhase() {
       return tracker.completeCurrent();
+    },
+
+    completeWorkflowPhase(phase: Phase) {
+      return tracker.completePhase(phase);
     },
 
     advanceWorkflowTo(phase) {

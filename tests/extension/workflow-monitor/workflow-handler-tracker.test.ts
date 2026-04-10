@@ -16,7 +16,9 @@ describe("WorkflowHandler workflow-tracker integration", () => {
   });
 
   test("marks prompted state for boundary phase (not current phase)", () => {
+    // advanceTo no longer auto-completes, so explicitly complete phases
     handler.handleInputText("/skill:writing-plans");
+    handler.completeWorkflowPhase("plan");
     handler.handleInputText("/skill:executing-tasks");
 
     const stateBefore = handler.getWorkflowState()!;
