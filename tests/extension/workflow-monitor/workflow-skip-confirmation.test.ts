@@ -125,7 +125,7 @@ describe("skip-confirmation gating on /skill transitions", () => {
     expect(ctx.ui.select).toHaveBeenCalledTimes(1);
     const [_title, options] = (ctx.ui.select as any).mock.calls[0];
     expect(Array.isArray(options)).toBe(true);
-    expect(options).toEqual(["Do plan now", "Skip plan", "Cancel"]);
+    expect(options).toEqual(["Do plan now", "Mark plan as complete", "Skip plan", "Cancel"]);
   });
 
   test("single unresolved + skip: skips phase and allows transition", async () => {

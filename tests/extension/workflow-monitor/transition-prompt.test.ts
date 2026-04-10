@@ -119,14 +119,12 @@ describe("boundary prompting", () => {
               phases: {
                 brainstorm: "complete",
                 plan: "pending",
-                execute: "active",
-                verify: "pending",
-                review: "pending",
-                finish: "pending",
+                execute: "pending",
+                finalize: "pending",
               },
               currentPhase: "execute",
-              artifacts: { brainstorm: null, plan: null, execute: null, verify: null, review: null, finish: null },
-              prompted: { brainstorm: false, plan: false, execute: false, verify: false, review: false, finish: false },
+              artifacts: { brainstorm: null, plan: null, execute: null, finalize: null },
+              prompted: { brainstorm: false, plan: false, execute: false, finalize: false },
             },
           },
         ],
@@ -142,10 +140,13 @@ describe("boundary prompting", () => {
     await onSessionStart({}, ctx);
     await onAgentEnd({}, ctx);
 
+    // The highest-priority boundary is design_committed (brainstorm complete, not prompted).
+    // Skip on a committed boundary skips the next phase (plan) and advances to execute.
     const latest = fake.appendedEntries.at(-1)?.data;
     expect(latest.workflow.phases.plan).toBe("skipped");
     expect(latest.workflow.currentPhase).toBe("execute");
-    // phaseAfterSkip ("execute") === currentPhase ("execute") → same-phase, no editor injection
+    // advanceTo("execute") on currentPhase already "execute" → same-phase no-op,
+    // so no editor text is injected (advanceWorkflowTo returns false, no setEditorText call)
     expect(editorTexts.length).toBe(0);
   });
 

@@ -12,9 +12,31 @@ export interface WorkflowTrackerState {
   prompted: Record<Phase, boolean>;
 }
 
-export type TransitionBoundary = "design_committed" | "plan_ready" | "execution_complete";
+export type TransitionBoundary =
+  | "design_reviewable"
+  | "plan_reviewable"
+  | "design_committed"
+  | "plan_ready"
+  | "execution_complete";
 
 export function computeBoundaryToPrompt(state: WorkflowTrackerState): TransitionBoundary | null {
+  // Reviewable: current phase has its deliverable artifact but hasn't been
+  // user-confirmed as complete. Prompt the user to review before moving on.
+  if (
+    state.currentPhase === "brainstorm" &&
+    state.artifacts.brainstorm &&
+    state.phases.brainstorm === "active" &&
+    !state.prompted.brainstorm
+  ) {
+    return "design_reviewable";
+  }
+  if (state.currentPhase === "plan" && state.artifacts.plan && state.phases.plan === "active" && !state.prompted.plan) {
+    return "plan_reviewable";
+  }
+
+  // Committed: phase is complete but user hasn't been prompted for
+  // transition options yet (e.g. phases completed via skip-confirmation
+  // "mark complete" or execute phase auto-completing on all tasks terminal).
   if (state.phases.brainstorm === "complete" && !state.prompted.brainstorm) {
     return "design_committed";
   }
@@ -96,21 +118,29 @@ export class WorkflowTracker {
 
     if (current) {
       const curIdx = WORKFLOW_PHASES.indexOf(current);
-      if (nextIdx <= curIdx) {
-        // Backward or same-phase navigation = new task. Reset everything.
+      if (nextIdx === curIdx) {
+        // Same-phase navigation is a no-op. This prevents accidental resets
+        // when plan_tracker init is called while already in execute, or when
+        // a skill is re-invoked during its own phase.
+        return false;
+      }
+      if (nextIdx < curIdx) {
+        // Backward navigation = intentional new task. Reset everything.
         this.reset();
         // Fall through to activate the target phase below.
       } else {
-        // Forward advance: auto-complete the current phase.
-        if (this.state.phases[current] === "active") {
-          this.state.phases[current] = "complete";
+        // Forward advance: do NOT auto-complete the current phase.
+        // Phase completion requires explicit user confirmation via
+        // boundary prompts or skip-confirmation "mark complete".
+        // However, refuse to jump over unresolved intermediate phases.
+        for (let i = curIdx + 1; i < nextIdx; i++) {
+          const intermediate = WORKFLOW_PHASES[i]!;
+          const status = this.state.phases[intermediate];
+          if (status !== "complete" && status !== "skipped") {
+            // Can't advance past an unresolved intermediate phase.
+            return false;
+          }
         }
-      }
-    }
-
-    for (const p of WORKFLOW_PHASES) {
-      if (p !== phase && this.state.phases[p] === "active") {
-        this.state.phases[p] = "complete";
       }
     }
 
@@ -138,6 +168,10 @@ export class WorkflowTracker {
   completeCurrent(): boolean {
     const phase = this.state.currentPhase;
     if (!phase) return false;
+    return this.completePhase(phase);
+  }
+
+  completePhase(phase: Phase): boolean {
     if (this.state.phases[phase] === "complete") return false;
     this.state.phases[phase] = "complete";
     return true;
@@ -203,11 +237,9 @@ export class WorkflowTracker {
       }
       let changed = false;
       changed = this.recordArtifact("brainstorm", path) || changed;
-      // Activating and immediately completing: the design doc is the
-      // deliverable that signals brainstorm is done. Do NOT mark prompted
-      // so the agent_end boundary prompt still fires to offer session handoff.
+      // Activate brainstorm phase but do NOT auto-complete.
+      // User confirms completion via the reviewable boundary prompt at agent_end.
       changed = this.advanceTo("brainstorm") || changed;
-      changed = this.completeCurrent() || changed;
       return changed;
     }
 
@@ -219,11 +251,9 @@ export class WorkflowTracker {
       }
       let changed = false;
       changed = this.recordArtifact("plan", path) || changed;
-      // Activating and immediately completing: the implementation plan
-      // is the deliverable that signals plan phase is done. Do NOT mark
-      // prompted so the agent_end boundary prompt still fires.
+      // Activate plan phase but do NOT auto-complete.
+      // User confirms completion via the reviewable boundary prompt at agent_end.
       changed = this.advanceTo("plan") || changed;
-      changed = this.completeCurrent() || changed;
       return changed;
     }
 
@@ -231,6 +261,9 @@ export class WorkflowTracker {
   }
 
   onPlanTrackerInit(): boolean {
+    // Guard: don't advance if already in execute (prevents accidental resets).
+    // Also refuse to jump over unresolved phases (e.g., plan still active).
+    if (this.state.currentPhase === "execute") return false;
     return this.advanceTo("execute");
   }
 
