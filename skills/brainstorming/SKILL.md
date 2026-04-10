@@ -1,78 +1,27 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
-allowed-tools: read bash
+description: "Use this before any creative work — creating features, building components, adding functionality, or modifying behavior. Explores intent and design before implementation."
 ---
 
-> **Related skills:** Consider `/skill:using-git-worktrees` to set up an isolated workspace, then `/skill:writing-plans` for implementation planning.
+# Brainstorming
 
-# Brainstorming Ideas Into Designs
+Read-only exploration. You may **not** edit or create any files except under `docs/plans/`.
 
-> ⚠️ **BOUNDARY — DO NOT VIOLATE**
->
-> This skill is **read-only exploration**. You MUST NOT use `edit` or `write` tools.
-> The only tools allowed are `read` and `bash` (for investigation only).
->
-> - ✅ Read code and docs: yes
-> - ✅ Write to `docs/plans/`: yes (design documents only)
-> - ❌ Edit or create any other files: **absolutely no**
->
-> If you find yourself reaching for `edit` or `write`, **stop**. Present what
-> you found as a design section and ask the user to approve it first.
+## Process
 
-## Overview
+1. **Check git state** — run `git status` and `git log --oneline -5`. If there's uncommitted work, ask the user what to do with it first.
+2. **Understand the idea** — read existing code, docs, and recent commits. Ask questions one at a time to refine the idea. Prefer multiple choice when possible.
+3. **Explore approaches** — propose 2-3 approaches with trade-offs. Lead with your recommendation.
+4. **Present the design** — break it into sections of 200-300 words. Check after each section whether it looks right. Cover: architecture, components, data flow, error handling, testing.
+5. **Write the design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit.
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+## Principles
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design in small sections (200-300 words), checking after each section whether it looks right so far.
+- One question at a time
+- YAGNI — remove unnecessary features
+- Design for testability
+- Always explore alternatives before settling
 
-## The Process
+## After the design
 
-**Before anything else — check git state:**
-- Run `git status` and `git log --oneline -5`
-- If on a feature branch with uncommitted or unmerged work, ask the user:
-  - "You're on `<branch>` with uncommitted changes. Want to finish/merge that first, stash it, or continue here?"
-- Require exactly one of: finish prior work, stash, or explicitly continue here
-- If the topic is new, suggest creating a new branch before brainstorming
-
-**Understanding the idea:**
-- Check out the current project state first (files, docs, recent commits)
-- Check if the codebase or ecosystem already solves this before designing from scratch
-- Ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
-
-**Exploring approaches:**
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
-
-**Presenting the design:**
-- Once you believe you understand what you're building, present the design
-- Break it into sections of 200-300 words
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
-
-## After the Design
-
-**Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
-- Commit the design document to git
-- The workflow monitor automatically tracks phase transitions when you invoke skills
-
-**Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
-- Set up isolated workspace — `/skill:using-git-worktrees` for larger work, or just create a branch for small changes
-- Use `/skill:writing-plans` to create detailed implementation plan
-
-## Key Principles
-
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Design for testability** - Favor approaches with clear boundaries that are easy to verify with TDD
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design in sections, validate each
-- **Be flexible** - Go back and clarify when something doesn't make sense
+Ask: "Ready to plan? Run `/skill:writing-plans`"
