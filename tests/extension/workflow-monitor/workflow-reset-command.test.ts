@@ -8,7 +8,7 @@ import workflowMonitorExtension from "../../../extensions/workflow-monitor";
 function setup() {
   const commands = new Map<string, (args: string, ctx: any) => Promise<void>>();
   const appendedEntries: Array<{ customType: string; data: any }> = [];
-  const toolCalls: Array<[string, any]> = [];
+  const emittedEvents: Array<[string, any]> = [];
 
   const fakePi: any = {
     on() {},
@@ -19,14 +19,16 @@ function setup() {
     registerCommand(name: string, opts: any) {
       commands.set(name, opts.handler);
     },
-    callTool(name: string, params: any) {
-      toolCalls.push([name, params]);
-      return Promise.resolve({});
+    events: {
+      emit(event: string, data?: any) {
+        emittedEvents.push([event, data]);
+      },
+      on() {},
     },
   };
 
   workflowMonitorExtension(fakePi);
-  return { commands, appendedEntries, toolCalls };
+  return { commands, appendedEntries, emittedEvents };
 }
 
 describe("/workflow-reset command", () => {
@@ -109,8 +111,8 @@ describe("/workflow-reset command", () => {
     expect(ctx.ui.notify).not.toHaveBeenCalled();
   });
 
-  test("invokes plan_tracker clear to immediately update the Tasks widget", async () => {
-    const { commands, toolCalls } = setup();
+  test("emits plan_tracker:clear event to immediately update the Tasks widget", async () => {
+    const { commands, emittedEvents } = setup();
 
     const ctx: any = {
       hasUI: false,
@@ -120,8 +122,7 @@ describe("/workflow-reset command", () => {
     const handler = commands.get("workflow-reset");
     await handler!("", ctx);
 
-    const clearCall = toolCalls.find(([name]) => name === "plan_tracker");
-    expect(clearCall).toBeDefined();
-    expect(clearCall![1]).toEqual({ action: "clear" });
+    const clearEvent = emittedEvents.find(([name]) => name === "plan_tracker:clear");
+    expect(clearEvent).toBeDefined();
   });
 });

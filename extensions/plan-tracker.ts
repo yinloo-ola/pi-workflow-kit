@@ -236,6 +236,12 @@ export default function (pi: ExtensionAPI) {
     }
   };
 
+  // Listen for clear signal from workflow-monitor's /workflow-reset command.
+  // This allows cross-extension communication without a callTool API.
+  pi.events.on("plan_tracker:clear", () => {
+    tasks = [];
+  });
+
   // Reconstruct state + widget on session events
   // session_start covers startup, reload, new, resume, fork (pi v0.65.0+)
   pi.on("session_start", async (_event, ctx) => {

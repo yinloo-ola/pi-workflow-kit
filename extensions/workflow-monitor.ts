@@ -791,12 +791,12 @@ export default function (pi: ExtensionAPI) {
     async handler(_args, ctx) {
       handler.resetState();
       // Emit a clear signal so plan-tracker also reconstructs to empty on next
-      // session reload. Also invoke plan_tracker clear now so the in-memory
-      // state and widget update immediately.
+      // session reload. Also notify plan-tracker in real time via the shared
+      // event bus so its in-memory state and widget update immediately.
       pi.appendEntry(PLAN_TRACKER_CLEARED_TYPE, { clearedAt: Date.now() });
       persistState();
       updateWidget(ctx);
-      await pi.callTool(PLAN_TRACKER_TOOL_NAME, { action: "clear" });
+      pi.events.emit("plan_tracker:clear");
       if (ctx.hasUI) {
         ctx.ui.notify("Workflow reset. Ready for a new task.", "info");
       }
