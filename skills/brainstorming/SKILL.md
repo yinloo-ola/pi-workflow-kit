@@ -13,7 +13,11 @@ Read-only exploration. You may **not** edit or create any files except under `do
 2. **Understand the idea** — read existing code, docs, and recent commits. Ask questions one at a time to refine the idea. Prefer multiple choice when possible.
 3. **Explore approaches** — propose 2-3 approaches with trade-offs. Lead with your recommendation.
 4. **Present the design** — break it into sections of 200-300 words. Check after each section whether it looks right. Cover: architecture, components, data flow, error handling, testing.
-5. **Write the design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit.
+5. **Set up workspace & write the design doc** — create a branch for this work. For larger features, use a git worktree for isolation:
+   ```
+   git worktree add ../<repo>-<feature-name> -b <feature-name>
+   ```
+   Save the design doc to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit on the new branch.
 
 ## Principles
 
