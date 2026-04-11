@@ -41,6 +41,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `bash` stays available during brainstorm/plan for investigation commands. The theoretical bash-write loophole is accepted.
 - No state persistence — phase resets on reload, you invoke the skill again.
 
+## [Unreleased]
+
+### Added
+
+- **Checkpoint review gates** — optional `checkpoint: test` and `checkpoint: done` labels on tasks in the implementation plan. The agent pauses at checkpoints for human review before proceeding. The agent assigns checkpoints based on complexity; the user can adjust when reviewing the plan.
+- **Workspace setup in brainstorming** — brainstorming now creates the feature branch (or worktree) before committing the design doc, keeping `main` clean.
+
 [Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.6.0...HEAD
 [0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0
 [0.5.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.0...v0.5.1
