@@ -31,7 +31,7 @@ You control each phase explicitly by invoking the skill:
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:brainstorming` | Refine your idea into a design doc via collaborative dialogue |
 | **Plan** | `/skill:writing-plans` | Break the design into bite-sized TDD tasks with exact file paths and code |
-| **Execute** | `/skill:executing-tasks` | Implement the plan task-by-task with TDD discipline |
+| **Execute** | `/skill:executing-tasks` | Implement the plan task-by-task with TDD discipline and optional checkpoint review gates |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
 
 During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/plans/`. During execute and finalize, all tools are available.
@@ -42,7 +42,7 @@ During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/pl
 |-------|------:|-------------|
 | `brainstorming` | ~30 | Explore the idea, propose approaches, write design doc |
 | `writing-plans` | ~35 | Break design into tasks with TDD scenarios, set up branch/worktree |
-| `executing-tasks` | ~40 | Implement tasks with TDD discipline, handle code review |
+| `executing-tasks` | ~50 | Implement tasks with TDD discipline, checkpoint review gates, handle code review |
 | `finalizing` | ~20 | Archive docs, update changelog, create PR, clean up |
 
 ### TDD Three-Scenario Model
@@ -54,6 +54,16 @@ The plan labels each task with its TDD scenario:
 | New feature | Adding new behavior | Write failing test → implement → pass |
 | Modifying tested code | Changing existing behavior | Run existing tests first → modify → verify |
 | Trivial | Config, docs, naming | Use judgment |
+
+### Checkpoint Review Gates
+
+Optionally label tasks with a `checkpoint` to pause for human review:
+
+| Checkpoint | When to use | What happens |
+|---|---|---|
+| *(none)* | Trivial tasks, well-understood changes | Auto-advance, no pause |
+| `checkpoint: test` | Test design matters | Pause after failing test, before implementing |
+| `checkpoint: done` | Implementation review matters | Pause after implementation passes tests, before committing |
 
 ## Architecture
 
