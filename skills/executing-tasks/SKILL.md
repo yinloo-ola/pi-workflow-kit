@@ -9,12 +9,29 @@ Implement the plan from `docs/plans/*-implementation.md` task by task.
 
 ## Per-task lifecycle
 
-For each task:
+Check each task for a `checkpoint` label and follow the appropriate flow:
+
+### No checkpoint (auto-advance)
 
 1. **Implement** — write the code as described in the plan
 2. **Run tests** — verify the changes work
 3. **Fix if needed** — if tests fail, debug and fix before moving on
 4. **Commit** — `git add` the relevant files and commit with a clear message
+
+### checkpoint: test
+
+1. **Write the test** — follow the TDD scenario for the task
+2. **Pause for review** — show what was done and the diff, then wait for human input
+3. **Continue** — implement, run tests, fix if needed
+4. **Commit** — `git add` the relevant files and commit with a clear message
+
+### checkpoint: done
+
+1. **Implement** — write the code as described in the plan
+2. **Run tests** — verify the changes work
+3. **Fix if needed** — if tests fail, debug and fix before moving on
+4. **Pause for review** — show what was done and the diff, then wait for human input
+5. **Commit** — `git add` the relevant files and commit with a clear message
 
 ## TDD discipline
 
@@ -25,6 +42,25 @@ Follow the TDD scenario from the plan:
 - **Trivial change**: use judgment
 
 Don't skip tests because "it's obvious." The test is the contract.
+
+## Checkpoint review
+
+When pausing at a checkpoint, present:
+
+```
+⏸ Paused at checkpoint: [test|done] for task [N]
+
+**What was done:** [brief summary]
+**Diff:** [show relevant diff]
+
+Review and let me know how to proceed.
+```
+
+Wait for the human to respond. They may:
+- Approve and continue
+- Request changes to the test or implementation
+- Ask to revert the task
+- Adjust the remaining plan
 
 ## Receiving code review
 
