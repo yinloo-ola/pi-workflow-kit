@@ -21,13 +21,46 @@ Ship the completed work.
    - Update CHANGELOG.md
    - Update any inline docs
 
-3. **Create PR**:
-   ```
-   git push origin <branch>
-   gh pr create --title "feat: <summary>" --body "<task summary>"
-   ```
+3. **Choose a merge strategy** — ask the human which option they prefer:
 
-4. **Clean up** — if a worktree was used, remove it after the PR is merged:
+   1. **Create PR** — push and open a PR for external review:
+      ```
+      git push origin <branch>
+      gh pr create --title "feat: <summary>" --body "<task summary>"
+      ```
+
+   2. **Rebase & merge** *(recommended)* — rebase onto parent, fast-forward merge, push parent, delete branch:
+      ```
+      parent=$(git show-branch -a 2>/dev/null | grep '\*' | grep -v "$(git branch --show-current)" | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
+      git checkout "$parent" && git pull
+      git checkout - && git rebase "$parent"
+      git checkout "$parent" && git merge --ff-only -
+      git push origin "$parent"
+      git branch -d - && git push origin --delete -
+      ```
+
+   3. **Squash & merge** — squash all commits into one on parent, push parent, delete branch:
+      ```
+      parent=$(git show-branch -a 2>/dev/null | grep '\*' | grep -v "$(git branch --show-current)" | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
+      git checkout "$parent" && git pull
+      git merge --squash -
+      git commit -m "feat: <summary>"
+      git push origin "$parent"
+      git branch -d - && git push origin --delete -
+      ```
+
+   4. **Merge commit** — merge with `--no-ff`, push parent, delete branch:
+      ```
+      parent=$(git show-branch -a 2>/dev/null | grep '\*' | grep -v "$(git branch --show-current)" | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
+      git checkout "$parent" && git pull
+      git merge --no-ff -m "Merge branch '<branch>'" -
+      git push origin "$parent"
+      git branch -d - && git push origin --delete -
+      ```
+
+   For options 2–4, confirm the detected parent branch with the human before proceeding.
+
+4. **Clean up** — if a worktree was used, remove it:
    ```
    git worktree remove ../<repo>-<feature-name>
    ```
