@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
 /**
@@ -28,15 +29,17 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("input", (event) => {
 		const text = event.text ?? "";
-		for (const [skill, p] of Object.entries(SKILL_TO_PHASE)) {
-			if (text.includes(skill)) {
-				phase = p;
+		const match = text.match(/^\/skill:([\w-]+)/);
+		if (match) {
+			const skill = match[1];
+			if (skill in SKILL_TO_PHASE) {
+				phase = SKILL_TO_PHASE[skill];
 				return;
 			}
 		}
 		if (
-			text.includes("executing-tasks") ||
-			text.includes("finalizing")
+			text.startsWith("/skill:executing-tasks") ||
+			text.startsWith("/skill:finalizing")
 		) {
 			phase = null;
 		}
@@ -50,7 +53,9 @@ export default function (pi: ExtensionAPI) {
 		const filePath = (event.input as { path?: string }).path ?? "";
 		if (!filePath) return;
 
-		if (filePath.startsWith("docs/plans/")) return;
+		const absolute = resolve(ctx.cwd, filePath);
+		const plansDir = resolve(ctx.cwd, "docs/plans");
+		if (absolute.startsWith(plansDir + "/")) return;
 
 		if (ctx.hasUI) {
 			ctx.ui.notify(
@@ -60,7 +65,7 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		return {
-			blocked: true,
+			block: true,
 			reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming and planning.`,
 		};
 	});
