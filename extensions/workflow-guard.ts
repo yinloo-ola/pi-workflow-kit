@@ -4,7 +4,7 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 /**
  * Workflow Guard extension.
  *
- * Blocks write/edit outside docs/plans/ during brainstorm and plan phases.
+ * Blocks write/edit outside docs/plans/ and unsafe bash during brainstorm and plan phases.
  * You control phases explicitly via /skill: commands — no auto-detection,
  * no state persistence, no prompts.
  */
@@ -143,6 +143,23 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("tool_call", (event, ctx) => {
 		if (!phase) return;
+
+		if (event.toolName === "bash") {
+			const command = (event.input as { command?: string }).command ?? "";
+			if (!isSafeCommand(command)) {
+				if (ctx.hasUI) {
+					ctx.ui.notify(
+						`Blocked bash command during ${phase} phase: ${command}`,
+						"warning",
+					);
+				}
+				return {
+					block: true,
+					reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (not allowlisted). Only read-only commands are permitted during brainstorming and planning.\nCommand: ${command}`,
+				};
+			}
+			return;
+		}
 
 		if (event.toolName !== "write" && event.toolName !== "edit") return;
 
