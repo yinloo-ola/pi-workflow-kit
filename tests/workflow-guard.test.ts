@@ -16,7 +16,60 @@ import { describe, it, expect, beforeEach } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { getCurrentPhase } from "../extensions/workflow-guard";
+import { getCurrentPhase, isSafeCommand } from "../extensions/workflow-guard";
+
+describe("isSafeCommand", () => {
+	it("allows safe read-only commands", () => {
+		expect(isSafeCommand("cat file.ts")).toBe(true);
+		expect(isSafeCommand("grep -r 'foo' src/")).toBe(true);
+		expect(isSafeCommand("git status")).toBe(true);
+		expect(isSafeCommand("git log --oneline -5")).toBe(true);
+		expect(isSafeCommand("npm list")).toBe(true);
+		expect(isSafeCommand("ls -la")).toBe(true);
+		expect(isSafeCommand("curl https://example.com")).toBe(true);
+	});
+
+	it("blocks destructive commands", () => {
+		expect(isSafeCommand("rm -rf node_modules")).toBe(false);
+		expect(isSafeCommand("touch newfile.ts")).toBe(false);
+		expect(isSafeCommand("mv old.ts new.ts")).toBe(false);
+		expect(isSafeCommand("mkdir src/components")).toBe(false);
+	});
+
+	it("blocks file-writing bash patterns", () => {
+		expect(isSafeCommand("echo 'hello' > file.ts")).toBe(false);
+		expect(isSafeCommand("cat config > backup.txt")).toBe(false);
+		expect(isSafeCommand("echo 'log' >> output.log")).toBe(false);
+		expect(isSafeCommand("tee output.txt")).toBe(false);
+		expect(isSafeCommand("sed -i 's/old/new/g' file.ts")).toBe(false);
+	});
+
+	it("blocks git mutations but allows read-only git", () => {
+		expect(isSafeCommand("git add .")).toBe(false);
+		expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
+		expect(isSafeCommand("git push")).toBe(false);
+		expect(isSafeCommand("git checkout -b feature")).toBe(false);
+		expect(isSafeCommand("git status")).toBe(true);
+		expect(isSafeCommand("git log --oneline")).toBe(true);
+		expect(isSafeCommand("git diff")).toBe(true);
+	});
+
+	it("blocks editors", () => {
+		expect(isSafeCommand("vim file.ts")).toBe(false);
+		expect(isSafeCommand("nano file.ts")).toBe(false);
+		expect(isSafeCommand("code .")).toBe(false);
+	});
+
+	it("blocks sudo", () => {
+		expect(isSafeCommand("sudo apt install foo")).toBe(false);
+	});
+
+	it("blocks npm installs but allows read-only npm", () => {
+		expect(isSafeCommand("npm install lodash")).toBe(false);
+		expect(isSafeCommand("npm list")).toBe(true);
+		expect(isSafeCommand("npm audit")).toBe(true);
+	});
+});
 
 describe("workflow-guard", () => {
 	describe("phase detection from input text", () => {
