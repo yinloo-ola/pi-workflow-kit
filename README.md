@@ -13,7 +13,7 @@ brainstorm → plan → execute → finalize
 **1 extension** that enforces the rules:
 
 - During brainstorming and planning, `write` and `edit` are **hard-blocked** outside `docs/plans/`. The agent can only read code and discuss the design with you — it literally cannot modify source files.
-- `bash` stays available for investigation (`grep`, `find`, `git log`, etc.).
+- `bash` is **restricted to read-only commands** — file writes, installs, git mutations, and editors are blocked. Safe commands like `grep`, `find`, `git status`, `cat`, `curl` remain available.
 
 No configuration required. Skills and extensions activate automatically after install.
 
@@ -34,7 +34,7 @@ You control each phase explicitly by invoking the skill:
 | **Execute** | `/skill:executing-tasks` | Implement the plan task-by-task with TDD discipline and optional checkpoint review gates |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
 
-During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/plans/`. During execute and finalize, all tools are available.
+During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/plans/` and restricts `bash` to read-only commands. During execute and finalize, all tools are available.
 
 ### Skills
 
