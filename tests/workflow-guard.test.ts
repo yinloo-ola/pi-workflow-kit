@@ -133,14 +133,11 @@ describe("workflow-guard", () => {
 			}
 		});
 
-		it("should allow bash regardless of phase", () => {
-			const phase = "brainstorm";
-			const toolName = "bash";
-
-			if (phase && (toolName === "write" || toolName === "edit")) {
-				throw new Error("should not block bash");
-			}
-			expect(true).toBe(true);
+		it("should block unsafe bash during brainstorm (safe bash tested via isSafeCommand)", () => {
+			// The tool_call handler now guards bash via isSafeCommand.
+			// Direct testing of safe/unsafe commands is in the isSafeCommand describe block.
+			// This just confirms bash is no longer blanket-allowed.
+			expect(isSafeCommand("rm -rf /")).toBe(false);
 		});
 	});
 });
