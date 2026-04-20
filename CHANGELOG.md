@@ -49,9 +49,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `bash` stays available during brainstorm/plan for investigation commands. The theoretical bash-write loophole is accepted.
 - No state persistence — phase resets on reload, you invoke the skill again.
 
+## [0.8.1] - 2026-04-20
+
+### Changed
+
+- **Bash guard supports compound commands** — `&&`, `||`, `;` chains are now split and each sub-command is individually checked against the safe/destructive lists. Pipes (`|`) remain unsplit to allow `git log | head`-style usage.
+
+### Fixed
+
+- **Workflow guard write-blocking bug** — the tool_call handler returned `{ blocked: true }` instead of `{ block: true }`, so writes were never actually blocked during brainstorm/plan phases.
+- **Skill matching was unanchored** — `/skill:finalizing` incorrectly matched `/skill:finalizing-extra` patterns; now requires `\b` word boundary.
+
+## [0.8.0] - 2026-04-18
+
+### Added
+
+- **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
+
 ## [Unreleased]
 
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
 [0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0
 [0.5.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.0...v0.5.1
