@@ -9,7 +9,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
 ## Process
 
-1. **Check for a design doc & workspace** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. Verify you're on the feature branch (or in its worktree) created during brainstorming. If no design doc exists, ask the user to describe what they want to build, read relevant code, create a branch, and create the plan directly.
+1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If no design doc exists, ask the user to describe what they want to build and read relevant code.
 2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 ## Task format

@@ -101,10 +101,27 @@ const SAFE_PATTERNS = [
 	/^\s*eza\b/,
 ];
 
+/** Split a compound command into individual sub-commands.
+ * Handles &&, ||, ;, and | (pipe) operators, ignoring leading whitespace.
+ */
+function splitCompoundCommand(command: string): string[] {
+	// Match sub-commands separated by &&, ||, ; (with optional whitespace)
+	// We don't split on | to allow piping (e.g. `git log | head`)
+	return command
+		.split(/&&|\|\||;/)
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0);
+}
+
 export function isSafeCommand(command: string): boolean {
-	const isDestructive = DESTRUCTIVE_PATTERNS.some((p) => p.test(command));
-	const isSafe = SAFE_PATTERNS.some((p) => p.test(command));
-	return !isDestructive && isSafe;
+	const parts = splitCompoundCommand(command);
+	return parts.every(
+		(part) => {
+			const isDestructive = DESTRUCTIVE_PATTERNS.some((p) => p.test(part));
+			const isSafe = SAFE_PATTERNS.some((p) => p.test(part));
+			return !isDestructive && isSafe;
+		},
+	);
 }
 
 const SKILL_TO_PHASE: Record<string, Phase> = {

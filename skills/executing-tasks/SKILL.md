@@ -7,6 +7,27 @@ description: "Use this to implement an approved plan task-by-task. Run after wri
 
 Implement the plan from `docs/plans/*-implementation.md` task by task.
 
+## Before you start
+
+1. **Check git state** — run `git status` and `git log --oneline -5`. Note any uncommitted changes.
+2. **Suggest workspace isolation** — if the user isn't already on a feature branch or worktree, present the options:
+
+   - **Branch** (smaller changes):
+     ```
+     git checkout -b <feature-name>
+     ```
+   - **Worktree** (larger features, keeps main clean):
+     ```
+     git worktree add ../<repo>-<feature-name> -b <feature-name>
+     ```
+
+   Derive `<feature-name>` from the plan doc (e.g. `docs/plans/2026-04-16-auth-design.md` → `auth`). Ask the user which they prefer, then wait for confirmation before proceeding.
+
+3. **Commit the plan docs** — if `docs/plans/` has uncommitted files, commit them on the new branch:
+   ```
+   git add docs/plans/ && git commit -m "docs: add design and implementation plan"
+   ```
+
 ## Per-task lifecycle
 
 Check each task for a `checkpoint` label and follow the appropriate flow:
