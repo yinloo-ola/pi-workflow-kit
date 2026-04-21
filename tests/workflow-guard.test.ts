@@ -69,6 +69,62 @@ describe("isSafeCommand", () => {
 		expect(isSafeCommand("npm list")).toBe(true);
 		expect(isSafeCommand("npm audit")).toBe(true);
 	});
+
+	it("allows cd", () => {
+		expect(isSafeCommand("cd /some/path")).toBe(true);
+		expect(isSafeCommand("cd src && ls")).toBe(true);
+	});
+
+	it("allows gh read-only subcommands", () => {
+		expect(isSafeCommand("gh pr view 1564 --json title,body")).toBe(true);
+		expect(isSafeCommand("gh pr list --repo owner/repo")).toBe(true);
+		expect(isSafeCommand("gh pr diff 1564")).toBe(true);
+		expect(isSafeCommand("gh issue view 42")).toBe(true);
+		expect(isSafeCommand("gh issue list --label bug")).toBe(true);
+		expect(isSafeCommand("gh repo view owner/repo")).toBe(true);
+		expect(isSafeCommand("gh run view 12345")).toBe(true);
+	});
+
+	it("blocks gh write subcommands", () => {
+		expect(isSafeCommand("gh pr create --title 'fix'")).toBe(false);
+		expect(isSafeCommand("gh pr merge 1564")).toBe(false);
+		expect(isSafeCommand("gh issue close 42")).toBe(false);
+		expect(isSafeCommand("gh release create v1.0")).toBe(false);
+	});
+
+	it("allows git read-only subcommands (new additions)", () => {
+		expect(isSafeCommand("git blame src/index.ts")).toBe(true);
+		expect(isSafeCommand("git shortlog -sn")).toBe(true);
+		expect(isSafeCommand("git stash list")).toBe(true);
+		expect(isSafeCommand("git tag -l")).toBe(true);
+		expect(isSafeCommand("git tag --list 'v*'")).toBe(true);
+		expect(isSafeCommand("git describe --tags")).toBe(true);
+	});
+
+	it("still blocks git stash mutations", () => {
+		expect(isSafeCommand("git stash push -m 'wip'")).toBe(false);
+		expect(isSafeCommand("git stash pop")).toBe(false);
+	});
+
+	it("allows 2>/dev/null on safe commands", () => {
+		expect(isSafeCommand("git remote -v 2>/dev/null")).toBe(true);
+		expect(isSafeCommand("gh pr view 1564 2>/dev/null")).toBe(true);
+		expect(isSafeCommand("npm list 2>/dev/null")).toBe(true);
+	});
+
+	it("allows 2>&1 on safe commands", () => {
+		expect(isSafeCommand("git log 2>&1")).toBe(true);
+	});
+
+	it("still blocks stdout redirects even with stderr redirect present", () => {
+		expect(isSafeCommand("echo 'hello' > file.ts 2>/dev/null")).toBe(false);
+		expect(isSafeCommand("cat config > backup.txt 2>/dev/null")).toBe(false);
+	});
+
+	it("allows the exact user-reported blocked commands", () => {
+		expect(isSafeCommand("cd /Users/u/partying/pt-room && git remote -v 2>/dev/null; echo '---'; ls")).toBe(true);
+		expect(isSafeCommand("gh pr view 1564 --repo olachat/pt-partying --json title,body,files,additions,deletions 2>/dev/null || echo 'gh failed'")).toBe(true);
+	});
 });
 
 describe("workflow-guard", () => {
