@@ -68,6 +68,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Safe commands expansion** — allowlisted `cd`, GitHub CLI read-only subcommands (`gh pr view/list/diff/checks/status`, `gh issue view/list`, `gh repo view/fork/list`, `gh release view/list/download`, `gh run view/list`), and git read-only subcommands (`blame`, `shortlog`, `stash list`, `tag -l/--list`, `describe`).
+- **Harmless redirect stripping** — `2>/dev/null` and `2>&1` are stripped before pattern matching, fixing false blocks on common stderr suppression.
+- **Extracted `shouldBlockFilePath()`** — file-path blocking logic extracted into a testable pure function.
+- **4 `shouldBlockFilePath` tests** — validates that only `docs/plans/` subtree is writable during brainstorm/plan, blocks directory itself and absolute paths.
+- **Removed 5 tautological tests** — replaced `expect(true).toBe(true)` blocking logic stubs with the real `shouldBlockFilePath` tests.
+
+### Fixed
+
+- **`git stash list` and `git tag -l` falsely blocked** — destructive pattern now uses negative lookaheads `(?!\s+list)` and `(?!\s+(-l|--list))` to allow read-only variants while still blocking mutations.
+
 [Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.1...HEAD
 [0.8.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.7.0...v0.8.0
