@@ -146,6 +146,18 @@ const SKILL_TO_PHASE: Record<string, Phase> = {
 	"writing-plans": "plan",
 };
 
+/** Determine if a write/edit to filePath should be blocked during the given phase.
+ *  Only writes under docs/plans/ are allowed during brainstorm and plan phases.
+ */
+export function shouldBlockFilePath(
+	filePath: string,
+	cwd: string,
+): boolean {
+	const absolute = resolve(cwd, filePath);
+	const plansDir = resolve(cwd, "docs/plans");
+	return !absolute.startsWith(plansDir + "/");
+}
+
 export function getCurrentPhase(): Phase {
 	return phase;
 }
@@ -200,9 +212,7 @@ export default function (pi: ExtensionAPI) {
 		const filePath = (event.input as { path?: string }).path ?? "";
 		if (!filePath) return;
 
-		const absolute = resolve(ctx.cwd, filePath);
-		const plansDir = resolve(ctx.cwd, "docs/plans");
-		if (absolute.startsWith(plansDir + "/")) return;
+		if (!shouldBlockFilePath(filePath, ctx.cwd)) return;
 
 		if (ctx.hasUI) {
 			ctx.ui.notify(

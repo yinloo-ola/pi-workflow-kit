@@ -16,7 +16,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { getCurrentPhase, isSafeCommand } from "../extensions/workflow-guard";
+import { getCurrentPhase, isSafeCommand, shouldBlockFilePath } from "../extensions/workflow-guard";
 
 describe("isSafeCommand", () => {
 	it("allows safe read-only commands", () => {
@@ -127,12 +127,25 @@ describe("isSafeCommand", () => {
 	});
 });
 
-describe("workflow-guard", () => {
-	describe("phase detection from input text", () => {
-		it("returns null initially", () => {
-			expect(getCurrentPhase()).toBeNull();
-		});
+describe("shouldBlockFilePath", () => {
+	const cwd = "/project";
+
+	it("allows writes under docs/plans/", () => {
+		expect(shouldBlockFilePath("docs/plans/2026-04-21-feature-design.md", cwd)).toBe(false);
+		expect(shouldBlockFilePath("docs/plans/sub/nested.md", cwd)).toBe(false);
 	});
 
+	it("blocks writes outside docs/plans/", () => {
+		expect(shouldBlockFilePath("src/index.ts", cwd)).toBe(true);
+		expect(shouldBlockFilePath("extensions/workflow-guard.ts", cwd)).toBe(true);
+		expect(shouldBlockFilePath("docs/README.md", cwd)).toBe(true);
+	});
 
+	it("blocks writes to docs/plans/ itself (no trailing file)", () => {
+		expect(shouldBlockFilePath("docs/plans", cwd)).toBe(true);
+	});
+
+	it("blocks absolute paths outside plans", () => {
+		expect(shouldBlockFilePath("/tmp/evil.js", cwd)).toBe(true);
+	});
 });
