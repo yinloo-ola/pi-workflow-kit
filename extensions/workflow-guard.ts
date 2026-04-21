@@ -99,6 +99,17 @@ const SAFE_PATTERNS = [
 	/^\s*fd\b/,
 	/^\s*bat\b/,
 	/^\s*eza\b/,
+	/^\s*cd\b/,
+	/^\s*gh\s+pr\s+(view|list|diff|checks|status)\b/i,
+	/^\s*gh\s+issue\s+(view|list)\b/i,
+	/^\s*gh\s+repo\s+(view|fork|list)\b/i,
+	/^\s*gh\s+release\s+(view|list|download)\b/i,
+	/^\s*gh\s+run\s+(view|list)\b/i,
+	/^\s*git\s+blame\b/,
+	/^\s*git\s+shortlog\b/,
+	/^\s*git\s+stash\s+list\b/i,
+	/^\s*git\s+tag\s+(-l|--list)\b/i,
+	/^\s*git\s+describe\b/,
 ];
 
 /** Split a compound command into individual sub-commands.
