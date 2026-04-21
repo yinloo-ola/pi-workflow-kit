@@ -113,12 +113,18 @@ function splitCompoundCommand(command: string): string[] {
 		.filter((s) => s.length > 0);
 }
 
+/** Strip stderr redirects that are purely cosmetic (no side effects). */
+function stripHarmlessRedirects(cmd: string): string {
+	return cmd.replace(/\s*2\s*>\s*(\/dev\/null|&1)\b/g, "");
+}
+
 export function isSafeCommand(command: string): boolean {
 	const parts = splitCompoundCommand(command);
 	return parts.every(
 		(part) => {
-			const isDestructive = DESTRUCTIVE_PATTERNS.some((p) => p.test(part));
-			const isSafe = SAFE_PATTERNS.some((p) => p.test(part));
+			const cleaned = stripHarmlessRedirects(part);
+			const isDestructive = DESTRUCTIVE_PATTERNS.some((p) => p.test(cleaned));
+			const isSafe = SAFE_PATTERNS.some((p) => p.test(cleaned));
 			return !isDestructive && isSafe;
 		},
 	);
