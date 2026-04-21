@@ -14,7 +14,7 @@
   "author": "yinloo-ola",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yinloo-ola/pi-workflow-kit.git"
+    "url": "git+https://github.com/yinloo-ola/pi-workflow-kit.git"
   },
   "files": [
     "extensions/",
