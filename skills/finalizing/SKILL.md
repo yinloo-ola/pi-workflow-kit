@@ -14,7 +14,7 @@ Ship the completed work.
    mkdir -p docs/plans/completed
    mv docs/plans/*-design.md docs/plans/completed/
    mv docs/plans/*-implementation.md docs/plans/completed/
-   git add docs/plans/completed/ && git commit -m "chore: archive planning docs"
+   git add docs/plans/ && git commit -m "chore: archive planning docs"
    ```
 
 2. **Update documentation** — if the API or surface changed:
