@@ -13,7 +13,7 @@ brainstorm → plan → execute → finalize
 **1 extension** that enforces the rules:
 
 - During brainstorming and planning, `write` and `edit` are **hard-blocked** outside `docs/plans/`. The agent can only read code and discuss the design with you — it literally cannot modify source files.
-- `bash` is **restricted to read-only commands** — file writes, installs, git mutations, and editors are blocked. Safe commands like `grep`, `find`, `git status`, `cat`, `curl` remain available.
+- `bash` is **restricted to read-only commands** — file writes, installs, git mutations, and editors are blocked. Safe commands like `grep`, `find`, `git status`, `cat`, `curl`, `go doc`, `go list` remain available.
 
 No configuration required. Skills and extensions activate automatically after install.
 
