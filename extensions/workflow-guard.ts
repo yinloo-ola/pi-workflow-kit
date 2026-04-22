@@ -110,6 +110,10 @@ const SAFE_PATTERNS = [
 	/^\s*git\s+stash\s+list\b/i,
 	/^\s*git\s+tag\s+(-l|--list)\b/i,
 	/^\s*git\s+describe\b/,
+	/^\s*go\s+doc\b/,
+	/^\s*go\s+list\b/,
+	/^\s*go\s+version\b/,
+	/^\s*go\s+env\b/,
 ];
 
 /** Split a compound command into individual sub-commands.
