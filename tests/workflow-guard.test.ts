@@ -101,6 +101,20 @@ describe("isSafeCommand", () => {
 		expect(isSafeCommand("git describe --tags")).toBe(true);
 	});
 
+	it("allows go read-only subcommands", () => {
+		expect(isSafeCommand("go doc go.opentelemetry.io/otel/label")).toBe(true);
+		expect(isSafeCommand("go doc go.opentelemetry.io/otel/codes 2>&1 | head -20")).toBe(true);
+		expect(isSafeCommand("go list -m -versions go.opentelemetry.io/otel 2>&1 | tr ' ' '\\n' | grep -E '^v1\\\\.(2[89]|[3-9][0-9])' | head -20")).toBe(true);
+		expect(isSafeCommand("go version")).toBe(true);
+		expect(isSafeCommand("go env GOOS GOARCH")).toBe(true);
+	});
+
+	it("blocks go write subcommands", () => {
+		expect(isSafeCommand("go build ./...")).toBe(false);
+		expect(isSafeCommand("go install golang.org/x/tools/gopls@latest")).toBe(false);
+		expect(isSafeCommand("go mod tidy")).toBe(false);
+	});
+
 	it("still blocks git stash mutations", () => {
 		expect(isSafeCommand("git stash push -m 'wip'")).toBe(false);
 		expect(isSafeCommand("git stash pop")).toBe(false);
