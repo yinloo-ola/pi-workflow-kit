@@ -157,7 +157,7 @@ Don't skip tests because "it's obvious." The test is the contract.
 
 ## Batching and session management
 
-After completing ~3-5 non-checkpoint tasks in the same session, suggest a fresh session:
+The agent suggests a fresh session at natural break points to minimize token accumulation. After completing ~3-5 non-checkpoint tasks in the same session, suggest:
 
 ```
 ✅ Tasks 3-5 done (commits: a1b2, e4f5, i7j8)
@@ -174,6 +174,22 @@ Progress: 5/10 tasks done
 The user can say "continue" to keep going in the same session. Respect their choice.
 
 Also suggest `/new` at checkpoint review pauses when multiple tasks have been completed since the last session break.
+
+## Progress file updates (automated)
+
+During execution, the agent should update the progress file in place. Example workflow:
+
+```bash
+# Before task 2 starts:
+sed -i 's/| 2 | ⬜ pending/| 2 | 🔄 in-progress/'
+# After successful commit a1b2c3d:
+sed -i 's/| 2 | 🔄 in-progress/| 2 | ✅ done/'
+sed -i 's/| 2 | ✅ done[^|]*|/| 2 | ✅ done | a1b2c3d |/'
+# Update timestamp:
+sed -i "s/Last updated:.*/Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)/"
+```
+
+Note: The agent should use proper markdown table parsing (not naive sed in production) to avoid corrupting the file — ensure the replacement targets the correct row.
 
 ## User override commands
 
