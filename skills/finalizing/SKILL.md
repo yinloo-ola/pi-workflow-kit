@@ -7,13 +7,26 @@ description: "Use this after all tasks are complete to clean up, document, and s
 
 Ship the completed work.
 
+## Pre-finalization checks
+
+### Check for skipped tasks
+
+Before archiving, if a progress file exists (`docs/plans/*-progress.md`), read it and check for any `⏭ skipped` tasks. If found, warn:
+
+```
+⚠️ Tasks 4 and 7 were skipped. Continue with finalizing, or go back?
+```
+
+Wait for the user to confirm before proceeding.
+
 ## Process
 
-1. **Move planning docs** — archive the design and implementation docs, then commit:
+1. **Move planning docs** — archive the design, implementation, and progress docs, then commit:
    ```
    mkdir -p docs/plans/completed
    mv docs/plans/*-design.md docs/plans/completed/
    mv docs/plans/*-implementation.md docs/plans/completed/
+   mv docs/plans/*-progress.md docs/plans/completed/
    git add docs/plans/ && git commit -m "chore: archive planning docs"
    ```
 
@@ -28,6 +41,14 @@ Ship the completed work.
       ```
       git push origin <branch>
       gh pr create --title "feat: <summary>" --body "<task summary>"
+      ```
+
+      Use the progress file to generate the summary. Convert the task table to a bulleted list:
+      ```
+      - ✅ Create User model
+      - ✅ Write User model tests
+      - ⏭ Add auth middleware (skipped)
+      - ✅ Add login endpoint
       ```
 
    2. **Rebase & merge** *(recommended)* — rebase onto parent, fast-forward merge, push parent, delete branch:
@@ -54,7 +75,7 @@ Ship the completed work.
       ```
       parent=$(git show-branch -a 2>/dev/null | grep '\*' | grep -v "$(git branch --show-current)" | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
       git checkout "$parent" && git pull
-      git merge --no-ff -m "Merge branch '<branch>'" -
+      git checkout - && git merge --no-ff -m "Merge branch '<branch>'" -
       git push origin "$parent"
       git branch -d - && git push origin --delete -
       ```
