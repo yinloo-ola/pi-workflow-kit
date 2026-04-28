@@ -22,6 +22,28 @@ Each task should be 2-5 minutes of work:
 - `git commit` after each task
 - Optional `checkpoint: test` or `checkpoint: done` label
 
+Each task must use a numbered heading:
+
+```markdown
+## Task N: <description>
+
+<!-- tdd: new-feature -->
+<!-- checkpoint: none -->
+```
+
+...where N starts at 1 and incrementally numbers each task in the plan.
+
+The metadata comments (placed right after the heading) are optional but recommended. If present, they help the executing-tasks skill parse the plan correctly.
+
+Valid TDD values: `new-feature`, `modifying-tested-code`, `trivial`
+
+Valid checkpoint values: `none`, `test`, `done`
+
+These comments are optional — if omitted, the agent infers TDD scenario and checkpoint from context.
+
+Also use the `<!-- tdd: ... -->` and `<!-- checkpoint: ... -->` metadata comments to specify options explicitly. The inline `checkpoint: test` / `checkpoint: done` label format (e.g. in a task list) is also supported as a fallback, but the metadata comment is the canonical source.
+
+
 ## TDD in the plan
 
 Label each task with its TDD scenario:
