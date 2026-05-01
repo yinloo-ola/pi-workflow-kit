@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Diagnose skill** — standalone 6-phase debugging loop (build feedback loop → reproduce → minimize → hypothesise → instrument → fix → cleanup). Invoked on demand with `/skill:diagnose`.
+- **Design-it-twice in brainstorming** — approaches now include concrete interface sketches (types, method signatures, caller code) for grounded comparison.
+- **ADRs in brainstorming** — lightweight architecture decision records written to `docs/plans/adr/` for hard-to-reverse, surprising, trade-off decisions. Archived during finalizing.
+- **Vertical slices in planning** — guidance for end-to-end task structure with horizontal slicing called out as an anti-pattern.
+- **Refactoring checklist in executing-tasks** — post-test-pass checks for shallow modules, deletion test, duplication, and seam discipline using depth/seam/locality vocabulary.
+- **ADR archival in finalizing** — finalizing now archives `docs/plans/adr/` to `docs/plans/completed/adr/` alongside design docs.
+
 ## [0.8.3] - 2026-04-22
 
 ### Added
