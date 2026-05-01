@@ -44,6 +44,7 @@ During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/pl
 | `writing-plans` | ~35 | Break design into tasks with TDD scenarios, set up branch/worktree |
 | `executing-tasks` | ~50 | Implement tasks with TDD discipline, checkpoint review gates, handle code review |
 | `finalizing` | ~20 | Archive docs, update changelog, create PR, clean up |
+| `diagnose` | ~35 | 6-phase debugging loop: build feedback loop, reproduce, hypothesise, instrument, fix, cleanup |
 
 ### TDD Three-Scenario Model
 
@@ -75,7 +76,8 @@ pi-workflow-kit/
 │   ├── brainstorming/SKILL.md
 │   ├── writing-plans/SKILL.md
 │   ├── executing-tasks/SKILL.md
-│   └── finalizing/SKILL.md
+│   ├── finalizing/SKILL.md
+│   └── diagnose/SKILL.md
 ├── tests/
 │   └── workflow-guard.test.ts
 ├── package.json

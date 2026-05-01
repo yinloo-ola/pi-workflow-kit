@@ -47,6 +47,8 @@ Explore the idea through collaborative dialogue. The agent reads code, asks ques
 
 Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md`
 
+Optionally writes ADRs to `docs/plans/adr/` for significant architectural decisions.
+
 ### 2. Plan
 
 ```
@@ -72,6 +74,14 @@ Implement the plan task-by-task. Each task: implement → run tests → fix if n
 ```
 
 Archive plan docs, update CHANGELOG/README, create PR, clean up worktree.
+
+### 5. Diagnose (on demand)
+
+```
+/skill:diagnose
+```
+
+A 6-phase debugging loop you invoke when something is broken. Build a feedback loop first, then reproduce, hypothesise, instrument, fix, and cleanup. Not a pipeline phase — use whenever needed.
 
 ## What the extension does
 

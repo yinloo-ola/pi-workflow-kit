@@ -1,6 +1,6 @@
 # Workflow Phases
 
-`pi-workflow-kit` has 4 phases. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 4 phases and 1 utility skill. You invoke each one explicitly with `/skill:`.
 
 ```
 brainstorm → plan → execute → finalize
@@ -55,3 +55,15 @@ No write restrictions. All tools available.
 - Clean up worktree if one was used
 
 No write restrictions. All tools available.
+
+## diagnose
+
+```
+/skill:diagnose
+```
+
+Not a pipeline phase. A utility skill invoked on demand when debugging is needed.
+
+- Build a feedback loop (failing test, curl script, etc.)
+- Reproduce, hypothesise, instrument, fix, cleanup
+- No write restrictions (used during execute/finalize, or outside the pipeline)
