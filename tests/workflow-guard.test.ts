@@ -139,6 +139,40 @@ describe("isSafeCommand", () => {
 		expect(isSafeCommand("cd /Users/u/partying/pt-room && git remote -v 2>/dev/null; echo '---'; ls")).toBe(true);
 		expect(isSafeCommand("gh pr view 1564 --repo olachat/pt-partying --json title,body,files,additions,deletions 2>/dev/null || echo 'gh failed'")).toBe(true);
 	});
+
+	// --- Known bug tests (TODO: fix) ---
+
+	// https://github.com/user/repo/issues/1 — 'code' in path matched editor regex
+	it("allows cd && git status && echo && git log chain (path with 'code')", () => {
+		expect(
+			isSafeCommand(
+				"cd /Volumes/Ext/code/personal/sttacomp && git status && echo \"---LOG---\" && git log --oneline -5",
+			),
+		).toBe(true);
+	});
+
+	// Bug 1: quote-unaware && splitting
+	it("BUG: does NOT handle && inside quoted strings", () => {
+		// echo "a && b" && git status → splits on && inside quotes → breaks
+		// This test documents the current (broken) behavior.
+		// Change to toBe(true) once fixed.
+		expect(
+			isSafeCommand("echo \"use && for chaining\" && git status"),
+		).toBe(false); // TODO: should be true
+	});
+
+	// Bug 2: redirect regex matches > inside arguments
+	it("BUG: does NOT handle > inside grep arguments", () => {
+		// grep "x > y" file.txt → /(>)/ matches the > inside the quoted string
+		// This test documents the current (broken) behavior.
+		// Change to toBe(true) once fixed.
+		expect(
+			isSafeCommand("grep 'x > y' file.txt"),
+		).toBe(false); // TODO: should be true
+		expect(
+			isSafeCommand('grep "x > y" file.txt'),
+		).toBe(false); // TODO: should be true
+	});
 });
 
 describe("shouldBlockFilePath", () => {

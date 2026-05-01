@@ -45,7 +45,7 @@ const DESTRUCTIVE_PATTERNS = [
 	/\bshutdown\b/i,
 	/\bsystemctl\s+(start|stop|restart|enable|disable)/i,
 	/\bservice\s+\S+\s+(start|stop|restart)/i,
-	/\b(vim?|nano|emacs|code|subl)\b/i,
+	/^\s*(vim?|nano|emacs|code|subl)\b/i,
 ];
 
 const SAFE_PATTERNS = [
@@ -117,7 +117,8 @@ const SAFE_PATTERNS = [
 ];
 
 /** Split a compound command into individual sub-commands.
- * Handles &&, ||, ;, and | (pipe) operators, ignoring leading whitespace.
+ * Splits on &&, ||, and ; operators, ignoring leading whitespace.
+ * Does NOT split on | (pipe) to allow piping (e.g. `git log | head`).
  */
 function splitCompoundCommand(command: string): string[] {
 	// Match sub-commands separated by &&, ||, ; (with optional whitespace)
