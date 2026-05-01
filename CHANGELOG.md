@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-02
+
 ### Added
 
 - **Diagnose skill** — standalone 6-phase debugging loop (build feedback loop → reproduce → minimize → hypothesise → instrument → fix → cleanup). Invoked on demand with `/skill:diagnose`.
@@ -14,6 +16,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Vertical slices in planning** — guidance for end-to-end task structure with horizontal slicing called out as an anti-pattern.
 - **Refactoring checklist in executing-tasks** — post-test-pass checks for shallow modules, deletion test, duplication, and seam discipline using depth/seam/locality vocabulary.
 - **ADR archival in finalizing** — finalizing now archives `docs/plans/adr/` to `docs/plans/completed/adr/` alongside design docs.
+
+## [0.9.0] - 2026-04-30
+
+### Added
+
+- **Safe commands expansion** — allowlisted `cd`, GitHub CLI read-only subcommands (`gh pr view/list/diff/checks/status`, `gh issue view/list`, `gh repo view/fork/list`, `gh release view/list/download`, `gh run view/list`), and git read-only subcommands (`blame`, `shortlog`, `stash list`, `tag -l/--list`, `describe`).
+- **Harmless redirect stripping** — `2>/dev/null` and `2>&1` are stripped before pattern matching, fixing false blocks on common stderr suppression.
+- **Extracted `shouldBlockFilePath()`** — file-path blocking logic extracted into a testable pure function.
+- **4 `shouldBlockFilePath` tests** — validates that only `docs/plans/` subtree is writable during brainstorm/plan, blocks directory itself and absolute paths.
+
+### Fixed
+
+- **`git stash list` and `git tag -l` falsely blocked** — destructive pattern now uses negative lookaheads to allow read-only variants while still blocking mutations.
 
 ## [0.8.3] - 2026-04-22
 
@@ -83,23 +98,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
 
-## [Unreleased]
 
-### Added
-
-- **Safe commands expansion** — allowlisted `cd`, GitHub CLI read-only subcommands (`gh pr view/list/diff/checks/status`, `gh issue view/list`, `gh repo view/fork/list`, `gh release view/list/download`, `gh run view/list`), and git read-only subcommands (`blame`, `shortlog`, `stash list`, `tag -l/--list`, `describe`).
-- **Harmless redirect stripping** — `2>/dev/null` and `2>&1` are stripped before pattern matching, fixing false blocks on common stderr suppression.
-- **Extracted `shouldBlockFilePath()`** — file-path blocking logic extracted into a testable pure function.
-- **4 `shouldBlockFilePath` tests** — validates that only `docs/plans/` subtree is writable during brainstorm/plan, blocks directory itself and absolute paths.
-- **Removed 5 tautological tests** — replaced `expect(true).toBe(true)` blocking logic stubs with the real `shouldBlockFilePath` tests.
-
-### Fixed
-
-- **`git stash list` and `git tag -l` falsely blocked** — destructive pattern now uses negative lookaheads `(?!\s+list)` and `(?!\s+(-l|--list))` to allow read-only variants while still blocking mutations.
-
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.1...HEAD
-[0.8.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.0...v0.8.1
-[0.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.7.0...v0.8.0
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
 [0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0
 [0.5.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.0...v0.5.1
