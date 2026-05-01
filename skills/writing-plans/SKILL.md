@@ -44,6 +44,25 @@ These comments are optional — if omitted, the agent infers TDD scenario and ch
 Also use the `<!-- tdd: ... -->` and `<!-- checkpoint: ... -->` metadata comments to specify options explicitly. The inline `checkpoint: test` / `checkpoint: done` label format (e.g. in a task list) is also supported as a fallback, but the metadata comment is the canonical source.
 
 
+## Vertical slices
+
+Each task should be a **vertical slice** — a thin path through ALL relevant layers end-to-end, delivering one complete piece of observable behavior.
+
+```
+WRONG (horizontal):
+  Task 1: Create database schema for users
+  Task 2: Write user API endpoints
+  Task 3: Build user UI components
+  Task 4: Wire everything together
+
+RIGHT (vertical):
+  Task 1: User can sign up (model + endpoint + validation + test)
+  Task 2: User can log in (auth check + token + test)
+  Task 3: User can view profile (query + endpoint + test)
+```
+
+Vertical slices ensure every committed task leaves the codebase in a testable state and reduces the blast radius of a bad task.
+
 ## TDD in the plan
 
 Label each task with its TDD scenario:
