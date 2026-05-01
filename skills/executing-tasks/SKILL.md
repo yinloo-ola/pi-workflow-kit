@@ -155,6 +155,19 @@ Follow the TDD scenario from the plan:
 
 Don't skip tests because "it's obvious." The test is the contract.
 
+## Refactoring
+
+After all tests pass for a task, check for refactoring opportunities:
+
+- **Shallow modules** — is the interface nearly as complex as the implementation? Can complexity be hidden behind a simpler interface?
+- **Deletion test** — if you deleted this module, would complexity vanish (pass-through) or reappear across callers (earning its keep)?
+- **Duplication** — extract repeated patterns
+- **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
+
+Run tests after each refactor step. Never refactor while tests are failing.
+
+Key vocabulary: **depth** (lots of behavior behind a small interface), **seam** (where behavior can be altered without editing in place), **locality** (change concentrated in one place).
+
 ## Batching and session management
 
 The agent suggests a fresh session at natural break points to minimize token accumulation. After completing ~3-5 non-checkpoint tasks in the same session, suggest:
