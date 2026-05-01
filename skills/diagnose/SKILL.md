@@ -11,6 +11,10 @@ A 6-phase debugging discipline. Phase 1 is the skill — spend disproportionate 
 
 Create a fast, deterministic, agent-runnable pass/fail signal for the bug before doing anything else. Try in this order: failing test, curl script, CLI invocation, headless browser script.
 
+Other strategies when the basics don't work:
+- **Bisection** — bug appeared between two known states? Automate "boot at state X, check, repeat" to bisect
+- **Replay** — save a real network request or event log to disk, replay it through the code path in isolation
+
 The loop must produce the failure mode the **user** described — not a nearby but different failure. Iterate on the loop itself: can you make it faster? Sharper? More deterministic?
 
 If you genuinely cannot build a loop, stop and say so. List what you tried. Ask for access to a reproducing environment or a captured artifact.
@@ -23,6 +27,8 @@ Run the loop. Confirm:
 - The failure matches the user's reported symptom
 - The failure is reproducible across multiple runs
 - You've captured the exact symptom (error message, wrong output, slow timing)
+
+Then **minimize the repro** — strip it down to the smallest input, shortest path, or fewest steps that still triggers the bug. A minimized repro dramatically narrows the hypothesis space.
 
 ## Phase 3 — Hypothesise
 
@@ -47,3 +53,4 @@ Required before declaring done:
 - Regression test passes (or absence of seam is documented)
 - All `[DEBUG-...]` instrumentation removed
 - Ask: what would have prevented this bug?
+- If the bug was caused by an architectural problem (no good test seam, tangled callers, hidden coupling), suggest writing an ADR to `docs/plans/adr/` capturing that insight
