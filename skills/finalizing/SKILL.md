@@ -21,12 +21,15 @@ Wait for the user to confirm before proceeding.
 
 ## Process
 
-1. **Move planning docs** — archive the design, implementation, and progress docs, then commit:
+1. **Move planning docs** — archive the design, implementation, progress docs, and ADRs (if any), then commit:
    ```
    mkdir -p docs/plans/completed
+   mkdir -p docs/plans/completed/adr
    mv docs/plans/*-design.md docs/plans/completed/
    mv docs/plans/*-implementation.md docs/plans/completed/
    mv docs/plans/*-progress.md docs/plans/completed/
+   mv docs/plans/adr/*.md docs/plans/completed/adr/ 2>/dev/null || true
+   rmdir docs/plans/adr 2>/dev/null || true
    git add docs/plans/ && git commit -m "chore: archive planning docs"
    ```
 
