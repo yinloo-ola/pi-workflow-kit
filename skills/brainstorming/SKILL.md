@@ -10,9 +10,9 @@ Read-only exploration. You may **not** edit or create any files except under `do
 ## Process
 
 1. **Check git state** — run `git status` and `git log --oneline -5`. If there's uncommitted work, ask the user what to do with it first.
-2. **Understand the idea** — read existing code, docs, and recent commits. Ask questions one at a time to refine the idea. Prefer multiple choice when possible.
+2. **Understand the idea** — read existing code, docs, and recent commits. Grep for related functionality, check package.json/dependencies and module structure. Read only what's necessary to ground the design — don't read the entire codebase. Ask questions to refine the idea. Prefer multiple choice when possible. After each question, check: can you clearly articulate (a) what the user wants to build, (b) why, and (c) key constraints? If yes, present your understanding as a short summary and ask: "Should I proceed with this, or is there more to add?" The human decides when to move on.
 3. **Explore approaches** — propose 2-3 approaches. For each approach, sketch the concrete interface (types, method signatures, example caller code) so the comparison is grounded in actual code, not abstract descriptions. Lead with your recommendation.
-4. **Present the design** — break it into sections of 200-300 words. Check after each section whether it looks right. Cover: architecture, components, data flow, error handling, testing.
+4. **Present the design** — break it into focused sections. Each section should be one screen of reading. Present each section to the human and wait for approval before continuing. Cover: architecture, components, data flow, error handling, testing. On feedback, incorporate it and re-present the revised section.
 
    When a significant architectural decision is identified, offer to write a lightweight ADR to `docs/plans/adr/`. Only write an ADR when all three are true:
 
@@ -29,7 +29,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
    ```
 
    ADRs live under `docs/plans/adr/` and are archived during finalizing alongside the design doc.
-5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Ask the user to commit it. Branch creation and worktree setup should be deferred to the execution phase (`/skill:executing-tasks`).
+5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Organize features as end-to-end slices (each slice delivers one observable behavior through all relevant layers) so the planning phase can decompose them directly into tasks. Branch creation, committing, and workspace setup are handled by `/skill:executing-tasks`.
 
 ## Principles
 

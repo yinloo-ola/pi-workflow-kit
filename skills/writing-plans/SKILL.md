@@ -5,22 +5,24 @@ description: "Use this to break a design into an implementation plan with bite-s
 
 # Writing Plans
 
-Read-only exploration. You may **not** edit or create any files except under `docs/plans/`.
+You may only create or edit files under `docs/plans/`. Do not modify source code or configuration.
 
 ## Process
 
-1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If no design doc exists, ask the user to describe what they want to build and read relevant code.
-2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
+1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If the design doc is incomplete, fill gaps by asking the human. If no design doc exists, ask the user to describe what they want to build and read relevant code.
+2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. If the design is too large for ~15 tasks, flag this to the human and ask whether to reduce scope or proceed with the full plan.
+3. **Present the plan** — show the complete plan to the human. Wait for approval before suggesting execution.
 
 ## Task format
 
-Each task should be 2-5 minutes of work:
+Each task should produce one committed, testable change:
 
 - Exact file paths to create/modify
-- Complete code (not "add validation")
+- Complete code (not "add validation"). For tasks that depend on types or utilities from earlier tasks, reference them explicitly (e.g., `import { User } from Task 2`) and include only the new code
 - Exact commands with expected output
 - `git commit` after each task
 - Optional `checkpoint: test` or `checkpoint: done` label
+- Each task's tests should cover the happy path and at least one edge case or error path
 
 Each task must use a numbered heading:
 
@@ -33,15 +35,11 @@ Each task must use a numbered heading:
 
 ...where N starts at 1 and incrementally numbers each task in the plan.
 
-The metadata comments (placed right after the heading) are optional but recommended. If present, they help the executing-tasks skill parse the plan correctly.
+The metadata comments (placed right after the heading) are optional. If omitted, the executing-tasks skill infers the TDD scenario and checkpoint from context. When in doubt, include them explicitly.
 
 Valid TDD values: `new-feature`, `modifying-tested-code`, `trivial`
 
 Valid checkpoint values: `none`, `test`, `done`
-
-These comments are optional — if omitted, the agent infers TDD scenario and checkpoint from context.
-
-Also use the `<!-- tdd: ... -->` and `<!-- checkpoint: ... -->` metadata comments to specify options explicitly. The inline `checkpoint: test` / `checkpoint: done` label format (e.g. in a task list) is also supported as a fallback, but the metadata comment is the canonical source.
 
 
 ## Vertical slices
@@ -60,6 +58,8 @@ RIGHT (vertical):
   Task 2: User can log in (auth check + token + test)
   Task 3: User can view profile (query + endpoint + test)
 ```
+
+Order tasks so each one can be verified independently and delivers a complete vertical slice. If a task requires infrastructure (models, types) that no previous task has created, include it in that task — don't create it as a separate task.
 
 Vertical slices ensure every committed task leaves the codebase in a testable state and reduces the blast radius of a bad task.
 
