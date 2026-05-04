@@ -10,28 +10,13 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 ## Before you start
 
 1. **Check git state** — run `git status` and `git log --oneline -5`. Note any uncommitted changes.
-2. **Find the plan** — look for `docs/plans/*-implementation.md`. If multiple exist, ask the user which one to execute.
+2. **Find the plan** — look for `docs/plans/*-implementation.md`. If none exist, say "No implementation plan found. Run `/skill:writing-plans` first." and stop. If multiple exist, ask the user which one to execute.
 3. **Check for existing progress** — look for `docs/plans/*-progress.md`. If one exists matching the plan, this is a **resume** (see [Resume](#resume)). If not, this is a **first run** (see [First run](#first-run)).
 
 ## First run
 
 1. **Parse the implementation plan** — read the plan and extract all `## Task N:` headings. Build the progress table with all tasks as `⬜ pending`.
-2. **Create the progress file** — save to `docs/plans/<plan-name>-progress.md` (replace `-implementation` with `-progress` in the plan filename):
-
-   ```markdown
-   # Progress: <topic>
-
-   Plan: docs/plans/YYYY-MM-DD-<topic>-implementation.md
-   Branch: <current-branch>
-   Started: <ISO timestamp>
-   Last updated: <ISO timestamp>
-
-   | # | Status | Task | Commit |
-   |---|--------|------|--------|
-   | 1 | ⬜ pending | Task description (preserve checkpoint labels) | — |
-   ```
-
-3. **Suggest workspace isolation** — if the user isn't already on a feature branch or worktree, present the options:
+2. **Suggest workspace isolation** — if the user isn't already on a feature branch or worktree, present the options:
 
    - **Branch** (smaller changes):
      ```
@@ -43,6 +28,23 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
      ```
 
    Derive `<feature-name>` from the plan doc (e.g. `docs/plans/2026-04-16-auth-design.md` → `auth`). Ask the user which they prefer, then wait for confirmation before proceeding.
+
+3. **Create the progress file** — save to `docs/plans/<plan-name>-progress.md` (replace `-implementation` with `-progress` in the plan filename):
+
+   ```markdown
+   # Progress: <topic>
+
+   Plan: docs/plans/YYYY-MM-DD-<topic>-implementation.md
+   Branch: <actual branch name>
+   Started: <ISO timestamp>
+   Last updated: <ISO timestamp>
+
+   | # | Status | Task | Commit |
+   |---|--------|------|--------|
+   | 1 | ⬜ pending | Task description (preserve checkpoint labels) | — |
+   ```
+
+   Use the actual branch name — whether it's the original branch or a new one from the isolation step.
 
 4. **Commit the plan docs** — if `docs/plans/` has uncommitted files, commit them on the new branch:
    ```
@@ -92,117 +94,84 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 For each task the agent works on:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
-2. **Read only the relevant task** — grep/jump to `## Task N:` in the implementation plan. Do not read the entire plan.
-3. **Implement** — follow the TDD discipline (see [TDD discipline](#tdd-discipline)) and checkpoint flow (see [Checkpoints](#checkpoints))
-4. **Commit** — `git add` the relevant files and commit with a clear message
-5. **Update progress** — mark `✅ done` + record the commit hash
-6. **Check next task** — look at the next task in the progress file:
-   - **Has checkpoint** → pause for review (see [Checkpoint review](#checkpoint-review))
-   - **No checkpoint** → continue to the next task
+2. **Read the plan selectively** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full.
+3. **Write the test** — for `new-feature`: write a failing test. For `modifying-tested-code`: run existing tests first. For `trivial`: skip steps 3-5, go to step 6.
+4. **Run the test** — confirm it fails (new-feature) or passes (modifying-tested-code). Fix if needed.
+5. **⏸ PAUSE if `checkpoint: test`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
+6. **Implement** — write the code to make the test pass.
+7. **Run tests** — verify everything passes. If tests fail and you cannot fix them after retrying, see [If you're stuck](#if-youre-stuck). If still stuck, mark the task `❌ failed` with the reason in the progress file and move to the next task.
+8. **Verify against task description** — re-read the task from the plan. Does the implementation satisfy every requirement in the description? If not, fix before proceeding.
+9. **Refactor if needed** — after all tests pass, check for refactoring opportunities:
+   - **Shallow modules** — is the interface nearly as complex as the implementation? Can complexity be hidden behind a simpler interface?
+   - **Deletion test** — if you deleted this module, would complexity vanish (pass-through) or reappear across callers (earning its keep)?
+   - **Duplication** — extract repeated patterns
+   - **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
 
-## Checkpoints
-
-Check each task for a `checkpoint` label and follow the appropriate flow:
-
-### No checkpoint (auto-advance)
-
-1. **Implement** — write the code as described in the plan
-2. **Run tests** — verify the changes work
-3. **Fix if needed** — if tests fail, debug and fix before moving on
-4. **Commit** — `git add` the relevant files and commit with a clear message
-
-### checkpoint: test
-
-1. **Write the test** — follow the TDD scenario for the task
-2. **Pause for review** — show what was done and the diff, then wait for human input
-3. **Continue** — implement, run tests, fix if needed
-4. **Commit** — `git add` the relevant files and commit with a clear message
-
-### checkpoint: done
-
-1. **Implement** — write the code as described in the plan
-2. **Run tests** — verify the changes work
-3. **Fix if needed** — if tests fail, debug and fix before moving on
-4. **Pause for review** — show what was done and the diff, then wait for human input
-5. **Commit** — `git add` the relevant files and commit with a clear message
+   Run tests after each refactor step. Never refactor while tests are failing.
+10. **⏸ PAUSE if `checkpoint: done`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
+11. **Commit** — `git add` the relevant files and commit with a clear message.
+12. **Update progress** — mark `✅ done` + record the commit hash.
+13. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
+    ```
+    ✅ Tasks N-M done (commits: abc, def)
+    Progress: X/Y tasks done
+    ⏭  Next: Task [N+1] — [description]
+    💡 Context is building up. For clean context on remaining tasks:
+       /new  then  /skill:executing-tasks
+       (or just say "continue" to keep going here)
+    ```
+    Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
+14. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
 
 ## Checkpoint review
 
-When pausing at a checkpoint, present:
+When pausing at a `checkpoint: test`, present the test code first:
 
 ```
-⏸ Paused at checkpoint: [test|done] for task [N]
+⏸ Paused at checkpoint: test for task [N]
+
+**Test written:**
+[show the test code]
+
+**Expected behavior:** [what this test validates]
+**Next:** Task [N+1] — [description]
+
+**Available actions:**
+- **Approve** — continue to implementation (step 6)
+- **Request changes** — describe what to change, I'll update and re-present
+- **Revert** — undo this task and mark it back to pending
+- **Adjust plan** — modify the remaining tasks in the implementation plan
+- `skip` — skip this task and move on
+- `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
+- `status` — show the full progress table
+```
+
+When pausing at a `checkpoint: done`, present the implementation review:
+
+```
+⏸ Paused at checkpoint: done for task [N]
 
 **What was done:** [brief summary]
 **Diff:** [show relevant diff]
+**Next:** Task [N+1] — [description]
 
-Review and let me know how to proceed.
+**Available actions:**
+- **Approve** — continue to the next task
+- **Request changes** — describe what to change, I'll update and re-present
+- **Revert** — undo this task and mark it back to pending
+- **Adjust plan** — modify the remaining tasks in the implementation plan
+- `skip` — skip this task and move on
+- `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
+- `status` — show the full progress table
 ```
 
-Wait for the human to respond. They may:
-- Approve and continue
-- Request changes to the test or implementation
-- Ask to revert the task
-- Adjust the remaining plan
+Wait for the human to respond. On **request changes**, make the edits, then re-present at the same checkpoint. Repeat until approved.
 
-## TDD discipline
+## Progress file updates
 
-Follow the TDD scenario from the plan:
+Update the progress file by reading it, modifying the relevant row's status and commit hash, and writing it back. Target the specific task row — do not use pattern-matching approaches (e.g. sed) that could corrupt the table.
 
-- **New feature**: write the test first, see it fail, then implement
-- **Modifying tested code**: run existing tests before and after
-- **Trivial change**: use judgment
-
-Don't skip tests because "it's obvious." The test is the contract.
-
-## Refactoring
-
-After all tests pass for a task, check for refactoring opportunities:
-
-- **Shallow modules** — is the interface nearly as complex as the implementation? Can complexity be hidden behind a simpler interface?
-- **Deletion test** — if you deleted this module, would complexity vanish (pass-through) or reappear across callers (earning its keep)?
-- **Duplication** — extract repeated patterns
-- **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
-
-Run tests after each refactor step. Never refactor while tests are failing.
-
-Key vocabulary: **depth** (lots of behavior behind a small interface), **seam** (where behavior can be altered without editing in place), **locality** (change concentrated in one place).
-
-## Batching and session management
-
-The agent suggests a fresh session at natural break points to minimize token accumulation. After completing ~3-5 non-checkpoint tasks in the same session, suggest:
-
-```
-✅ Tasks 3-5 done (commits: a1b2, e4f5, i7j8)
-
-Progress: 5/10 tasks done
-
-⏭  Next: Task 6 — Add auth middleware (no checkpoint)
-
-💡 Context is building up. For clean context on remaining tasks:
-   /new  then  /skill:executing-tasks
-   (or just say "continue" to keep going here)
-```
-
-The user can say "continue" to keep going in the same session. Respect their choice.
-
-Also suggest `/new` at checkpoint review pauses when multiple tasks have been completed since the last session break.
-
-## Progress file updates (automated)
-
-During execution, the agent should update the progress file in place. Example workflow:
-
-```bash
-# Before task 2 starts:
-sed -i 's/| 2 | ⬜ pending/| 2 | 🔄 in-progress/'
-# After successful commit a1b2c3d:
-sed -i 's/| 2 | 🔄 in-progress/| 2 | ✅ done/'
-sed -i 's/| 2 | ✅ done[^|]*|/| 2 | ✅ done | a1b2c3d |/'
-# Update timestamp:
-sed -i "s/Last updated:.*/Last updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)/"
-```
-
-Note: The agent should use proper markdown table parsing (not naive sed in production) to avoid corrupting the file — ensure the replacement targets the correct row.
+Update `Last updated` timestamp on every change.
 
 ## User override commands
 
@@ -217,18 +186,19 @@ The user can issue these commands at any time during execution:
 
 ## Receiving code review
 
-When the user shares code review feedback:
+When the user shares code review feedback (outside of a checkpoint pause):
 
 1. **Verify the criticism** — read the relevant code. Is the feedback accurate?
 2. **Evaluate the suggestion** — is the proposed fix the right approach? Consider alternatives.
-3. **Implement or push back** — if valid, fix it. If not, explain why with evidence from the codebase.
+3. **Implement or push back** — if valid, fix it, re-run tests, and amend the commit. If not, explain why with evidence from the codebase.
 4. **Don't blindly implement** — every suggestion should be verified against the code before accepting.
 
 ## If you're stuck
 
-- Re-read the current task section from the plan — you may have drifted from the spec
-- Check git log — recent commits may reveal context
-- Ask the user — it's better to clarify than to guess wrong
+1. Re-read the current task section from the plan — you may have drifted from the spec
+2. Check git log — recent commits may reveal context
+3. Ask the user — it's better to clarify than to guess wrong
+4. If still stuck after asking, mark the task `❌ failed` with the reason in the progress file and move to the next task
 
 ## After all tasks
 

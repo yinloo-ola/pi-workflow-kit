@@ -25,13 +25,15 @@ Wait for the user to confirm before proceeding.
    ```
    mkdir -p docs/plans/completed
    mkdir -p docs/plans/completed/adr
-   mv docs/plans/*-design.md docs/plans/completed/
-   mv docs/plans/*-implementation.md docs/plans/completed/
-   mv docs/plans/*-progress.md docs/plans/completed/
+   mv docs/plans/*-design.md docs/plans/completed/ 2>/dev/null || true
+   mv docs/plans/*-implementation.md docs/plans/completed/ 2>/dev/null || true
+   mv docs/plans/*-progress.md docs/plans/completed/ 2>/dev/null || true
    mv docs/plans/adr/*.md docs/plans/completed/adr/ 2>/dev/null || true
    rmdir docs/plans/adr 2>/dev/null || true
    git add docs/plans/ && git commit -m "chore: archive planning docs"
    ```
+
+   Each `mv` gracefully handles the case where no matching files exist (e.g., if the user skipped straight from brainstorm to finalize without executing tasks).
 
 2. **Update documentation** — if the API or surface changed:
    - Update README.md
