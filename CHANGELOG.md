@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-04
+
+### Changed
+
+- **Brainstorming convergence** — agent now self-assesses after each question and presents a summary when it can articulate what, why, and constraints. Human decides when to move on (no fixed question limit).
+- **Brainstorming codebase exploration** — step now includes grepping for related functionality, checking dependencies and module structure, with explicit guidance to read only what's necessary.
+- **Brainstorming design presentation** — sections are now "one screen of reading" instead of 200-300 words. Agent must present each section for human approval before continuing, and incorporate feedback before re-presenting.
+- **Brainstorming doc commit** — branch creation, committing, and workspace setup now fully delegated to executing-tasks.
+- **Writing-plans task sizing** — "2-5 minutes of work" replaced with "one committed, testable change" since agents can't measure wall-clock time.
+- **Writing-plans read-only header** — replaced misleading "read-only exploration" with explicit "you may only create or edit files under docs/plans/."
+- **Writing-plans scope flagging** — large designs (~15+ tasks) now flagged to human with option to reduce scope or proceed (no longer assumes reduction).
+- **Writing-plans ordering** — vertical slice ordering now explicitly prohibits separate infrastructure tasks; shared infrastructure must be included in the first slice that needs it.
+- **Executing-tasks plan reading** — "read only the relevant task" replaced with selective reading: overview section + all task headings + current task body.
+- **Executing-tasks workspace isolation** — reordered to happen before progress file creation so the branch field is accurate.
+- **Executing-tasks checkpoint review** — split into two distinct templates: checkpoint: test shows test code with expected behavior; checkpoint: done shows implementation diff. Both show next task for context.
+- **Finalizing archive** — `mv` commands now gracefully handle missing files with `2>/dev/null || true`.
+
+### Added
+
+- **Writing-plans plan review** — new step 3: present complete plan to human and wait for approval before suggesting execution.
+- **Writing-plans incomplete design handling** — agent now fills gaps in incomplete design docs by asking the human.
+- **Writing-plans test scope** — tasks now require tests covering happy path and at least one edge case or error path.
+- **Writing-plans cross-task dependencies** — tasks can reference types from earlier tasks (e.g., `import { User } from Task 2`) instead of requiring complete code.
+- **Executing-tasks plan-not-found** — explicit error message when no implementation plan exists, directing user to writing-plans.
+- **Executing-tasks task verification** — new step 8: re-read task from plan and verify implementation satisfies every requirement before proceeding.
+- **Executing-tasks next-task preview** — checkpoint reviews now show the next task so humans can evaluate whether current approach scales.
+
 ## [0.10.0] - 2026-05-02
 
 ### Added
@@ -99,7 +126,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
 
 
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
 [0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0

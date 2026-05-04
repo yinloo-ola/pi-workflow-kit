@@ -1,6 +1,6 @@
 {
   "name": "@tianhai/pi-workflow-kit",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Enforce structured brainstorm→plan→execute→finalize workflow with TDD discipline in AI coding agents",
   "keywords": [
     "pi-package",
