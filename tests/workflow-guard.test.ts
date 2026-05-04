@@ -140,6 +140,14 @@ describe("isSafeCommand", () => {
 		expect(isSafeCommand("gh pr view 1564 --repo olachat/pt-partying --json title,body,files,additions,deletions 2>/dev/null || echo 'gh failed'")).toBe(true);
 	});
 
+	it("allows cat piped to grep", () => {
+		expect(isSafeCommand("cd /Volumes/Ext/code/personal/sttacomp && cat web/package.json | grep -E \"tailwind|postcss|smui|svetamat\"")).toBe(true);
+	});
+
+	it("allows cat glob with 2>/dev/null and || echo fallback", () => {
+		expect(isSafeCommand("cd /Volumes/Ext/code/personal/sttacomp && cat web/tailwind.config.* 2>/dev/null || echo \"no tailwind config found\"")).toBe(true);
+	});
+
 	// --- Known bug tests (TODO: fix) ---
 
 	// https://github.com/user/repo/issues/1 — 'code' in path matched editor regex
