@@ -1,21 +1,10 @@
 # pi-workflow-kit
 
-Structured workflow skills and enforcement for [pi](https://github.com/badlogic/pi-mono).
+> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→finalize workflow with TDD discipline.
 
-## What You Get
+AI coding agents tend to skip design and jump straight into implementation, producing over-engineered or misaligned code. **pi-workflow-kit** solves this by hard-blocking write operations during brainstorm and planning phases — the agent *literally cannot modify your source files* until you approve the design.
 
-**4 workflow skills** that guide the agent through a structured development process:
-
-```
-brainstorm → plan → execute → finalize
-```
-
-**1 extension** that enforces the rules:
-
-- During brainstorming and planning, `write` and `edit` are **hard-blocked** outside `docs/plans/`. The agent can only read code and discuss the design with you — it literally cannot modify source files.
-- `bash` is **restricted to read-only commands** — file writes, installs, git mutations, and editors are blocked. Safe commands like `grep`, `find`, `git status`, `cat`, `curl`, `go doc`, `go list` remain available.
-
-No configuration required. Skills and extensions activate automatically after install.
+[pi](https://github.com/badlogic/pi-mono) package. Zero configuration required.
 
 ## Install
 
@@ -23,50 +12,110 @@ No configuration required. Skills and extensions activate automatically after in
 pi install npm:@tianhai/pi-workflow-kit
 ```
 
-## The Workflow
+No setup needed — skills and guards activate automatically after install.
 
-You control each phase explicitly by invoking the skill:
+**Want to try before committing?**
 
-| Phase | Command | What Happens |
+```bash
+pi -e npm:@tianhai/pi-workflow-kit
+```
+
+## What You Get
+
+### 🛡️ Workflow Guard (extension)
+
+Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
+
+| Phase | `write` / `edit` | `bash` |
+|-------|:-:|:-:|
+| **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Read-only only (grep, find, cat, git status, curl…) |
+| **Execute** / **Finalize** | ✅ Full access | ✅ Full access |
+
+The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files or run mutating commands.
+
+### 🧠 5 Workflow Skills
+
+Guide the agent through a disciplined development process:
+
+```
+brainstorm → plan → execute → finalize
+              ↕
+           diagnose (anytime)
+```
+
+| Phase | Trigger | What Happens |
 |-------|---------|--------------|
-| **Brainstorm** | `/skill:brainstorming` | Refine your idea into a design doc via collaborative dialogue |
-| **Plan** | `/skill:writing-plans` | Break the design into bite-sized TDD tasks with exact file paths and code |
-| **Execute** | `/skill:executing-tasks` | Implement the plan task-by-task with TDD discipline and optional checkpoint review gates |
+| **Brainstorm** | `/skill:brainstorming` | Explore approaches, debate tradeoffs, produce a design doc |
+| **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with file paths and acceptance criteria |
+| **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and optional checkpoint review gates |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
+| **Diagnose** | `/skill:diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
 
-During brainstorm and plan, the extension blocks `write`/`edit` outside `docs/plans/` and restricts `bash` to read-only commands. During execute and finalize, all tools are available.
+## The Workflow in Detail
 
-### Skills
+### Phase Control
 
-| Skill | Lines | Description |
-|-------|------:|-------------|
-| `brainstorming` | ~30 | Explore the idea, propose approaches, write design doc |
-| `writing-plans` | ~35 | Break design into tasks with TDD scenarios, set up branch/worktree |
-| `executing-tasks` | ~50 | Implement tasks with TDD discipline, checkpoint review gates, handle code review |
-| `finalizing` | ~20 | Archive docs, update changelog, create PR, clean up |
-| `diagnose` | ~35 | 6-phase debugging loop: build feedback loop, reproduce, hypothesise, instrument, fix, cleanup |
+You control each phase — the agent never advances on its own. Invoke a skill to move forward:
+
+```
+/skill:brainstorming   →  discuss and design
+/skill:writing-plans   →  break into tasks
+/skill:executing-tasks →  implement with TDD
+/skill:finalizing      →  ship it
+```
 
 ### TDD Three-Scenario Model
 
-The plan labels each task with its TDD scenario:
+Each task is labeled with its TDD scenario during planning:
 
 | Scenario | When | Rule |
 |----------|------|------|
-| New feature | Adding new behavior | Write failing test → implement → pass |
-| Modifying tested code | Changing existing behavior | Run existing tests first → modify → verify |
-| Trivial | Config, docs, naming | Use judgment |
+| **New feature** | Adding new behavior | Write failing test → implement → pass |
+| **Modifying tested code** | Changing existing behavior | Run existing tests first → modify → verify |
+| **Trivial** | Config, docs, naming | Use judgment |
 
 ### Checkpoint Review Gates
 
-Optionally label tasks with a `checkpoint` to pause for human review:
+Optionally label tasks with a `checkpoint` to pause for human review. At each checkpoint the agent stops and waits for your feedback — you can approve, ask for changes, or send it back to rethink. Only when you're satisfied does it move on to the next task.
 
-| Checkpoint | When to use | What happens |
+| Checkpoint | When to Use | What Happens |
 |---|---|---|
 | *(none)* | Trivial tasks, well-understood changes | Auto-advance, no pause |
-| `checkpoint: test` | Test design matters | Pause after failing test, before implementing |
-| `checkpoint: done` | Implementation review matters | Pause after implementation passes tests, before committing |
+| `checkpoint: test` | Test design matters | Agent writes the failing test, then pauses for your review. Verify the test covers the right cases before the agent implements. |
+| `checkpoint: done` | Implementation review matters | Agent implements and passes tests, then pauses for your review. Verify the implementation is correct before committing. |
 
-## Architecture
+## Quick Start
+
+```bash
+# Install
+pi install npm:@tianhai/pi-workflow-kit
+
+# Start a new feature
+> /skill:brainstorming
+> I want to add OAuth2 login to our API
+
+# (agent explores approaches, writes design doc)
+# (write/edit are blocked — your code is safe)
+
+> /skill:writing-plans
+
+# (agent breaks design into TDD tasks)
+> /skill:executing-tasks
+
+# (agent implements with TDD, all tools unlocked)
+> /skill:finalizing
+
+# (agent archives docs, updates changelog, creates PR)
+```
+
+## Why?
+
+- **AI agents skip design.** Left unchecked, they jump to code and over-engineer. This forces a think-first workflow.
+- **TDD needs structure.** The three-scenario model gives the agent clear rules for when to write tests first.
+- **You stay in control.** Checkpoint review gates let you approve test designs and implementations before the agent commits.
+- **Enforced, not suggested.** Hard blocks mean the agent can't ignore the rules — not even accidentally.
+
+## Project
 
 ```
 pi-workflow-kit/
@@ -92,4 +141,4 @@ npm test
 
 ## License
 
-MIT
+[MIT](LICENSE)
