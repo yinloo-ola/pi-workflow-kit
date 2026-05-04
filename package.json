@@ -1,9 +1,17 @@
 {
   "name": "@tianhai/pi-workflow-kit",
   "version": "0.10.1",
-  "description": "Workflow skills and enforcement extensions for pi",
+  "description": "Enforce structured brainstorm→plan→execute→finalize workflow with TDD discipline in AI coding agents",
   "keywords": [
-    "pi-package"
+    "pi-package",
+    "ai-coding-agent",
+    "workflow",
+    "tdd",
+    "guard-rails",
+    "code-review",
+    "pi-extension",
+    "brainstorm",
+    "test-driven-development"
   ],
   "scripts": {
     "test": "vitest run",
