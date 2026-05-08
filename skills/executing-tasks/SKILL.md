@@ -131,14 +131,19 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 | Status | Meaning |
 |--------|---------|
 | `⬜ pending` | Not started |
-| `🔄 in-progress` | Currently being worked on |
+| `🔄 in-progress` | Currently executing plan steps |
+| `⏸ test-review` | Paused at checkpoint: test, waiting for human approval |
+| `⏸ done-review` | Paused at checkpoint: done, waiting for human approval |
 | `✅ done` | Committed successfully |
 | `❌ failed` | Could not complete (append `Failed: <reason>`) |
 | `⏭ skipped` | User chose to skip |
 
 **Update rules:**
 - Mark `🔄 in-progress` immediately when starting a task
+- Mark `⏸ test-review` or `⏸ done-review` when the agent reaches a `⏸ CHECKPOINT` gate in the plan
+- Can only return to `🔄 in-progress` after human says "approve"
 - Mark `✅ done` + record commit hash only after successful `git commit`
+- Cannot go from `🔄 in-progress` → `✅ done` if the task has a checkpoint — must go through the review status first
 - Mark `❌ failed` + append reason when the agent can't proceed after retrying
 - Mark `⏭ skipped` when the user says "skip"
 - Update `Last updated` timestamp on every change
@@ -146,57 +151,33 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 
 ## Per-task execution
 
-For each task the agent works on:
+For each task:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
-2. **Read the plan selectively** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
-3. **Write the test** — for `new-feature`: write a failing test. For `modifying-tested-code`: run existing tests first. For `trivial`: skip steps 3-5, go to step 6.
-4. **Run the test** — confirm it fails (new-feature) or passes (modifying-tested-code). Fix if needed.
-5. **⏸ PAUSE if `checkpoint: test`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
-6. **Implement** — write the code to make the test pass.
-7. **Run tests** — verify everything passes. If tests fail and you cannot fix them after retrying, see [If you're stuck](#if-youre-stuck). If still stuck, mark the task `❌ failed` with the reason in the progress file and move to the next task.
-8. **Verify against task description** — re-read the task from the plan. Does the implementation satisfy every requirement in the description? If not, fix before proceeding.
-9. **Refactor if needed** — after all tests pass, check for refactoring opportunities:
-   - **Shallow modules** — is the interface nearly as complex as the implementation? Can complexity be hidden behind a simpler interface?
-   - **Deletion test** — if you deleted this module, would complexity vanish (pass-through) or reappear across callers (earning its keep)?
-   - **Duplication** — extract repeated patterns
-   - **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
-
-   Run tests after each refactor step. Never refactor while tests are failing.
-10. **Learn from mistakes** — if you caught yourself making a mistake during this task that you've made before or that would apply to future tasks, append a rule to `docs/lessons.md`. Only add rules that would change future behavior. If the file doesn't exist, create it with the standard format (see below). Do not add one-off errors or things you self-corrected immediately.
-
-    **`docs/lessons.md` format:**
-    ```markdown
-    # Lessons Learned
-
-    <!--
-    Agent: read this at the start of each task during executing-tasks.
-    Follow every rule. Add new rules when you catch yourself making repeat mistakes.
-    Retire rules that no longer apply during finalizing.
-    -->
-
-    ## Rules
-
-    - <new rule here>
-    ```
-11. **⏸ PAUSE if `checkpoint: done`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
-12. **Commit** — `git add` the relevant files and commit with a clear message.
-13. **Update progress** — mark `✅ done` + record the commit hash.
-14. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
-    ```
-    ✅ Tasks N-M done (commits: abc, def)
-    Progress: X/Y tasks done
-    ⏭  Next: Task [N+1] — [description]
-    💡 Context is building up. For clean context on remaining tasks:
-       /new  then  /skill:executing-tasks
-       (or just say "continue" to keep going here)
-    ```
-    Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
-15. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
+2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
+3. **Execute the plan** — follow each numbered step in the task body, in order. When you encounter a `⏸ CHECKPOINT` gate:
+   - Update progress to `⏸ test-review` or `⏸ done-review`
+   - Present the [checkpoint review](#checkpoint-review) below
+   - Wait for human approval
+   - On approval, update progress back to `🔄 in-progress`
+   - Continue with the next step
+4. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
+5. **Update progress** — mark `✅ done` + record the commit hash.
+6. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
+   ```
+   ✅ Tasks N-M done (commits: abc, def)
+   Progress: X/Y tasks done
+   ⏭  Next: Task [N+1] — [description]
+   💡 Context is building up. For clean context on remaining tasks:
+      /new  then  /skill:executing-tasks
+      (or just say "continue" to keep going here)
+   ```
+   Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
+7. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
 
 ## Checkpoint review
 
-When pausing at a `checkpoint: test`, present the test code first:
+When pausing at a `checkpoint: test`, present the test code:
 
 ```
 ⏸ Paused at checkpoint: test for task [N]
@@ -205,13 +186,12 @@ When pausing at a `checkpoint: test`, present the test code first:
 [show the test code]
 
 **Expected behavior:** [what this test validates]
-**Next:** Task [N+1] — [description]
+**Next:** Continue implementing after approval
 
 **Available actions:**
-- **Approve** — continue to implementation (step 6)
+- **Approve** — continue to implementation
 - **Request changes** — describe what to change, I'll update and re-present
 - **Revert** — undo this task and mark it back to pending
-- **Adjust plan** — modify the remaining tasks in the implementation plan
 - `skip` — skip this task and move on
 - `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
 - `status` — show the full progress table
@@ -223,14 +203,15 @@ When pausing at a `checkpoint: done`, present the implementation review:
 ⏸ Paused at checkpoint: done for task [N]
 
 **What was done:** [brief summary]
-**Diff:** [show relevant diff]
-**Next:** Task [N+1] — [description]
+**Refactoring done:** [what changed, or "none needed — [reason]"]
+**Lessons learned:** [new rule added to docs/lessons.md, or "none"]
+**Diff:** [run `git diff --cached` or `git diff` — do NOT commit first]
+**Next:** Commit after approval
 
 **Available actions:**
-- **Approve** — continue to the next task
+- **Approve** — commit and move to next task
 - **Request changes** — describe what to change, I'll update and re-present
 - **Revert** — undo this task and mark it back to pending
-- **Adjust plan** — modify the remaining tasks in the implementation plan
 - `skip` — skip this task and move on
 - `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
 - `status` — show the full progress table
