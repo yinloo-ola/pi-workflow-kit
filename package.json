@@ -40,13 +40,12 @@
     ]
   },
   "peerDependencies": {
-    "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-coding-agent": "*",
-    "@mariozechner/pi-tui": "*",
+    "@earendil-works/pi-coding-agent": "*",
     "@sinclair/typebox": "*"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.15",
+    "@earendil-works/pi-coding-agent": "*",
     "vitest": "^4.0.18"
   }
 }
