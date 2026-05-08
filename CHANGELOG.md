@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.13.0] - 2026-05-08
+
+### Added
+
+- Lessons learned: persistent rules file (`docs/lessons.md`) read at every workflow phase and written to when the agent catches repeat mistakes. Survives `/new` sessions.
+
 ## [Unreleased]
 
 ### Changed

@@ -132,7 +132,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 For each task the agent works on:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
-2. **Read the plan selectively** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full.
+2. **Read the plan selectively** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
 3. **Write the test** — for `new-feature`: write a failing test. For `modifying-tested-code`: run existing tests first. For `trivial`: skip steps 3-5, go to step 6.
 4. **Run the test** — confirm it fails (new-feature) or passes (modifying-tested-code). Fix if needed.
 5. **⏸ PAUSE if `checkpoint: test`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
@@ -146,10 +146,26 @@ For each task the agent works on:
    - **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
 
    Run tests after each refactor step. Never refactor while tests are failing.
-10. **⏸ PAUSE if `checkpoint: done`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
-11. **Commit** — `git add` the relevant files and commit with a clear message.
-12. **Update progress** — mark `✅ done` + record the commit hash.
-13. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
+10. **Learn from mistakes** — if you caught yourself making a mistake during this task that you've made before or that would apply to future tasks, append a rule to `docs/lessons.md`. Only add rules that would change future behavior. If the file doesn't exist, create it with the standard format (see below). Do not add one-off errors or things you self-corrected immediately.
+
+    **`docs/lessons.md` format:**
+    ```markdown
+    # Lessons Learned
+
+    <!--
+    Agent: read this at the start of each task during executing-tasks.
+    Follow every rule. Add new rules when you catch yourself making repeat mistakes.
+    Retire rules that no longer apply during finalizing.
+    -->
+
+    ## Rules
+
+    - <new rule here>
+    ```
+11. **⏸ PAUSE if `checkpoint: done`** — present the [checkpoint review](#checkpoint-review) below. Wait for human input. On changes, update and re-present at this same pause.
+12. **Commit** — `git add` the relevant files and commit with a clear message.
+13. **Update progress** — mark `✅ done` + record the commit hash.
+14. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
     ```
     ✅ Tasks N-M done (commits: abc, def)
     Progress: X/Y tasks done
@@ -159,7 +175,7 @@ For each task the agent works on:
        (or just say "continue" to keep going here)
     ```
     Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
-14. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
+15. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
 
 ## Checkpoint review
 
@@ -237,6 +253,7 @@ When the user shares code review feedback (outside of a checkpoint pause):
 2. Check git log — recent commits may reveal context
 3. Ask the user — it's better to clarify than to guess wrong
 4. If still stuck after asking, mark the task `❌ failed` with the reason in the progress file and move to the next task
+5. **Check `docs/lessons.md`** — a previous lesson may be relevant to your current problem.
 
 ## After all tasks
 

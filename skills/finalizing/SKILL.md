@@ -35,12 +35,34 @@ Wait for the user to confirm before proceeding.
 
    Each `mv` gracefully handles the case where no matching files exist (e.g., if the user skipped straight from brainstorm to finalize without executing tasks).
 
-2. **Update documentation** — if the API or surface changed:
+2. **Review lessons learned** — if `docs/lessons.md` exists, review it:
+   - Add any lessons from this session that were missed during execution
+   - Retire rules that no longer apply (remove the bullet)
+   - If no changes are needed, leave it as-is
+
+   If `docs/lessons.md` doesn't exist but lessons were learned this session, create it with the standard format:
+
+   ```markdown
+   # Lessons Learned
+
+   <!--
+   Agent: read this at the start of each task during executing-tasks.
+   Follow every rule. Add new rules when you catch yourself making repeat mistakes.
+   Retire rules that no longer apply during finalizing.
+   -->
+
+   ## Rules
+
+   - <rule 1>
+   - <rule 2>
+   ```
+
+3. **Update documentation** — if the API or surface changed:
    - Update README.md
    - Update CHANGELOG.md
    - Update any inline docs
 
-3. **Choose a merge strategy** — ask the human which option they prefer:
+4. **Choose a merge strategy** — ask the human which option they prefer:
 
    1. **Create PR** — push and open a PR for external review:
       ```
@@ -87,7 +109,7 @@ Wait for the user to confirm before proceeding.
 
    For options 2–4, confirm the detected parent branch with the human before proceeding.
 
-4. **Clean up** — if a worktree was used, remove it:
+5. **Clean up** — if a worktree was used, remove it:
    ```
    git worktree remove ../<repo>-<feature-name>
    ```

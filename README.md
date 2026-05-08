@@ -74,6 +74,25 @@ Each task is labeled with its TDD scenario during planning:
 | **Modifying tested code** | Changing existing behavior | Run existing tests first → modify → verify |
 | **Trivial** | Config, docs, naming | Use judgment |
 
+### Lessons Learned
+
+A persistent rules file (`docs/lessons.md`) helps the agent learn from repeat mistakes across sessions. When the agent catches itself making the same error — like forgetting to run `make lint` — it writes a rule immediately. Future sessions (even after `/new`) pick it up automatically.
+
+```
+brainstorm → reads lessons (design context)
+plan        → reads lessons (task breakdown)
+execute     → reads lessons per task, writes new ones on repeat mistakes
+finalize    → reviews and retires stale rules
+```
+
+Rules are simple imperative bullets:
+
+- After completing each task, run `make lint && make fmt` before committing
+- Never import `testify` in this project
+- Always check for existing test helpers before writing new ones
+
+No configuration needed — the file is created automatically when the first lesson is written.
+
 ### Checkpoint Review Gates
 
 Optionally label tasks with a `checkpoint` to pause for human review. At each checkpoint the agent stops and waits for your feedback — you can approve, ask for changes, or send it back to rethink. Only when you're satisfied does it move on to the next task.
