@@ -7,4 +7,4 @@ Last updated: 2026-05-08T00:00:00Z
 
 | # | Status | Task | Commit |
 |---|--------|------|--------|
-| 1 | ✅ done | Add worktree handoff flow to executing-tasks | — |
+| 1 | ✅ done | Add worktree handoff flow to executing-tasks | 2ce48e7 |
