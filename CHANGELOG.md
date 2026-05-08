@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Writing-plans concrete code guidance** — added "Level of detail" section requiring plans to include copy-pasteable code (SQL schemas, type definitions, function bodies, test assertions) instead of vague summaries like "implement bookmark model".
+- **Executing-tasks checkpoint gates** — rewrote checkpoint handling with explicit rules: checkpoints must fire BEFORE any `git add`/`git commit`, code stays uncommitted until human approval, and `checkpoint: done` now uses `git diff` (not `git diff --cached`) since nothing should be staged.
+
+### Changed
+
 - **Migrated to @earendil-works** — peer dependencies updated from `@mariozechner/*` to `@earendil-works/pi-coding-agent`. Dropped unused `@mariozechner/pi-ai` and `@mariozechner/pi-tui` peer deps. Added `@earendil-works/pi-coding-agent` as devDependency for IDE type resolution.
 
 - **Executing-tasks worktree handoff** — when the user chooses worktree isolation, the agent now moves plan docs into the worktree, commits the removal on the current branch, and stops with a handoff message instead of continuing execution in the wrong directory. The user restarts in the worktree with `cd ../<repo>-<feature> && pi`.
