@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Executing-tasks worktree handoff** — when the user chooses worktree isolation, the agent now moves plan docs into the worktree, commits the removal on the current branch, and stops with a handoff message instead of continuing execution in the wrong directory. The user restarts in the worktree with `cd ../<repo>-<feature> && pi`.
+
 ## [0.11.0] - 2026-05-04
 
 ### Changed
