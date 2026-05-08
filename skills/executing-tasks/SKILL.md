@@ -63,7 +63,24 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
       Then run: /skill:executing-tasks
       ```
 
-   e. **Do not proceed with task execution.** The session ends here.
+   e. **Create the progress file** in the worktree — save to `<worktree>/docs/plans/<plan-name>-progress.md`:
+
+      ```markdown
+      # Progress: <topic>
+
+      Plan: docs/plans/YYYY-MM-DD-<topic>-implementation.md
+      Branch: <feature-name>
+      Started: <ISO timestamp>
+      Last updated: <ISO timestamp>
+
+      | # | Status | Task | Commit |
+      |---|--------|------|--------|
+      | 1 | ⬜ pending | Task description (preserve checkpoint labels) | — |
+      ```
+
+      This ensures the new session in the worktree will detect the progress file and resume correctly.
+
+   f. **Do not proceed with task execution.** The session ends here.
 
 4. **If branch was chosen — continue with execution:**
 
