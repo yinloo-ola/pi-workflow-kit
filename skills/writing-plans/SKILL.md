@@ -19,9 +19,9 @@ Each task should produce one testable change. The executing-tasks skill handles 
 
 Each task must include:
 - Exact file paths to create/modify
-- Complete code (not "add validation"). For tasks that depend on types or utilities from earlier tasks, reference them explicitly (e.g., `import { User } from Task 2`) and include only the new code
-- Exact commands with expected output
-- Each task's tests should cover the happy path and at least one edge case or error path
+- **Concrete code** — include the actual implementation, not a summary. Write out SQL schemas, type definitions, function signatures with bodies, route handler code, and test assertions. A developer should be able to copy-paste from the plan and have working code. For tasks that depend on types or utilities from earlier tasks, reference them explicitly (e.g., `import { User } from Task 2`) and include only the new code
+- Exact commands with expected output (e.g., `npx vitest run src/user/model.test.ts` → shows 1 test passing)
+- Each task's tests should cover the happy path and at least one edge case or error path, with concrete assertions
 
 Each task must use a numbered heading with optional metadata comments:
 
@@ -39,7 +39,55 @@ Valid TDD values: `new-feature`, `modifying-tested-code`, `trivial`
 
 Valid checkpoint values: `none`, `test`, `done`
 
+### Level of detail
+
+This is the #1 thing to get right. The plan is not a high-level outline — it's a detailed recipe that the executing-tasks skill will follow step by step. If you write "implement login handler" without showing the code, the executing agent has to guess, and that defeats the purpose of the plan.
+
+Think of it this way: the plan author (you, now) has the full design context, the domain model, and the architecture in mind. The plan executor (a future agent session) will have none of that context — just the plan file. Write accordingly.
+
+**What "concrete code" means in practice:**
+- SQL: `CREATE TABLE` statements with all columns, types, and constraints
+- Types/interfaces: full type definitions with fields
+- Functions: signature + body (the logic, not just the name)
+- Tests: concrete assertions (`expect(result.status).toBe(409)`) not descriptions ("test that it returns an error")
+- Routes: the actual handler code with validation, error handling, and response format
+- Config: exact values, not "configure appropriately"
+
+**Bad** (too vague — the executor must guess):
+```
+3. Implement bookmark model
+```
+
+**Good** (executor can copy-paste):
+```
+3. Implement `src/db/bookmarks.ts`:
+
+```ts
+import db from '../db.js';
+
+export function createBookmarksTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      messageId TEXT NOT NULL,
+      createdAt TEXT DEFAULT (datetime('now')),
+      UNIQUE(userId, messageId)
+    )
+  `);
+}
+
+export function insertBookmark(userId: string, messageId: string) {
+  const id = crypto.randomUUID();
+  db.prepare('INSERT INTO bookmarks (id, userId, messageId) VALUES (?, ?, ?)').run(id, userId, messageId);
+  return { id, userId, messageId };
+}
+```
+```
+
 ### Task body structure
+
+The examples below show the structure — headings, metadata comments, checkpoints, and step numbering. For the code content within steps, follow the detail level described above.
 
 **No checkpoint** — numbered steps only:
 ```markdown

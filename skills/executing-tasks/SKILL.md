@@ -140,10 +140,11 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 
 **Update rules:**
 - Mark `🔄 in-progress` immediately when starting a task
-- Mark `⏸ test-review` or `⏸ done-review` when the agent reaches a `⏸ CHECKPOINT` gate in the plan
-- Can only return to `🔄 in-progress` after human says "approve"
+- Mark `⏸ test-review` or `⏸ done-review` when the agent reaches a `⏸ CHECKPOINT` gate in the plan — this must happen BEFORE any `git add` or `git commit`
+- Can only return to `🔄 in-progress` after the human explicitly says "approve"
 - Mark `✅ done` + record commit hash only after successful `git commit`
 - Cannot go from `🔄 in-progress` → `✅ done` if the task has a checkpoint — must go through the review status first
+- `git add` and `git commit` happen AFTER human approval, never before
 - Mark `❌ failed` + append reason when the agent can't proceed after retrying
 - Mark `⏭ skipped` when the user says "skip"
 - Update `Last updated` timestamp on every change
@@ -155,12 +156,7 @@ For each task:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
 2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
-3. **Execute the plan** — follow each numbered step in the task body, in order. When you encounter a `⏸ CHECKPOINT` gate:
-   - Update progress to `⏸ test-review` or `⏸ done-review`
-   - Present the [checkpoint review](#checkpoint-review) below
-   - Wait for human approval
-   - On approval, update progress back to `🔄 in-progress`
-   - Continue with the next step
+3. **Execute the plan** — follow each numbered step in the task body, in order.
 4. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
 5. **Update progress** — mark `✅ done` + record the commit hash.
 6. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
@@ -175,49 +171,90 @@ For each task:
    Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
 7. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
 
+### Checkpoint gates — when the plan says STOP
+
+The plan marks certain steps with `⏸ **CHECKPOINT: test**` or `⏸ **CHECKPOINT: done**`. These are hard stop points. When you reach one:
+
+1. **Stop executing immediately.** Do not proceed to the next step in the task. Do not pass go.
+2. **Do NOT run `git add` or `git commit`.** The code stays uncommitted until the human approves.
+3. Update the progress file to `⏸ test-review` or `⏸ done-review`.
+4. Present the checkpoint review (see below).
+5. **Wait for the human to respond.** Do not continue executing steps, do not commit, do not move to the next task.
+6. On approval, update progress back to `🔄 in-progress` and continue with the next step in the task.
+
+The whole point of checkpoints is that the human reviews code at critical moments before the agent proceeds further. If you skip past a checkpoint without waiting, you defeat this purpose.
+
+| Checkpoint type | What the agent has done at this point | What needs human approval |
+|---|---|---|
+| `checkpoint: test` | Written failing tests, confirmed they fail | The test design — are the right things being tested? |
+| `checkpoint: done` | Implemented, refactored, written lessons | The implementation approach, the refactoring choices |
+
+**For `checkpoint: test`:** Only the test file should exist at this point. No implementation code yet. The human reviews the test to confirm the right behavior is being specified.
+
+**For `checkpoint: done`:** All code changes are made but NOT committed. Run `git diff` (not `git diff --cached` — nothing should be staged) to show the human what changed. The human reviews before anything is committed.
+
 ## Checkpoint review
 
-When pausing at a `checkpoint: test`, present the test code:
+When you hit a checkpoint gate, present a review to the human and **stop all execution** until they respond.
 
+### At `checkpoint: test`
+
+You have written the failing tests and confirmed they fail. No implementation code exists yet.
+
+Present:
 ```
 ⏸ Paused at checkpoint: test for task [N]
 
-**Test written:**
-[show the test code]
+**Test file:** `path/to/test.ts`
 
-**Expected behavior:** [what this test validates]
-**Next:** Continue implementing after approval
+**Test code:**
+[show the full test code]
 
-**Available actions:**
-- **Approve** — continue to implementation
-- **Request changes** — describe what to change, I'll update and re-present
-- **Revert** — undo this task and mark it back to pending
-- `skip` — skip this task and move on
-- `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
-- `status` — show the full progress table
+**Test results:** [paste the failing test output showing which tests fail and why]
+
+**What this validates:** [summarize the behavior these tests specify]
+**Next step after approval:** Write the implementation to make these tests pass
+
+What would you like to do?
+- **approve** — I'll implement to make these tests pass
+- **request changes** — tell me what to change in the tests
+- **revert** — undo this task and go back to pending
+- **skip** — skip this task entirely
+- **stop** — pause here, resume later with /skill:executing-tasks
+- **status** — show the full progress table
 ```
 
-When pausing at a `checkpoint: done`, present the implementation review:
+### At `checkpoint: done`
 
+You have implemented the code, run the refactor step, and written any lessons. Nothing is committed yet.
+
+Present:
 ```
 ⏸ Paused at checkpoint: done for task [N]
 
-**What was done:** [brief summary]
-**Refactoring done:** [what changed, or "none needed — [reason]"]
-**Lessons learned:** [new rule added to docs/lessons.md, or "none"]
-**Diff:** [run `git diff --cached` or `git diff` — do NOT commit first]
-**Next:** Commit after approval
+**What was done:** [brief summary — what feature/fix was implemented]
 
-**Available actions:**
-- **Approve** — commit and move to next task
-- **Request changes** — describe what to change, I'll update and re-present
-- **Revert** — undo this task and mark it back to pending
-- `skip` — skip this task and move on
-- `stop` — pause here, start a fresh session later with `/skill:executing-tasks`
-- `status` — show the full progress table
+**Test results:** [run tests now, paste the passing output]
+
+**Diff:** [run `git diff` — the unstaged changes are what this task produced]
+[paste the full diff]
+
+**Refactoring done:** [what changed during refactor, or "none needed — [reason]"]
+**Lessons learned:** [new rule added to docs/lessons.md, or "none"]
+**Next step after approval:** git add, commit, and move to next task
+
+What would you like to do?
+- **approve** — I'll commit and move to the next task
+- **request changes** — tell me what to change, I'll update and re-present
+- **revert** — undo this task and go back to pending
+- **skip** — skip this task entirely
+- **stop** — pause here, resume later with /skill:executing-tasks
+- **status** — show the full progress table
 ```
 
-Wait for the human to respond. On **request changes**, make the edits, then re-present at the same checkpoint. Repeat until approved.
+**Do not commit before the human approves.** The diff you show at `checkpoint: done` is the uncommitted work. If the human requests changes, make the edits, re-run tests, and re-present the updated diff at the same checkpoint. Repeat until they say "approve".
+
+Only after approval: `git add` the relevant files, commit, and mark the task `✅ done`.
 
 ## Progress file updates
 
