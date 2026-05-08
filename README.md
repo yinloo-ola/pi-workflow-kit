@@ -47,7 +47,7 @@ brainstorm → plan → execute → finalize
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:brainstorming` | Explore approaches, debate tradeoffs, produce a design doc |
 | **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with file paths and acceptance criteria |
-| **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and optional checkpoint review gates |
+| **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
 

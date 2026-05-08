@@ -4,24 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.14.0] - 2026-05-09
+
+### Changed
+
+- **Writing-plans concrete code guidance** — added "Level of detail" section requiring plans to include copy-pasteable code (SQL schemas, type definitions, function bodies, test assertions) instead of vague summaries like "implement bookmark model".
+- **Writing-plans checkpoint gates** — rewrote checkpoint handling with explicit rules: checkpoints must fire BEFORE any `git add`/`git commit`, code stays uncommitted until human approval, and `checkpoint: done` now uses `git diff` (not `git diff --cached`) since nothing should be staged.
+- **Executing-tasks simplified** — replaced the complex multi-step executor with a straightforward plan-following runner with status-driven flow. Removed redundant verification and review steps in favor of a cleaner loop.
+- **Skill trigger clarifications** — updated brainstorming and diagnose skill descriptions for more accurate auto-triggering.
+
 ## [0.13.0] - 2026-05-08
 
 ### Added
 
 - Lessons learned: persistent rules file (`docs/lessons.md`) read at every workflow phase and written to when the agent catches repeat mistakes. Survives `/new` sessions.
 
-## [Unreleased]
-
-### Changed
-
-- **Writing-plans concrete code guidance** — added "Level of detail" section requiring plans to include copy-pasteable code (SQL schemas, type definitions, function bodies, test assertions) instead of vague summaries like "implement bookmark model".
-- **Executing-tasks checkpoint gates** — rewrote checkpoint handling with explicit rules: checkpoints must fire BEFORE any `git add`/`git commit`, code stays uncommitted until human approval, and `checkpoint: done` now uses `git diff` (not `git diff --cached`) since nothing should be staged.
+## [0.13.2] - 2026-05-08
 
 ### Changed
 
 - **Migrated to @earendil-works** — peer dependencies updated from `@mariozechner/*` to `@earendil-works/pi-coding-agent`. Dropped unused `@mariozechner/pi-ai` and `@mariozechner/pi-tui` peer deps. Added `@earendil-works/pi-coding-agent` as devDependency for IDE type resolution.
-
-- **Executing-tasks worktree handoff** — when the user chooses worktree isolation, the agent now moves plan docs into the worktree, commits the removal on the current branch, and stops with a handoff message instead of continuing execution in the wrong directory. The user restarts in the worktree with `cd ../<repo>-<feature> && pi`.
+- **Executing-tasks worktree handoff** — when the user chooses worktree isolation, the agent now moves plan docs into the worktree, commits the removal on the current branch, and stops with a handoff message instead of continuing execution in the wrong directory.
 
 ## [0.11.0] - 2026-05-04
 
@@ -143,7 +146,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
 
 
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.11.0...HEAD
+[0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
+[0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...HEAD
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
