@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Migrated to @earendil-works** — peer dependencies updated from `@mariozechner/*` to `@earendil-works/pi-coding-agent`. Dropped unused `@mariozechner/pi-ai` and `@mariozechner/pi-tui` peer deps. Added `@earendil-works/pi-coding-agent` as devDependency for IDE type resolution.
+
 - **Executing-tasks worktree handoff** — when the user chooses worktree isolation, the agent now moves plan docs into the worktree, commits the removal on the current branch, and stops with a handoff message instead of continuing execution in the wrong directory. The user restarts in the worktree with `cd ../<repo>-<feature> && pi`.
 
 ## [0.11.0] - 2026-05-04
