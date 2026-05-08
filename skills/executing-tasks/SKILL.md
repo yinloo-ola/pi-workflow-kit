@@ -156,10 +156,19 @@ For each task:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
 2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
-3. **Execute the plan** — follow each numbered step in the task body, in order.
-4. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
-5. **Update progress** — mark `✅ done` + record the commit hash.
-6. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
+3. **Execute the plan steps** — follow each numbered step in the task body, in order. Stop at any `⏸ CHECKPOINT` gate (see [Checkpoint gates](#checkpoint-gates--when-the-plan-says-stop)).
+4. **Verify against task description** — re-read the task from the plan. Does the implementation satisfy every requirement listed? If not, fix before proceeding.
+5. **Refactor** — after all tests pass, look for:
+   - **Shallow modules** — is the interface nearly as complex as the implementation? Can complexity be hidden behind a simpler interface?
+   - **Deletion test** — if you deleted this module, would complexity vanish (pass-through) or reappear across callers (earning its keep)?
+   - **Duplication** — extract repeated patterns
+   - **Seam discipline** — don't introduce abstraction unless something actually varies across it. One adapter = hypothetical seam. Two adapters = real seam
+
+   Run tests after each refactor step. Never refactor while tests are failing.
+6. **Learn from mistakes** — if you caught yourself making a mistake during this task that you've made before or that would apply to future tasks, append a rule to `docs/lessons.md`. Only add rules that would change future behavior. If the file doesn't exist, create it with the standard format (see below).
+7. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
+8. **Update progress** — mark `✅ done` + record the commit hash.
+9. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
    ```
    ✅ Tasks N-M done (commits: abc, def)
    Progress: X/Y tasks done
@@ -169,7 +178,23 @@ For each task:
       (or just say "continue" to keep going here)
    ```
    Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
-7. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
+10. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
+
+### `docs/lessons.md` format
+
+```markdown
+# Lessons Learned
+
+<!--
+Agent: read this at the start of each task during executing-tasks.
+Follow every rule. Add new rules when you catch yourself making repeat mistakes.
+Retire rules that no longer apply during finalizing.
+-->
+
+## Rules
+
+- <new rule here>
+```
 
 ### Checkpoint gates — when the plan says STOP
 

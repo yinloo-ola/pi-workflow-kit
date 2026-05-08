@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: "Disciplined debugging loop for hard bugs and performance regressions. Use when a test fails unexpectedly, a bug is found during execution, or something is broken."
+description: "Disciplined debugging loop for hard bugs and performance regressions. Use when a test fails unexpectedly, a bug is found during execution, or something is broken. Use this skill whenever the user reports a bug, says 'this doesn't work', 'something's wrong', 'help me debug', or when tests fail for unclear reasons. Works at any point in the workflow — brainstorm, execute, or standalone."
 ---
 
 # Diagnose
