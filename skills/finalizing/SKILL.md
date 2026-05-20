@@ -37,6 +37,7 @@ Wait for the user to confirm before proceeding.
 
 2. **Review lessons learned** — if `docs/lessons.md` exists, review it:
    - Add any lessons from this session that were missed during execution
+   - **Generalize domain-specific rules** — if a rule names a specific service, entity, or feature, either rewrite it as a generic pattern or remove it if no generic form exists
    - Retire rules that no longer apply (remove the bullet)
    - If no changes are needed, leave it as-is
 
@@ -48,6 +49,7 @@ Wait for the user to confirm before proceeding.
    <!--
    Agent: read this at the start of each task during executing-tasks.
    Follow every rule. Add new rules when you catch yourself making repeat mistakes.
+   Rules must be generic patterns applicable to any domain or feature — not specific to one service, entity, or use case.
    Retire rules that no longer apply during finalizing.
    -->
 

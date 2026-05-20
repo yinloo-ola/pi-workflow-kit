@@ -166,6 +166,14 @@ For each task:
 
    Run tests after each refactor step. Never refactor while tests are failing.
 6. **Learn from mistakes** — if you caught yourself making a mistake during this task that you've made before or that would apply to future tasks, append a rule to `docs/lessons.md`. Only add rules that would change future behavior. If the file doesn't exist, create it with the standard format (see below).
+
+   Before writing, apply the **generalization test**: would this rule apply equally to a completely different feature or domain in this repo? If not, rewrite it — strip out specific service names, entity types, and domain concepts, and express the underlying pattern instead. If you can't express a generic form, don't write the rule.
+
+   ❌ **Domain-specific** (only survives this sprint):
+   > "Always validate `userId` before calling `UserProfile.Get`"
+
+   ✅ **Generic** (applies across the whole repo):
+   > "Always validate required ID fields at the service boundary — missing IDs should return 400, not 500"
 7. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
 8. **Update progress** — mark `✅ done` + record the commit hash.
 9. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
@@ -188,6 +196,7 @@ For each task:
 <!--
 Agent: read this at the start of each task during executing-tasks.
 Follow every rule. Add new rules when you catch yourself making repeat mistakes.
+Rules must be generic patterns applicable to any domain or feature — not specific to one service, entity, or use case.
 Retire rules that no longer apply during finalizing.
 -->
 

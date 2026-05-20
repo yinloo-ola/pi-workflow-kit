@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- **Generic lessons enforcement** — `executing-tasks` now requires a generalization test before writing to `docs/lessons.md`: rules must apply to any domain or feature in the repo, not just the current one. Includes a bad/good example in the skill text. `finalizing` now audits `docs/lessons.md` for domain-specific rules and rewrites or removes them. Both skills' `docs/lessons.md` format template comments updated to reinforce the constraint.
+
 ## [0.14.0] - 2026-05-09
 
 ### Changed
