@@ -47,7 +47,6 @@ Each task must include:
   Ensure every criteria block specifies the expected state and returned results using `Given/When/Then` behavioral blocks.
 - **Concrete code** — include the actual implementation, not a summary. Write out SQL schemas, type definitions, function signatures with bodies, route handler code, and test assertions. A developer should be able to copy-paste from the plan and have working code. For tasks that depend on types or utilities from earlier tasks, reference them explicitly (e.g., `import { User } from Task 2`) and include only the new code
 - Exact commands with expected output (e.g., `npx vitest run src/user/model.test.ts` → shows 1 test passing)
-- Each task's tests should cover the happy path and at least one edge case or error path, with concrete assertions
 
 Each task must use a numbered heading with optional metadata comments:
 
