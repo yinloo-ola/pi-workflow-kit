@@ -35,10 +35,12 @@ Wait for the user to confirm before proceeding.
 
    Each `mv` gracefully handles the case where no matching files exist (e.g., if the user skipped straight from brainstorm to finalize without executing tasks).
 
-2. **Review lessons learned** — if `docs/lessons.md` exists, review it:
-   - Add any lessons from this session that were missed during execution
+2. **Review & Polish Lessons (Agile Scrum Master Hat)** — if `docs/lessons.md` exists, put on your **Agile Scrum Master Hat** to curate and optimize it for future sprints:
+   - **Add missed lessons** — capture any lessons from this session that weren't written during execution
    - **Generalize domain-specific rules** — if a rule names a specific service, entity, or feature, either rewrite it as a generic pattern or remove it if no generic form exists
-   - Retire rules that no longer apply (remove the bullet)
+   - **De-duplicate** — combine overlapping or redundant rules into single, sharper entries
+   - **Categorize** — group the rules under clear, structured markdown headers (e.g., `## Tool Usage`, `## Testing Patterns`, `## Architecture Rules`) to make the document highly scannable for future sessions. Keep the `## Rules` section as the append target for new entries during execution — categorization moves rules out of `## Rules` into the appropriate category headers.
+   - **Retire stale rules** — remove bullets that no longer apply
    - If no changes are needed, leave it as-is
 
    If `docs/lessons.md` doesn't exist but lessons were learned this session, create it with the standard format:
