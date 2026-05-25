@@ -11,7 +11,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 
 1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If the design doc is incomplete, fill gaps by asking the human. If no design doc exists, ask the user to describe what they want to build and read relevant code. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the task breakdown (e.g., if a lesson says "always run lint before commit," include that in relevant task instructions).
 
-   Then check whether the design doc has an `## Architectural Review` section. If it doesn't, and the design involves any of the following, prompt the user: "This design involves [list what you found: database changes, authentication, external services, concurrency, large data flows] but hasn't been reviewed for production risks. Run `/skill:design-review` first, or type 'proceed' to skip."
+   Then evaluate whether the design — whether from the design doc or from the user's description and codebase exploration — involves any of the following:
 
    - Database schema changes or migrations
    - Authentication or authorization logic
@@ -19,6 +19,8 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - Concurrency or batch processing
    - File uploads or large data flows
    - Redis, caching, or message queues
+
+   If any apply AND the design doc does not already have an `## Architectural Review` section, prompt the user: "This design involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:design-review` first, or type 'proceed' to skip."
 
    If the design doc explicitly notes "Simple change — no design review needed", skip this check.
 2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. If the design is too large for ~15 tasks, flag this to the human and ask whether to reduce scope or proceed with the full plan.
