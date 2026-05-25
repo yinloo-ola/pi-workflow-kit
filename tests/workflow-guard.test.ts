@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 /**
  * Tests for workflow-guard.ts
@@ -16,192 +16,200 @@ import { describe, it, expect, beforeEach } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { getCurrentPhase, isSafeCommand, shouldBlockFilePath } from "../extensions/workflow-guard";
+import { isSafeCommand, shouldBlockFilePath } from "../extensions/workflow-guard";
 
 describe("isSafeCommand", () => {
-	it("allows safe read-only commands", () => {
-		expect(isSafeCommand("cat file.ts")).toBe(true);
-		expect(isSafeCommand("grep -r 'foo' src/")).toBe(true);
-		expect(isSafeCommand("git status")).toBe(true);
-		expect(isSafeCommand("git log --oneline -5")).toBe(true);
-		expect(isSafeCommand("npm list")).toBe(true);
-		expect(isSafeCommand("ls -la")).toBe(true);
-		expect(isSafeCommand("curl https://example.com")).toBe(true);
-	});
+  it("allows safe read-only commands", () => {
+    expect(isSafeCommand("cat file.ts")).toBe(true);
+    expect(isSafeCommand("grep -r 'foo' src/")).toBe(true);
+    expect(isSafeCommand("git status")).toBe(true);
+    expect(isSafeCommand("git log --oneline -5")).toBe(true);
+    expect(isSafeCommand("npm list")).toBe(true);
+    expect(isSafeCommand("ls -la")).toBe(true);
+    expect(isSafeCommand("curl https://example.com")).toBe(true);
+  });
 
-	it("blocks destructive commands", () => {
-		expect(isSafeCommand("rm -rf node_modules")).toBe(false);
-		expect(isSafeCommand("touch newfile.ts")).toBe(false);
-		expect(isSafeCommand("mv old.ts new.ts")).toBe(false);
-		expect(isSafeCommand("mkdir src/components")).toBe(false);
-	});
+  it("blocks destructive commands", () => {
+    expect(isSafeCommand("rm -rf node_modules")).toBe(false);
+    expect(isSafeCommand("touch newfile.ts")).toBe(false);
+    expect(isSafeCommand("mv old.ts new.ts")).toBe(false);
+    expect(isSafeCommand("mkdir src/components")).toBe(false);
+  });
 
-	it("blocks file-writing bash patterns", () => {
-		expect(isSafeCommand("echo 'hello' > file.ts")).toBe(false);
-		expect(isSafeCommand("cat config > backup.txt")).toBe(false);
-		expect(isSafeCommand("echo 'log' >> output.log")).toBe(false);
-		expect(isSafeCommand("tee output.txt")).toBe(false);
-		expect(isSafeCommand("sed -i 's/old/new/g' file.ts")).toBe(false);
-	});
+  it("blocks file-writing bash patterns", () => {
+    expect(isSafeCommand("echo 'hello' > file.ts")).toBe(false);
+    expect(isSafeCommand("cat config > backup.txt")).toBe(false);
+    expect(isSafeCommand("echo 'log' >> output.log")).toBe(false);
+    expect(isSafeCommand("tee output.txt")).toBe(false);
+    expect(isSafeCommand("sed -i 's/old/new/g' file.ts")).toBe(false);
+  });
 
-	it("blocks git mutations but allows read-only git", () => {
-		expect(isSafeCommand("git add .")).toBe(false);
-		expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
-		expect(isSafeCommand("git push")).toBe(false);
-		expect(isSafeCommand("git checkout -b feature")).toBe(false);
-		expect(isSafeCommand("git status")).toBe(true);
-		expect(isSafeCommand("git log --oneline")).toBe(true);
-		expect(isSafeCommand("git diff")).toBe(true);
-	});
+  it("blocks git mutations but allows read-only git", () => {
+    expect(isSafeCommand("git add .")).toBe(false);
+    expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
+    expect(isSafeCommand("git push")).toBe(false);
+    expect(isSafeCommand("git checkout -b feature")).toBe(false);
+    expect(isSafeCommand("git status")).toBe(true);
+    expect(isSafeCommand("git log --oneline")).toBe(true);
+    expect(isSafeCommand("git diff")).toBe(true);
+  });
 
-	it("blocks editors", () => {
-		expect(isSafeCommand("vim file.ts")).toBe(false);
-		expect(isSafeCommand("nano file.ts")).toBe(false);
-		expect(isSafeCommand("code .")).toBe(false);
-	});
+  it("blocks editors", () => {
+    expect(isSafeCommand("vim file.ts")).toBe(false);
+    expect(isSafeCommand("nano file.ts")).toBe(false);
+    expect(isSafeCommand("code .")).toBe(false);
+  });
 
-	it("blocks sudo", () => {
-		expect(isSafeCommand("sudo apt install foo")).toBe(false);
-	});
+  it("blocks sudo", () => {
+    expect(isSafeCommand("sudo apt install foo")).toBe(false);
+  });
 
-	it("blocks npm installs but allows read-only npm", () => {
-		expect(isSafeCommand("npm install lodash")).toBe(false);
-		expect(isSafeCommand("npm list")).toBe(true);
-		expect(isSafeCommand("npm audit")).toBe(true);
-	});
+  it("blocks npm installs but allows read-only npm", () => {
+    expect(isSafeCommand("npm install lodash")).toBe(false);
+    expect(isSafeCommand("npm list")).toBe(true);
+    expect(isSafeCommand("npm audit")).toBe(true);
+  });
 
-	it("allows cd", () => {
-		expect(isSafeCommand("cd /some/path")).toBe(true);
-		expect(isSafeCommand("cd src && ls")).toBe(true);
-	});
+  it("allows cd", () => {
+    expect(isSafeCommand("cd /some/path")).toBe(true);
+    expect(isSafeCommand("cd src && ls")).toBe(true);
+  });
 
-	it("allows gh read-only subcommands", () => {
-		expect(isSafeCommand("gh pr view 1564 --json title,body")).toBe(true);
-		expect(isSafeCommand("gh pr list --repo owner/repo")).toBe(true);
-		expect(isSafeCommand("gh pr diff 1564")).toBe(true);
-		expect(isSafeCommand("gh issue view 42")).toBe(true);
-		expect(isSafeCommand("gh issue list --label bug")).toBe(true);
-		expect(isSafeCommand("gh repo view owner/repo")).toBe(true);
-		expect(isSafeCommand("gh run view 12345")).toBe(true);
-	});
+  it("allows gh read-only subcommands", () => {
+    expect(isSafeCommand("gh pr view 1564 --json title,body")).toBe(true);
+    expect(isSafeCommand("gh pr list --repo owner/repo")).toBe(true);
+    expect(isSafeCommand("gh pr diff 1564")).toBe(true);
+    expect(isSafeCommand("gh issue view 42")).toBe(true);
+    expect(isSafeCommand("gh issue list --label bug")).toBe(true);
+    expect(isSafeCommand("gh repo view owner/repo")).toBe(true);
+    expect(isSafeCommand("gh run view 12345")).toBe(true);
+  });
 
-	it("blocks gh write subcommands", () => {
-		expect(isSafeCommand("gh pr create --title 'fix'")).toBe(false);
-		expect(isSafeCommand("gh pr merge 1564")).toBe(false);
-		expect(isSafeCommand("gh issue close 42")).toBe(false);
-		expect(isSafeCommand("gh release create v1.0")).toBe(false);
-	});
+  it("blocks gh write subcommands", () => {
+    expect(isSafeCommand("gh pr create --title 'fix'")).toBe(false);
+    expect(isSafeCommand("gh pr merge 1564")).toBe(false);
+    expect(isSafeCommand("gh issue close 42")).toBe(false);
+    expect(isSafeCommand("gh release create v1.0")).toBe(false);
+  });
 
-	it("allows git read-only subcommands (new additions)", () => {
-		expect(isSafeCommand("git blame src/index.ts")).toBe(true);
-		expect(isSafeCommand("git shortlog -sn")).toBe(true);
-		expect(isSafeCommand("git stash list")).toBe(true);
-		expect(isSafeCommand("git tag -l")).toBe(true);
-		expect(isSafeCommand("git tag --list 'v*'")).toBe(true);
-		expect(isSafeCommand("git describe --tags")).toBe(true);
-	});
+  it("allows git read-only subcommands (new additions)", () => {
+    expect(isSafeCommand("git blame src/index.ts")).toBe(true);
+    expect(isSafeCommand("git shortlog -sn")).toBe(true);
+    expect(isSafeCommand("git stash list")).toBe(true);
+    expect(isSafeCommand("git tag -l")).toBe(true);
+    expect(isSafeCommand("git tag --list 'v*'")).toBe(true);
+    expect(isSafeCommand("git describe --tags")).toBe(true);
+  });
 
-	it("allows go read-only subcommands", () => {
-		expect(isSafeCommand("go doc go.opentelemetry.io/otel/label")).toBe(true);
-		expect(isSafeCommand("go doc go.opentelemetry.io/otel/codes 2>&1 | head -20")).toBe(true);
-		expect(isSafeCommand("go list -m -versions go.opentelemetry.io/otel 2>&1 | tr ' ' '\\n' | grep -E '^v1\\\\.(2[89]|[3-9][0-9])' | head -20")).toBe(true);
-		expect(isSafeCommand("go version")).toBe(true);
-		expect(isSafeCommand("go env GOOS GOARCH")).toBe(true);
-	});
+  it("allows go read-only subcommands", () => {
+    expect(isSafeCommand("go doc go.opentelemetry.io/otel/label")).toBe(true);
+    expect(isSafeCommand("go doc go.opentelemetry.io/otel/codes 2>&1 | head -20")).toBe(true);
+    expect(
+      isSafeCommand(
+        "go list -m -versions go.opentelemetry.io/otel 2>&1 | tr ' ' '\\n' | grep -E '^v1\\\\.(2[89]|[3-9][0-9])' | head -20",
+      ),
+    ).toBe(true);
+    expect(isSafeCommand("go version")).toBe(true);
+    expect(isSafeCommand("go env GOOS GOARCH")).toBe(true);
+  });
 
-	it("blocks go write subcommands", () => {
-		expect(isSafeCommand("go build ./...")).toBe(false);
-		expect(isSafeCommand("go install golang.org/x/tools/gopls@latest")).toBe(false);
-		expect(isSafeCommand("go mod tidy")).toBe(false);
-	});
+  it("blocks go write subcommands", () => {
+    expect(isSafeCommand("go build ./...")).toBe(false);
+    expect(isSafeCommand("go install golang.org/x/tools/gopls@latest")).toBe(false);
+    expect(isSafeCommand("go mod tidy")).toBe(false);
+  });
 
-	it("still blocks git stash mutations", () => {
-		expect(isSafeCommand("git stash push -m 'wip'")).toBe(false);
-		expect(isSafeCommand("git stash pop")).toBe(false);
-	});
+  it("still blocks git stash mutations", () => {
+    expect(isSafeCommand("git stash push -m 'wip'")).toBe(false);
+    expect(isSafeCommand("git stash pop")).toBe(false);
+  });
 
-	it("allows 2>/dev/null on safe commands", () => {
-		expect(isSafeCommand("git remote -v 2>/dev/null")).toBe(true);
-		expect(isSafeCommand("gh pr view 1564 2>/dev/null")).toBe(true);
-		expect(isSafeCommand("npm list 2>/dev/null")).toBe(true);
-	});
+  it("allows 2>/dev/null on safe commands", () => {
+    expect(isSafeCommand("git remote -v 2>/dev/null")).toBe(true);
+    expect(isSafeCommand("gh pr view 1564 2>/dev/null")).toBe(true);
+    expect(isSafeCommand("npm list 2>/dev/null")).toBe(true);
+  });
 
-	it("allows 2>&1 on safe commands", () => {
-		expect(isSafeCommand("git log 2>&1")).toBe(true);
-	});
+  it("allows 2>&1 on safe commands", () => {
+    expect(isSafeCommand("git log 2>&1")).toBe(true);
+  });
 
-	it("still blocks stdout redirects even with stderr redirect present", () => {
-		expect(isSafeCommand("echo 'hello' > file.ts 2>/dev/null")).toBe(false);
-		expect(isSafeCommand("cat config > backup.txt 2>/dev/null")).toBe(false);
-	});
+  it("still blocks stdout redirects even with stderr redirect present", () => {
+    expect(isSafeCommand("echo 'hello' > file.ts 2>/dev/null")).toBe(false);
+    expect(isSafeCommand("cat config > backup.txt 2>/dev/null")).toBe(false);
+  });
 
-	it("allows the exact user-reported blocked commands", () => {
-		expect(isSafeCommand("cd /Users/u/partying/pt-room && git remote -v 2>/dev/null; echo '---'; ls")).toBe(true);
-		expect(isSafeCommand("gh pr view 1564 --repo olachat/pt-partying --json title,body,files,additions,deletions 2>/dev/null || echo 'gh failed'")).toBe(true);
-	});
+  it("allows the exact user-reported blocked commands", () => {
+    expect(isSafeCommand("cd /Users/u/partying/pt-room && git remote -v 2>/dev/null; echo '---'; ls")).toBe(true);
+    expect(
+      isSafeCommand(
+        "gh pr view 1564 --repo olachat/pt-partying --json title,body,files,additions,deletions 2>/dev/null || echo 'gh failed'",
+      ),
+    ).toBe(true);
+  });
 
-	it("allows cat piped to grep", () => {
-		expect(isSafeCommand("cd /Volumes/Ext/code/personal/sttacomp && cat web/package.json | grep -E \"tailwind|postcss|smui|svetamat\"")).toBe(true);
-	});
+  it("allows cat piped to grep", () => {
+    expect(
+      isSafeCommand(
+        'cd /Volumes/Ext/code/personal/sttacomp && cat web/package.json | grep -E "tailwind|postcss|smui|svetamat"',
+      ),
+    ).toBe(true);
+  });
 
-	it("allows cat glob with 2>/dev/null and || echo fallback", () => {
-		expect(isSafeCommand("cd /Volumes/Ext/code/personal/sttacomp && cat web/tailwind.config.* 2>/dev/null || echo \"no tailwind config found\"")).toBe(true);
-	});
+  it("allows cat glob with 2>/dev/null and || echo fallback", () => {
+    expect(
+      isSafeCommand(
+        'cd /Volumes/Ext/code/personal/sttacomp && cat web/tailwind.config.* 2>/dev/null || echo "no tailwind config found"',
+      ),
+    ).toBe(true);
+  });
 
-	// --- Known bug tests (TODO: fix) ---
+  // --- Known bug tests (TODO: fix) ---
 
-	// https://github.com/user/repo/issues/1 — 'code' in path matched editor regex
-	it("allows cd && git status && echo && git log chain (path with 'code')", () => {
-		expect(
-			isSafeCommand(
-				"cd /Volumes/Ext/code/personal/sttacomp && git status && echo \"---LOG---\" && git log --oneline -5",
-			),
-		).toBe(true);
-	});
+  // https://github.com/user/repo/issues/1 — 'code' in path matched editor regex
+  it("allows cd && git status && echo && git log chain (path with 'code')", () => {
+    expect(
+      isSafeCommand('cd /Volumes/Ext/code/personal/sttacomp && git status && echo "---LOG---" && git log --oneline -5'),
+    ).toBe(true);
+  });
 
-	// Bug 1: quote-unaware && splitting
-	it("BUG: does NOT handle && inside quoted strings", () => {
-		// echo "a && b" && git status → splits on && inside quotes → breaks
-		// This test documents the current (broken) behavior.
-		// Change to toBe(true) once fixed.
-		expect(
-			isSafeCommand("echo \"use && for chaining\" && git status"),
-		).toBe(false); // TODO: should be true
-	});
+  // Bug 1: quote-unaware && splitting
+  it("BUG: does NOT handle && inside quoted strings", () => {
+    // echo "a && b" && git status → splits on && inside quotes → breaks
+    // This test documents the current (broken) behavior.
+    // Change to toBe(true) once fixed.
+    expect(isSafeCommand('echo "use && for chaining" && git status')).toBe(false); // TODO: should be true
+  });
 
-	// Bug 2: redirect regex matches > inside arguments
-	it("BUG: does NOT handle > inside grep arguments", () => {
-		// grep "x > y" file.txt → /(>)/ matches the > inside the quoted string
-		// This test documents the current (broken) behavior.
-		// Change to toBe(true) once fixed.
-		expect(
-			isSafeCommand("grep 'x > y' file.txt"),
-		).toBe(false); // TODO: should be true
-		expect(
-			isSafeCommand('grep "x > y" file.txt'),
-		).toBe(false); // TODO: should be true
-	});
+  // Bug 2: redirect regex matches > inside arguments
+  it("BUG: does NOT handle > inside grep arguments", () => {
+    // grep "x > y" file.txt → /(>)/ matches the > inside the quoted string
+    // This test documents the current (broken) behavior.
+    // Change to toBe(true) once fixed.
+    expect(isSafeCommand("grep 'x > y' file.txt")).toBe(false); // TODO: should be true
+    expect(isSafeCommand('grep "x > y" file.txt')).toBe(false); // TODO: should be true
+  });
 });
 
 describe("shouldBlockFilePath", () => {
-	const cwd = "/project";
+  const cwd = "/project";
 
-	it("allows writes under docs/plans/", () => {
-		expect(shouldBlockFilePath("docs/plans/2026-04-21-feature-design.md", cwd)).toBe(false);
-		expect(shouldBlockFilePath("docs/plans/sub/nested.md", cwd)).toBe(false);
-	});
+  it("allows writes under docs/plans/", () => {
+    expect(shouldBlockFilePath("docs/plans/2026-04-21-feature-design.md", cwd)).toBe(false);
+    expect(shouldBlockFilePath("docs/plans/sub/nested.md", cwd)).toBe(false);
+  });
 
-	it("blocks writes outside docs/plans/", () => {
-		expect(shouldBlockFilePath("src/index.ts", cwd)).toBe(true);
-		expect(shouldBlockFilePath("extensions/workflow-guard.ts", cwd)).toBe(true);
-		expect(shouldBlockFilePath("docs/README.md", cwd)).toBe(true);
-	});
+  it("blocks writes outside docs/plans/", () => {
+    expect(shouldBlockFilePath("src/index.ts", cwd)).toBe(true);
+    expect(shouldBlockFilePath("extensions/workflow-guard.ts", cwd)).toBe(true);
+    expect(shouldBlockFilePath("docs/README.md", cwd)).toBe(true);
+  });
 
-	it("blocks writes to docs/plans/ itself (no trailing file)", () => {
-		expect(shouldBlockFilePath("docs/plans", cwd)).toBe(true);
-	});
+  it("blocks writes to docs/plans/ itself (no trailing file)", () => {
+    expect(shouldBlockFilePath("docs/plans", cwd)).toBe(true);
+  });
 
-	it("blocks absolute paths outside plans", () => {
-		expect(shouldBlockFilePath("/tmp/evil.js", cwd)).toBe(true);
-	});
+  it("blocks absolute paths outside plans", () => {
+    expect(shouldBlockFilePath("/tmp/evil.js", cwd)).toBe(true);
+  });
 });
