@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: "Audit a design doc for production risks — security, scalability, fault tolerance, and operational hazards. Run after brainstorming, before writing-plans. Use when the brainstorm flags a non-trivial design, or when you want to stress-test a design for production readiness."
+description: "Audit a design doc for production risks — security, scalability, fault tolerance, and operational hazards. Use after brainstorming for non-trivial designs, or when you want to stress-test a design for production readiness."
 ---
 
 # Design Review
