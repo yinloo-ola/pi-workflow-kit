@@ -29,6 +29,10 @@ Read-only exploration. You may **not** edit or create any files except under `do
    ```
 
    ADRs live under `docs/plans/adr/` and are archived during finalizing alongside the design doc.
+
+   For non-trivial designs, note any areas that may need production-risk review (database changes, external services, auth, concurrency, large data flows). You don't need to audit them here — just flag them for the design-review stage.
+
+   For trivial changes (config, naming, simple field additions), note "Simple change — no design review needed" in the design doc.
 5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Organize features as end-to-end slices (each slice delivers one observable behavior through all relevant layers) so the planning phase can decompose them directly into tasks. Branch creation, committing, and workspace setup are handled by `/skill:executing-tasks`.
 
 ## Principles
@@ -40,4 +44,5 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
 ## After the design
 
-Ask: "Ready to plan? Run `/skill:writing-plans`"
+- **Non-trivial design**: Ask: "Design looks good. Run `/skill:design-review` to check for production risks before planning."
+- **Trivial change**: Ask: "Simple change — skip design review. Ready to plan? Run `/skill:writing-plans`"
