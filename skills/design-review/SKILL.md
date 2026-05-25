@@ -11,7 +11,7 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
 
 1. **Find the design doc** — look for `docs/plans/*-design.md`. If none exists, say "No design doc found. Run `/skill:brainstorming` first." and stop.
 
-2. **Check triviality** — if the design doc notes "Simple change — no design review needed", confirm with the user: "This looks like a trivial change. Skip the full audit?" If yes, append a brief section:
+2. **Check triviality** — if the design doc notes "Simple change — no design review needed", append a brief section:
 
    ```markdown
    ## Architectural Review
