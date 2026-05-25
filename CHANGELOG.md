@@ -18,6 +18,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Brainstorming focused** — brainstorming now ends with a trivial/non-trivial gate and hands off to design-review for non-trivial changes, instead of inline security review.
 - **Cognitive persona shifts in execution** — executing-tasks now applies three frames: QA Test (translate acceptance criteria, verify sandbox), Pragmatic Developer (simplest green), Senior Refactoring (craftsmanship). Refactoring step merged into the frame rather than a separate step.
 - **Lessons curation upgraded** — finalizing now uses an Agile Scrum Master Hat to de-duplicate, categorize (under structured headers like `## Tool Usage`, `## Testing Patterns`), and retire stale rules. New rules append to `## Rules` during execution; categorization happens during finalizing.
+- **Trigger list alignment** — brainstorming and writing-plans now check for the same 6 production-risk categories (database schema, auth, external APIs, concurrency, file uploads, Redis/caching).
+- **Language-agnostic QA guidance** — executing-tasks QA frame now uses `NODE_ENV=test` as an example alongside other language equivalents.
+- **Deduplicated test coverage** — writing-plans task format no longer has overlapping test coverage bullets (Acceptance Criteria covers happy path + edge cases).
+
+### Fixed
+
+- **Biome lint and format errors** — fixed unused imports and string concatenation lint in workflow-guard, tabs→spaces formatting.
 
 ## [0.15.0] - 2026-05-20
 
