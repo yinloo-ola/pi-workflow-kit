@@ -33,20 +33,21 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files or run mutating commands.
 
-### 🧠 5 Workflow Skills
+### 🧠 6 Workflow Skills
 
 Guide the agent through a disciplined development process:
 
 ```
-brainstorm → plan → execute → finalize
-              ↕
-           diagnose (anytime)
+brainstorm → design-review → plan → execute → finalize
+                                    ↕
+                                 diagnose (anytime)
 ```
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:brainstorming` | Explore approaches, debate tradeoffs, produce a design doc |
-| **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with file paths and acceptance criteria |
+| **Design Review** | `/skill:design-review` | Audit design for production risks (security, scalability, fault tolerance) |
+| **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with acceptance criteria and concrete code |
 | **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
@@ -59,6 +60,7 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 
 ```
 /skill:brainstorming   →  discuss and design
+/skill:design-review   →  audit for production risks (non-trivial designs)
 /skill:writing-plans   →  break into tasks
 /skill:executing-tasks →  implement with TDD
 /skill:finalizing      →  ship it
@@ -116,15 +118,20 @@ pi install npm:@tianhai/pi-workflow-kit
 # (agent explores approaches, writes design doc)
 # (write/edit are blocked — your code is safe)
 
+> /skill:design-review
+
+# (agent audits for security, scalability, fault tolerance)
+# (trivial changes can skip this step)
+
 > /skill:writing-plans
 
-# (agent breaks design into TDD tasks)
+# (agent breaks design into TDD tasks with acceptance criteria)
 > /skill:executing-tasks
 
-# (agent implements with TDD, all tools unlocked)
+# (agent implements with TDD, cognitive persona shifts, all tools unlocked)
 > /skill:finalizing
 
-# (agent archives docs, updates changelog, creates PR)
+# (agent archives docs, curates lessons, creates PR)
 ```
 
 ## Why?
@@ -142,6 +149,7 @@ pi-workflow-kit/
 │   └── workflow-guard.ts      # Write blocker during brainstorm/plan
 ├── skills/
 │   ├── brainstorming/SKILL.md
+│   ├── design-review/SKILL.md
 │   ├── writing-plans/SKILL.md
 │   ├── executing-tasks/SKILL.md
 │   ├── finalizing/SKILL.md

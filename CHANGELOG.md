@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.16.0] - 2026-05-25
+
+### Added
+
+- **Design review skill** — new `/skill:design-review` for auditing design docs against 6 architectural pillars, 8 high-risk production hazards, and 3 Socratic risk heuristics. Runs between brainstorming and planning for non-trivial designs. Trivial changes skip it automatically.
+- **Acceptance criteria in planning** — every task in the implementation plan now requires `Given/When/Then` behavioral acceptance criteria (happy path + edge cases) under a QA Engineer Hat.
+- **Plan acceptance audit** — writing-plans now runs a 5-point audit (vertical slices, sizing, QA coverage, checkpoint alignment, risk enforcement) before presenting the plan.
+- **Design-review safety net** — writing-plans checks whether the design doc has an Architectural Review section and prompts the user to run design-review if missing for non-trivial designs.
+
+### Changed
+
+- **Brainstorming focused** — brainstorming now ends with a trivial/non-trivial gate and hands off to design-review for non-trivial changes, instead of inline security review.
+- **Cognitive persona shifts in execution** — executing-tasks now applies three frames: QA Test (translate acceptance criteria, verify sandbox), Pragmatic Developer (simplest green), Senior Refactoring (craftsmanship). Refactoring step merged into the frame rather than a separate step.
+- **Lessons curation upgraded** — finalizing now uses an Agile Scrum Master Hat to de-duplicate, categorize (under structured headers like `## Tool Usage`, `## Testing Patterns`), and retire stale rules. New rules append to `## Rules` during execution; categorization happens during finalizing.
+- **Trigger list alignment** — brainstorming and writing-plans now check for the same 6 production-risk categories (database schema, auth, external APIs, concurrency, file uploads, Redis/caching).
+- **Language-agnostic QA guidance** — executing-tasks QA frame now uses `NODE_ENV=test` as an example alongside other language equivalents.
+- **Deduplicated test coverage** — writing-plans task format no longer has overlapping test coverage bullets (Acceptance Criteria covers happy path + edge cases).
+
+### Fixed
+
+- **Biome lint and format errors** — fixed unused imports and string concatenation lint in workflow-guard, tabs→spaces formatting.
+
 ## [0.15.0] - 2026-05-20
 
 ### Changed
@@ -152,9 +174,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
 
 
+[0.16.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.15.0...v0.16.0
+[0.15.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...HEAD
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
