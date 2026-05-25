@@ -10,8 +10,28 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 ## Process
 
 1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If the design doc is incomplete, fill gaps by asking the human. If no design doc exists, ask the user to describe what they want to build and read relevant code. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the task breakdown (e.g., if a lesson says "always run lint before commit," include that in relevant task instructions).
+
+   Then check whether the design doc has an `## Architectural Review` section. If it doesn't, and the design involves any of the following, prompt the user: "This design involves [list what you found: database changes, authentication, external services, concurrency, large data flows] but hasn't been reviewed for production risks. Run `/skill:design-review` first, or type 'proceed' to skip."
+
+   - Database schema changes or migrations
+   - Authentication or authorization logic
+   - External API or service integrations
+   - Concurrency or batch processing
+   - File uploads or large data flows
+   - Redis, caching, or message queues
+
+   If the design doc explicitly notes "Simple change — no design review needed", skip this check.
 2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. If the design is too large for ~15 tasks, flag this to the human and ask whether to reduce scope or proceed with the full plan.
 3. **Present the plan** — show the complete plan to the human. Wait for approval before suggesting execution.
+
+   Before presenting, run the **Plan Acceptance Audit**:
+   - **Vertical Slices**: Is every task a complete vertical slice (not horizontal)?
+   - **Task Sizing**: Is any single task too large or covering multiple complex behaviors? If so, split it.
+   - **QA Coverage**: Does every task have both a Happy Path and at least one Edge Case in its Acceptance Criteria?
+   - **Checkpoint Alignment**: Are `checkpoint: test` and `checkpoint: done` gates placed on the most critical or risky tasks?
+   - **Risk Enforcement**: If the design doc's Architectural Review section flagged any hazards as `[TRIGGERED]`, verify the corresponding tasks have `checkpoint: done` and a `Hazard Mitigation Verification` section.
+
+   If any check fails, fix the plan before presenting.
 
 ## Task format
 
@@ -19,6 +39,10 @@ Each task should produce one testable change. The executing-tasks skill handles 
 
 Each task must include:
 - Exact file paths to create/modify
+- **Acceptance Criteria (QA Engineer Hat)** — Put on your **QA Engineer Hat** to design exhaustive test coverage. Explicitly define:
+  - **Happy Path**: Expected behavior under normal operations.
+  - **Edge Cases & Error Paths**: What happens with empty inputs, limits exceeded, authentication failures, or error states.
+  Ensure every criteria block specifies the expected state and returned results using `Given/When/Then` behavioral blocks.
 - **Concrete code** — include the actual implementation, not a summary. Write out SQL schemas, type definitions, function signatures with bodies, route handler code, and test assertions. A developer should be able to copy-paste from the plan and have working code. For tasks that depend on types or utilities from earlier tasks, reference them explicitly (e.g., `import { User } from Task 2`) and include only the new code
 - Exact commands with expected output (e.g., `npx vitest run src/user/model.test.ts` → shows 1 test passing)
 - Each task's tests should cover the happy path and at least one edge case or error path, with concrete assertions
@@ -95,6 +119,16 @@ The examples below show the structure — headings, metadata comments, checkpoin
 
 <!-- tdd: new-feature -->
 
+Acceptance Criteria (QA Engineer Hat):
+- **Happy Path**:
+  - Given: Valid user data with name and email
+  - When: The User model is created
+  - Then: The model contains the correct fields and a generated ID
+- **Edge Case (duplicate email)**:
+  - Given: A user with email "test@example.com" already exists
+  - When: Another user is created with the same email
+  - Then: Creation fails with a unique constraint error
+
 Files:
 - `src/user/model.ts`
 - `src/user/model.test.ts`
@@ -112,6 +146,16 @@ Steps:
 
 <!-- tdd: new-feature -->
 <!-- checkpoint: test -->
+
+Acceptance Criteria (QA Engineer Hat):
+- **Happy Path**:
+  - Given: A user with valid credentials exists
+  - When: Login is attempted
+  - Then: A valid session token is returned
+- **Edge Case (wrong password)**:
+  - Given: A user exists but password is incorrect
+  - When: Login is attempted
+  - Then: An authentication error is returned
 
 Files:
 - `src/auth/login.test.ts`
@@ -134,6 +178,20 @@ Steps:
 
 <!-- tdd: new-feature -->
 <!-- checkpoint: done -->
+
+Acceptance Criteria (QA Engineer Hat):
+- **Happy Path**:
+  - Given: A user with email "user@example.com" and password "secure123" exists
+  - When: A POST request with those credentials is sent to `/api/login`
+  - Then: Response returns `200 OK` with a signed JWT token
+- **Edge Case (invalid password)**:
+  - Given: A user exists but the password sent is "wrong-pass"
+  - When: A POST request is sent to `/api/login`
+  - Then: Response returns `401 Unauthorized`
+- **Edge Case (rate limiting)**:
+  - Given: 5 failed login attempts from the same IP
+  - When: A 6th attempt is sent
+  - Then: Response returns `429 Too Many Requests`
 
 Files:
 - `src/auth/login.ts`
@@ -158,6 +216,16 @@ Steps:
 <!-- tdd: new-feature -->
 <!-- checkpoint: test -->
 <!-- checkpoint: done -->
+
+Acceptance Criteria (QA Engineer Hat):
+- **Happy Path**:
+  - Given: A valid OAuth2 authorization code
+  - When: The auth callback is invoked
+  - Then: A user session is created and the user is redirected to the dashboard
+- **Edge Case (expired code)**:
+  - Given: An expired or invalid authorization code
+  - When: The auth callback is invoked
+  - Then: The user is redirected to login with an error message
 
 Steps:
 1. Write failing test for auth flow
