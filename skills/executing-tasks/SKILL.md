@@ -212,6 +212,8 @@ Retire rules that no longer apply during finalizing.
 - <new rule here>
 ```
 
+When adding a new rule during execution, always append it under `## Rules`. The categorization into specific headers (e.g., `## Tool Usage`, `## Testing Patterns`) is done during finalizing — never during execution.
+
 ### Checkpoint gates — when the plan says STOP
 
 The plan marks certain steps with `⏸ **CHECKPOINT: test**` or `⏸ **CHECKPOINT: done**`. These are hard stop points. When you reach one:
