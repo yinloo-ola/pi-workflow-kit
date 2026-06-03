@@ -1,6 +1,6 @@
 # pi-workflow-kit
 
-> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→finalize workflow with TDD discipline.
+> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→verify→finalize workflow with TDD discipline.
 
 AI coding agents tend to skip design and jump straight into implementation, producing over-engineered or misaligned code. **pi-workflow-kit** solves this by hard-blocking write operations during brainstorm and planning phases — the agent *literally cannot modify your source files* until you approve the design.
 
@@ -33,15 +33,13 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files or run mutating commands.
 
-### 🧠 6 Workflow Skills
+### 🧠 7 Workflow Skills
 
 Guide the agent through a disciplined development process:
 
-```
-brainstorm → design-review → plan → execute → finalize
-                                    ↕
-                                 diagnose (anytime)
-```
+brainstorm → design-review → plan → execute → verify → finalize
+                                           ↕
+                                        diagnose (anytime)
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
@@ -49,6 +47,7 @@ brainstorm → design-review → plan → execute → finalize
 | **Design Review** | `/skill:design-review` | Audit design for production risks (security, scalability, fault tolerance) |
 | **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with acceptance criteria and concrete code |
 | **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
+| **Verify** | `/skill:verify` | Three expert review passes (security, optimization, traceability) on implemented code |
 | **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
 
@@ -58,13 +57,12 @@ brainstorm → design-review → plan → execute → finalize
 
 You control each phase — the agent never advances on its own. Invoke a skill to move forward:
 
-```
 /skill:brainstorming   →  discuss and design
 /skill:design-review   →  audit for production risks (non-trivial designs)
 /skill:writing-plans   →  break into tasks
 /skill:executing-tasks →  implement with TDD
+/skill:verify          →  review code for security, optimization, and traceability issues
 /skill:finalizing      →  ship it
-```
 
 ### TDD Three-Scenario Model
 
@@ -129,6 +127,9 @@ pi install npm:@tianhai/pi-workflow-kit
 > /skill:executing-tasks
 
 # (agent implements with TDD, cognitive persona shifts, all tools unlocked)
+> /skill:verify
+
+# (agent runs security, optimization, and traceability reviews on implemented code)
 > /skill:finalizing
 
 # (agent archives docs, curates lessons, creates PR)
@@ -152,6 +153,7 @@ pi-workflow-kit/
 │   ├── design-review/SKILL.md
 │   ├── writing-plans/SKILL.md
 │   ├── executing-tasks/SKILL.md
+│   ├── verify/SKILL.md
 │   ├── finalizing/SKILL.md
 │   └── diagnose/SKILL.md
 ├── tests/
