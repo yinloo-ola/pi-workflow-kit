@@ -7,5 +7,5 @@ Last updated: 2026-06-03T13:00:00Z
 
 | # | Status | Task | Commit |
 |---|--------|------|--------|
-| 1 | ⬜ pending | Create the verify skill | — |
-| 2 | ⬜ pending | Update README with verify skill | — |
+| 1 | ✅ done | Create the verify skill | c48d47a |
+| 2 | ✅ done | Update README with verify skill | ea37ea8 |
