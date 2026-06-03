@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.17.0] - 2026-06-03
+
+### Added
+
+- **Verify skill** — new `/skill:verify` for post-implementation code verification. Runs three sequential expert review passes (security, optimization, traceability) over implemented code. Catches issues that pass tests but break in production — based on the 'last prompt' pattern. Outputs a structured report with categorized findings and actionable remediation task list.
+- **Verify in workflow pipeline** — `verify` now sits between `execute` and `finalize` in the workflow: `brainstorm → design-review → plan → execute → verify → finalize`. Optional — trivial changes can skip it.
+
 ## [0.16.0] - 2026-05-25
 
 ### Added
