@@ -290,3 +290,54 @@ Use judgment when assigning checkpoints. Prefer `checkpoint: test` for new featu
 ## After the plan
 
 Ask: "Ready to execute? Run `/skill:executing-tasks`"
+
+## Behavioral Guidelines
+
+Guidelines to reduce overcomplication and hidden assumptions in plans. Derived from [Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876) on LLM coding pitfalls, adapted for the planning context.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial plans (1-2 tasks), use judgment.
+
+### Surface Assumptions
+
+**When the design is ambiguous, annotate — don't silently pick.**
+
+When writing a plan, you'll encounter gaps: the design says "paginated" but doesn't specify how, says "validate input" but doesn't say which fields, or leaves the data layer unspecified. Your instinct will be to fill the gap and keep writing. Resist that.
+
+Instead, add a brief `> **Assumption:** ...` note in the plan at the point where you made the call:
+
+```
+> **Assumption:** Using offset/limit pagination because the design just says
+> "paginated". Cursor-based would be better for large datasets.
+```
+
+```
+> **Assumption:** No service layer — handler calls store directly. Add one
+> if cross-cutting concerns (logging, auth checks) emerge later.
+```
+
+This lets the reviewer see what you chose and why, without blocking progress. Common gaps worth annotating:
+- Pagination style, error handling strategy, concurrency model
+- Whether to add a service/middleware layer
+- Whether to add external dependencies
+- Naming conventions when the design doesn't specify
+
+### Build Only What Each Task Needs
+
+**Minimum code to deliver the task's observable behavior. Nothing more.**
+
+- No interface methods that no task exercises yet. If Task 2 creates a `Store` interface, it should have only the methods Task 2 calls. Add methods in the task that first needs them.
+- No layers (service, middleware, repository) unless the design explicitly requires them.
+- No error types, helper files, or shared packages until a task actually uses them.
+- No external dependencies when stdlib suffices. Every `go get` or `npm install` is a choice — default to no.
+- No "flexible" or "configurable" code that wasn't requested.
+
+If you find yourself writing a store with 4 methods where only 1 is used in this task, stop. Write 1 method. Add the rest when the tasks that need them arrive.
+
+### One Task, One Change
+
+**Each task should trace to exactly one user-facing behavior.**
+
+- If a task creates more than 4 new files, it's probably doing too much — split it.
+- If a task modifies existing files unrelated to its acceptance criteria, trim the scope.
+- Infrastructure (types, interfaces, module scaffolding) should live in the same task as the first code that uses it, not in a separate "setup" task — unless the infrastructure alone is complex enough to warrant its own task.
+- Every file listed in a task's `Files:` section should be directly necessary for that task's acceptance criteria to pass.
