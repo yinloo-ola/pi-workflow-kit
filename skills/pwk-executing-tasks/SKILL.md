@@ -1,6 +1,6 @@
 ---
 name: pwk-executing-tasks
-description: "Use this to implement an approved plan task-by-task. Run after writing-plans, before finalizing."
+description: "Use this to implement an approved plan task-by-task. Run after pwk-writing-plans, before finalizing."
 ---
 
 # Executing Tasks
@@ -10,7 +10,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 ## Before you start
 
 1. **Check git state** — run `git status` and `git log --oneline -5`. Note any uncommitted changes.
-2. **Find the plan** — look for `docs/plans/*-implementation.md`. If none exist, say "No implementation plan found. Run `/skill:writing-plans` first." and stop. If multiple exist, ask the user which one to execute.
+2. **Find the plan** — look for `docs/plans/*-design.md` to get the Features table. Find the feature with status `🔄 planned`. The plan doc is `docs/plans/YYYY-MM-DD-<topic>-<slugified-feature-name>-implementation.md`. If no design doc exists, fall back to looking for a single `*-implementation.md` (backward compatibility with plans not using the feature table). If multiple plan docs exist and no design doc, ask the user which one to execute.
 3. **Check for existing progress** — look for `docs/plans/*-progress.md`. If one exists matching the plan, this is a **resume** (see [Resume](#resume)). If not, this is a **first run** (see [First run](#first-run)).
 
 ## First run
@@ -60,7 +60,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
       To continue, start a new session there:
         cd ../<repo>-<feature-name> && pi
 
-      Then run: /skill:executing-tasks
+      Then run: /skill:pwk-executing-tasks
       ```
 
    e. **Create the progress file** in the worktree — save to `<worktree>/docs/plans/<plan-name>-progress.md`:
@@ -119,7 +119,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
    - Show the failure reason from the progress file
    - Ask: "Retry, skip, or abort?"
 4. **Handle pending task** — proceed normally
-5. **All done** — if no `⬜ pending` or `❌ failed` tasks remain, show summary and suggest `/skill:finalizing`
+5. **All done** — if no `⬜ pending` or `❌ failed` tasks remain, show summary and suggest `/skill:pwk-finalizing`
 6. **Begin task execution** — proceed from the identified task
 
 ## Progress file
@@ -155,7 +155,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 For each task:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
-2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
+2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Extract the `Design:` and `Feature:` metadata to know which design doc and feature row this execution covers. Read the design doc's Features table for context on the overall feature set. Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
 3. **Execute the plan steps** — follow each numbered step in the task body, in order. As you work, shift your cognitive focus through three frames:
 
    **QA Test frame** (when writing/running tests): Focus entirely on translating the task's `Given/When/Then` Acceptance Criteria into precise failing tests. Before running tests, verify the test environment is sandboxed — no real database connections, API calls, or live services. External dependencies must be mocked or stubbed. Ensure the test environment is isolated (e.g., `NODE_ENV=test`, `GO_ENV=test`, or equivalent for your stack).
@@ -183,17 +183,18 @@ For each task:
    > "Always validate required ID fields at the service boundary — missing IDs should return 400, not 500"
 6. **Commit** — after all steps are done (no checkpoint gates remain in the task), `git add` the relevant files and commit with a clear message.
 7. **Update progress** — mark `✅ done` + record the commit hash.
-8. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
+8. **Update design doc** — if the progress file shows all tasks for the current feature are `✅ done`, find the design doc (from plan metadata), and mark the current feature row as `✅ done` in the Features table.
+9. **Suggest session break if needed** — after completing ~3-5 tasks since the last break, suggest:
    ```
    ✅ Tasks N-M done (commits: abc, def)
    Progress: X/Y tasks done
    ⏭  Next: Task [N+1] — [description]
    💡 Context is building up. For clean context on remaining tasks:
-      /new  then  /skill:executing-tasks
+      /new  then  /skill:pwk-executing-tasks
       (or just say "continue" to keep going here)
    ```
    Also suggest at checkpoint review pauses when multiple tasks have been completed since the last break. Respect the user's choice if they say "continue".
-9. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
+10. **Loop** — go back to step 1 for the next `⬜ pending` task, or see [After all tasks](#after-all-tasks) if none remain.
 
 ### `docs/lessons.md` format
 
@@ -335,16 +336,42 @@ When the user shares code review feedback (outside of a checkpoint pause):
 
 ## After all tasks
 
-When no `⬜ pending` or `❌ failed` tasks remain, show a summary:
+When no `⬜ pending` or `❌ failed` tasks remain for the current feature, read the design doc's Features table. Show the per-task summary from the progress file, then check for more features:
+
+### More features remaining
 
 ```
-✅ All tasks complete!
+✅ Feature "<feature name>" complete.
 
 | # | Status | Task |
 |---|--------|------|
 | 1 | ✅ done | Create User model |
-| 2 | ✅ done | Write User model tests |
-| 3 | ⏭ skipped | Add auth middleware |
+| 2 | ✅ done | Add signup endpoint |
 
-Ready to ship? Run `/skill:finalizing`
+⏭  Next: "<next pending feature name>"
+💡 Options:
+   - Plan next feature: /skill:pwk-writing-plans
+   - Verify this feature first: /skill:pwk-verify
+   - Or just say "continue"
+```
+
+### All features complete
+
+```
+✅ All features complete!
+
+| # | Status | Feature |
+|---|--------|---------|
+| 1 | ✅ done | User signup |
+| 2 | ✅ done | Email verification |
+| 3 | ⏭ skipped | Password reset |
+
+| # | Status | Task |
+|---|--------|------|
+| 1 | ✅ done | Create User model |
+| 2 | ✅ done | Add signup endpoint |
+| ... | ... | ... |
+
+   - Verify everything: /skill:pwk-verify
+   - Ship: /skill:pwk-finalizing
 ```
