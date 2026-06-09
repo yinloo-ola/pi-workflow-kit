@@ -11,7 +11,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 type Phase = "brainstorm" | "plan" | "verify" | null;
 
-// Destructive commands blocked in brainstorm/plan phases
+// Destructive commands blocked in brainstorm/plan/verify phases
 const DESTRUCTIVE_PATTERNS = [
   /\brm\b/i,
   /\brmdir\b/i,
@@ -151,7 +151,7 @@ const SKILL_TO_PHASE: Record<string, Phase> = {
 };
 
 /** Determine if a write/edit to filePath should be blocked during the given phase.
- *  Only writes under docs/plans/ are allowed during brainstorm and plan phases.
+ *  Only writes under docs/plans/ are allowed during brainstorm, plan, and verify phases.
  */
 export function shouldBlockFilePath(filePath: string, cwd: string): boolean {
   const absolute = resolve(cwd, filePath);

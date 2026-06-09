@@ -11,7 +11,7 @@ Read-only exploration of the design and plan docs. You **may** edit the plan doc
 
 1. **Find the design and plan docs** — look for `docs/plans/*-design.md` and `docs/plans/*-implementation.md`. If neither exists, say "No design or plan doc found. Run `/skill:pwk-brainstorming` first." and stop. Read the plan doc for concrete code context alongside the design doc for architectural context.
 
-2. **Check triviality** — if the design doc notes "Simple change — no design review needed", append a brief section to the plan doc:
+2. **Check triviality** — if a plan doc was found in step 1 and the design doc notes "Simple change — no design review needed", append a brief section to the plan doc:
 
    ```markdown
    ## Architectural Review
@@ -20,6 +20,8 @@ Read-only exploration of the design and plan docs. You **may** edit the plan doc
    ```
 
    Then say: "Review complete — no action needed. Ready to execute? Run `/skill:pwk-executing-tasks`" and stop.
+
+   If no plan doc was found, skip this check and say: "No plan doc found to append to. Run `/skill:pwk-writing-plans` first." and stop.
 
 3. **Read the design and plan docs in full** — understand the architecture from the design doc, and concrete code from the plan doc. The plan doc's implementation details (SQL queries, type definitions, function bodies) are what the hazard checks audit.
 

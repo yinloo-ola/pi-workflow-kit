@@ -155,7 +155,7 @@ Implement the plan from `docs/plans/*-implementation.md` task by task, with file
 For each task:
 
 1. **Mark in-progress** — update the progress file: `🔄 in-progress`
-2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Extract the `Design:` and `Feature:` metadata to know which design doc and feature row this execution covers. Read the design doc's Features table for context on the overall feature set. Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md` if it exists** — follow all rules listed there while working on this task.
+2. **Read the plan** — read the plan's overview section (everything before `## Task 1:`). Extract the `Design:` and `Feature:` metadata to know which design doc and feature row this execution covers. Check the current feature's status in the design doc's Features table. Skim all `## Task N:` headings for dependency awareness. Then read the current task's body in full. **Read `docs/lessons.md`** if it exists — follow all rules listed there while working on this task.
 3. **Execute the plan steps** — follow each numbered step in the task body, in order. As you work, shift your cognitive focus through three frames:
 
    **QA Test frame** (when writing/running tests): Focus entirely on translating the task's `Given/When/Then` Acceptance Criteria into precise failing tests. Before running tests, verify the test environment is sandboxed — no real database connections, API calls, or live services. External dependencies must be mocked or stubbed. Ensure the test environment is isolated (e.g., `NODE_ENV=test`, `GO_ENV=test`, or equivalent for your stack).

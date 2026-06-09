@@ -11,7 +11,9 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 
 1. **Check for a design doc** — look for `docs/plans/*-design.md`. If one exists, use it as the basis for the plan. If the design doc is incomplete, fill gaps by asking the human. If no design doc exists, ask the user to describe what they want to build and read relevant code. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the task breakdown (e.g., if a lesson says "always run lint before commit," include that in relevant task instructions).
 
-   Then evaluate whether the design — whether from the design doc or from the user's description and codebase exploration — involves any of the following:
+   If the design doc has a `## Features` table, read it to identify the next feature with status `⬜ pending`. Mark that feature as `🔄 planned` by editing the design doc. This plan will cover only that one feature. If the design doc has no Features table, plan the entire design as before.
+
+   Then evaluate whether the feature — whether from the design doc or from the user's description and codebase exploration — involves any of the following:
 
    - Database schema changes or migrations
    - Authentication or authorization logic
@@ -23,8 +25,6 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    If any apply, prompt the user: "This feature involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:pwk-design-review` first, or type 'proceed' to skip."
 
    If the design doc explicitly notes "Simple change — no design review needed", skip this check.
-
-   If the design doc has a `## Features` table, read it to identify the next feature with status `⬜ pending`. Mark that feature as `🔄 planned` by editing the design doc. This plan will cover only that one feature. If the design doc has no Features table, plan the entire design as before.
 2. **Write the implementation plan** — break the feature into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md` (derive `<feature-name>` from the feature's name in the table, slugified). If the design doc has no Features table, use `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. Include metadata at the top of the plan doc so the executor can find the design doc and feature row:
 
    ```markdown
