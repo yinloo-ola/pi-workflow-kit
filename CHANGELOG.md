@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.18.0] - 2026-06-09
+
+### Added
+
+- **Feature-based planning** — design docs now include a `## Features` table that tracks each feature's status (`⬜ pending` → `🔄 planned` → `✅ done`). Skills plan and execute one feature at a time, looping back for the next.
+- **`pwk-` skill namespace** — all 7 skills renamed with `pwk-` prefix for namespace clarity (e.g., `/skill:brainstorming` → `/skill:pwk-brainstorming`). Old skill names in `docs/plans/completed/` are preserved as historical records.
+- **Design review repositioned** — `/skill:pwk-design-review` now runs after `/skill:pwk-writing-plans` (not after brainstorming). Per-feature scope: review findings append to the plan doc, not the design doc. Concrete code in plans makes hazard checks more meaningful.
+- **Verify phase in workflow-guard** — `pwk-verify` now enforces read-only (same as brainstorm/plan). `Phase` type extended to include `"verify"`.
+- **TypeScript project config** — added `tsconfig.json` and `@types/node` for IDE type resolution in the extension.
+
+### Changed
+
+- **Plan doc naming** — per-feature plans use `YYYY-MM-DD-<topic>-<feature-name>-implementation.md` with `Design:` and `Feature:` metadata header. Backward compatible: plans without a Features table use the original naming.
+- **Design review reads both docs** — reads the plan doc for concrete code context alongside the design doc for architectural context.
+- **Hazard check ordering** — writing-plans now identifies the feature before evaluating the hazard checklist, so "This feature involves..." is accurate.
+- **Executing-tasks feature loop** — marks features `✅ done` in the design doc's Features table when all tasks complete, then suggests planning the next feature or verifying.
+- **Finalizing guards** — warns before archiving if the design doc has unstarted features. Archives verification reports alongside plan docs.
+
 ## [0.17.0] - 2026-06-03
 
 ### Added
@@ -185,7 +203,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [0.15.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.17.0...v0.18.0
+[0.17.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...v0.17.0
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
 [0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
