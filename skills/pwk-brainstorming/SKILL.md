@@ -30,10 +30,22 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
    ADRs live under `docs/plans/adr/` and are archived during finalizing alongside the design doc.
 
-   For non-trivial designs, note any areas that may need production-risk review (database schema changes, authentication or authorization, external API integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues). You don't need to audit them here — just flag them for the design-review stage.
+5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Include a `## Features` table listing each feature as a testable, observable behavior. Simple features get one row. Complex features get many.
 
-   For trivial changes (config, naming, simple field additions), note "Simple change — no design review needed" in the design doc.
-5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Organize features as end-to-end slices (each slice delivers one observable behavior through all relevant layers) so the planning phase can decompose them directly into tasks. Branch creation, committing, and workspace setup are handled by `/skill:pwk-executing-tasks`.
+   Table format:
+   ```markdown
+   ## Features
+
+   | # | Feature | Status | Observable Behavior |
+   |---|---------|--------|---------------------|
+   | 1 | Feature name | ⬜ pending | What the user can do when this is complete |
+   ```
+
+   Status values: `⬜ pending`, `🔄 planned`, `✅ done`, `⏭ skipped`.
+
+   For trivial changes where the entire feature is a single row, note "Simple change — no design review needed" below the table. For non-trivial designs, note areas that may need production-risk review (database schema changes, authentication or authorization, external API integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues).
+
+   Branch creation, committing, and workspace setup are handled by `/skill:pwk-executing-tasks`.
 
 ## Principles
 
@@ -44,5 +56,4 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
 ## After the design
 
-- **Non-trivial design**: Ask: "Design looks good. Run `/skill:pwk-design-review` to check for production risks before planning."
-- **Trivial change**: Ask: "Simple change — skip design review. Ready to plan? Run `/skill:pwk-writing-plans`"
+Ask: "Ready to plan? Run `/skill:pwk-writing-plans`"
