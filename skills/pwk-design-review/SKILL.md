@@ -19,7 +19,7 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
    **Status**: Skipped — trivial change. No high-risk operations detected.
    ```
 
-   Then say: "Ready to plan? Run `/skill:writing-plans`" and stop.
+   Then say: "Ready to plan? Run `/skill:pwk-writing-plans`" and stop.
 
 3. **Read the design doc in full** — understand the architecture, data flow, components, and error handling proposed.
 
@@ -110,4 +110,4 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
 
 ## After the review
 
-Ask: "Ready to plan? Run `/skill:writing-plans`"
+Ask: "Ready to plan? Run `/skill:pwk-writing-plans`"

@@ -11,7 +11,7 @@ The core insight: code that passes tests is not code that's ready. Working code 
 
 ## Process
 
-1. **Check what's been done** — run `git log --oneline` and `git diff --stat` to understand the scope of recent changes. If nothing has been implemented, say "No code changes found. Run `/skill:executing-tasks` first." and stop.
+1. **Check what's been done** — run `git log --oneline` and `git diff --stat` to understand the scope of recent changes. If nothing has been implemented, say "No code changes found. Run `/skill:pwk-executing-tasks` first." and stop.
 
 2. **Identify the project's layers** — before reviewing, map the codebase's architecture. Look for layer boundaries: UI/handlers/routes → services/business logic → repositories/data access → database/models. Note the patterns: does the project use controllers, handlers, or routes? Services or use cases? Repositories or DAOs? This map drives the traceability pass.
 
@@ -19,7 +19,7 @@ The core insight: code that passes tests is not code that's ready. Working code 
 
 4. **Compile the report** — write all findings to `docs/plans/*-verification-report.md`. Present the report to the user and wait for feedback.
 
-5. **Offer to create a remediation plan** — after the report, ask: "Want me to create a fix plan from these findings? Run `/skill:writing-plans` to turn the task list into executable tasks."
+5. **Offer to create a remediation plan** — after the report, ask: "Want me to create a fix plan from these findings? Run `/skill:pwk-writing-plans` to turn the task list into executable tasks."
 
 ## Pass 1 — Security Review 🔴
 

@@ -20,7 +20,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - File uploads or large data flows
    - Redis, caching, or message queues
 
-   If any apply AND the design doc does not already have an `## Architectural Review` section, prompt the user: "This design involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:design-review` first, or type 'proceed' to skip."
+   If any apply AND the design doc does not already have an `## Architectural Review` section, prompt the user: "This design involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:pwk-design-review` first, or type 'proceed' to skip."
 
    If the design doc explicitly notes "Simple change — no design review needed", skip this check.
 2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. If the design is too large for ~15 tasks, flag this to the human and ask whether to reduce scope or proceed with the full plan.
@@ -289,7 +289,7 @@ Use judgment when assigning checkpoints. Prefer `checkpoint: test` for new featu
 
 ## After the plan
 
-Ask: "Ready to execute? Run `/skill:executing-tasks`"
+Ask: "Ready to execute? Run `/skill:pwk-executing-tasks`"
 
 ## Behavioral Guidelines
 

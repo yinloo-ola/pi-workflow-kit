@@ -263,7 +263,7 @@ What would you like to do?
 - **request changes** — tell me what to change in the tests
 - **revert** — undo this task and go back to pending
 - **skip** — skip this task entirely
-- **stop** — pause here, resume later with /skill:executing-tasks
+- **stop** — pause here, resume later with /skill:pwk-executing-tasks
 - **status** — show the full progress table
 ```
 
@@ -291,7 +291,7 @@ What would you like to do?
 - **request changes** — tell me what to change, I'll update and re-present
 - **revert** — undo this task and go back to pending
 - **skip** — skip this task entirely
-- **stop** — pause here, resume later with /skill:executing-tasks
+- **stop** — pause here, resume later with /skill:pwk-executing-tasks
 - **status** — show the full progress table
 ```
 
