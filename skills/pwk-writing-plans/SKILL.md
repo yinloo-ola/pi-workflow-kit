@@ -20,10 +20,23 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - File uploads or large data flows
    - Redis, caching, or message queues
 
-   If any apply AND the design doc does not already have an `## Architectural Review` section, prompt the user: "This design involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:pwk-design-review` first, or type 'proceed' to skip."
+   If any apply, prompt the user: "This feature involves [list what you found] but hasn't been reviewed for production risks. Run `/skill:pwk-design-review` first, or type 'proceed' to skip."
 
    If the design doc explicitly notes "Simple change — no design review needed", skip this check.
-2. **Write the implementation plan** — break the design into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. If the design is too large for ~15 tasks, flag this to the human and ask whether to reduce scope or proceed with the full plan.
+
+   If the design doc has a `## Features` table, read it to identify the next feature with status `⬜ pending`. Mark that feature as `🔄 planned` by editing the design doc. This plan will cover only that one feature. If the design doc has no Features table, plan the entire design as before.
+2. **Write the implementation plan** — break the feature into tasks. Save to `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md` (derive `<feature-name>` from the feature's name in the table, slugified). If the design doc has no Features table, use `docs/plans/YYYY-MM-DD-<topic>-implementation.md`. Include metadata at the top of the plan doc so the executor can find the design doc and feature row:
+
+   ```markdown
+   # Implementation Plan: <feature name>
+
+   ## Overview
+
+   Design: docs/plans/YYYY-MM-DD-<topic>-design.md
+   Feature: <feature name> (row N in Features table)
+   ```
+
+   If the design is too large for ~15 tasks for a single feature, flag this to the human and ask whether to reduce scope or proceed with the full plan.
 3. **Present the plan** — show the complete plan to the human. Wait for approval before suggesting execution.
 
    Before presenting, run the **Plan Acceptance Audit**:
@@ -31,7 +44,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - **Task Sizing**: Is any single task too large or covering multiple complex behaviors? If so, split it.
    - **QA Coverage**: Does every task have both a Happy Path and at least one Edge Case in its Acceptance Criteria?
    - **Checkpoint Alignment**: Are `checkpoint: test` and `checkpoint: done` gates placed on the most critical or risky tasks?
-   - **Risk Enforcement**: If the design doc's Architectural Review section flagged any hazards as `[TRIGGERED]`, verify the corresponding tasks have `checkpoint: done` and a `Hazard Mitigation Verification` section.
+   - **Risk Enforcement**: If this plan doc's Architectural Review section flagged any hazards as `[TRIGGERED]`, verify the corresponding tasks have `checkpoint: done` and a `Hazard Mitigation Verification` section.
 
    If any check fails, fix the plan before presenting.
 
@@ -290,6 +303,8 @@ Use judgment when assigning checkpoints. Prefer `checkpoint: test` for new featu
 ## After the plan
 
 Ask: "Ready to execute? Run `/skill:pwk-executing-tasks`"
+
+> After executing this feature, the executor will check for more `⬜ pending` features and suggest planning the next one.
 
 ## Behavioral Guidelines
 
