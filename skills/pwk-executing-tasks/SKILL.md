@@ -1,5 +1,5 @@
 ---
-name: executing-tasks
+name: pwk-executing-tasks
 description: "Use this to implement an approved plan task-by-task. Run after writing-plans, before finalizing."
 ---
 

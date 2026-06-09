@@ -1,5 +1,5 @@
 ---
-name: verify
+name: pwk-verify
 description: "Post-implementation code verification with three expert review passes — security, optimization, and traceability. Use after executing-tasks and before finalizing to catch issues that pass tests but break in production. Runs the 'last prompt' pattern: adversarial security review, dead code and duplication audit, and end-to-end contract verification across every layer. Use this skill whenever the user says 'verify', 'review the code', 'check for issues', 'security review', 'the last prompt', 'audit', or when code has been implemented and needs a quality gate before shipping."
 ---
 

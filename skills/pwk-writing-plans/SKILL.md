@@ -1,5 +1,5 @@
 ---
-name: writing-plans
+name: pwk-writing-plans
 description: "Use this to break a design into an implementation plan with bite-sized TDD tasks. Works with or without a prior brainstorm. Use this skill when the user says 'let's plan', 'break this down', 'write a plan', 'create tasks', or after a brainstorm session when they want to move to implementation. Also use when the user has a clear idea and wants to jump straight to a structured plan."
 ---
 

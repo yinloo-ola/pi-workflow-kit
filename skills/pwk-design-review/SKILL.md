@@ -1,5 +1,5 @@
 ---
-name: design-review
+name: pwk-design-review
 description: "Audit a design doc for production risks — security, scalability, fault tolerance, and operational hazards. Use after brainstorming for non-trivial designs, or when you want to stress-test a design for production readiness."
 ---
 

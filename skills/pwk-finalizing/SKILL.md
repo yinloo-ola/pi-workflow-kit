@@ -1,5 +1,5 @@
 ---
-name: finalizing
+name: pwk-finalizing
 description: "Use this after all tasks are complete to clean up, document, and ship the work."
 ---
 
