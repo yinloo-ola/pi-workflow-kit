@@ -3,50 +3,56 @@
 `pi-workflow-kit` has 4 phases and 1 utility skill. You invoke each one explicitly with `/skill:`.
 
 ```
-brainstorm → plan → execute → finalize
+brainstorm → plan → [design-review?] → execute → [verify?] → finalize
+```
+
+For complex features, each phase loops per feature:
+```
+brainstorm (name features) → plan next feature → [design-review?] → execute feature → [verify?] → loop...
 ```
 
 ## brainstorm
 
 ```
-/skill:brainstorming
+/skill:pwk-brainstorming
 ```
 
 - Explore requirements and shape the design
 - Ask questions one at a time, propose approaches
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` with a `## Features` table listing all features and their status
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 ## plan
 
 ```
-/skill:writing-plans
+/skill:pwk-writing-plans
 ```
 
-- Read the design doc
-- Break into bite-sized tasks with TDD scenarios
-- Optionally set up a branch or worktree
-- Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`
+- Read the design doc's Features table, identify the next `⬜ pending` feature
+- Mark it `🔄 planned` and create a per-feature implementation plan
+- Produce `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md`
+- Optionally trigger design review for non-trivial features
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 ## execute
 
 ```
-/skill:executing-tasks
+/skill:pwk-executing-tasks
 ```
 
-- Read the implementation plan
+- Read the plan doc, resolve the design doc and feature row from metadata
 - Implement tasks one at a time: implement → test → fix → commit
-- Handle code review feedback by verifying criticism before implementing
+- Mark feature `✅ done` in the design doc's Features table when complete
+- Suggest planning the next feature or verifying
 
 No write restrictions. All tools available.
 
 ## finalize
 
 ```
-/skill:finalizing
+/skill:pwk-finalizing
 ```
 
 - Archive plan docs to `docs/plans/completed/`
@@ -59,7 +65,7 @@ No write restrictions. All tools available.
 ## diagnose
 
 ```
-/skill:diagnose
+/skill:pwk-diagnose
 ```
 
 Not a pipeline phase. A utility skill invoked on demand when debugging is needed.

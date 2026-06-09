@@ -28,7 +28,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 | Phase | `write` / `edit` | `bash` |
 |-------|:-:|:-:|
-| **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Read-only only (grep, find, cat, git status, curl…) |
+| **Brainstorm** / **Plan** / **Verify** | 🔒 Blocked outside `docs/plans/` | 🔒 Read-only only (grep, find, cat, git status, curl…) |
 | **Execute** / **Finalize** | ✅ Full access | ✅ Full access |
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files or run mutating commands.
@@ -37,19 +37,21 @@ The agent can read code and discuss design with you during brainstorm/plan, but 
 
 Guide the agent through a disciplined development process:
 
-brainstorm → design-review → plan → execute → verify → finalize
-                                           ↕
-                                        diagnose (anytime)
+brainstorm → plan → [design-review?] → execute → [verify?] → finalize
+                ↕
+             diagnose (anytime)
+
+For multi-feature designs, the plan→execute loop repeats per feature.
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
-| **Brainstorm** | `/skill:brainstorming` | Explore approaches, debate tradeoffs, produce a design doc |
-| **Design Review** | `/skill:design-review` | Audit design for production risks (security, scalability, fault tolerance) |
-| **Plan** | `/skill:writing-plans` | Break design into bite-sized TDD tasks with acceptance criteria and concrete code |
-| **Execute** | `/skill:executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
-| **Verify** | `/skill:verify` | Three expert review passes (security, optimization, traceability) on implemented code |
-| **Finalize** | `/skill:finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
-| **Diagnose** | `/skill:diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
+| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, debate tradeoffs, produce a design doc with a Features table |
+| **Design Review** | `/skill:pwk-design-review` | Audit plan and design for production risks (security, scalability, fault tolerance) |
+| **Plan** | `/skill:pwk-writing-plans` | Plan one feature at a time from the Features table — bite-sized TDD tasks with acceptance criteria |
+| **Execute** | `/skill:pwk-executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
+| **Verify** | `/skill:pwk-verify` | Three expert review passes (security, optimization, traceability) on implemented code |
+| **Finalize** | `/skill:pwk-finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
+| **Diagnose** | `/skill:pwk-diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
 
 ## The Workflow in Detail
 
@@ -57,12 +59,24 @@ brainstorm → design-review → plan → execute → verify → finalize
 
 You control each phase — the agent never advances on its own. Invoke a skill to move forward:
 
-/skill:brainstorming   →  discuss and design
-/skill:design-review   →  audit for production risks (non-trivial designs)
-/skill:writing-plans   →  break into tasks
-/skill:executing-tasks →  implement with TDD
-/skill:verify          →  review code for security, optimization, and traceability issues
-/skill:finalizing      →  ship it
+/skill:pwk-brainstorming   →  discuss and design (names features)
+/skill:pwk-writing-plans   →  plan next feature from the Features table
+/skill:pwk-design-review   →  audit for production risks (on demand)
+/skill:pwk-executing-tasks →  implement with TDD
+/skill:pwk-verify           →  review code for security, optimization, and traceability
+/skill:pwk-finalizing       →  ship it
+
+### Feature-Based Planning
+
+Design docs include a `## Features` table that tracks each feature's status:
+
+| # | Feature | Status | Notes |
+|---|---------|--------|-------|
+| 1 | User signup | ✅ done | |
+| 2 | Email verification | 🔄 planned | Plan: docs/plans/...-email-verification-implementation.md |
+| 3 | Password reset | ⬜ pending | |
+
+This enables incremental development — plan and execute one feature at a time, then loop back for the next.
 
 ### TDD Three-Scenario Model
 
@@ -110,27 +124,23 @@ Optionally label tasks with a `checkpoint` to pause for human review. At each ch
 pi install npm:@tianhai/pi-workflow-kit
 
 # Start a new feature
-> /skill:brainstorming
+> /skill:pwk-brainstorming
 > I want to add OAuth2 login to our API
 
-# (agent explores approaches, writes design doc)
+# (agent explores approaches, writes design doc with Features table)
 # (write/edit are blocked — your code is safe)
 
-> /skill:design-review
+> /skill:pwk-writing-plans
 
-# (agent audits for security, scalability, fault tolerance)
-# (trivial changes can skip this step)
-
-> /skill:writing-plans
-
-# (agent breaks design into TDD tasks with acceptance criteria)
-> /skill:executing-tasks
+# (agent picks next feature, breaks into TDD tasks)
+# (triggers design review for non-trivial features)
+> /skill:pwk-executing-tasks
 
 # (agent implements with TDD, cognitive persona shifts, all tools unlocked)
-> /skill:verify
+> /skill:pwk-verify
 
 # (agent runs security, optimization, and traceability reviews on implemented code)
-> /skill:finalizing
+> /skill:pwk-finalizing
 
 # (agent archives docs, curates lessons, creates PR)
 ```
@@ -147,15 +157,15 @@ pi install npm:@tianhai/pi-workflow-kit
 ```
 pi-workflow-kit/
 ├── extensions/
-│   └── workflow-guard.ts      # Write blocker during brainstorm/plan
+│   └── workflow-guard.ts      # Write blocker during brainstorm/plan/verify
 ├── skills/
-│   ├── brainstorming/SKILL.md
-│   ├── design-review/SKILL.md
-│   ├── writing-plans/SKILL.md
-│   ├── executing-tasks/SKILL.md
-│   ├── verify/SKILL.md
-│   ├── finalizing/SKILL.md
-│   └── diagnose/SKILL.md
+│   ├── pwk-brainstorming/SKILL.md
+│   ├── pwk-design-review/SKILL.md
+│   ├── pwk-writing-plans/SKILL.md
+│   ├── pwk-executing-tasks/SKILL.md
+│   ├── pwk-verify/SKILL.md
+│   ├── pwk-finalizing/SKILL.md
+│   └── pwk-diagnose/SKILL.md
 ├── tests/
 │   └── workflow-guard.test.ts
 ├── package.json
