@@ -1,17 +1,17 @@
 ---
 name: pwk-design-review
-description: "Audit a design doc for production risks — security, scalability, fault tolerance, and operational hazards. Use after brainstorming for non-trivial designs, or when you want to stress-test a design for production readiness."
+description: "Audit a plan and design doc for production risks — security, scalability, fault tolerance, and operational hazards. Use after writing-plans for non-trivial features, when the plan has concrete code that makes hazard checks meaningful."
 ---
 
 # Design Review
 
-Read-only exploration of the design doc. You **may** edit the design doc to append review findings. You may **not** edit source code or configuration.
+Read-only exploration of the design and plan docs. You **may** edit the plan doc to append review findings. You may **not** edit source code or configuration.
 
 ## Process
 
-1. **Find the design doc** — look for `docs/plans/*-design.md`. If none exists, say "No design doc found. Run `/skill:brainstorming` first." and stop.
+1. **Find the design and plan docs** — look for `docs/plans/*-design.md` and `docs/plans/*-implementation.md`. If neither exists, say "No design or plan doc found. Run `/skill:pwk-brainstorming` first." and stop. Read the plan doc for concrete code context alongside the design doc for architectural context.
 
-2. **Check triviality** — if the design doc notes "Simple change — no design review needed", append a brief section:
+2. **Check triviality** — if the design doc notes "Simple change — no design review needed", append a brief section to the plan doc:
 
    ```markdown
    ## Architectural Review
@@ -19,9 +19,9 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
    **Status**: Skipped — trivial change. No high-risk operations detected.
    ```
 
-   Then say: "Ready to plan? Run `/skill:pwk-writing-plans`" and stop.
+   Then say: "Review complete — no action needed. Ready to execute? Run `/skill:pwk-executing-tasks`" and stop.
 
-3. **Read the design doc in full** — understand the architecture, data flow, components, and error handling proposed.
+3. **Read the design and plan docs in full** — understand the architecture from the design doc, and concrete code from the plan doc. The plan doc's implementation details (SQL queries, type definitions, function bodies) are what the hazard checks audit.
 
 4. **🏛️ Architectural Pillars Review** — evaluate the design against the 6 Pillars of Production-Grade Design:
 
@@ -55,7 +55,7 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
 
 7. **Present findings** — show the full review to the user. For each triggered hazard or Socratic risk, propose a concrete mitigation. Wait for user feedback and incorporate changes.
 
-8. **Append to design doc** — add a `## Architectural Review` section to the design doc. Two cases:
+8. **Append to plan doc** — add a `## Architectural Review` section to the plan doc (not the design doc — review is per-feature, and the plan doc is the per-feature artifact). Two cases:
 
    **All clear** (no hazards triggered, no Socratic risks):
    ```markdown
@@ -110,4 +110,4 @@ Read-only exploration of the design doc. You **may** edit the design doc to appe
 
 ## After the review
 
-Ask: "Ready to plan? Run `/skill:pwk-writing-plans`"
+Ask: "Review complete. Ready to execute? Run `/skill:pwk-executing-tasks`"
