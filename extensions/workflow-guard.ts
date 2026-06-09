@@ -4,12 +4,12 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 /**
  * Workflow Guard extension.
  *
- * Blocks write/edit outside docs/plans/ and unsafe bash during brainstorm and plan phases.
+ * Blocks write/edit outside docs/plans/ and unsafe bash during brainstorm, plan, and verify phases.
  * You control phases explicitly via /skill: commands — no auto-detection,
  * no state persistence, no prompts.
  */
 
-type Phase = "brainstorm" | "plan" | null;
+type Phase = "brainstorm" | "plan" | "verify" | null;
 
 // Destructive commands blocked in brainstorm/plan phases
 const DESTRUCTIVE_PATTERNS = [
@@ -145,8 +145,9 @@ export function isSafeCommand(command: string): boolean {
 }
 
 const SKILL_TO_PHASE: Record<string, Phase> = {
-  brainstorming: "brainstorm",
-  "writing-plans": "plan",
+  "pwk-brainstorming": "brainstorm",
+  "pwk-writing-plans": "plan",
+  "pwk-verify": "verify",
 };
 
 /** Determine if a write/edit to filePath should be blocked during the given phase.
@@ -179,7 +180,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
     }
-    if (text.startsWith("/skill:executing-tasks") || text.startsWith("/skill:finalizing")) {
+    if (text.startsWith("/skill:pwk-executing-tasks") || text.startsWith("/skill:pwk-finalizing")) {
       phase = null;
     }
   });
@@ -195,7 +196,7 @@ export default function (pi: ExtensionAPI) {
         }
         return {
           block: true,
-          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (not allowlisted). Only read-only commands are permitted during brainstorming and planning.\nCommand: ${command}`,
+          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (not allowlisted). Only read-only commands are permitted during brainstorming, planning, and verification.\nCommand: ${command}`,
         };
       }
       return;
@@ -217,7 +218,7 @@ export default function (pi: ExtensionAPI) {
 
     return {
       block: true,
-      reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming and planning.`,
+      reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming, planning, and verification.`,
     };
   });
 }
