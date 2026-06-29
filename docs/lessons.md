@@ -16,3 +16,4 @@ Retire rules that no longer apply during finalizing.
 
 - When adding a new phase to an extension, update ALL comments and error messages — stale comments in one place create confusion about the actual behavior
 - When renaming skills with a prefix, check for `/skill:` references in prose and code blocks separately — backtick-enclosed references in code examples may use a different pattern than prose references
+- When porting a config file that pins a schema/tool version, align the pin (and migrate deprecated fields) to the actually-installed tool version before committing — a verbatim copy of a stale config produces a broken lint/build script
