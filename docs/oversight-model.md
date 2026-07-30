@@ -4,31 +4,35 @@
 
 ## Skills
 
-Skills teach the agent the workflow. There are 4:
+Skills teach the agent the workflow. There are 5 pipeline skills:
 
-- **pwk-brainstorming** — explore ideas, produce a design doc with a Features table
-- **pwk-writing-plans** — plan one feature at a time from the Features table
-- **pwk-executing-tasks** — implement tasks, mark features done, loop to next feature
-- **pwk-finalizing** — archive docs, create PR
+- **pwk-brainstorming** — explore ideas, produce a descriptive design doc that opens with a `## Requirements` list
+- **pwk-writing-plans** — turn each requirement into acceptance criteria + integration-test cases (a behavioral spec, no implementation code)
+- **pwk-executing-tasks** — implement requirement-by-requirement, test-first, with two mandatory human checkpoints per requirement
+- **pwk-code-review** — the inline reviewer (code tracing, spec alignment, code smells, production hazards). During `pwk-executing-tasks`, per-requirement review instead runs **four specialized reviewers in parallel** via the `subagent` tool, each from a fresh context (spec gaps & scope creep, tracing, smells, hazards). These ship as package agents (`agents/pwk-*.md`) discovered natively by the optional **`pi-subagents`** package; all report findings only — fixes are applied by the executing-tasks main agent. Falls back to inline `/skill:pwk-code-review` when `pi-subagents` is not installed.
+- **pwk-finalizing** — delete consumed plan docs, curate lessons, update docs, create PR or merge
 
-Plus 3 on-demand skills:
+Plus 2 on-demand skills:
 
-- **pwk-design-review** — audit a plan doc for production risks (triggered by writing-plans)
-- **pwk-verify** — post-implementation verification with security, optimization, and traceability passes
-- **pwk-diagnose** — 6-phase debugging loop
+- **pwk-status** — read-only overview of all active design topics (phase + progress), for resuming or juggling parallel designs
+- **pwk-diagnose** — 6-phase debugging loop, invoked anytime something is broken
 
-They explain *what* to do and *when* to do it.
+They explain *what* to do and *when* to do it. Phase control is manual — you invoke each skill with `/skill:`; the agent never advances on its own.
 
 ## Extension
 
 The `workflow-guard` extension enforces one rule:
 
-> During brainstorm, plan, and verify phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
+> During brainstorm and plan phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
 
-The agent can still use `read` and `bash` for investigation. It literally cannot call `write` or `edit` on source files — the tools are blocked at the extension level.
+The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is shown once when the gated phase begins so the model self-restricts.
+
+During executing-tasks, code-review, and finalizing, nothing is restricted.
+
+Phases follow the skill you invoke — there is no message-keyword unlock. `/pwk-guard on|off|auto` manually overrides the guard (`on` = force read-only lock, `off` = disabled, `auto` = skill-driven, the default); subcommands autocomplete.
 
 ## Enforcement style
 
-Hard block for write boundaries. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked.
+Hard block for write boundaries during gated phases. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked.
 
-TDD, debugging, and code review are guidance in the skill instructions, not runtime-enforced.
+TDD, checkpoints, debugging, and code review are guidance in the skill instructions, not runtime-enforced. The bash blacklist covers common destructive vectors only; exotic escapes (interpreter one-liners, piped shells) rely on the phase reminder — the guard is advisory, not a security boundary.

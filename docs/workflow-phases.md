@@ -1,15 +1,13 @@
 # Workflow Phases
 
-`pi-workflow-kit` has 4 phases and 1 utility skill. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 5 pipeline skills plus 2 utility skills. You invoke each one explicitly with `/skill:`.
 
 ```
-brainstorm → plan → [design-review?] → execute → [verify?] → finalize
+brainstorm → writing-plans → executing-tasks → finalizing
+                          (per requirement: tests → ⏸ checkpoint → implement → ⏸ checkpoint → code-review)
 ```
 
-For complex features, each phase loops per feature:
-```
-brainstorm (name features) → plan next feature → [design-review?] → execute feature → [verify?] → loop...
-```
+A design doc is one PR; a requirement is one testable slice within it. For multi-design work (a large issue split into several design docs — each its own PR), run the pipeline once per design doc.
 
 ## brainstorm
 
@@ -17,50 +15,69 @@ brainstorm (name features) → plan next feature → [design-review?] → execut
 /skill:pwk-brainstorming
 ```
 
-- Explore requirements and shape the design
-- Ask questions one at a time, propose approaches
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` with a `## Features` table listing all features and their status
+- Explore requirements and shape the design.
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list.
+- May split a large issue into multiple design docs (human-approved).
+- ADRs go to `docs/adr/` (permanent, never archived).
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
-## plan
+## writing-plans
 
 ```
 /skill:pwk-writing-plans
 ```
 
-- Read the design doc's Features table, identify the next `⬜ pending` feature
-- Mark it `🔄 planned` and create a per-feature implementation plan
-- Produce `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md`
-- Optionally trigger design review for non-trivial features
+- Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
+- Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
+- Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
-Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
+Write boundary: only `docs/plans/` is writable.
 
-## execute
+## executing-tasks
 
 ```
 /skill:pwk-executing-tasks
 ```
 
-- Read the plan doc, resolve the design doc and feature row from metadata
-- Implement tasks one at a time: implement → test → fix → commit
-- Mark feature `✅ done` in the design doc's Features table when complete
-- Suggest planning the next feature or verifying
+- Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → **per-requirement review** (four parallel reviewers via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
+- Two **mandatory** human checkpoints per requirement.
+- Progress tracked in `docs/plans/*-progress.md`.
+- After all requirements: **integration gate** — run the full suite and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
 
 No write restrictions. All tools available.
 
-## finalize
+## code-review
+
+```
+/skill:pwk-code-review
+```
+
+The **inline reviewer**: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked — may modify code to fix smells.
+
+**Not a phase you drive manually.** During `pwk-executing-tasks`, per-requirement review runs **four specialized reviewers in parallel** via the `subagent` tool (spec, tracing, smell, hazard — each fresh-context, read-only reporters); this skill is the **fallback** when [`pi-subagents`](https://pi.dev/packages/pi-subagents) is not installed. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
+
+No write restrictions.
+
+## finalizing
 
 ```
 /skill:pwk-finalizing
 ```
 
-- Archive plan docs to `docs/plans/completed/`
-- Update CHANGELOG, README if needed
-- Create PR
-- Clean up worktree if one was used
+- **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
+- Delete consumed plan docs (per-`<topic>`) — code + tests are the source of truth; ADRs stay at `docs/adr/`.
+- Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
-No write restrictions. All tools available.
+No write restrictions.
+
+## status
+
+```
+/skill:pwk-status
+```
+
+Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight. Not a pipeline phase.
 
 ## diagnose
 
@@ -70,6 +87,12 @@ No write restrictions. All tools available.
 
 Not a pipeline phase. A utility skill invoked on demand when debugging is needed.
 
-- Build a feedback loop (failing test, curl script, etc.)
-- Reproduce, hypothesise, instrument, fix, cleanup
-- No write restrictions (used during execute/finalize, or outside the pipeline)
+No write restrictions.
+
+## Manual override
+
+`/pwk-guard on|off|auto` overrides the guard regardless of phase: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Use it as an escape hatch when the guard blocks something you genuinely need; phase transitions otherwise happen only via `/skill:` commands.
+
+## Continuity across sessions
+
+A new session resumes by invoking the skill for the phase to continue. The skill globs `docs/plans/` for its artifact (progress file / plan doc), resumes the single match, or asks if several. Each resumption skill reports what it found on entry — no registry file needed; the `<topic>` slug in the filenames is the identity.

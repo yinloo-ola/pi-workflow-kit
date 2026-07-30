@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **`/pwk-guard` command** — manual override of the workflow guard: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Mirrors the `/fog` escape hatch in pi-wayfinder.
+
+### Added
+
+- **Parallel specialized sub-agents** for per-requirement code-review (`ab5eba8`). Four dedicated agents — spec, tracing, smell, hazard — each reviewing from a different dimension via the `subagent` tool's parallel mode. Each gets a fresh context window (zero pollution from prior requirements). The agents ship as **package agents** (`agents/pwk-*.md`, declared via the `pi-subagents.agents` manifest key) discovered natively by the optional **`pi-subagents`** package — no copy step, clean upgrades. When `pi-subagents` is not installed, flow falls back to inline `/skill:pwk-code-review`.
+- **Reviewers gained frontmatter** (`name`/`description`/`tools`/`systemPromptMode`). The previous `.pi/agents/pwk-*.md` files had no frontmatter, so agent loaders (which require `name` + `description`) silently skipped them — the parallel path never actually ran, even in-repo. Moved to `agents/` and removed `.pi/`.
+- **`agentScope` set to `"both"`** in `pwk-executing-tasks` so package + user + project agents are all reachable (package agents are scope-independent in `pi-subagents`, but `both` is the safe default).
+- **Sub-agents set to read-only reporters** (`16ee0a2`). Review agents report findings only; they do not edit files or produce commits. Enforced via `tools: read, grep, find, ls, bash` (no `write`/`edit`). The main agent collects all results, applies smell fixes itself, runs the full test suite, and commits — eliminating concurrent write races between parallel subprocesses.
+
+### Changed
+
+- **Phase transitions are skill-only.** Removed the `approve`/`accept`/`lgtm`/`ship it` message-keyword that ended the gated plan phase — it was a false-positive footgun ("I approve of approach A" unlocked writes mid-discussion). Run `/skill:pwk-executing-tasks` (or any non-gated skill) to leave the plan phase.
+
+## [1.0.0] - 2026-07-30
+
+### Changed (breaking)
+
+- **Design-doc-per-pipeline** — removed the `## Features` status table and the per-feature plan→execute loop. Each design doc runs its own plan → execute → finalize pipeline. A large issue may split into multiple design docs (human-approved).
+- **Plans are behavioral specs, not implementation recipes** — `pwk-writing-plans` now produces acceptance criteria + integration-test cases per requirement (no exact code, no micro-tasks). The executor implements with full autonomy.
+- **Test-first, two mandatory checkpoints per requirement** — `pwk-executing-tasks` writes integration tests (red) → checkpoint: tests → implement (green) → checkpoint: complete → code-review, per requirement.
+- **Guard: simple common-blacklist + phase reminder** — `isSafeCommand` is now `!DESTRUCTIVE` (the `SAFE_PATTERNS` allowlist is removed; fewer false positives). A short phase reminder is shown once when the gated phase begins (cache-safe). Added destructive patterns for edit-via-bash vectors (`sed -i`, `perl -i`, `awk -i inplace`, `git apply`, `patch`, `find -delete`).
+- **ADRs are permanent** — moved from `docs/plans/adr/` to `docs/adr/`; no longer archived during finalizing.
+- **Finalize is per-topic** — archives only the active design's artifacts, not all plan docs.
+
+### Added
+
+- **`pwk-code-review`** — per requirement, after completion: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked.
+
+### Removed
+
+- **`pwk-design-review`** — superseded by per-requirement `pwk-code-review`.
+- **`pwk-verify`** — superseded by per-requirement `pwk-code-review`.
+
+### Notes
+
+- **Continuity** — a new session resumes by invoking the phase skill; it globs `docs/plans/` and reports what it found. The `<topic>` slug in filenames is the identity; no registry file.
+- **No backward compatibility** for the old Features table — existing design docs remain readable prose; their status columns are no longer parsed.
+
 ## [0.18.0] - 2026-06-09
 
 ### Added

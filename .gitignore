@@ -2,4 +2,3 @@ node_modules/
 
 # KotaDB local storage
 .kotadb/
-.pi/workflow-kit-state.json

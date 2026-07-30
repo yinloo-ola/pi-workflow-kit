@@ -1,6 +1,6 @@
 {
   "name": "@tianhai/pi-workflow-kit",
-  "version": "0.18.1",
+  "version": "1.0.0",
   "description": "Enforce structured brainstorm→plan→execute→finalize workflow with TDD discipline in AI coding agents",
   "keywords": [
     "pi-package",
@@ -27,7 +27,11 @@
   "files": [
     "extensions/",
     "skills/",
-    "docs/",
+    "agents/",
+    "docs/developer-usage-guide.md",
+    "docs/workflow-phases.md",
+    "docs/oversight-model.md",
+    "docs/lessons.md",
     "LICENSE",
     "README.md"
   ],
@@ -39,9 +43,20 @@
       "skills"
     ]
   },
+  "pi-subagents": {
+    "agents": [
+      "./agents"
+    ]
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "@sinclair/typebox": "*"
+    "@sinclair/typebox": "*",
+    "pi-subagents": "*"
+  },
+  "peerDependenciesMeta": {
+    "pi-subagents": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.15",
