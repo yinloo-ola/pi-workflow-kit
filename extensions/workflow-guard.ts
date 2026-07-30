@@ -28,8 +28,6 @@ const DESTRUCTIVE_PATTERNS = [
   /\btruncate\b/i,
   /\bdd\b/i,
   /\bshred\b/i,
-  /(^|[^<])>(?!>)/,
-  />>/,
   /\bnpm\s+(install|uninstall|update|ci|link|publish)/i,
   /\byarn\s+(add|remove|install|publish)/i,
   /\bpnpm\s+(add|remove|install|publish)/i,
@@ -58,6 +56,10 @@ const DESTRUCTIVE_PATTERNS = [
   /^\s*(vim?|nano|emacs|code|subl)\b/i,
 ];
 
+// Redirect operators — tested on a quote-stripped command so '>' inside quoted
+// arguments (e.g. grep 'x > y') doesn't false-positive.
+const REDIRECT_PATTERNS = [/(^|[^<])>(?!>)/, />>/];
+
 /** Split a compound command into individual sub-commands.
  * Splits on &&, ||, and ; operators, ignoring leading whitespace.
  * Does NOT split on | (pipe) to allow piping (e.g. `git log | head`).
@@ -76,9 +78,47 @@ function stripHarmlessRedirects(cmd: string): string {
   return cmd.replace(/\s*2\s*>\s*(\/dev\/null|&1)\b/g, "");
 }
 
+/** Blank out single- and double-quoted substrings so operators (>,
+ *  >>, &&) inside quoted arguments don't trigger destructive-pattern
+ *  false-positives. Replaces quoted content and quote chars with spaces,
+ *  preserving length so operators outside quotes still match.
+ *  Advisory only — not a full shell parser. */
+function stripQuoted(cmd: string): string {
+  let out = "";
+  let i = 0;
+  let inQuote = false;
+  while (i < cmd.length) {
+    const ch = cmd[i];
+    const code = cmd.charCodeAt(i);
+    if (inQuote) {
+      if (code === 0x5c) {
+        out += "  ";
+        i += 2;
+        continue;
+      }
+      out += " ";
+      if (code === 0x22 || code === 0x27) {
+        inQuote = false;
+      }
+      i++;
+      continue;
+    }
+    if (code === 0x22 || code === 0x27) {
+      inQuote = true;
+      out += " ";
+      i++;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+
 export function isSafeCommand(command: string): boolean {
   return splitCompoundCommand(command).every((part) => {
     const cleaned = stripHarmlessRedirects(part);
+    if (REDIRECT_PATTERNS.some((p) => p.test(stripQuoted(cleaned)))) return false;
     return !DESTRUCTIVE_PATTERNS.some((p) => p.test(cleaned));
   });
 }

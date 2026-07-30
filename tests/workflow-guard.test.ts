@@ -208,12 +208,10 @@ describe("isSafeCommand", () => {
   });
 
   // Bug 2: redirect regex matches > inside arguments
-  it("BUG: does NOT handle > inside grep arguments", () => {
-    // grep "x > y" file.txt → /(>)/ matches the > inside the quoted string
-    // This test documents the current (broken) behavior.
-    // Change to toBe(true) once fixed.
-    expect(isSafeCommand("grep 'x > y' file.txt")).toBe(false); // TODO: should be true
-    expect(isSafeCommand('grep "x > y" file.txt')).toBe(false); // TODO: should be true
+  it("handles > inside quoted arguments (quote-aware redirect detection)", () => {
+    // grep 'x > y' file.txt should be allowed — the > is inside a string, not a redirect
+    expect(isSafeCommand("grep 'x > y' file.txt")).toBe(true);
+    expect(isSafeCommand('grep "x > y" file.txt')).toBe(true);
   });
 });
 
