@@ -18,7 +18,11 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests). You
 ## First run
 
 1. **Parse the plan** — read all `## Requirement N:` headings. Build the progress table with all requirements as `⬜ pending`. Process them in **listed order** — the plan is already in build order; do not reorder.
-2. **Create the progress file** at `docs/plans/<plan-name>-progress.md`:
+2. **Setup pre-flight** — if the plan has a `## Setup` section, follow it: install dependencies, apply migrations, and seed data. Run the existing test suite to confirm nothing broke. **⏸ CHECKPOINT: setup** — present the migration/output to the human and wait for approval.
+   - **approve** → continue.
+   - **request changes** → revise and re-present.
+   (Only runs on the first `First run` — the progress file is created after this step, so a resumed session skips setup.)
+3. **Create the progress file** at `docs/plans/<plan-name>-progress.md`:
 
    ```markdown
    # Progress: <topic>
@@ -32,8 +36,8 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests). You
    |---|--------|-------------|--------|
    | 1 | ⬜ pending | <requirement name> | — |
    ```
-3. **Commit the plan docs** — `git add docs/plans/ && git commit -m "docs: add implementation plan"`.
-4. Begin requirement 1 (see [Per-requirement execution](#per-requirement-execution)).
+4. **Commit the plan docs** — `git add docs/plans/ && git commit -m "docs: add implementation plan"`.
+5. Begin requirement 1 (see [Per-requirement execution](#per-requirement-execution)).
 
 ## Resume
 

@@ -49,6 +49,17 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    …
    ```
 
+   **If the design has `## Production-risk areas`** that flag schema migrations, new dependencies, external API integrations, or seed data, emit a `## Setup` section between `## Overview` and `## Requirement 1`:
+
+   ```markdown
+   ## Setup
+
+   - **Dependencies:** what to install (and how)
+   - **Migrations:** each migration with a brief description
+   - **Seed / test data:** what data to prepare
+   - **Verify:** how to confirm setup worked (e.g. `npm test` still passes)
+   ```
+
 5. **Before presenting — audit the spec:**
    - Every requirement has acceptance criteria **and** matching integration tests.
    - Acceptance criteria are observable behaviors, not implementation steps.
