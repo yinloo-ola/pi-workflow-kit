@@ -14,7 +14,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 3. **Explore approaches** — propose 2-3 approaches. For each approach, sketch the concrete interface (types, method signatures, example caller code) so the comparison is grounded in actual code, not abstract descriptions. Lead with your recommendation.
 4. **Present the design** — break it into focused sections. Each section should be one screen of reading. Present each section to the human and wait for approval before continuing. Cover: architecture, components, data flow, error handling, testing. On feedback, incorporate it and re-present the revised section.
 
-   When a significant architectural decision is identified, offer to write a lightweight ADR to `docs/plans/adr/`. Only write an ADR when all three are true:
+   When a significant architectural decision is identified, offer to write a lightweight ADR to `docs/adr/`. Only write an ADR when all three are true:
 
    1. **Hard to reverse** — changing your mind later has meaningful cost
    2. **Surprising without context** — a future reader will wonder "why?"
@@ -28,22 +28,13 @@ Read-only exploration. You may **not** edit or create any files except under `do
    <1-3 sentences: context, decision, and why.>
    ```
 
-   ADRs live under `docs/plans/adr/` and are archived during finalizing alongside the design doc.
+   ADRs live under `docs/adr/` permanently — they are institutional memory, never archived.
 
-5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md`. Include a `## Features` table listing each feature as a testable, observable behavior. Simple features get one row. Complex features get many.
+5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md` as a descriptive document (not a task list). Cover: problem, approaches considered, architecture, components, data flow, error handling, and testing.
 
-   Table format:
-   ```markdown
-   ## Features
+   If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` keys its design-review trigger on this section.
 
-   | # | Feature | Status | Observable Behavior |
-   |---|---------|--------|---------------------|
-   | 1 | Feature name | ⬜ pending | What the user can do when this is complete |
-   ```
-
-   Status values: `⬜ pending`, `🔄 planned`, `✅ done`, `⏭ skipped`.
-
-   For trivial changes where the entire feature is a single row, note "Simple change — no design review needed" below the table. For non-trivial designs, note areas that may need production-risk review (database schema changes, authentication or authorization, external API integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues).
+   **Splitting large issues:** if the issue is large and decomposes into genuinely independent sub-issues, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`), and get the human's approval before writing them. Each design doc then runs its own plan → execute → finalize pipeline. Most work is a single design doc — splitting is opt-in.
 
    Branch creation, committing, and workspace setup are handled by `/skill:pwk-executing-tasks`.
 
