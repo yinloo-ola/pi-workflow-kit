@@ -126,7 +126,11 @@ export default function (pi: ExtensionAPI) {
         return;
       }
     }
-    if (text.startsWith("/skill:pwk-executing-tasks") || text.startsWith("/skill:pwk-finalizing")) {
+    if (
+      text.startsWith("/skill:pwk-executing-tasks") ||
+      text.startsWith("/skill:pwk-finalizing") ||
+      text.startsWith("/skill:pwk-code-review")
+    ) {
       phase = null;
     }
   });
