@@ -37,7 +37,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 | Phase | `write` / `edit` | `bash` |
 |-------|:-:|:-:|
 | **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
-| **Execute** / **Code-review** / **Finalize** | ✅ Full access | ✅ Full access |
+| **Execute** / **Code-review** / **Finalize** / **Diagnose** / **Status** | ✅ Full access | ✅ Full access |
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
 

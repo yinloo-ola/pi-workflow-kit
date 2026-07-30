@@ -53,4 +53,5 @@ Required before declaring done:
 - Regression test passes (or absence of seam is documented)
 - All `[DEBUG-...]` instrumentation removed
 - Ask: what would have prevented this bug?
+- If the answer is a repeatable pattern, append a **generic** rule to `docs/lessons.md` (strip domain specifics) so future sessions catch it early.
 - If the bug was caused by an architectural problem (no good test seam, tangled callers, hidden coupling), suggest writing an ADR to `docs/adr/` capturing that insight
