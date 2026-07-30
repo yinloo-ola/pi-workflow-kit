@@ -41,7 +41,7 @@ Guide the agent through a disciplined development process:
 brainstorm → writing-plans → executing-tasks → finalizing
                              (per requirement: tests → checkpoint → implement → checkpoint → code-review)
                                 ↕
-                          diagnose (anytime)
+                   diagnose (anytime)   ·   status (anytime)
 ```
 
 For multi-design work (a large issue split into several design docs), run the pipeline once per design doc.
@@ -54,6 +54,7 @@ For multi-design work (a large issue split into several design docs), run the pi
 | **Code review** | `/skill:pwk-code-review` | Per requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
 | **Finalize** | `/skill:pwk-finalizing` | Archive plan docs (per-topic), update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup |
+| **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase. |
 
 ## The Workflow in Detail
 

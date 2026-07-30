@@ -5,7 +5,7 @@ How to install and use `pi-workflow-kit` with the Pi coding agent.
 ## What you get
 
 - **5 pipeline skills** — brainstorm → writing-plans → executing-tasks → finalizing, with code-review running per requirement during execution.
-- **1 utility skill** — diagnose (debugging, on demand).
+- **2 utility skills** — diagnose (debugging) and status (multi-topic overview), both on demand.
 - **1 extension** — hard-blocks source writes during brainstorm and writing-plans, and blocks destructive bash via a simple common-blacklist.
 
 ## Installation
@@ -89,6 +89,14 @@ Archive the design's planning docs (per-topic), curate lessons, update CHANGELOG
 ```
 
 A debugging loop you invoke when something is broken. Not a pipeline phase.
+
+### Status (on demand)
+
+```
+/skill:pwk-status
+```
+
+A read-only overview of all active design topics — which phase each is in and how far along. Use when resuming work or juggling several designs in parallel (e.g. across worktrees) and you're unsure which topic to continue. Not a pipeline phase.
 
 ## What the extension does
 
