@@ -53,19 +53,42 @@ Today's `mv docs/plans/*-design.md docs/plans/completed/` archives *every* desig
 
 ADRs record hard-to-reverse, surprising decisions for future readers — institutional memory, not throwaway planning artifacts. So ADRs are written to `docs/adr/` and never moved during finalizing; only the working artifacts (design, implementation, progress, verification docs) get archived to `docs/plans/completed/`. Today ADRs sit at `docs/plans/adr/` and get swept into `docs/plans/completed/adr/` — buried exactly when a future reader would look for them.
 
+## Plan/Execute redesign (refined during execution)
+
+### Plans are behavioral specs, not implementation recipes
+
+`pwk-writing-plans` produces, per requirement: **acceptance criteria + integration-test cases** — a stable behavioral spec. It does NOT specify implementation (no exact code, no file-by-file recipe, no micro-tasks). A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria + integration tests survive implementation changes. The executor has full autonomy to choose structure, signatures, internals.
+
+### Executor writes the integration tests first (Option A)
+
+`pwk-writing-plans` specifies acceptance criteria + integration tests in the plan doc; `pwk-executing-tasks` creates the test files first (red), then implements to green. The plan phase stays read-only (no guard change).
+
+### Two mandatory checkpoints per requirement
+
+Each requirement in `pwk-executing-tasks` has two hard human-review gates: (1) after the integration tests are written, (2) after the requirement is implemented. Both mandatory.
+
+### Discard design-review; add pwk-code-review; drop verify
+
+`pwk-design-review` and `pwk-verify` are removed. A new `pwk-code-review` runs after each requirement completes — code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), and the production hazard check. It is unlocked (can modify code to fix smells); per-requirement code-review supersedes the old separate verify pass.
+
+### Design docs list requirements
+
+Brainstorming design docs explicitly enumerate the requirements, so writing-plans derives acceptance criteria per requirement.
+
 ## Module outline
 
 Files the next skill will change (edit in place — name + the intent of each change, not signatures):
 
-- `skills/pwk-brainstorming/SKILL.md` — drop Features-table production; a design doc is descriptive (problem, approaches, architecture, components, data flow, error handling, testing); may produce multiple design docs when a large issue is split (human-approved); ADRs are written to `docs/adr/` (not `docs/plans/adr/`).
-- `skills/pwk-writing-plans/SKILL.md` — plan the *whole* design doc into one plan doc; drop "find next `⬜ pending` feature / flip to `🔄 planned`" and the `Feature:` metadata; keep the `Design:` reference and the production-risk hazard trigger (now keyed on the whole design).
-- `skills/pwk-executing-tasks/SKILL.md` — drop all Features-table read/mutation (find planned feature, mark feature done, suggest-next-feature); add a skill-entry "here's what I found" discovery report; 1:1 design↔plan↔progress; after all tasks, suggest verify/finalize.
+- `skills/pwk-brainstorming/SKILL.md` — drop Features-table production; a design doc is descriptive (problem, approaches, architecture, components, data flow, error handling, testing) **and enumerates the requirements**; may produce multiple design docs when a large issue is split (human-approved); ADRs are written to `docs/adr/` (not `docs/plans/adr/`).
+- `skills/pwk-writing-plans/SKILL.md` — plan the whole design doc; **per requirement produce acceptance criteria + integration-test cases** (a behavioral spec — no implementation code, coarse); drop feature-row logic and `Feature:` metadata; keep the `Design:` reference; specify the two mandatory checkpoints (after tests, after complete).
+- `skills/pwk-executing-tasks/SKILL.md` — **high autonomy per requirement**: write integration tests (red) → ⏸ checkpoint: tests → implement to green → ⏸ checkpoint: complete → `/skill:pwk-code-review`; drop Features-table logic; skill-entry discovery report; after all requirements, suggest finalize.
 - `skills/pwk-finalizing/SKILL.md` — scope archive to `*<topic>*` artifacts (design/implementation/progress/verification docs only); do **not** move ADRs (they stay at `docs/adr/`); drop the "unplanned features" warning; keep lessons curation, docs update, merge strategy.
-- `skills/pwk-design-review/SKILL.md` — review keys on the single plan doc (drop "per-feature" / feature-row language); substance unchanged.
-- `skills/pwk-verify/SKILL.md` — no structural change (verify operates on git diff, not the Features table); confirm no stale feature-table references remain.
+- `skills/pwk-design-review/SKILL.md` — **remove** (discarded; replaced by the per-requirement `pwk-code-review`).
+- `skills/pwk-verify/SKILL.md` — **remove** (dropped; per-requirement `pwk-code-review` supersedes it).
+- `skills/pwk-code-review/SKILL.md` — **new**: per requirement, after the complete checkpoint — code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check; unlocked (can modify code).
 - `extensions/workflow-guard.ts` — drop `SAFE_PATTERNS` and the `&& isSafe` term in `isSafeCommand` (simple common blacklist via `DESTRUCTIVE_PATTERNS`); add a `before_agent_start` hook that appends a short phase-aware reminder **after the user's message** each turn (a message, not a system-prompt change — cache-safe); keep `splitCompoundCommand`, `stripHarmlessRedirects`, `DESTRUCTIVE_PATTERNS`, `shouldBlockFilePath`, and the reactive block reason.
 - `tests/workflow-guard.test.ts` — update `isSafeCommand` expectations: read-only commands no longer need an allowlist match; destructive commands still blocked.
-- `README.md` / `docs/developer-usage-guide.md` / `docs/workflow-phases.md` — rewrite the workflow description: design-doc-per-pipeline (no Features table, no per-feature loop), the new continuity model, and the blacklist guard.
+- `README.md` / `docs/developer-usage-guide.md` / `docs/workflow-phases.md` — rewrite the workflow description: design-doc-per-pipeline (no Features table, no per-feature loop), behavioral-spec plans + autonomous execution + per-requirement `pwk-code-review`, the new continuity model, and the blacklist guard.
 
 ## Notes
 

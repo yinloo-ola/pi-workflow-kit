@@ -30,7 +30,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
    ADRs live under `docs/adr/` permanently — they are institutional memory, never archived.
 
-5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md` as a descriptive document (not a task list). Cover: problem, approaches considered, architecture, components, data flow, error handling, and testing.
+5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md` as a descriptive document (not a task list). **Open with a `## Requirements` list** — each requirement one testable behavior the user will get (`pwk-writing-plans` derives acceptance criteria + integration tests per requirement). Then cover: problem, approaches considered, architecture, components, data flow, error handling, and testing.
 
    If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` keys its design-review trigger on this section.
 

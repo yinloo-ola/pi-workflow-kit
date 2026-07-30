@@ -10,6 +10,19 @@ No Features table — this plan covers the whole design as one pipeline. The cha
 
 ---
 
+## ⚠ REVISION — Plan/Execute redesign (supersedes Task 3, 4, 6, 7 bodies)
+
+See `docs/plans/2026-07-29-simplify-workflow-decisions.md` → "Plan/Execute redesign". The original task bodies below for 3/4/6/7 are STALE; updated scope:
+
+- **Task 3 (pwk-writing-plans):** rewrite to produce, **per requirement: acceptance criteria + integration-test cases** (a behavioral spec — no implementation code, coarse). Drop feature-row logic. Specify the two mandatory checkpoints (after tests written, after requirement complete). The plan doc no longer contains exact code or micro-tasks.
+- **Task 4 (pwk-executing-tasks):** rewrite for **high autonomy per requirement**: write integration tests (red) → ⏸ checkpoint: tests → implement to green (executor chooses structure/signatures/internals) → ⏸ checkpoint: complete → `/skill:pwk-code-review`. Drop Features-table logic. After all requirements → finalize.
+- **Task 6:** **delete `pwk-design-review`** and **create `pwk-code-review`** (new skill: per-requirement code tracing + spec alignment + code smells (applies fixes) + hazard check; unlocked).
+- **Task 7:** **delete `pwk-verify`** (superseded by per-requirement pwk-code-review).
+- **Task 2 follow-up:** brainstorming design docs must enumerate requirements (small edit to the already-committed Task 2).
+- **Tasks 8–10 (docs):** reflect the new pipeline + skill set (drop design-review/verify, add code-review; behavioral-spec plans + autonomous execution).
+
+---
+
 ## Task 1: Guard — simple common blacklist + tail-appended phase reminder
 
 <!-- tdd: modifying-tested-code -->
