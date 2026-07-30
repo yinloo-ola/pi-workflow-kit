@@ -86,7 +86,7 @@ For each requirement:
        {"agent": "pwk-smell-reviewer", "task": "<scope + diff here>\n\n## Smell Review\nReport: shallow modules (interface ≈ implementation complexity), duplication, missing seams / premature abstraction, poor naming, magic values, dead code. Flag only: smells requiring risky large refactors. Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."},
        {"agent": "pwk-hazard-reviewer", "task": "<scope + diff here>\n\n## Hazard Review\nAudit changed code against these hazards: unbounded ops (KEYS/SCAN/full-table loads), missing indexes, unbounded concurrency (Promise.all without limits), long-running transactions, query/command interpolation (injection), unrestricted uploads/temp flooding, silent swallowing loops. Write [SAFE] (1-line reason) or [TRIGGERED] (mitigation). Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."}
      ],
-     "agentScope": "project",
+     "agentScope": "both",
      "cwd": "<repo-root>"
    }
    ```

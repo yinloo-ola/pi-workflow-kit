@@ -20,6 +20,14 @@ No setup needed — skills and guards activate automatically after install.
 pi -e npm:@tianhai/pi-workflow-kit
 ```
 
+**Optional — parallel code review.** Per-requirement review can run four specialized reviewers in parallel via the `subagent` tool. Install [`pi-subagents`](https://pi.dev/packages/pi-subagents) to enable it:
+
+```bash
+pi install npm:pi-subagents
+```
+
+The four reviewers (`pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, `pwk-hazard-reviewer`) ship with this kit as **package agents** — `pi-subagents` discovers them automatically, no extra setup. Without `pi-subagents`, `pwk-executing-tasks` falls back to inline `/skill:pwk-code-review`.
+
 ## What You Get
 
 ### 🛡️ Workflow Guard (extension)
@@ -167,6 +175,7 @@ pi-workflow-kit/
 │   ├── pwk-finalizing/SKILL.md
 │   ├── pwk-status/SKILL.md
 │   └── pwk-diagnose/SKILL.md
+├── agents/                   # package agents for parallel code-review (discovered by pi-subagents)
 ├── docs/
 │   ├── developer-usage-guide.md
 │   ├── workflow-phases.md

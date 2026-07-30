@@ -69,12 +69,16 @@ Implement requirement-by-requirement with **full autonomy**: write the integrati
 ### 4. Code review (per requirement)
 
 ```
-/tool:subagent { tasks: [{ agent: "pwk-spec-reviewer", task: "..." }, ...], agentScope: "project" }
+/tool:subagent { tasks: [{ agent: "pwk-spec-reviewer", task: "..." }, ...], agentScope: "both" }
 ```
 
-Per requirement, four specialized reviewers launch in parallel — each reviewing from a different dimension (spec gaps & scope creep, end-to-end code tracing, code smells, production hazards). Agents live under `.pi/agents/pwk-*.md`. All report findings only; no agent edits files or produces commits. The main agent collects results, applies smell fixes itself, runs integration tests after each fix, then updates progress to `✅ done`.
+Per requirement, four specialized reviewers launch in parallel — each reviewing from a different dimension (spec gaps & scope creep, end-to-end code tracing, code smells, production hazards). The reviewers ship as **package agents** (`agents/pwk-*.md`, declared via the `pi-subagents.agents` manifest key) and are discovered natively by the optional **`pi-subagents`** package — no copy step. All report findings only; no agent edits files or produces commits. The main agent collects results, applies smell fixes itself, runs integration tests after each fix, then updates progress to `✅ done`.
 
-*Fallback:* if the `subagent` tool is unavailable, the skill falls back to inline `/skill:pwk-code-review` as before.
+*Fallback:* if `pi-subagents` is not installed (so the `subagent` tool is unavailable), the skill falls back to inline `/skill:pwk-code-review` as before. Install it to enable parallel review:
+
+```bash
+pi install npm:pi-subagents
+```
 
 ### 5. Finalize
 

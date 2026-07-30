@@ -12,8 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Parallel specialized sub-agents** for per-requirement code-review (`ab5eba8`). Four dedicated agents — spec, tracing, smell, hazard — each reviewing from a different dimension via the `subagent` tool's parallel mode. Each gets a fresh context window (zero pollution from prior requirements). Agents live under `.pi/agents/pwk-*.md`. When the `subagent` tool is unavailable, flow falls back to inline `/skill:pwk-code-review`.
-- **Sub-agents set to read-only reporters** (`16ee0a2`). Review agents report findings only; they do not edit files or produce commits. The main agent collects all results, applies smell fixes itself, runs the full test suite, and commits — eliminating concurrent write races between parallel subprocesses.
+- **Parallel specialized sub-agents** for per-requirement code-review (`ab5eba8`). Four dedicated agents — spec, tracing, smell, hazard — each reviewing from a different dimension via the `subagent` tool's parallel mode. Each gets a fresh context window (zero pollution from prior requirements). The agents ship as **package agents** (`agents/pwk-*.md`, declared via the `pi-subagents.agents` manifest key) discovered natively by the optional **`pi-subagents`** package — no copy step, clean upgrades. When `pi-subagents` is not installed, flow falls back to inline `/skill:pwk-code-review`.
+- **Reviewers gained frontmatter** (`name`/`description`/`tools`/`systemPromptMode`). The previous `.pi/agents/pwk-*.md` files had no frontmatter, so agent loaders (which require `name` + `description`) silently skipped them — the parallel path never actually ran, even in-repo. Moved to `agents/` and removed `.pi/`.
+- **`agentScope` set to `"both"`** in `pwk-executing-tasks` so package + user + project agents are all reachable (package agents are scope-independent in `pi-subagents`, but `both` is the safe default).
+- **Sub-agents set to read-only reporters** (`16ee0a2`). Review agents report findings only; they do not edit files or produce commits. Enforced via `tools: read, grep, find, ls, bash` (no `write`/`edit`). The main agent collects all results, applies smell fixes itself, runs the full test suite, and commits — eliminating concurrent write races between parallel subprocesses.
 
 ### Changed
 
