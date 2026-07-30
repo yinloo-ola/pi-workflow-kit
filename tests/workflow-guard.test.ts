@@ -44,6 +44,16 @@ describe("isSafeCommand", () => {
     expect(isSafeCommand("sed -i 's/old/new/g' file.ts")).toBe(false);
   });
 
+  it("blocks edit-via-bash vectors (in-place editors, patch appliers, find-delete)", () => {
+    expect(isSafeCommand("sed -i 's/a/b/g' file.ts")).toBe(false);
+    expect(isSafeCommand("perl -i -pe 's/a/b/' file.ts")).toBe(false);
+    expect(isSafeCommand("perl -pi -e 's/a/b/' file.ts")).toBe(false);
+    expect(isSafeCommand("awk -i inplace '{print $1}' file.ts")).toBe(false);
+    expect(isSafeCommand("git apply fix.patch")).toBe(false);
+    expect(isSafeCommand("patch -p1 < fix.diff")).toBe(false);
+    expect(isSafeCommand("find . -name '*.bak' -delete")).toBe(false);
+  });
+
   it("blocks git mutations but allows read-only git", () => {
     expect(isSafeCommand("git add .")).toBe(false);
     expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
@@ -85,11 +95,16 @@ describe("isSafeCommand", () => {
     expect(isSafeCommand("gh run view 12345")).toBe(true);
   });
 
-  it("blocks gh write subcommands", () => {
-    expect(isSafeCommand("gh pr create --title 'fix'")).toBe(false);
-    expect(isSafeCommand("gh pr merge 1564")).toBe(false);
-    expect(isSafeCommand("gh issue close 42")).toBe(false);
-    expect(isSafeCommand("gh release create v1.0")).toBe(false);
+  it("allows gh subcommands and ungated commands under the blacklist", () => {
+    // gh writes aren't destructive-listed; the simple blacklist lets them through (reminder covers intent).
+    expect(isSafeCommand("gh pr create --title 'fix'")).toBe(true);
+    expect(isSafeCommand("gh pr merge 1564")).toBe(true);
+    expect(isSafeCommand("gh issue close 42")).toBe(true);
+    expect(isSafeCommand("gh release create v1.0")).toBe(true);
+    // Commands the old allowlist rejected as false positives are now allowed.
+    expect(isSafeCommand('for f in *.md; do echo "$f"; done')).toBe(true);
+    expect(isSafeCommand("FOO=bar; grep -r x src/")).toBe(true);
+    expect(isSafeCommand("go test ./...")).toBe(true);
   });
 
   it("allows git read-only subcommands (new additions)", () => {
@@ -113,10 +128,11 @@ describe("isSafeCommand", () => {
     expect(isSafeCommand("go env GOOS GOARCH")).toBe(true);
   });
 
-  it("blocks go write subcommands", () => {
-    expect(isSafeCommand("go build ./...")).toBe(false);
-    expect(isSafeCommand("go install golang.org/x/tools/gopls@latest")).toBe(false);
-    expect(isSafeCommand("go mod tidy")).toBe(false);
+  it("allows go subcommands under the blacklist", () => {
+    // go build/test/install/mod tidy aren't destructive-listed; allowed under the simple blacklist.
+    expect(isSafeCommand("go build ./...")).toBe(true);
+    expect(isSafeCommand("go install golang.org/x/tools/gopls@latest")).toBe(true);
+    expect(isSafeCommand("go mod tidy")).toBe(true);
   });
 
   it("still blocks git stash mutations", () => {
@@ -173,12 +189,11 @@ describe("isSafeCommand", () => {
     ).toBe(true);
   });
 
-  // Bug 1: quote-unaware && splitting
-  it("BUG: does NOT handle && inside quoted strings", () => {
-    // echo "a && b" && git status → splits on && inside quotes → breaks
-    // This test documents the current (broken) behavior.
-    // Change to toBe(true) once fixed.
-    expect(isSafeCommand('echo "use && for chaining" && git status')).toBe(false); // TODO: should be true
+  // Bug 1: quote-unaware && splitting. Under the blacklist this false-positive symptom disappears
+  // (none of the split parts are destructive), so the command is now allowed. The quote-unaware
+  // splitting itself is still unfixed, but it no longer causes a wrong block.
+  it("allows && inside quoted strings under the blacklist (splitting bug masked)", () => {
+    expect(isSafeCommand('echo "use && for chaining" && git status')).toBe(true);
   });
 
   // Bug 2: redirect regex matches > inside arguments

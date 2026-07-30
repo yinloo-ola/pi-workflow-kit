@@ -4,14 +4,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 /**
  * Workflow Guard extension.
  *
- * Blocks write/edit outside docs/plans/ and unsafe bash during brainstorm, plan, and verify phases.
- * You control phases explicitly via /skill: commands — no auto-detection,
- * no state persistence, no prompts.
+ * Blocks write/edit outside docs/plans/ and destructive bash during brainstorm, plan, and verify phases.
+ * Bash uses a simple common-blacklist (DESTRUCTIVE_PATTERNS) — a command is allowed unless it matches
+ * a destructive pattern. A short phase reminder is appended after the user's message each turn via
+ * before_agent_start. You control phases explicitly via /skill: commands — no auto-detection, no prompts.
  */
 
 type Phase = "brainstorm" | "plan" | "verify" | null;
 
-// Destructive commands blocked in brainstorm/plan/verify phases
+// Destructive commands blocked in brainstorm/plan/verify phases (simple common blacklist)
 const DESTRUCTIVE_PATTERNS = [
   /\brm\b/i,
   /\brmdir\b/i,
@@ -35,7 +36,13 @@ const DESTRUCTIVE_PATTERNS = [
   /\bpip\s+(install|uninstall)/i,
   /\bapt(-get)?\s+(install|remove|purge|update|upgrade)/i,
   /\bbrew\s+(install|uninstall|upgrade)/i,
-  /\bgit\s+(add|commit|push|pull|merge|rebase|reset|checkout|branch\s+-[dD]|stash(?!\s+list)|cherry-pick|revert|tag(?!\s+(-l|--list))|init|clone)/i,
+  /\bgit\s+(add|commit|push|pull|merge|rebase|reset|checkout|branch\s+-[dD]|stash(?!\s+list)|cherry-pick|revert|tag(?!\s+(-l|--list))|init|clone|apply)/i,
+  // Edit-via-bash vectors: in-place editors, patch appliers, find-delete (bypass the write/edit tool block)
+  /\bsed\b.*\s-i\b/i,
+  /\bperl\b.*\s-[a-z]*i\b/i,
+  /\bawk\b.*-i\s+inplace\b/i,
+  /\bpatch\b/i,
+  /\bfind\b.*\s-delete\b/i,
   /\bsudo\b/i,
   /\bsu\b/i,
   /\bkill\b/i,
@@ -46,74 +53,6 @@ const DESTRUCTIVE_PATTERNS = [
   /\bsystemctl\s+(start|stop|restart|enable|disable)/i,
   /\bservice\s+\S+\s+(start|stop|restart)/i,
   /^\s*(vim?|nano|emacs|code|subl)\b/i,
-];
-
-const SAFE_PATTERNS = [
-  /^\s*cat\b/,
-  /^\s*head\b/,
-  /^\s*tail\b/,
-  /^\s*less\b/,
-  /^\s*more\b/,
-  /^\s*grep\b/,
-  /^\s*find\b/,
-  /^\s*ls\b/,
-  /^\s*pwd\b/,
-  /^\s*echo\b/,
-  /^\s*printf\b/,
-  /^\s*wc\b/,
-  /^\s*sort\b/,
-  /^\s*uniq\b/,
-  /^\s*diff\b/,
-  /^\s*file\b/,
-  /^\s*stat\b/,
-  /^\s*du\b/,
-  /^\s*df\b/,
-  /^\s*tree\b/,
-  /^\s*which\b/,
-  /^\s*whereis\b/,
-  /^\s*type\b/,
-  /^\s*env\b/,
-  /^\s*printenv\b/,
-  /^\s*uname\b/,
-  /^\s*whoami\b/,
-  /^\s*id\b/,
-  /^\s*date\b/,
-  /^\s*cal\b/,
-  /^\s*uptime\b/,
-  /^\s*ps\b/,
-  /^\s*top\b/,
-  /^\s*htop\b/,
-  /^\s*free\b/,
-  /^\s*git\s+(status|log|diff|show|branch|remote|config\s+--get)/i,
-  /^\s*git\s+ls-/i,
-  /^\s*npm\s+(list|ls|view|info|search|outdated|audit)/i,
-  /^\s*yarn\s+(list|info|why|audit)/i,
-  /^\s*node\s+--version/i,
-  /^\s*python\s+--version/i,
-  /^\s*curl\s/i,
-  /^\s*wget\s+-O\s*-/i,
-  /^\s*jq\b/,
-  /^\s*sed\s+-n/i,
-  /^\s*awk\b/,
-  /^\s*rg\b/,
-  /^\s*fd\b/,
-  /^\s*bat\b/,
-  /^\s*eza\b/,
-  /^\s*cd\b/,
-  /^\s*gh\s+pr\s+(view|list|diff|checks|status)\b/i,
-  /^\s*gh\s+issue\s+(view|list)\b/i,
-  /^\s*gh\s+repo\s+(view|fork|list)\b/i,
-  /^\s*gh\s+release\s+(view|list|download)\b/i,
-  /^\s*gh\s+run\s+(view|list)\b/i,
-  /^\s*git\s+blame\b/,
-  /^\s*git\s+shortlog\b/,
-  /^\s*git\s+stash\s+list\b/i,
-  /^\s*git\s+tag\s+(-l|--list)\b/i,
-  /^\s*git\s+describe\b/,
-  /^\s*go\s+doc\b/,
-  /^\s*go\s+list\b/,
-  /^\s*go\s+version\b/,
-  /^\s*go\s+env\b/,
 ];
 
 /** Split a compound command into individual sub-commands.
@@ -135,12 +74,9 @@ function stripHarmlessRedirects(cmd: string): string {
 }
 
 export function isSafeCommand(command: string): boolean {
-  const parts = splitCompoundCommand(command);
-  return parts.every((part) => {
+  return splitCompoundCommand(command).every((part) => {
     const cleaned = stripHarmlessRedirects(part);
-    const isDestructive = DESTRUCTIVE_PATTERNS.some((p) => p.test(cleaned));
-    const isSafe = SAFE_PATTERNS.some((p) => p.test(cleaned));
-    return !isDestructive && isSafe;
+    return !DESTRUCTIVE_PATTERNS.some((p) => p.test(cleaned));
   });
 }
 
@@ -148,6 +84,16 @@ const SKILL_TO_PHASE: Record<string, Phase> = {
   "pwk-brainstorming": "brainstorm",
   "pwk-writing-plans": "plan",
   "pwk-verify": "verify",
+};
+
+/** Phase-aware reminder appended after the user's message each turn while a gated phase is active.
+ *  Returned as a message (not a system-prompt change) so it sits at the tail of the request and
+ *  never invalidates the cached prefix. */
+const PHASE_REMINDERS: Record<Exclude<Phase, null>, string> = {
+  brainstorm:
+    "[pi-workflow-kit] BRAINSTORM phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
+  plan: "[pi-workflow-kit] PLAN phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
+  verify: "[pi-workflow-kit] VERIFY phase: read-only. No source edits; writes only under docs/plans/.",
 };
 
 /** Determine if a write/edit to filePath should be blocked during the given phase.
@@ -185,6 +131,20 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
+  // Append a short phase reminder after the user's message each turn while a gated phase is active.
+  // Returning { message } adds a custom message at the tail of the request (cache-safe: it never
+  // touches the cached system-prompt/tools/history prefix).
+  pi.on("before_agent_start", async () => {
+    if (!phase) return {};
+    return {
+      message: {
+        customType: "pwk-phase-reminder",
+        content: PHASE_REMINDERS[phase],
+        display: false,
+      },
+    };
+  });
+
   pi.on("tool_call", (event, ctx) => {
     if (!phase) return;
 
@@ -196,7 +156,7 @@ export default function (pi: ExtensionAPI) {
         }
         return {
           block: true,
-          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (not allowlisted). Only read-only commands are permitted during brainstorming, planning, and verification.\nCommand: ${command}`,
+          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (destructive). Only read-only commands are permitted during brainstorming, planning, and verification.\nCommand: ${command}`,
         };
       }
       return;
