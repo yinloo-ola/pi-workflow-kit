@@ -11,11 +11,21 @@ Ship the completed work.
 
 1. **Run the FULL test suite.** Every test must pass. Resume spans sessions — don't assume the last execute session left the suite green. If anything fails, stop and send the user back to `/skill:pwk-executing-tasks` to fix; never archive or open a PR against a red suite.
 
-2. Read the progress file (`docs/plans/*-progress.md`). If any requirements are `⏭ skipped` or `❌ failed`, warn and confirm before proceeding:
+2. Read the progress file (`docs/plans/*-progress.md`). Check for failed or skipped rows:
 
-   ```
-   ⚠️ Requirements 4 and 7 were skipped/failed. Continue with finalizing, or go back?
-   ```
+   - **Any `❌ failed`** → **block**. Present the count and reasons to the user. Do not continue until one of:
+     - The user sends the task back to `/skill:pwk-executing-tasks` to fix the failures, or
+     - The user explicitly types `--force-failed` to acknowledge shipping with known incomplete requirements.
+
+     Never merge a branch that carries incomplete requirements without explicit acknowledgment.
+
+   - **Only `⏭ skipped`** (no `❌ failed`) → present a warning and confirm:
+
+     ```
+     ⚠️ Requirement 4 was skipped. Continue with finalizing, or go back?
+     ```
+
+     Continue on confirmation; abort otherwise.
 
 ## Process
 

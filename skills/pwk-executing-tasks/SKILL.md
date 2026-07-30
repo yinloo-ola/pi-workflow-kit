@@ -55,7 +55,7 @@ Path: `docs/plans/<plan-name>-progress.md`. Update the matching row directly (no
 | `⏸ complete-review` | Paused at checkpoint: complete, awaiting human approval |
 | `🔎 review` | Committed; `pwk-code-review` in progress |
 | `✅ done` | `pwk-code-review` complete (smells fixed, hazards noted), all green |
-| `❌ failed` | Could not complete (append `Failed: <reason>`) |
+| `❌ failed` | Could not complete; partial work discarded/reverted (append `Failed: <reason>`) |
 | `⏭ skipped` | User chose to skip |
 
 ## Per-requirement execution
@@ -121,5 +121,10 @@ Only when the full suite is green and the feature works end-to-end:
 1. Re-read the requirement's acceptance criteria — you may have drifted.
 2. Check `git log` for context.
 3. Ask the user — clarify beats guessing.
-4. If still stuck, mark `❌ failed` with the reason and move on.
-5. Check `docs/lessons.md` — a prior lesson may apply.
+4. If still stuck:
+   - Discard uncommitted changes (`git restore .`).
+   - If the requirement has already been committed (step 7 completed), also revert its commit(s) so partial work leaves no trace on the shipped branch (`git revert HEAD --no-edit` if only the requirement commit; `git revert HEAD~N..HEAD --no-edit` if multiple commits including code-review smell fixes).
+
+   **Never leave a failed requirement's partial work on the shipped branch.** Dead code from incomplete requirements must be cleaned up before moving on.
+5. Mark `❌ failed` with the reason and move on.
+6. Check `docs/lessons.md` — a prior lesson may apply.
