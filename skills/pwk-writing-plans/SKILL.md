@@ -57,7 +57,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    Fix gaps before presenting.
 
 6. **Set up workspace isolation** *(before approving)* — you're already on the `<topic>` feature branch (step 2); the design + plan docs live here, not on `main` (committed at the start of `pwk-executing-tasks`). For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
-7. **Present the plan** — show the complete plan and wait for approval. Approval **ends the gated plan phase** (the guard unlocks on it) so execution can begin.
+7. **Present the plan** — show the complete plan and wait for approval. On approval, hand off to `/skill:pwk-executing-tasks` — running it is what transitions out of the gated plan phase (the guard unlocks on the skill, not on the word "approve").
 
 ## What the plan is NOT
 

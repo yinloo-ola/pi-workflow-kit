@@ -115,10 +115,80 @@ let phase: Phase = null;
 // is shown only on the first turn of the phase (and re-armed on any later phase change into it).
 let pendingPhaseReminder = false;
 
+/**
+ * Manual guard override set by `/pwk-guard`.
+ * - null  → "auto": enforcement follows the skill-driven phase (default).
+ * - "on"  → force a read-only lock (enforce regardless of phase).
+ * - "off" → disable the guard entirely (escape hatch).
+ * Skill transitions still update `phase` while an override is active, so returning
+ * to `auto` recovers the correct state; enforcement itself ignores `phase`.
+ */
+let guardOverride: "on" | "off" | null = null;
+
+/** Is the guard actively enforcing read-only right now? */
+function enforceActive(): boolean {
+  if (guardOverride === "off") return false;
+  if (guardOverride === "on") return true;
+  return phase !== null;
+}
+
+/** Label for the current enforcement context, used in block reasons and reminders. */
+function enforceLabel(): string {
+  return guardOverride === "on" ? "GUARD ON" : phase ? phase.toUpperCase() : "";
+}
+
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", () => {
     phase = null;
     pendingPhaseReminder = false;
+    guardOverride = null;
+  });
+
+  // --- Manual override (escape hatch) -----------------------------------
+  // Phases are driven by `/skill:` commands; `/pwk-guard` lets the user pin the
+  // guard regardless of phase. `/pwk-guard auto` returns control to skill transitions.
+  pi.registerCommand("pwk-guard", {
+    description:
+      "Manual guard override: /pwk-guard on (force read-only lock) | off (disable guard) | auto (skill-driven phases, default).",
+    getArgumentCompletions: (prefix) => {
+      const p = (prefix ?? "").trim().toLowerCase();
+      const opts = [
+        { value: "on", label: "on", description: "Force read-only lock (ignore skill phases)" },
+        { value: "off", label: "off", description: "Disable the guard entirely" },
+        { value: "auto", label: "auto", description: "Follow skill-driven phases (default)" },
+      ];
+      const matched = opts.filter((o) => o.value.startsWith(p));
+      return matched.length ? matched : opts;
+    },
+    handler: async (args, ctx) => {
+      const arg = (args ?? "").trim().toLowerCase();
+      if (arg === "auto") {
+        guardOverride = null;
+        if (phase) pendingPhaseReminder = true; // re-announce the active gated phase, if any
+        ctx.ui.notify("Guard AUTO — enforcement follows skill-driven phases.", "info");
+        return;
+      }
+      if (arg !== "on" && arg !== "off") {
+        ctx.ui.notify("Usage: /pwk-guard on | off | auto", "info");
+        return;
+      }
+      guardOverride = arg;
+      pendingPhaseReminder = false; // override announces itself via the message below
+      pi.sendMessage({
+        customType: "pwk-guard:override",
+        content:
+          arg === "on"
+            ? "[pi-workflow-kit] GUARD ON (manual override): read-only lock active — no source edits; writes only under docs/plans/. No mutations. Use /pwk-guard auto to resume skill-driven phases."
+            : "[pi-workflow-kit] GUARD OFF (manual override): enforcement disabled — writes and bash are unrestricted. Use /pwk-guard auto to resume skill-driven phases.",
+        display: false,
+      });
+      ctx.ui.notify(
+        arg === "on"
+          ? "Guard ON — read-only lock active (skill phases ignored)."
+          : "Guard OFF — enforcement disabled (skill phases ignored).",
+        arg === "on" ? "warning" : "info",
+      );
+    },
   });
 
   pi.on("input", (event) => {
@@ -130,17 +200,14 @@ export default function (pi: ExtensionAPI) {
         const nextPhase = SKILL_TO_PHASE[skill];
         if (phase !== nextPhase) {
           phase = nextPhase;
-          pendingPhaseReminder = true;
+          // The reminder is a phase-entry cue; only relevant when the guard is auto-driven.
+          if (guardOverride === null) pendingPhaseReminder = true;
         }
         return;
       }
     }
-    // Approving a plan ends the gated plan phase (isolation/branch creation is then allowed).
-    // Narrow verbs so design discussion like "should we approve X?" doesn't unlock.
-    if (phase === "plan" && /\b(approve[ds]?|approved|accept(ing)?|lgtm|ship\s*it)\b/i.test(text)) {
-      phase = null;
-      return;
-    }
+    // Phase transitions happen only via skills — no message keyword unlocks the plan phase.
+    // Run /skill:pwk-executing-tasks (or any non-gated skill) to leave a gated phase.
     if (
       text.startsWith("/skill:pwk-executing-tasks") ||
       text.startsWith("/skill:pwk-finalizing") ||
@@ -162,6 +229,9 @@ export default function (pi: ExtensionAPI) {
   pi.on("before_agent_start", async () => {
     if (!phase || !pendingPhaseReminder) return {};
     pendingPhaseReminder = false;
+    // Override states announce themselves via the /pwk-guard handler; this reminder
+    // is the auto-mode phase-entry cue only.
+    if (guardOverride !== null) return {};
     return {
       message: {
         customType: "pwk-phase-reminder",
@@ -172,17 +242,20 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("tool_call", (event, ctx) => {
-    if (!phase) return;
+    if (!enforceActive()) return;
+    const label = enforceLabel();
+    const manual = guardOverride === "on";
+    const scope = manual ? "manual read-only lock" : `${label.toLowerCase()} phase`;
 
     if (event.toolName === "bash") {
       const command = (event.input as { command?: string }).command ?? "";
       if (!isSafeCommand(command)) {
         if (ctx.hasUI) {
-          ctx.ui.notify(`Blocked bash command during ${phase} phase: ${command}`, "warning");
+          ctx.ui.notify(`Blocked bash command (${scope}): ${command}`, "warning");
         }
         return {
           block: true,
-          reason: `⚠️ ${phase.toUpperCase()} PHASE reminder: read-only phase — no source writes or destructive bash. Only read-only commands are permitted.\nBlocked command: ${command}`,
+          reason: `⚠️ ${label}: read-only — no source writes or destructive bash. Only read-only commands are permitted.\nBlocked command: ${command}`,
         };
       }
       return;
@@ -196,15 +269,14 @@ export default function (pi: ExtensionAPI) {
     if (!shouldBlockFilePath(filePath, ctx.cwd)) return;
 
     if (ctx.hasUI) {
-      ctx.ui.notify(
-        `Blocked ${event.toolName} to ${filePath} during ${phase} phase. Only docs/plans/ is writable.`,
-        "warning",
-      );
+      ctx.ui.notify(`Blocked ${event.toolName} to ${filePath} (${scope}). Only docs/plans/ is writable.`, "warning");
     }
 
     return {
       block: true,
-      reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming and planning.`,
+      reason: `⚠️ ${label}: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable${
+        manual ? " under the manual read-only lock" : " during brainstorming and planning"
+      }.`,
     };
   });
 }

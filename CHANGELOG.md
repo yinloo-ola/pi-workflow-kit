@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **`/pwk-guard` command** — manual override of the workflow guard: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Mirrors the `/fog` escape hatch in pi-wayfinder.
+
+### Changed
+
+- **Phase transitions are skill-only.** Removed the `approve`/`accept`/`lgtm`/`ship it` message-keyword that ended the gated plan phase — it was a false-positive footgun ("I approve of approach A" unlocked writes mid-discussion). Run `/skill:pwk-executing-tasks` (or any non-gated skill) to leave the plan phase.
+
 ## [1.0.0] - 2026-07-30
 
 ### Changed (breaking)

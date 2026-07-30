@@ -46,7 +46,7 @@ Requirements are the leaf unit — never split further. Decision rule: **could t
 
    **Splitting large issues:** if the work is large enough to be multiple PRs, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`) and get the human's approval first — see [Granularity](#granularity) for the decision rule. Each design doc then runs its own pipeline.
 
-   Branch creation, committing, and workspace setup happen at the end of `/skill:pwk-writing-plans` (after the plan is approved). Until then the session is read-only and uncommitted.
+   Branch creation and workspace setup happen at the end of `/skill:pwk-writing-plans` (after the plan is approved); the design + plan docs are committed at the start of `pwk-executing-tasks`. Until then the session is read-only and uncommitted.
 
 ## Principles
 

@@ -29,6 +29,8 @@ The agent can still use `read` and `bash` for investigation. During those gated 
 
 During executing-tasks, code-review, and finalizing, nothing is restricted.
 
+Phases follow the skill you invoke — there is no message-keyword unlock. `/pwk-guard on|off|auto` manually overrides the guard (`on` = force read-only lock, `off` = disabled, `auto` = skill-driven, the default); subcommands autocomplete.
+
 ## Enforcement style
 
 Hard block for write boundaries during gated phases. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked.
