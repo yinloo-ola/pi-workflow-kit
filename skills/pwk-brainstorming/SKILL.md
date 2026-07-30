@@ -7,6 +7,19 @@ description: "Use this before any creative work — creating features, building 
 
 Read-only exploration. You may **not** edit or create any files except under `docs/plans/`.
 
+## Proportionality: trivial vs non-trivial
+
+Classify the change at the very start. The right amount of brainstorm depends on the size of the change.
+
+- **Trivial** — a typo or obvious bugfix with no open design questions, a config/version bump, a single-function change with no architectural impact, or anything the human flags as trivial. For trivial changes:
+  - Skip steps 3–5 (the multi-turn approach exploration and sectioned design presentation).
+  - Write a **minimal** design doc in one turn: a one-line context sentence, a `## Requirements` list with the single requirement, and (if applicable) a `## Production-risk areas` line. No approaches section, no sectioned review.
+  - Tell the human the plan can be a single inline requirement, and hand off to `/skill:pwk-writing-plans`.
+  - The guard still enforces read-only — trivial does **not** skip the phase; it compresses it to one turn.
+- **Non-trivial** — anything with open design questions, multiple viable approaches, cross-module impact, or new behavior. Run the full Process below.
+
+When unsure, ask the human: "This looks like a trivial fix — want me to fast-path it, or do a full brainstorm?" Default to full if they don't say.
+
 ## Granularity
 
 **A design doc is one pull request; a requirement is one testable slice within it.** Two decomposition levels answer two different questions:

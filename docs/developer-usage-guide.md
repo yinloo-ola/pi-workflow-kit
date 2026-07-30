@@ -120,5 +120,6 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 
 - Start with brainstorming for anything non-trivial.
 - The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
-- Each requirement has two mandatory checkpoints: use them to steer test design and implementation.
+- Each requirement has two mandatory checkpoints by default: use them to steer test design and implementation.
+- **Right-size each requirement at plan time** with the `### Checkpoints` (`full`/`lite`/`none`) and `### Review` (`parallel`/`inline`/`skip`) tags — defaults are conservative (`full` + `parallel`), so behavior is unchanged unless you opt in. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc).
 - Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.

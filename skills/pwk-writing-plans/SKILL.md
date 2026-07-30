@@ -23,6 +23,16 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - **Challenge the design first** *(if `## Production-risk areas` exists)* — before writing acceptance criteria, stress-test the design against the flagged risks: ask the uncomfortable "what breaks under load / on failure / on bad input" questions and confirm the approach holds. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
    - **Ordering** — list requirements in the order they should be built. If a requirement depends on another, the dependency must come **earlier in the list**; the executor runs requirements in listed order and does not reorder. Aim for each requirement to be a vertical slice that merges cleanly on its own — if a dependency can't be sliced away, position resolves it (there is no parsed dependency graph).
    - **Production-risk notes** *(if the design flagged any in `## Production-risk areas`)* — carried forward so the executor and `pwk-code-review` account for them.
+   - **Checkpoint level** — how many human stops this requirement needs. Default `full`.
+     - `full` — two checkpoints (after tests written, after implementation complete). The current behavior; use for anything non-trivial.
+     - `lite` — one checkpoint (after implementation). Use for requirements with a clear spec but low implementation risk; the tests-review stop is dropped (the executor shows the red output inline and proceeds).
+     - `none` — no checkpoints. Use only for trivial requirements (e.g. a single config line, a one-line typo fix). The executor writes tests, implements, commits, and reviews with no human stop in between.
+   - **Review level** — how this requirement is reviewed. Default `parallel`.
+     - `parallel` — four specialized reviewers via the `subagent` tool (current behavior). Best for non-trivial diffs.
+     - `inline` — a single `/skill:pwk-code-review` pass. Use for small/medium diffs where one reviewer is enough.
+     - `skip` — no review. Use only for trivial diffs with no behavioral surface (e.g. version bumps, comment-only).
+
+   The human approves these tags at plan approval (step 7); defaults are conservative, so behavior is unchanged unless the human opts in to lighter levels. Tag every requirement — missing tags default to `full` / `parallel`.
 
    Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`:
 
@@ -41,6 +51,9 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    ### Integration tests
    - `should <behavior>` — asserts <observable outcome>
    - `should <error case>` — asserts <failure outcome>
+
+   ### Checkpoints: full | lite | none
+   ### Review: parallel | inline | skip
 
    ### Production-risk notes
    - <from the design's Production-risk areas, if any>
@@ -62,6 +75,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 
 5. **Before presenting — audit the spec:**
    - Every requirement has acceptance criteria **and** matching integration tests.
+   - Every requirement has a checkpoint level and a review level (default `full` / `parallel` if omitted).
    - Acceptance criteria are observable behaviors, not implementation steps.
    - Edge/error cases are covered.
    - Production-risk areas from the design are reflected.
@@ -76,7 +90,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 - **Not micro-tasks** — one coarse block per requirement. The executor decides how to structure and slice the implementation.
 - **Not the tests themselves** — the plan specifies *what* the tests prove (names + assertions); `pwk-executing-tasks` writes the actual test files first (red), then implements to green.
 
-The executor has **full autonomy** to choose structure, signatures, and internals — bounded only by the acceptance criteria and the two mandatory checkpoints per requirement (after integration tests are written, and after the requirement is complete), enforced by `pwk-executing-tasks`.
+The executor has **full autonomy** to choose structure, signatures, and internals — bounded only by the acceptance criteria, the integration tests, and the per-requirement checkpoints (default two; fewer if the plan tags the requirement `lite` or `none`), enforced by `pwk-executing-tasks`.
 
 ## After the plan
 

@@ -17,11 +17,11 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests). You
 
 ## First run
 
-1. **Parse the plan** — read all `## Requirement N:` headings. Build the progress table with all requirements as `⬜ pending`. Process them in **listed order** — the plan is already in build order; do not reorder.
+1. **Parse the plan** — read all `## Requirement N:` headings **and** each requirement's `### Checkpoints` and `### Review` tags (defaults: `full` / `parallel` if a tag is missing). Build the progress table with all requirements as `⬜ pending`. Process them in **listed order** — the plan is already in build order; do not reorder.
 2. **Setup pre-flight** — if the plan has a `## Setup` section, follow it: install dependencies, apply migrations, and seed data. Run the existing test suite to confirm nothing broke. **⏸ CHECKPOINT: setup** — present the migration/output to the human and wait for approval.
    - **approve** → continue.
    - **request changes** → revise and re-present.
-   (Only runs on the first `First run` — the progress file is created after this step, so a resumed session skips setup.)
+   (Only runs on the first `First run` — the progress file is created after this step, so a resumed session skips setup. Record `setup: done` in the progress file header so a resume can confirm it rather than assume it.)
 3. **Create the progress file** at `docs/plans/<plan-name>-progress.md`:
 
    ```markdown
@@ -66,22 +66,26 @@ Path: `docs/plans/<plan-name>-progress.md`. Update the matching row directly (no
 
 For each requirement:
 
-1. **Mark in-progress** — `🔄 in-progress`.
+1. **Mark in-progress** — `🔄 in-progress`. Read this requirement's `### Checkpoints` and `### Review` tags (defaults `full` / `parallel` if missing).
 2. **Write the integration tests (red).** Read the requirement's acceptance criteria + integration-test cases from the plan and write the actual test files. Run them — confirm they **fail** (red). If they pass immediately, the behavior may already exist or the tests are wrong; investigate before proceeding.
-3. **⏸ CHECKPOINT: tests.** Stop. Do not implement yet. Mark `⏸ tests-review`. Present the integration tests and the failing output to the human, and wait for approval. The human reviews whether the right behaviors are being specified.
+3. **⏸ CHECKPOINT: tests** *(only if checkpoint level is `full`)*. Stop. Do not implement yet. Mark `⏸ tests-review`. Present the integration tests and the failing output to the human, and wait for approval. The human reviews whether the right behaviors are being specified.
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise the tests, re-run, re-present.
+   - **`lite` / `none`** → skip this stop. Show the red output inline and proceed; do not mark `⏸ tests-review`.
 4. **Implement (green).** With full autonomy, implement whatever is needed to make the integration tests pass and satisfy the acceptance criteria — you choose the structure, modules, signatures, and internals. Run the tests after each meaningful change. Refactor for clarity (shallow modules, no duplication, seam discipline) while tests stay green.
 5. **Learn.** If you caught a repeat mistake, append a **generic** rule to `docs/lessons.md` (strip domain specifics).
-6. **⏸ CHECKPOINT: complete.** Stop. Do **not** commit yet. Mark `⏸ complete-review`. Run the tests (show passing output) and `git diff`, present the implementation to the human, and wait for approval.
+6. **⏸ CHECKPOINT: complete** *(only if checkpoint level is `full` or `lite`)*. Stop. Do **not** commit yet. Mark `⏸ complete-review`. Run the tests (show passing output) and `git diff`, present the implementation to the human, and wait for approval.
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise, re-run, re-present at this same checkpoint.
+   - **`none`** → skip this stop. Show the green output and `git diff` inline and proceed to commit.
 7. **Commit.** `git add` the relevant files and commit with a clear message. (Status stays `🔄 in-progress` — not done yet.)
-8. **Code review.** Mark `🔎 review`. Attempt isolated code-review via the `subagent` tool — four agents review the same diff in parallel, each from a different dimension (each gets a fresh context window, zero pollution from previous requirements):
+8. **Composition check** *(after each commit)* — if this requirement's diff touched **shared code** (modules imported by other requirements in the plan), run the **full test suite** now and flag any cross-requirement regression to fix immediately, while the context is fresh. If it touched only this requirement's own files, keep running just this requirement's tests (current behavior). This catches composition regressions early instead of discovering them only at the integration gate.
+9. **Code review.** Mark `🔎 review`. Drive review by the requirement's `### Review` tag:
+   - **`parallel`** — attempt isolated review via the `subagent` tool (four agents, fresh context each), as below.
+   - **`inline`** — run `/skill:pwk-code-review` for this requirement as a single pass.
+   - **`skip`** — no review. Mark the requirement `✅ done` and proceed to the next.
 
-   Gather the requirement's scope: acceptance criteria, integration test cases, and git diff (`git log --oneline -5 && git diff HEAD~N..HEAD`).
-
-   **If the `subagent` tool is available**, invoke it with parallel tasks:
+   **Parallel path** — gather the requirement's scope: acceptance criteria, integration test cases, and git diff (`git log --oneline -5 && git diff HEAD~N..HEAD`). If the `subagent` tool is available, invoke it with parallel tasks:
    ```json
    {
      "tasks": [
@@ -98,11 +102,11 @@ For each requirement:
    **On success:** collect all findings. For smell-review findings: identify the smells, apply the fixes yourself (re-run integration tests after changes — must stay green, commit). For trace/spec/hazard findings: flag as follow-ups for human decision or later fix. Update the progress-file row to `✅ done`. Flag non-trivial issues as follow-ups.
 
    **Fallback** (subagent unavailable or returns error): revert to inline review — run `/skill:pwk-code-review` for this requirement as before.
-9. **Loop** — go to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).
+10. **Loop** — go to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).
 
-### Checkpoint gates are mandatory
+### Checkpoint gates are mandatory (when the tag says so)
 
-Both checkpoints are **hard stops, not optional**. When you reach one:
+A checkpoint fires only when the requirement's `### Checkpoints` tag calls for it (`full` → both, `lite` → complete only, `none` → none). When a checkpoint fires it is a **hard stop**: when it doesn't, proceed without stopping. When a checkpoint fires:
 - Stop executing immediately. Do not pass it without explicit human approval.
 - **Never** `git add` or `git commit` before the human approves at a checkpoint.
 - Mark the progress file to the review status **before** pausing.

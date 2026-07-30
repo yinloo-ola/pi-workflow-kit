@@ -41,11 +41,21 @@ Write boundary: only `docs/plans/` is writable.
 ```
 
 - Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → **per-requirement review** (four parallel reviewers via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
-- Two **mandatory** human checkpoints per requirement.
+- Two **mandatory** human checkpoints per requirement — unless the plan tags a requirement lighter (see [Proportionality](#proportionality)).
+- **Composition check after each commit** — if a requirement touched shared code, the executor runs the full suite now and fixes cross-requirement regressions immediately, rather than discovering them only at the integration gate.
 - Progress tracked in `docs/plans/*-progress.md`.
 - After all requirements: **integration gate** — run the full suite and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
 
 No write restrictions. All tools available.
+
+## Proportionality
+
+The defaults preserve the 1.0.0 behavior (two checkpoints + parallel review per requirement). At plan time the human can tag each requirement lighter to right-size the workflow:
+
+- **Checkpoints** — `full` (both stops, default) | `lite` (one stop, after implementation) | `none` (no stops, trivial only). Test-first is preserved either way: even `none` writes tests first (red) and implements to green; only the human *stops* are optional.
+- **Review** — `parallel` (four fresh-context reviewers, default) | `inline` (single `pwk-code-review` pass) | `skip` (trivial diffs with no behavioral surface only).
+
+A trivial fix can also skip the multi-turn brainstorm dialogue via the brainstorming trivial fast-path (compress to one turn, minimal design doc) — the guard still enforces read-only. Tags default conservatively, so nothing changes unless the human opts in.
 
 ## code-review
 

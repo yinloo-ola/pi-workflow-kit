@@ -21,6 +21,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Phase transitions are skill-only.** Removed the `approve`/`accept`/`lgtm`/`ship it` message-keyword that ended the gated plan phase — it was a false-positive footgun ("I approve of approach A" unlocked writes mid-discussion). Run `/skill:pwk-executing-tasks` (or any non-gated skill) to leave the plan phase.
 
+### Added
+
+- **Proportional workflow** — right-size the pipeline per change, without restoring the old complexity.
+  - **Trivial fast-path** in `pwk-brainstorming`: classify trivial vs non-trivial at the start; trivial changes (typo, obvious fix, config bump) compress brainstorm to one turn with a minimal design doc. The guard still enforces read-only — the phase isn't skipped, just compressed.
+  - **Per-requirement tags at plan time** in `pwk-writing-plans`: `### Checkpoints` (`full` default | `lite` one stop | `none` no stops) and `### Review` (`parallel` default | `inline` | `skip`). Defaults preserve 1.0.0 behavior; the human opts in to lighter levels at plan approval. Test-first is preserved regardless — even `none` writes tests first (red) and implements to green; only the human *stops* are optional.
+  - **`pwk-executing-tasks` honors the tags**: `full` runs both checkpoints, `lite` runs the complete checkpoint only, `none` runs none; review dispatch follows `parallel`/`inline`/`skip`.
+  - **Composition check after each commit** in `pwk-executing-tasks`: when a requirement touches shared code (modules imported by other requirements), the executor runs the full suite now and fixes cross-requirement regressions immediately, instead of discovering them only at the integration gate.
+  - Skill-text only — no extension or runtime changes; the guard is untouched.
+
 ## [1.0.0] - 2026-07-30
 
 ### Changed (breaking)

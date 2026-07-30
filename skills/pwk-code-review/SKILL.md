@@ -39,7 +39,7 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 - **Tracing and spec alignment are the core** — they catch what tests miss: untested branches, missing criteria, scope creep.
 - **Fix smells in place; flag everything else.** Don't redesign.
-- **Be proportional** — a one-function change doesn't need the depth of a batch pipeline.
+- **Be proportional** — a one-function change doesn't need the depth of a batch pipeline. When this skill runs as the inline path because the plan tagged the requirement `Review: inline`, that was a deliberate call at plan time — keep the review focused and don't second-guess the tag.
 
 ## After the review
 
