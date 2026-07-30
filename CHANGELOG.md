@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.0] - 2026-07-30
+
+### Changed (breaking)
+
+- **Design-doc-per-pipeline** — removed the `## Features` status table and the per-feature plan→execute loop. Each design doc runs its own plan → execute → finalize pipeline. A large issue may split into multiple design docs (human-approved).
+- **Plans are behavioral specs, not implementation recipes** — `pwk-writing-plans` now produces acceptance criteria + integration-test cases per requirement (no exact code, no micro-tasks). The executor implements with full autonomy.
+- **Test-first, two mandatory checkpoints per requirement** — `pwk-executing-tasks` writes integration tests (red) → checkpoint: tests → implement (green) → checkpoint: complete → code-review, per requirement.
+- **Guard: simple common-blacklist + phase reminder** — `isSafeCommand` is now `!DESTRUCTIVE` (the `SAFE_PATTERNS` allowlist is removed; fewer false positives). A short phase reminder is appended after the user's message each turn (cache-safe). Added destructive patterns for edit-via-bash vectors (`sed -i`, `perl -i`, `awk -i inplace`, `git apply`, `patch`, `find -delete`).
+- **ADRs are permanent** — moved from `docs/plans/adr/` to `docs/adr/`; no longer archived during finalizing.
+- **Finalize is per-topic** — archives only the active design's artifacts, not all plan docs.
+
+### Added
+
+- **`pwk-code-review`** — per requirement, after completion: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked.
+
+### Removed
+
+- **`pwk-design-review`** — superseded by per-requirement `pwk-code-review`.
+- **`pwk-verify`** — superseded by per-requirement `pwk-code-review`.
+
+### Notes
+
+- **Continuity** — a new session resumes by invoking the phase skill; it globs `docs/plans/` and reports what it found. The `<topic>` slug in filenames is the identity; no registry file.
+- **No backward compatibility** for the old Features table — existing design docs remain readable prose; their status columns are no longer parsed.
+
 ## [0.18.0] - 2026-06-09
 
 ### Added
