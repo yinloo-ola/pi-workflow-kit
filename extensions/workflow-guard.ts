@@ -41,7 +41,7 @@ const DESTRUCTIVE_PATTERNS = [
   /\bsed\b.*\s-i\b/i,
   /\bperl\b.*\s-[a-z]*i\b/i,
   /\bawk\b.*-i\s+inplace\b/i,
-  /\bpatch\b/i,
+  /^\s*patch\b/i, // command-position only — avoids FP on "patch" in paths/searches (grep/cat/cd)
   /\bfind\b.*\s-delete\b/i,
   /\bsudo\b/i,
   /\bsu\b/i,

@@ -54,6 +54,13 @@ describe("isSafeCommand", () => {
     expect(isSafeCommand("find . -name '*.bak' -delete")).toBe(false);
   });
 
+  it("does not false-positive on 'patch' in paths, searches, or args", () => {
+    expect(isSafeCommand("grep patch README.md")).toBe(true);
+    expect(isSafeCommand("cat patch-001.diff")).toBe(true);
+    expect(isSafeCommand("cd my-patch-dir")).toBe(true);
+    expect(isSafeCommand("git log | grep patch")).toBe(true);
+  });
+
   it("blocks git mutations but allows read-only git", () => {
     expect(isSafeCommand("git add .")).toBe(false);
     expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
