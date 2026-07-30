@@ -54,7 +54,7 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. F
 | **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code) |
 | **Execute** | `/skill:pwk-executing-tasks` | Per requirement: write tests (red) → **checkpoint: tests** → implement (green) → **checkpoint: complete** → code-review |
 | **Code review** | `/skill:pwk-code-review` | Per requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
-| **Finalize** | `/skill:pwk-finalizing` | Archive plan docs (per-topic), update README/CHANGELOG, create PR |
+| **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup |
 | **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase. |
 
@@ -143,7 +143,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 > /skill:pwk-finalizing
 
-# (agent archives docs, curates lessons, creates PR)
+# (agent deletes consumed plan docs, curates lessons, creates PR)
 ```
 
 ## Why?
@@ -173,7 +173,7 @@ pi-workflow-kit/
 │   ├── oversight-model.md
 │   ├── lessons.md
 │   ├── adr/                  # permanent architectural decisions (never archived)
-│   └── plans/                # active design/plan/progress docs (archived to docs/plans/completed/)
+│   └── plans/                # active design/plan/progress docs (deleted after finalization)
 ├── tests/
 │   └── workflow-guard.test.ts
 ├── package.json

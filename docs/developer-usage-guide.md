@@ -82,7 +82,7 @@ Per requirement, four specialized reviewers launch in parallel — each reviewin
 /skill:pwk-finalizing
 ```
 
-**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive the design's planning docs (per-topic), curate lessons, update CHANGELOG/README, create PR or merge.
+**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then delete consumed plan docs (code + tests are the source of truth), curate lessons, update CHANGELOG/README, create PR or merge.
 
 ### Diagnose (on demand)
 

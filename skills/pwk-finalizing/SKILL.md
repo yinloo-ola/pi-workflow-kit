@@ -1,6 +1,6 @@
 ---
 name: pwk-finalizing
-description: "Use after all requirements are complete to archive planning docs, curate lessons, update documentation, and ship the work."
+description: "Use after all requirements are complete to delete consumed plan docs, curate lessons, update documentation, and ship the work."
 ---
 
 # Finalizing
@@ -31,17 +31,15 @@ Ship the completed work.
 
 1. **Derive the topic** — from the progress file → its `Plan:` ref → the plan's `Design:` ref → the design-doc filename → `<topic>`. If several designs are in flight and it's ambiguous, ask which is being shipped.
 
-2. **Archive this design's planning docs** — only this design's artifacts; leave other (un-started) design docs in place:
+2. **Delete consumed plan docs** — only this design's artifacts; leave other (un-started) design docs in place:
 
    ```bash
-   mkdir -p docs/plans/completed
-   mv docs/plans/*<topic>*-design.md docs/plans/completed/ 2>/dev/null || true
-   mv docs/plans/*<topic>*-implementation.md docs/plans/completed/ 2>/dev/null || true
-   mv docs/plans/*<topic>*-progress.md docs/plans/completed/ 2>/dev/null || true
-   git add docs/plans/ && git commit -m "chore: archive planning docs"
+   rm -f docs/plans/*<topic>*-design.md
+   rm -f docs/plans/*<topic>*-implementation.md
+   rm -f docs/plans/*<topic>*-progress.md
    ```
 
-   Each `mv` gracefully handles a missing file. **Do not touch `docs/adr/`** — ADRs are permanent institutional memory, never archived.
+   Each `rm -f` gracefully handles a missing file. **Do not touch `docs/adr/`**, `docs/lessons.md`, `CHANGELOG.md`, or `README.md` — those are permanent.
 
 3. **Review & polish lessons (Agile Scrum Master Hat)** — if `docs/lessons.md` exists, curate it for future sprints: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize under clear headers, retire stale rules. If it doesn't exist but lessons were learned, create it with the standard format.
 
@@ -75,6 +73,6 @@ Ship the completed work.
 
 ## Principles
 
-- Archive **only** the active design's artifacts — un-started designs (from a split) stay in `docs/plans/`.
+- Delete **only** the active design's artifacts — un-started designs (from a split) stay in `docs/plans/`.
 - ADRs are never archived.
 - Bump the package version if this is a published change (major bump for breaking changes).

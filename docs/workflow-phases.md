@@ -65,7 +65,7 @@ No write restrictions.
 ```
 
 - **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Archive the design's planning docs (per-`<topic>`) to `docs/plans/completed/`; ADRs stay at `docs/adr/`.
+- Delete consumed plan docs (per-`<topic>`) — code + tests are the source of truth; ADRs stay at `docs/adr/`.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.
