@@ -17,7 +17,7 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests). You
 
 ## First run
 
-1. **Parse the plan** — read all `## Requirement N:` headings. Build the progress table with all requirements as `⬜ pending`.
+1. **Parse the plan** — read all `## Requirement N:` headings. Build the progress table with all requirements as `⬜ pending`. Process them in **listed order** — the plan is already in build order; do not reorder.
 2. **Create the progress file** at `docs/plans/<plan-name>-progress.md`:
 
    ```markdown
@@ -98,10 +98,15 @@ When the user shares review feedback outside a checkpoint: verify the criticism 
 
 ## After all requirements
 
-When no `⬜ pending` or `❌ failed` requirements remain:
+When no `⬜ pending` or `❌ failed` requirements remain, run the **integration gate** before suggesting finalize. Per-requirement code-review only saw each requirement's diff in isolation — this is where you prove the requirements *compose* into the feature:
+
+1. **Run the FULL test suite** (not just the last requirement's tests). Every test must pass. A failure here means one requirement regressed another — fix it now, in execute context, while the progress file and fix autonomy are at hand.
+2. **Confirm the requirements compose** into the feature the design doc described. Each requirement passed alone; do they deliver the intended end-to-end behavior *together*? If integration exposes a gap, fix it here (with tests) before shipping.
+
+Only when the full suite is green and the feature works end-to-end:
 
 ```
-✅ All requirements complete!
+✅ All requirements complete — integration verified!
 
 | # | Status | Requirement |
 |---|--------|-------------|

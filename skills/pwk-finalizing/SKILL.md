@@ -9,11 +9,13 @@ Ship the completed work.
 
 ## Pre-finalization checks
 
-Read the progress file (`docs/plans/*-progress.md`). If any requirements are `⏭ skipped` or `❌ failed`, warn and confirm before proceeding:
+1. **Run the FULL test suite.** Every test must pass. Resume spans sessions — don't assume the last execute session left the suite green. If anything fails, stop and send the user back to `/skill:pwk-executing-tasks` to fix; never archive or open a PR against a red suite.
 
-```
-⚠️ Requirements 4 and 7 were skipped/failed. Continue with finalizing, or go back?
-```
+2. Read the progress file (`docs/plans/*-progress.md`). If any requirements are `⏭ skipped` or `❌ failed`, warn and confirm before proceeding:
+
+   ```
+   ⚠️ Requirements 4 and 7 were skipped/failed. Continue with finalizing, or go back?
+   ```
 
 ## Process
 
@@ -31,7 +33,7 @@ Read the progress file (`docs/plans/*-progress.md`). If any requirements are `�
 
    Each `mv` gracefully handles a missing file. **Do not touch `docs/adr/`** — ADRs are permanent institutional memory, never archived.
 
-3. **Review & polish lessons (Agile Scrum Master Hat)** — if `docs/lessons.md` exists, curate it for future sprints: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize under clear headers, retire stale rules. Keep `## Rules` as the append target for new entries during execution. If it doesn't exist but lessons were learned, create it with the standard format.
+3. **Review & polish lessons (Agile Scrum Master Hat)** — if `docs/lessons.md` exists, curate it for future sprints: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize under clear headers, retire stale rules. If it doesn't exist but lessons were learned, create it with the standard format.
 
 4. **Update documentation** — if the API or surface changed: update `README.md`, `CHANGELOG.md`, and any inline docs.
 

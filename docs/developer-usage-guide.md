@@ -32,7 +32,7 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 
 ## The workflow
 
-You control each phase by invoking the skill. For multi-design work (a large issue split), run the pipeline once per design doc:
+You control each phase by invoking the skill. A design doc is one PR; a requirement is one testable slice within it. For multi-design work (a large issue split), run the pipeline once per design doc:
 
 ```
 /skill:pwk-brainstorming  →  /skill:pwk-writing-plans  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
@@ -64,7 +64,7 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 /skill:pwk-executing-tasks
 ```
 
-Implement requirement-by-requirement with **full autonomy**: write the integration tests (red) → **checkpoint: tests** → implement to green → **checkpoint: complete** → commit → code-review. Two mandatory human checkpoints per requirement.
+Implement requirement-by-requirement with **full autonomy**: write the integration tests (red) → **checkpoint: tests** → implement to green → **checkpoint: complete** → commit → code-review. Two mandatory human checkpoints per requirement. After all requirements, an **integration gate** runs the full suite and confirms the requirements compose into the feature before finalize.
 
 ### 4. Code review (per requirement)
 
@@ -80,7 +80,7 @@ After each requirement completes: code tracing, spec alignment (vs acceptance cr
 /skill:pwk-finalizing
 ```
 
-Archive the design's planning docs (per-topic), curate lessons, update CHANGELOG/README, create PR or merge.
+**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive the design's planning docs (per-topic), curate lessons, update CHANGELOG/README, create PR or merge.
 
 ### Diagnose (on demand)
 
@@ -102,7 +102,7 @@ A read-only overview of all active design topics — which phase each is in and 
 
 The `workflow-guard` extension watches `write`/`edit` and `bash` tool calls:
 
-- **During brainstorm and writing-plans**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is appended after your message each turn so the model self-restricts.
+- **During brainstorm and writing-plans**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 - **During executing-tasks, code-review, finalizing**: no restrictions.
 
 The destructive blacklist covers common file-mutating vectors (redirects, `tee`, `cp`/`mv`/`touch`/`rm`, `git commit`/`apply`, `npm install`, in-place editors like `sed -i`/`perl -i`, `patch`, `find -delete`). Exotic vectors (interpreter escapes like `node -e`, `python -c`, `| bash`) rely on the phase reminder — the guard is advisory, not a security boundary.

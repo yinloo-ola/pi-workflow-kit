@@ -12,8 +12,9 @@ Skills teach the agent the workflow. There are 5 pipeline skills:
 - **pwk-code-review** — after each requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check
 - **pwk-finalizing** — archive the design's planning docs (per-topic), curate lessons, update docs, create PR or merge
 
-Plus 1 on-demand skill:
+Plus 2 on-demand skills:
 
+- **pwk-status** — read-only overview of all active design topics (phase + progress), for resuming or juggling parallel designs
 - **pwk-diagnose** — 6-phase debugging loop, invoked anytime something is broken
 
 They explain *what* to do and *when* to do it. Phase control is manual — you invoke each skill with `/skill:`; the agent never advances on its own.
@@ -24,7 +25,7 @@ The `workflow-guard` extension enforces one rule:
 
 > During brainstorm and plan phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
 
-The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is appended after the user's message each turn so the model self-restricts.
+The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
 During executing-tasks, code-review, and finalizing, nothing is restricted.
 

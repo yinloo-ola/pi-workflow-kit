@@ -1,13 +1,13 @@
 # Workflow Phases
 
-`pi-workflow-kit` has 5 pipeline skills plus 1 utility skill. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 5 pipeline skills plus 2 utility skills. You invoke each one explicitly with `/skill:`.
 
 ```
 brainstorm → writing-plans → executing-tasks → finalizing
                           (per requirement: tests → ⏸ checkpoint → implement → ⏸ checkpoint → code-review)
 ```
 
-For multi-design work (a large issue split into several design docs), run the pipeline once per design doc.
+A design doc is one PR; a requirement is one testable slice within it. For multi-design work (a large issue split into several design docs — each its own PR), run the pipeline once per design doc.
 
 ## brainstorm
 
@@ -29,7 +29,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 ```
 
 - Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
-- Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), notes cross-requirement dependencies, and challenges the design when `## Production-risk areas` is present.
+- Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Write boundary: only `docs/plans/` is writable.
@@ -43,6 +43,7 @@ Write boundary: only `docs/plans/` is writable.
 - Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → `/skill:pwk-code-review`.
 - Two **mandatory** human checkpoints per requirement.
 - Progress tracked in `docs/plans/*-progress.md`.
+- After all requirements: **integration gate** — run the full suite and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
 
 No write restrictions. All tools available.
 
@@ -63,6 +64,7 @@ No write restrictions.
 /skill:pwk-finalizing
 ```
 
+- **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
 - Archive the design's planning docs (per-`<topic>`) to `docs/plans/completed/`; ADRs stay at `docs/adr/`.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 

@@ -31,7 +31,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 | **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
 | **Execute** / **Code-review** / **Finalize** | ✅ Full access | ✅ Full access |
 
-The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is appended after your message each turn so the model self-restricts.
+The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
 ### 🧠 7 Workflow Skills
 
@@ -44,7 +44,7 @@ brainstorm → writing-plans → executing-tasks → finalizing
                    diagnose (anytime)   ·   status (anytime)
 ```
 
-For multi-design work (a large issue split into several design docs), run the pipeline once per design doc.
+A **design doc is one PR**; a **requirement is one testable slice within it**. For multi-design work (a large issue split into several design docs — each its own PR), run the pipeline once per design doc.
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
@@ -101,7 +101,7 @@ Rules are simple imperative bullets:
 - Never import `testify` in this project
 - Always check for existing test helpers before writing new ones
 
-No configuration needed — the file is created automatically when the first lesson is written.
+No configuration needed — the file ships with starter rules and grows as the agent learns.
 
 ### Two Mandatory Checkpoints per Requirement
 
@@ -113,6 +113,10 @@ Each requirement has **two hard human-review gates** (not optional):
 | **complete** | Implemented, tests green, refactored | Is the implementation correct before committing? |
 
 The agent stops and waits at each — approve, request changes, or send it back.
+
+### Before You Ship: the Integration Gate
+
+Per-requirement review checks each diff in isolation. Before finalizing, the agent runs an **integration gate**: the **full test suite** (not just the last requirement's) must pass, and it confirms the requirements compose into the feature the design described. Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
 
 ## Quick Start
 
@@ -165,6 +169,8 @@ pi-workflow-kit/
 │   ├── developer-usage-guide.md
 │   ├── workflow-phases.md
 │   ├── oversight-model.md
+│   ├── lessons.md
+│   ├── adr/                  # permanent architectural decisions (never archived)
 │   └── plans/                # active design/plan/progress docs (archived to docs/plans/completed/)
 ├── tests/
 │   └── workflow-guard.test.ts
