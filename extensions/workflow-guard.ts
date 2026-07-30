@@ -4,15 +4,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 /**
  * Workflow Guard extension.
  *
- * Blocks write/edit outside docs/plans/ and destructive bash during brainstorm, plan, and verify phases.
+ * Blocks write/edit outside docs/plans/ and destructive bash during brainstorm and plan phases.
  * Bash uses a simple common-blacklist (DESTRUCTIVE_PATTERNS) — a command is allowed unless it matches
  * a destructive pattern. A short phase reminder is appended after the user's message each turn via
  * before_agent_start. You control phases explicitly via /skill: commands — no auto-detection, no prompts.
  */
 
-type Phase = "brainstorm" | "plan" | "verify" | null;
+type Phase = "brainstorm" | "plan" | null;
 
-// Destructive commands blocked in brainstorm/plan/verify phases (simple common blacklist)
+// Destructive commands blocked in brainstorm/plan phases (simple common blacklist)
 const DESTRUCTIVE_PATTERNS = [
   /\brm\b/i,
   /\brmdir\b/i,
@@ -83,7 +83,6 @@ export function isSafeCommand(command: string): boolean {
 const SKILL_TO_PHASE: Record<string, Phase> = {
   "pwk-brainstorming": "brainstorm",
   "pwk-writing-plans": "plan",
-  "pwk-verify": "verify",
 };
 
 /** Phase-aware reminder appended after the user's message each turn while a gated phase is active.
@@ -93,11 +92,10 @@ const PHASE_REMINDERS: Record<Exclude<Phase, null>, string> = {
   brainstorm:
     "[pi-workflow-kit] BRAINSTORM phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
   plan: "[pi-workflow-kit] PLAN phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
-  verify: "[pi-workflow-kit] VERIFY phase: read-only. No source edits; writes only under docs/plans/.",
 };
 
 /** Determine if a write/edit to filePath should be blocked during the given phase.
- *  Only writes under docs/plans/ are allowed during brainstorm, plan, and verify phases.
+ *  Only writes under docs/plans/ are allowed during brainstorm and plan phases.
  */
 export function shouldBlockFilePath(filePath: string, cwd: string): boolean {
   const absolute = resolve(cwd, filePath);
@@ -160,7 +158,7 @@ export default function (pi: ExtensionAPI) {
         }
         return {
           block: true,
-          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (destructive). Only read-only commands are permitted during brainstorming, planning, and verification.\nCommand: ${command}`,
+          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (destructive). Only read-only commands are permitted during brainstorming and planning.\nCommand: ${command}`,
         };
       }
       return;
@@ -182,7 +180,7 @@ export default function (pi: ExtensionAPI) {
 
     return {
       block: true,
-      reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming, planning, and verification.`,
+      reason: `⚠️ ${phase.toUpperCase()} PHASE: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable during brainstorming and planning.`,
     };
   });
 }
