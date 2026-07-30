@@ -28,7 +28,8 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 /skill:pwk-writing-plans
 ```
 
-- Read the design doc's `## Requirements`; for each, derive **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code).
+- Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
+- Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), notes cross-requirement dependencies, and challenges the design when `## Production-risk areas` is present.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Write boundary: only `docs/plans/` is writable.
@@ -66,6 +67,14 @@ No write restrictions.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.
+
+## status
+
+```
+/skill:pwk-status
+```
+
+Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight. Not a pipeline phase.
 
 ## diagnose
 

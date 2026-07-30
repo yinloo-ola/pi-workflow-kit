@@ -13,10 +13,7 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests). You
 
 1. **Check git state** — `git status` and `git log --oneline -5`. Note uncommitted changes.
 2. **Find the plan + report** — look for `docs/plans/*-implementation.md`. If several, list them and ask which. Print a one-line discovery report, e.g. `Found: design "auth" — execute phase (1/3 requirements done)`. If a matching `*-progress.md` exists, this is a **resume** (see [Resume](#resume)).
-3. **Workspace isolation** — if not already on a feature branch/worktree, suggest:
-   - **Branch** (smaller): `git checkout -b <topic>` (derive `<topic>` from the plan doc)
-   - **Worktree** (larger; keeps main clean): `git worktree add ../<repo>-<topic> -b <topic>` — moves plan docs in and hands off to a new session there
-   Wait for the user's choice.
+3. **Workspace isolation should already be done** — `pwk-writing-plans` set up the branch/worktree before handoff. If you land here still on `main`, tell the user the workspace wasn't set up and suggest doing it before executing.
 
 ## First run
 
@@ -56,7 +53,8 @@ Path: `docs/plans/<plan-name>-progress.md`. Update the matching row directly (no
 | `🔄 in-progress` | Writing tests or implementing |
 | `⏸ tests-review` | Paused at checkpoint: tests, awaiting human approval |
 | `⏸ complete-review` | Paused at checkpoint: complete, awaiting human approval |
-| `✅ done` | Committed and code-reviewed |
+| `🔎 review` | Committed; `pwk-code-review` in progress |
+| `✅ done` | `pwk-code-review` complete (smells fixed, hazards noted), all green |
 | `❌ failed` | Could not complete (append `Failed: <reason>`) |
 | `⏭ skipped` | User chose to skip |
 
@@ -74,8 +72,8 @@ For each requirement:
 6. **⏸ CHECKPOINT: complete.** Stop. Do **not** commit yet. Mark `⏸ complete-review`. Run the tests (show passing output) and `git diff`, present the implementation to the human, and wait for approval.
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise, re-run, re-present at this same checkpoint.
-7. **Commit.** `git add` the relevant files and commit with a clear message. Mark `✅ done` and record the commit hash.
-8. **Code review.** Run `/skill:pwk-code-review` for this requirement (code tracing, spec alignment, code smells, hazard check). It may apply smell fixes; if so, commit those. Flagged non-trivial issues become follow-ups.
+7. **Commit.** `git add` the relevant files and commit with a clear message. (Status stays `🔄 in-progress` — not done yet.)
+8. **Code review.** Mark `🔎 review`, then run `/skill:pwk-code-review` for this requirement (code tracing, spec alignment, code smells, hazard check). It may apply smell fixes; if so, commit those. On completion it marks `✅ done`. Flagged non-trivial issues become follow-ups.
 9. **Loop** — go to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).
 
 ### Checkpoint gates are mandatory

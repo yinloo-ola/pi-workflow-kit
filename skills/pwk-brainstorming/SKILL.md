@@ -10,6 +10,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 ## Process
 
 1. **Check git state** — run `git status` and `git log --oneline -5`. If there's uncommitted work, ask the user what to do with it first.
+2. **Discovery** *(skip if this is a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md`. Report active topics found (e.g. `In-flight: auth (plan), billing (brainstorm)`). Multiple designs may run in parallel. If the new idea continues an existing topic, ask the human whether to extend it or start fresh before designing.
 2. **Understand the idea** — read existing code, docs, and recent commits. Grep for related functionality, check package.json/dependencies and module structure. **Check `docs/lessons.md`** if it exists — known constraints and patterns may affect the design. Read only what's necessary to ground the design — don't read the entire codebase. Ask questions to refine the idea. Prefer multiple choice when possible. After each question, check: can you clearly articulate (a) what the user wants to build, (b) why, and (c) key constraints? If yes, present your understanding as a short summary and ask: "Should I proceed with this, or is there more to add?" The human decides when to move on.
 3. **Explore approaches** — propose 2-3 approaches. For each approach, sketch the concrete interface (types, method signatures, example caller code) so the comparison is grounded in actual code, not abstract descriptions. Lead with your recommendation.
 4. **Present the design** — break it into focused sections. Each section should be one screen of reading. Present each section to the human and wait for approval before continuing. Cover: architecture, components, data flow, error handling, testing. On feedback, incorporate it and re-present the revised section.
@@ -36,7 +37,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
    **Splitting large issues:** if the issue is large and decomposes into genuinely independent sub-issues, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`), and get the human's approval before writing them. Each design doc then runs its own plan → execute → finalize pipeline. Most work is a single design doc — splitting is opt-in.
 
-   Branch creation, committing, and workspace setup are handled by `/skill:pwk-executing-tasks`.
+   Branch creation, committing, and workspace setup happen at the end of `/skill:pwk-writing-plans` (after the plan is approved). Until then the session is read-only and uncommitted.
 
 ## Principles
 

@@ -33,7 +33,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is appended after your message each turn so the model self-restricts.
 
-### 🧠 6 Workflow Skills
+### 🧠 7 Workflow Skills
 
 Guide the agent through a disciplined development process:
 
@@ -158,6 +158,7 @@ pi-workflow-kit/
 │   ├── pwk-executing-tasks/SKILL.md
 │   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md
+│   ├── pwk-status/SKILL.md
 │   └── pwk-diagnose/SKILL.md
 ├── docs/
 │   ├── developer-usage-guide.md

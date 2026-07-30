@@ -33,6 +33,7 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
    Also check the design's `## Production-risk areas`, if any.
 
 6. **Report** — summarize: tracing findings, spec gaps, smells fixed (with commits), hazards `[TRIGGERED]`. Non-trivial findings become follow-up items — the user decides whether to address now or defer.
+7. **Mark done** — update the requirement's progress-file row from `🔎 review` to `✅ done`. Done means reviewed, not just committed.
 
 ## Principles
 

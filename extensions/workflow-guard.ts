@@ -36,7 +36,10 @@ const DESTRUCTIVE_PATTERNS = [
   /\bpip\s+(install|uninstall)/i,
   /\bapt(-get)?\s+(install|remove|purge|update|upgrade)/i,
   /\bbrew\s+(install|uninstall|upgrade)/i,
-  /\bgit\s+(add|commit|push|pull|merge|rebase|reset|checkout|branch\s+-[dD]|stash(?!\s+list)|cherry-pick|revert|tag(?!\s+(-l|--list))|init|clone|apply)/i,
+  // git add/commit/apply merge files and are blocked below. Plain `git branch`/`checkout`/`switch`
+  // only create or move between branches (no source-file changes), so they are intentionally allowed
+  // during gated phases — pwk-writing-plans creates the feature branch before authoring the plan.
+  /\bgit\s+(add|commit|push|pull|merge|rebase|reset|branch\s+-[dD]|stash(?!\s+list)|cherry-pick|revert|tag(?!\s+(-l|--list))|init|clone|apply)/i,
   // Edit-via-bash vectors: in-place editors, patch appliers, find-delete (bypass the write/edit tool block)
   /\bsed\b.*\s-i\b/i,
   /\bperl\b.*\s-[a-z]*i\b/i,
@@ -124,10 +127,18 @@ export default function (pi: ExtensionAPI) {
         return;
       }
     }
+    // Approving a plan ends the gated plan phase (isolation/branch creation is then allowed).
+    // Narrow verbs so design discussion like "should we approve X?" doesn't unlock.
+    if (phase === "plan" && /\b(approve[ds]?|approved|accept(ing)?|lgtm|ship\s*it)\b/i.test(text)) {
+      phase = null;
+      return;
+    }
     if (
       text.startsWith("/skill:pwk-executing-tasks") ||
       text.startsWith("/skill:pwk-finalizing") ||
-      text.startsWith("/skill:pwk-code-review")
+      text.startsWith("/skill:pwk-code-review") ||
+      text.startsWith("/skill:pwk-diagnose") ||
+      text.startsWith("/skill:pwk-status")
     ) {
       phase = null;
     }

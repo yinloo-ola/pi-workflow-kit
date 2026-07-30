@@ -11,13 +11,15 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 
 ## Process
 
-1. **Find the design doc** — look for `docs/plans/*-design.md`. If none, ask the user to run `/skill:pwk-brainstorming` first. If several exist (a large issue was split), list them and ask which to plan. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the acceptance criteria and tests.
-
-2. **Read the Requirements** — the design doc opens with a `## Requirements` list; each requirement is one testable behavior the user will get. This plan covers **all** requirements in the design doc (one pipeline per design doc). If the design has no Requirements list, derive the requirements from its described behaviors and confirm them with the human before proceeding.
+1. **Find the design doc** — look for `docs/plans/*-design.md`. (For a full multi-topic overview when several are in flight, use `/skill:pwk-status`.) If none, ask the user to run `/skill:pwk-brainstorming` first. If several exist (a large issue was split), list them and ask which to plan. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the acceptance criteria and tests.
+2. **Create the feature branch first** — `git checkout -b <topic>` (branch creation is allowed in the plan phase). The design + plan docs are committed on this branch, not `main`.
+3. **Read the Requirements** — the design doc opens with a `## Requirements` list; each requirement is one testable behavior the user will get. This plan covers **all** requirements in the design doc (one pipeline per design doc). If the design has no Requirements list, derive the requirements from its described behaviors and confirm them with the human before proceeding.
 
 3. **Write the plan — acceptance criteria + integration tests per requirement.** For each requirement specify:
    - **Acceptance criteria** — `Given/When/Then` behavioral statements that define "done" for that requirement.
    - **Integration tests** — the concrete test cases that encode the acceptance criteria: a test name and what each asserts. This is the spec the executor writes and implements against.
+   - **Challenge the design first** *(if `## Production-risk areas` exists)* — before writing acceptance criteria, stress-test the design against the flagged risks: ask the uncomfortable "what breaks under load / on failure / on bad input" questions and confirm the approach holds. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
+   - **Dependencies (DAG)** — each requirement should be independently shippable. Cross-requirement dependencies are the smell to catch; note them as `Needs: Req N` so the executor processes them in dependency order.
    - **Production-risk notes** *(if the design flagged any in `## Production-risk areas`)* — carried forward so the executor and `pwk-code-review` account for them.
 
    Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`:
@@ -52,7 +54,8 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - Production-risk areas from the design are reflected.
    Fix gaps before presenting.
 
-5. **Present the plan** — show the complete plan to the human and wait for approval before suggesting execution.
+5. **Set up workspace isolation** *(before approving)* — you're already on the `<topic>` feature branch (step 2); the design + plan docs are committed here, not on `main`. For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
+6. **Present the plan** — show the complete plan and wait for approval. Approval **ends the gated plan phase** (the guard unlocks on it) so execution can begin.
 
 ## What the plan is NOT
 
