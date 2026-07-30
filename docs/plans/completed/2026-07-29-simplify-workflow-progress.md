@@ -19,4 +19,6 @@ Last updated: 2026-07-30T10:06:36Z
 | 10 | ✅ done | Rewrite docs/workflow-phases | eeb0eca |
 | — | ✅ done | CHANGELOG [1.0.0] + version bump | (this commit) |
 
-All requirements complete. `npm run check` green (29 tests). Ready to finalize.
+All requirements complete. `npm run check` green (29 tests).
+
+**Finalized 2026-07-30:** these planning docs were archived to `docs/plans/completed/` and the stale references they caused in the docs/skills were fixed (see companion commit).

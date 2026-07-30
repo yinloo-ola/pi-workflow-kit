@@ -1,8 +1,10 @@
 # Executing Tasks Redesign — Implementation Summary
 
+> **Historical document (superseded).** This summarizes the 2026-04 task-level redesign. The v1.0.0 rewrite (2026-07) replaced task-based execution with **per-requirement, behavioral-spec execution** (acceptance criteria + integration tests, two mandatory checkpoints per requirement, per-requirement `pwk-code-review`). The current model is in `README.md`, `docs/workflow-phases.md`, and `docs/oversight-model.md`. Kept for history only.
+
 **Date:** 2026-04-28  
 **Branch:** `executing-tasks-redesign`  
-**Status:** ✅ Complete
+**Status:** ✅ Complete (superseded by v1.0.0)
 
 ## Overview
 

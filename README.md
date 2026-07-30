@@ -159,6 +159,11 @@ pi-workflow-kit/
 │   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md
 │   └── pwk-diagnose/SKILL.md
+├── docs/
+│   ├── developer-usage-guide.md
+│   ├── workflow-phases.md
+│   ├── oversight-model.md
+│   └── plans/                # active design/plan/progress docs (archived to docs/plans/completed/)
 ├── tests/
 │   └── workflow-guard.test.ts
 ├── package.json

@@ -32,7 +32,7 @@ Read-only exploration. You may **not** edit or create any files except under `do
 
 5. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md` as a descriptive document (not a task list). **Open with a `## Requirements` list** — each requirement one testable behavior the user will get (`pwk-writing-plans` derives acceptance criteria + integration tests per requirement). Then cover: problem, approaches considered, architecture, components, data flow, error handling, and testing.
 
-   If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` keys its design-review trigger on this section.
+   If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` carries these notes into the plan, and `pwk-code-review` audits them after each requirement.
 
    **Splitting large issues:** if the issue is large and decomposes into genuinely independent sub-issues, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`), and get the human's approval before writing them. Each design doc then runs its own plan → execute → finalize pipeline. Most work is a single design doc — splitting is opt-in.
 
