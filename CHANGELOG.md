@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`/pwk-guard` command** — manual override of the workflow guard: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Mirrors the `/fog` escape hatch in pi-wayfinder.
 
+### Added
+
+- **Parallel specialized sub-agents** for per-requirement code-review (`ab5eba8`). Four dedicated agents — spec, tracing, smell, hazard — each reviewing from a different dimension via the `subagent` tool's parallel mode. Each gets a fresh context window (zero pollution from prior requirements). Agents live under `.pi/agents/pwk-*.md`. When the `subagent` tool is unavailable, flow falls back to inline `/skill:pwk-code-review`.
+- **Sub-agents set to read-only reporters** (`16ee0a2`). Review agents report findings only; they do not edit files or produce commits. The main agent collects all results, applies smell fixes itself, runs the full test suite, and commits — eliminating concurrent write races between parallel subprocesses.
+
 ### Changed
 
 - **Phase transitions are skill-only.** Removed the `approve`/`accept`/`lgtm`/`ship it` message-keyword that ended the gated plan phase — it was a false-positive footgun ("I approve of approach A" unlocked writes mid-discussion). Run `/skill:pwk-executing-tasks` (or any non-gated skill) to leave the plan phase.

@@ -81,17 +81,17 @@ For each requirement:
    ```json
    {
      "tasks": [
-       {"agent": "pwk-spec-reviewer", "task": "<scope + diff here>\n\n## Spec Review\nFor each acceptance criterion, point to the code and test that satisfy it. Flag gaps and scope creep."},
-       {"agent": "pwk-tracing-reviewer", "task": "<scope + diff here>\n\n## Trace Review\nTrace every new/changed code path end-to-end against tests. Note untested branches, dead branches, broken traces."},
-       {"agent": "pwk-smell-reviewer", "task": "<scope + diff here>\n\n## Smell Review\nFix shallow modules, duplication, missing seams, poor naming, magic values, dead code. Re-run tests after each fix (must stay green), commit changes. Flag only: smells requiring risky large refactors."},
-       {"agent": "pwk-hazard-reviewer", "task": "<scope + diff here>\n\n## Hazard Review\nAudit changed code: unbounded ops (KEYS/SCAN/full-table loads), missing indexes, unbounded concurrency, long-running transactions, query/command interpolation (injection), unrestricted uploads/temp flooding, silent swallowing loops. Write [SAFE] or [TRIGGERED] per item."}
+       {"agent": "pwk-spec-reviewer", "task": "<scope + diff here>\n\n## Spec Review\nFor each acceptance criterion, point to the code and test that satisfy it. Flag gaps (criterion with no covering code or test) and scope creep (code beyond criteria). Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."},
+       {"agent": "pwk-tracing-reviewer", "task": "<scope + diff here>\n\n## Trace Review\nTrace every new/changed code path end-to-end against tests. Note untested branches, dead branches, paths where the trace breaks. Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."},
+       {"agent": "pwk-smell-reviewer", "task": "<scope + diff here>\n\n## Smell Review\nReport: shallow modules (interface ≈ implementation complexity), duplication, missing seams / premature abstraction, poor naming, magic values, dead code. Flag only: smells requiring risky large refactors. Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."},
+       {"agent": "pwk-hazard-reviewer", "task": "<scope + diff here>\n\n## Hazard Review\nAudit changed code against these hazards: unbounded ops (KEYS/SCAN/full-table loads), missing indexes, unbounded concurrency (Promise.all without limits), long-running transactions, query/command interpolation (injection), unrestricted uploads/temp flooding, silent swallowing loops. Write [SAFE] (1-line reason) or [TRIGGERED] (mitigation). Report only — do not modify files. Your findings are collected by the parent agent which applies fixes and commits changes."}
      ],
      "agentScope": "project",
      "cwd": "<repo-root>"
    }
    ```
 
-   **On success:** collect each agent's findings and smell-fix commits. Apply fixes, re-run tests (must stay green), mark `✅ done`. Flag non-trivial issues as follow-ups.
+   **On success:** collect all findings. For smell-review findings: identify the smells, apply the fixes yourself (re-run integration tests after changes — must stay green, commit). For trace/spec/hazard findings: flag as follow-ups for human decision or later fix. Update the progress-file row to `✅ done`. Flag non-trivial issues as follow-ups.
 
    **Fallback** (subagent unavailable or returns error): revert to inline review — run `/skill:pwk-code-review` for this requirement as before.
 9. **Loop** — go to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).

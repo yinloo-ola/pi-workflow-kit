@@ -69,10 +69,12 @@ Implement requirement-by-requirement with **full autonomy**: write the integrati
 ### 4. Code review (per requirement)
 
 ```
-/skill:pwk-code-review
+/tool:subagent { tasks: [{ agent: "pwk-spec-reviewer", task: "..." }, ...], agentScope: "project" }
 ```
 
-After each requirement completes: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check.
+Per requirement, four specialized reviewers launch in parallel — each reviewing from a different dimension (spec gaps & scope creep, end-to-end code tracing, code smells, production hazards). Agents live under `.pi/agents/pwk-*.md`. All report findings only; no agent edits files or produces commits. The main agent collects results, applies smell fixes itself, runs integration tests after each fix, then updates progress to `✅ done`.
+
+*Fallback:* if the `subagent` tool is unavailable, the skill falls back to inline `/skill:pwk-code-review` as before.
 
 ### 5. Finalize
 
