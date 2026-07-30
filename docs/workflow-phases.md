@@ -1,15 +1,13 @@
 # Workflow Phases
 
-`pi-workflow-kit` has 4 phases and 1 utility skill. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 5 pipeline skills plus 1 utility skill. You invoke each one explicitly with `/skill:`.
 
 ```
-brainstorm → plan → [design-review?] → execute → [verify?] → finalize
+brainstorm → writing-plans → executing-tasks → finalizing
+                          (per requirement: tests → ⏸ checkpoint → implement → ⏸ checkpoint → code-review)
 ```
 
-For complex features, each phase loops per feature:
-```
-brainstorm (name features) → plan next feature → [design-review?] → execute feature → [verify?] → loop...
-```
+For multi-design work (a large issue split into several design docs), run the pipeline once per design doc.
 
 ## brainstorm
 
@@ -17,50 +15,57 @@ brainstorm (name features) → plan next feature → [design-review?] → execut
 /skill:pwk-brainstorming
 ```
 
-- Explore requirements and shape the design
-- Ask questions one at a time, propose approaches
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` with a `## Features` table listing all features and their status
+- Explore requirements and shape the design.
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list.
+- May split a large issue into multiple design docs (human-approved).
+- ADRs go to `docs/adr/` (permanent, never archived).
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
-## plan
+## writing-plans
 
 ```
 /skill:pwk-writing-plans
 ```
 
-- Read the design doc's Features table, identify the next `⬜ pending` feature
-- Mark it `🔄 planned` and create a per-feature implementation plan
-- Produce `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md`
-- Optionally trigger design review for non-trivial features
+- Read the design doc's `## Requirements`; for each, derive **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code).
+- Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
-Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
+Write boundary: only `docs/plans/` is writable.
 
-## execute
+## executing-tasks
 
 ```
 /skill:pwk-executing-tasks
 ```
 
-- Read the plan doc, resolve the design doc and feature row from metadata
-- Implement tasks one at a time: implement → test → fix → commit
-- Mark feature `✅ done` in the design doc's Features table when complete
-- Suggest planning the next feature or verifying
+- Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → `/skill:pwk-code-review`.
+- Two **mandatory** human checkpoints per requirement.
+- Progress tracked in `docs/plans/*-progress.md`.
 
 No write restrictions. All tools available.
 
-## finalize
+## code-review
+
+```
+/skill:pwk-code-review
+```
+
+- Runs after each requirement completes: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check.
+- Unlocked — may modify code to fix smells.
+
+No write restrictions.
+
+## finalizing
 
 ```
 /skill:pwk-finalizing
 ```
 
-- Archive plan docs to `docs/plans/completed/`
-- Update CHANGELOG, README if needed
-- Create PR
-- Clean up worktree if one was used
+- Archive the design's planning docs (per-`<topic>`) to `docs/plans/completed/`; ADRs stay at `docs/adr/`.
+- Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
-No write restrictions. All tools available.
+No write restrictions.
 
 ## diagnose
 
@@ -70,6 +75,8 @@ No write restrictions. All tools available.
 
 Not a pipeline phase. A utility skill invoked on demand when debugging is needed.
 
-- Build a feedback loop (failing test, curl script, etc.)
-- Reproduce, hypothesise, instrument, fix, cleanup
-- No write restrictions (used during execute/finalize, or outside the pipeline)
+No write restrictions.
+
+## Continuity across sessions
+
+A new session resumes by invoking the skill for the phase to continue. The skill globs `docs/plans/` for its artifact (progress file / plan doc), resumes the single match, or asks if several. Each resumption skill reports what it found on entry — no registry file needed; the `<topic>` slug in the filenames is the identity.

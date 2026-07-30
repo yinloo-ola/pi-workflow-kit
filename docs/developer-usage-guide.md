@@ -4,9 +4,9 @@ How to install and use `pi-workflow-kit` with the Pi coding agent.
 
 ## What you get
 
-- **4 workflow skills** that guide the agent through a structured feature-based workflow
-- **3 on-demand skills** for design review, verification, and debugging
-- **1 extension** that hard-blocks source writes during brainstorm, plan, and verify phases
+- **5 pipeline skills** — brainstorm → writing-plans → executing-tasks → finalizing, with code-review running per requirement during execution.
+- **1 utility skill** — diagnose (debugging, on demand).
+- **1 extension** — hard-blocks source writes during brainstorm and writing-plans, and blocks destructive bash via a simple common-blacklist.
 
 ## Installation
 
@@ -32,10 +32,10 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 
 ## The workflow
 
-You control each phase by invoking the skill. For multi-feature designs, the plan→execute loop repeats per feature:
+You control each phase by invoking the skill. For multi-design work (a large issue split), run the pipeline once per design doc:
 
 ```
-/skill:pwk-brainstorming  →  /skill:pwk-writing-plans  →  /skill:pwk-executing-tasks  →  loop or /skill:pwk-finalizing
+/skill:pwk-brainstorming  →  /skill:pwk-writing-plans  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
 ```
 
 ### 1. Brainstorm
@@ -44,11 +44,9 @@ You control each phase by invoking the skill. For multi-feature designs, the pla
 /skill:pwk-brainstorming
 ```
 
-Explore the idea through collaborative dialogue. The agent reads code, asks questions one at a time, proposes 2-3 approaches, and presents the design in sections for your review.
+Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review.
 
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` with a `## Features` table
-
-Optionally writes ADRs to `docs/plans/adr/` for significant architectural decisions.
+Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list. May split a large issue into multiple design docs. ADRs go to `docs/adr/` (permanent).
 
 ### 2. Plan
 
@@ -56,9 +54,9 @@ Optionally writes ADRs to `docs/plans/adr/` for significant architectural decisi
 /skill:pwk-writing-plans
 ```
 
-Read the design doc's Features table, pick the next `⬜ pending` feature, and create a per-feature implementation plan with exact file paths, complete code, and TDD scenarios. Optionally set up a branch or worktree.
+Read the design doc's Requirements and turn each into **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code).
 
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md`
+Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 ### 3. Execute
 
@@ -66,65 +64,50 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-<feature-name>-implementation.md`
 /skill:pwk-executing-tasks
 ```
 
-Implement the plan task-by-task. Each task: implement → run tests → fix if needed → commit. When the feature is done, marks it `✅ done` in the design doc and suggests planning the next feature.
+Implement requirement-by-requirement with **full autonomy**: write the integration tests (red) → **checkpoint: tests** → implement to green → **checkpoint: complete** → commit → code-review. Two mandatory human checkpoints per requirement.
 
-### 4. Finalize
+### 4. Code review (per requirement)
+
+```
+/skill:pwk-code-review
+```
+
+After each requirement completes: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check.
+
+### 5. Finalize
 
 ```
 /skill:pwk-finalizing
 ```
 
-Archive plan docs, update CHANGELOG/README, create PR, clean up worktree.
+Archive the design's planning docs (per-topic), curate lessons, update CHANGELOG/README, create PR or merge.
 
-### 5. Design Review (on demand)
-
-```
-/skill:pwk-design-review
-```
-
-Audit a plan doc for production risks — security, scalability, fault tolerance, and operational hazards. Triggered by writing-plans for non-trivial features. Review findings append to the plan doc, not the design doc.
-
-### 6. Verify (on demand)
-
-```
-/skill:pwk-verify
-```
-
-Post-implementation verification with three expert passes — security, optimization, and traceability. Run after executing a feature or before finalizing.
-
-### 7. Diagnose (on demand)
+### Diagnose (on demand)
 
 ```
 /skill:pwk-diagnose
 ```
 
-A 6-phase debugging loop you invoke when something is broken. Build a feedback loop first, then reproduce, hypothesise, instrument, fix, and cleanup. Not a pipeline phase — use whenever needed.
+A debugging loop you invoke when something is broken. Not a pipeline phase.
 
 ## What the extension does
 
-The `workflow-guard` extension watches `write` and `edit` tool calls:
+The `workflow-guard` extension watches `write`/`edit` and `bash` tool calls:
 
-- **During brainstorm and plan**: blocks writes outside `docs/plans/`. The agent can read code and use bash, but cannot modify source files.
-- **During verify**: same read-only enforcement — the agent can inspect code but not modify it.
-- **During execute and finalize**: no restrictions. All tools available.
+- **During brainstorm and writing-plans**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is appended after your message each turn so the model self-restricts.
+- **During executing-tasks, code-review, finalizing**: no restrictions.
+
+The destructive blacklist covers common file-mutating vectors (redirects, `tee`, `cp`/`mv`/`touch`/`rm`, `git commit`/`apply`, `npm install`, in-place editors like `sed -i`/`perl -i`, `patch`, `find -delete`). Exotic vectors (interpreter escapes like `node -e`, `python -c`, `| bash`) rely on the phase reminder — the guard is advisory, not a security boundary.
 
 No configuration needed. It activates automatically after install.
 
-## TDD guidance
+## Test-first discipline
 
-The plan labels each task with a TDD scenario:
-
-| Scenario | When | Rule |
-|----------|------|------|
-| New feature | Adding new behavior | Write failing test → implement → pass |
-| Modifying tested code | Changing existing behavior | Run existing tests first → modify → verify |
-| Trivial | Config, docs, naming | Use judgment |
-
-This is guidance in the skill instructions, not runtime enforcement.
+Plans specify *what* (acceptance criteria + integration tests); the executor writes the tests first (red), then implements to green. This keeps the spec stable — implementation details can change without invalidating the plan.
 
 ## Tips
 
-- Start with brainstorming for anything non-trivial
-- Use writing-plans before touching code for multi-step work
-- Put all plan artifacts under `docs/plans/`
-- During execute, the agent handles code review feedback by verifying criticism before implementing
+- Start with brainstorming for anything non-trivial.
+- The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
+- Each requirement has two mandatory checkpoints: use them to steer test design and implementation.
+- Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.

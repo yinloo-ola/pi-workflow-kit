@@ -1,6 +1,6 @@
 # pi-workflow-kit
 
-> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→verify→finalize workflow with TDD discipline.
+> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→finalize workflow with test-first discipline and per-requirement code review.
 
 AI coding agents tend to skip design and jump straight into implementation, producing over-engineered or misaligned code. **pi-workflow-kit** solves this by hard-blocking write operations during brainstorm and planning phases — the agent *literally cannot modify your source files* until you approve the design.
 
@@ -28,30 +28,32 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 | Phase | `write` / `edit` | `bash` |
 |-------|:-:|:-:|
-| **Brainstorm** / **Plan** / **Verify** | 🔒 Blocked outside `docs/plans/` | 🔒 Read-only only (grep, find, cat, git status, curl…) |
-| **Execute** / **Finalize** | ✅ Full access | ✅ Full access |
+| **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
+| **Execute** / **Code-review** / **Finalize** | ✅ Full access | ✅ Full access |
 
-The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files or run mutating commands.
+The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is appended after your message each turn so the model self-restricts.
 
-### 🧠 7 Workflow Skills
+### 🧠 6 Workflow Skills
 
 Guide the agent through a disciplined development process:
 
-brainstorm → plan → [design-review?] → execute → [verify?] → finalize
-                ↕
-             diagnose (anytime)
+```
+brainstorm → writing-plans → executing-tasks → finalizing
+                             (per requirement: tests → checkpoint → implement → checkpoint → code-review)
+                                ↕
+                          diagnose (anytime)
+```
 
-For multi-feature designs, the plan→execute loop repeats per feature.
+For multi-design work (a large issue split into several design docs), run the pipeline once per design doc.
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
-| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, debate tradeoffs, produce a design doc with a Features table |
-| **Design Review** | `/skill:pwk-design-review` | Audit plan and design for production risks (security, scalability, fault tolerance) |
-| **Plan** | `/skill:pwk-writing-plans` | Plan one feature at a time from the Features table — bite-sized TDD tasks with acceptance criteria |
-| **Execute** | `/skill:pwk-executing-tasks` | Implement tasks one-by-one with TDD discipline and pre-commit checkpoint review gates |
-| **Verify** | `/skill:pwk-verify` | Three expert review passes (security, optimization, traceability) on implemented code |
-| **Finalize** | `/skill:pwk-finalizing` | Archive plan docs, update README/CHANGELOG, create PR |
-| **Diagnose** | `/skill:pwk-diagnose` | 6-phase debugging loop: reproduce → hypothesize → instrument → fix → verify |
+| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list |
+| **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code) |
+| **Execute** | `/skill:pwk-executing-tasks` | Per requirement: write tests (red) → **checkpoint: tests** → implement (green) → **checkpoint: complete** → code-review |
+| **Code review** | `/skill:pwk-code-review` | Per requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
+| **Finalize** | `/skill:pwk-finalizing` | Archive plan docs (per-topic), update README/CHANGELOG, create PR |
+| **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup |
 
 ## The Workflow in Detail
 
@@ -59,63 +61,57 @@ For multi-feature designs, the plan→execute loop repeats per feature.
 
 You control each phase — the agent never advances on its own. Invoke a skill to move forward:
 
-/skill:pwk-brainstorming   →  discuss and design (names features)
-/skill:pwk-writing-plans   →  plan next feature from the Features table
-/skill:pwk-design-review   →  audit for production risks (on demand)
-/skill:pwk-executing-tasks →  implement with TDD
-/skill:pwk-verify           →  review code for security, optimization, and traceability
+```
+/skill:pwk-brainstorming   →  discuss and design (lists Requirements)
+/skill:pwk-writing-plans   →  turn each Requirement into acceptance criteria + integration tests
+/skill:pwk-executing-tasks →  implement per requirement with two mandatory checkpoints
+/skill:pwk-code-review     →  review each requirement (tracing, spec, smells, hazards)
 /skill:pwk-finalizing       →  ship it
+```
 
-### Feature-Based Planning
+### Behavioral-Spec Planning
 
-Design docs include a `## Features` table that tracks each feature's status:
+Plans specify *what*, not *how*. For each requirement, the plan gives **acceptance criteria + integration-test cases** — no implementation code, no file-by-file recipe. The executor has full autonomy to choose structure, signatures, and internals. A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria + integration tests survive implementation changes.
 
-| # | Feature | Status | Notes |
-|---|---------|--------|-------|
-| 1 | User signup | ✅ done | |
-| 2 | Email verification | 🔄 planned | Plan: docs/plans/...-email-verification-implementation.md |
-| 3 | Password reset | ⬜ pending | |
+### Test-First per Requirement
 
-This enables incremental development — plan and execute one feature at a time, then loop back for the next.
+Each requirement is implemented test-first:
 
-### TDD Three-Scenario Model
-
-Each task is labeled with its TDD scenario during planning:
-
-| Scenario | When | Rule |
-|----------|------|------|
-| **New feature** | Adding new behavior | Write failing test → implement → pass |
-| **Modifying tested code** | Changing existing behavior | Run existing tests first → modify → verify |
-| **Trivial** | Config, docs, naming | Use judgment |
+1. Write the integration tests (red)
+2. ⏸ **checkpoint: tests** — you review the test design
+3. Implement to green (full autonomy)
+4. ⏸ **checkpoint: complete** — you review the implementation
+5. Commit → code review
 
 ### Lessons Learned
 
-A persistent rules file (`docs/lessons.md`) helps the agent learn from repeat mistakes across sessions. When the agent catches itself making the same error — like forgetting to run `make lint` — it writes a rule immediately. Future sessions (even after `/new`) pick it up automatically.
+A persistent rules file (`docs/lessons.md`) helps the agent learn from repeat mistakes across sessions. When the agent catches itself making the same error, it writes a generic rule immediately. Future sessions (even after `/new`) pick it up automatically.
 
 ```
 brainstorm → reads lessons (design context)
-plan        → reads lessons (task breakdown)
-execute     → reads lessons per task, writes new ones on repeat mistakes
-finalize    → reviews and retires stale rules
+plan        → reads lessons (acceptance criteria / tests)
+execute     → reads lessons per requirement, writes new ones on repeat mistakes
+finalize    → reviews, generalizes, and retires stale rules
 ```
 
 Rules are simple imperative bullets:
 
-- After completing each task, run `make lint && make fmt` before committing
+- After completing each requirement, run `make lint && make fmt` before committing
 - Never import `testify` in this project
 - Always check for existing test helpers before writing new ones
 
 No configuration needed — the file is created automatically when the first lesson is written.
 
-### Checkpoint Review Gates
+### Two Mandatory Checkpoints per Requirement
 
-Optionally label tasks with a `checkpoint` to pause for human review. At each checkpoint the agent stops and waits for your feedback — you can approve, ask for changes, or send it back to rethink. Only when you're satisfied does it move on to the next task.
+Each requirement has **two hard human-review gates** (not optional):
 
-| Checkpoint | When to Use | What Happens |
+| Checkpoint | What's done | What you review |
 |---|---|---|
-| *(none)* | Trivial tasks, well-understood changes | Auto-advance, no pause |
-| `checkpoint: test` | Test design matters | Agent writes the failing test, then pauses for your review. Verify the test covers the right cases before the agent implements. |
-| `checkpoint: done` | Implementation review matters | Agent implements and passes tests, then pauses for your review. Verify the implementation is correct before committing. |
+| **tests** | Integration tests written, confirmed failing | Are the right behaviors being specified? |
+| **complete** | Implemented, tests green, refactored | Is the implementation correct before committing? |
+
+The agent stops and waits at each — approve, request changes, or send it back.
 
 ## Quick Start
 
@@ -127,19 +123,17 @@ pi install npm:@tianhai/pi-workflow-kit
 > /skill:pwk-brainstorming
 > I want to add OAuth2 login to our API
 
-# (agent explores approaches, writes design doc with Features table)
+# (agent explores approaches, writes a design doc with a Requirements list)
 # (write/edit are blocked — your code is safe)
 
 > /skill:pwk-writing-plans
 
-# (agent picks next feature, breaks into TDD tasks)
-# (triggers design review for non-trivial features)
+# (agent turns each Requirement into acceptance criteria + integration tests)
+
 > /skill:pwk-executing-tasks
 
-# (agent implements with TDD, cognitive persona shifts, all tools unlocked)
-> /skill:pwk-verify
+# (per requirement: writes tests → checkpoint → implements → checkpoint → code-review)
 
-# (agent runs security, optimization, and traceability reviews on implemented code)
 > /skill:pwk-finalizing
 
 # (agent archives docs, curates lessons, creates PR)
@@ -148,8 +142,8 @@ pi install npm:@tianhai/pi-workflow-kit
 ## Why?
 
 - **AI agents skip design.** Left unchecked, they jump to code and over-engineer. This forces a think-first workflow.
-- **TDD needs structure.** The three-scenario model gives the agent clear rules for when to write tests first.
-- **You stay in control.** Checkpoint review gates let you approve test designs and implementations before the agent commits.
+- **Specs beat recipes.** Plans are behavioral specs (acceptance criteria + tests), not implementation recipes — they don't invalidate when details change.
+- **You stay in control.** Two mandatory checkpoints per requirement let you approve test design and implementation before the agent commits.
 - **Enforced, not suggested.** Hard blocks mean the agent can't ignore the rules — not even accidentally.
 
 ## Project
@@ -157,13 +151,12 @@ pi install npm:@tianhai/pi-workflow-kit
 ```
 pi-workflow-kit/
 ├── extensions/
-│   └── workflow-guard.ts      # Write blocker during brainstorm/plan/verify
+│   └── workflow-guard.ts      # Write blocker during brainstorm/plan; destructive-bash blacklist
 ├── skills/
 │   ├── pwk-brainstorming/SKILL.md
-│   ├── pwk-design-review/SKILL.md
 │   ├── pwk-writing-plans/SKILL.md
 │   ├── pwk-executing-tasks/SKILL.md
-│   ├── pwk-verify/SKILL.md
+│   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md
 │   └── pwk-diagnose/SKILL.md
 ├── tests/
