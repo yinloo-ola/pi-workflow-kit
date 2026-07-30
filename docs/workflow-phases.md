@@ -40,7 +40,7 @@ Write boundary: only `docs/plans/` is writable.
 /skill:pwk-executing-tasks
 ```
 
-- Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → `/skill:pwk-code-review`.
+- Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → **per-requirement review** (four parallel reviewers via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
 - Two **mandatory** human checkpoints per requirement.
 - Progress tracked in `docs/plans/*-progress.md`.
 - After all requirements: **integration gate** — run the full suite and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
@@ -53,8 +53,9 @@ No write restrictions. All tools available.
 /skill:pwk-code-review
 ```
 
-- Runs after each requirement completes: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check.
-- Unlocked — may modify code to fix smells.
+The **inline reviewer**: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked — may modify code to fix smells.
+
+**Not a phase you drive manually.** During `pwk-executing-tasks`, per-requirement review runs **four specialized reviewers in parallel** via the `subagent` tool (spec, tracing, smell, hazard — each fresh-context, read-only reporters); this skill is the **fallback** when [`pi-subagents`](https://pi.dev/packages/pi-subagents) is not installed. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
 
 No write restrictions.
 
