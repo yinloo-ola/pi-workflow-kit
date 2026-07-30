@@ -111,10 +111,14 @@ export function getCurrentPhase(): Phase {
 }
 
 let phase: Phase = null;
+// True on the turn a gated phase is entered; consumed once by before_agent_start so the reminder
+// is shown only on the first turn of the phase (and re-armed on any later phase change into it).
+let pendingPhaseReminder = false;
 
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", () => {
     phase = null;
+    pendingPhaseReminder = false;
   });
 
   pi.on("input", (event) => {
@@ -123,7 +127,11 @@ export default function (pi: ExtensionAPI) {
     if (match) {
       const skill = match[1];
       if (skill in SKILL_TO_PHASE) {
-        phase = SKILL_TO_PHASE[skill];
+        const nextPhase = SKILL_TO_PHASE[skill];
+        if (phase !== nextPhase) {
+          phase = nextPhase;
+          pendingPhaseReminder = true;
+        }
         return;
       }
     }
@@ -144,11 +152,16 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  // Append a short phase reminder after the user's message each turn while a gated phase is active.
-  // Returning { message } adds a custom message at the tail of the request (cache-safe: it never
-  // touches the cached system-prompt/tools/history prefix).
+  // Show the phase reminder exactly once: on the first turn of a gated phase (before_agent_start
+  // fires before the LLM is called). It is NOT repeated every turn. Re-armed on any phase change.
+  // Returned as a tail-appended custom message so it never touches the cached system-prompt prefix.
+  //
+  // Note: a soft reminder on every *permitted* bash call is not possible — tool_call can only
+  // return { block, reason }, not a message. So at bash time the reminder surfaces only when a
+  // destructive command is actually blocked (the reactive `reason` in the tool_call handler).
   pi.on("before_agent_start", async () => {
-    if (!phase) return {};
+    if (!phase || !pendingPhaseReminder) return {};
+    pendingPhaseReminder = false;
     return {
       message: {
         customType: "pwk-phase-reminder",
@@ -169,7 +182,7 @@ export default function (pi: ExtensionAPI) {
         }
         return {
           block: true,
-          reason: `⚠️ ${phase.toUpperCase()} PHASE: Bash command blocked (destructive). Only read-only commands are permitted during brainstorming and planning.\nCommand: ${command}`,
+          reason: `⚠️ ${phase.toUpperCase()} PHASE reminder: read-only phase — no source writes or destructive bash. Only read-only commands are permitted.\nBlocked command: ${command}`,
         };
       }
       return;
