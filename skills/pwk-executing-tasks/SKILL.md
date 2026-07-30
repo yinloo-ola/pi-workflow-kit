@@ -73,7 +73,27 @@ For each requirement:
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise, re-run, re-present at this same checkpoint.
 7. **Commit.** `git add` the relevant files and commit with a clear message. (Status stays `🔄 in-progress` — not done yet.)
-8. **Code review.** Mark `🔎 review`, then run `/skill:pwk-code-review` for this requirement (code tracing, spec alignment, code smells, hazard check). It may apply smell fixes; if so, commit those. On completion it marks `✅ done`. Flagged non-trivial issues become follow-ups.
+8. **Code review.** Mark `🔎 review`. Attempt isolated code-review via the `subagent` tool — four agents review the same diff in parallel, each from a different dimension (each gets a fresh context window, zero pollution from previous requirements):
+
+   Gather the requirement's scope: acceptance criteria, integration test cases, and git diff (`git log --oneline -5 && git diff HEAD~N..HEAD`).
+
+   **If the `subagent` tool is available**, invoke it with parallel tasks:
+   ```json
+   {
+     "tasks": [
+       {"agent": "pwk-spec-reviewer", "task": "<scope + diff here>\n\n## Spec Review\nFor each acceptance criterion, point to the code and test that satisfy it. Flag gaps and scope creep."},
+       {"agent": "pwk-tracing-reviewer", "task": "<scope + diff here>\n\n## Trace Review\nTrace every new/changed code path end-to-end against tests. Note untested branches, dead branches, broken traces."},
+       {"agent": "pwk-smell-reviewer", "task": "<scope + diff here>\n\n## Smell Review\nFix shallow modules, duplication, missing seams, poor naming, magic values, dead code. Re-run tests after each fix (must stay green), commit changes. Flag only: smells requiring risky large refactors."},
+       {"agent": "pwk-hazard-reviewer", "task": "<scope + diff here>\n\n## Hazard Review\nAudit changed code: unbounded ops (KEYS/SCAN/full-table loads), missing indexes, unbounded concurrency, long-running transactions, query/command interpolation (injection), unrestricted uploads/temp flooding, silent swallowing loops. Write [SAFE] or [TRIGGERED] per item."}
+     ],
+     "agentScope": "project",
+     "cwd": "<repo-root>"
+   }
+   ```
+
+   **On success:** collect each agent's findings and smell-fix commits. Apply fixes, re-run tests (must stay green), mark `✅ done`. Flag non-trivial issues as follow-ups.
+
+   **Fallback** (subagent unavailable or returns error): revert to inline review — run `/skill:pwk-code-review` for this requirement as before.
 9. **Loop** — go to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).
 
 ### Checkpoint gates are mandatory
