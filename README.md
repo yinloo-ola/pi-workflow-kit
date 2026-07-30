@@ -68,7 +68,7 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 /skill:pwk-brainstorming   →  discuss and design (lists Requirements)
 /skill:pwk-writing-plans   →  turn each Requirement into acceptance criteria + integration tests
 /skill:pwk-executing-tasks →  implement per requirement with two mandatory checkpoints
-/skill:pwk-code-review     →  review each requirement (tracing, spec, smells, hazards)
+/skill:pwk-code-review     →  auto-runs per-requirement inside executing-tasks; also invocable manually for ad-hoc reviews
 /skill:pwk-finalizing       →  ship it
 ```
 
