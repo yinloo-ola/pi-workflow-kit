@@ -90,7 +90,7 @@ pi install npm:pi-subagents
 /skill:pwk-diagnose
 ```
 
-A debugging loop you invoke when something is broken. Not a pipeline phase.
+A debugging loop you invoke when something is broken. Not a pipeline phase. **Invoking it exits the gated brainstorm/plan phase** — diagnosis needs to write failing tests and debug instrumentation. If you only want read-only investigation mid-design, use `pwk-status` or re-lock with `/pwk-guard on`.
 
 ### Status (on demand)
 
@@ -98,15 +98,15 @@ A debugging loop you invoke when something is broken. Not a pipeline phase.
 /skill:pwk-status
 ```
 
-A read-only overview of all active design topics — which phase each is in and how far along. Use when resuming work or juggling several designs in parallel (e.g. across worktrees) and you're unsure which topic to continue. Not a pipeline phase.
+A read-only overview of all active design topics — which phase each is in and how far along. Use when resuming work or juggling several designs in parallel (e.g. across worktrees) and you're unsure which topic to continue. Not a pipeline phase, and **it does not exit the gated phase** — it needs no writes, so the brainstorm/plan write boundary stays up.
 
 ## What the extension does
 
 The `workflow-guard` extension watches `write`/`edit` and `bash` tool calls:
 
 - **During brainstorm and writing-plans**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is shown once when the gated phase begins so the model self-restricts.
-- **During executing-tasks, code-review, finalizing**: no restrictions.
-- **Phases are skill-driven**: the guard follows the skill you invoke — it never unlocks on message keywords. To override, run `/pwk-guard on` (force read-only), `off` (disable), or `auto` (default; skill-driven). Subcommands autocomplete.
+- **During executing-tasks, code-review, finalizing, diagnose**: no restrictions.
+- **Phases are skill-driven**: the guard follows the skill you invoke — it never unlocks on message keywords. The exact unlock set is `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose`; `pwk-status` stays gated. To override, run `/pwk-guard on` (force read-only), `off` (disable), or `auto` (default; skill-driven). Subcommands autocomplete.
 
 The destructive blacklist covers common file-mutating vectors (redirects, `tee`, `cp`/`mv`/`touch`/`rm`, `git commit`/`apply`, `npm install`, in-place editors like `sed -i`/`perl -i`, `patch`, `find -delete`). Exotic vectors (interpreter escapes like `node -e`, `python -c`, `| bash`) rely on the phase reminder — the guard is advisory, not a security boundary.
 

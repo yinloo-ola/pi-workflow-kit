@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - **`/pwk-guard` command** — manual override of the workflow guard: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Mirrors the `/fog` escape hatch in pi-wayfinder.
+- **skill-lint check 6 `phase unlock list`** — verifies the guard's unlock list (which `/skill:` commands exit a gated phase) against every skill's own claims, both directions: unlocking skills must document it, `pwk-status` must assert it does *not* unlock, and the exported `UNLOCK_SKILLS` const must match the input handler. Prevents a "read-only" skill from silently dropping the write boundary.
+
+### Changed
+
+- **`pwk-status` no longer exits the gated phase** — it is read-only orientation and previously unlocked the write boundary as a hidden side effect. `pwk-diagnose` and `pwk-code-review` still exit (they legitimately write source) and now say so in their SKILL.md and in `docs/workflow-phases.md` / `docs/oversight-model.md` / `README.md` / `docs/developer-usage-guide.md`.
+- **`pwk-executing-tasks` no longer inlines the four reviewer checklists** in its `subagent` task template (~450 tokens saved per execute). The checklists live only in `agents/pwk-*-reviewer.md`, now the single source of truth.
+- **Skills de-verbosified** (`pwk-brainstorming`, `pwk-writing-plans`, `pwk-executing-tasks`, `pwk-finalizing`) — ~100 lines trimmed across the four, with zero behavior change: every gate rule (proportionality tags, spec+inline constraint, integration gate, finalizing's failed/skipped blocks) is retained, and the wording now states the why once instead of repeating it per step.
 
 ### Added
 

@@ -5,78 +5,57 @@ description: "Use this before any creative work — creating features, building 
 
 # Brainstorming
 
-Read-only exploration. You may **not** edit or create any files except under `docs/plans/`.
+Read-only exploration of source code; every file you create or edit goes under `docs/plans/`. (Once an ADR is approved by the human, `docs/adr/` becomes writable too — ask the user to unlock or run the write.) Planning produces the document the executor builds from; source-writing happens in later phases.
 
 ## Proportionality: trivial vs non-trivial
 
-Classify the change at the very start. The right amount of brainstorm depends on the size of the change.
+Classify the change at the start.
 
-- **Trivial** — a typo or obvious bugfix with no open design questions, a config/version bump, a single-function change with no architectural impact, or anything the human flags as trivial. For trivial changes:
-  - Skip steps 3–5 (the multi-turn approach exploration and sectioned design presentation).
-  - Write a **minimal** design doc in one turn: a one-line context sentence, a `## Requirements` list with the single requirement, and (if applicable) a `## Production-risk areas` line. No approaches section, no sectioned review.
-  - Tell the human the plan can be a single inline requirement, and hand off to `/skill:pwk-writing-plans`.
-  - The guard still enforces read-only — trivial does **not** skip the phase; it compresses it to one turn.
-- **Non-trivial** — anything with open design questions, multiple viable approaches, cross-module impact, or new behavior. Run the full Process below.
+- **Trivial** — typo or obvious bugfix with no open design questions, config/version bump, single-function change, or anything the human flags as trivial. Skip steps 3–5; write a **minimal** design doc in one turn (one-line context, a `## Requirements` list with the single requirement, optional `## Production-risk areas` line), and hand off to `/skill:pwk-writing-plans`. The guard still enforces read-only — trivial compresses the phase to one turn, it doesn't skip it.
+- **Non-trivial** — open design questions, multiple approaches, cross-module impact, or new behavior. Run the full process below.
 
-When unsure, ask the human: "This looks like a trivial fix — want me to fast-path it, or do a full brainstorm?" Default to full if they don't say.
+When unsure, ask: "This looks trivial — fast-path it, or full brainstorm?" Default to full.
 
 ## Granularity
 
-**A design doc is one pull request; a requirement is one testable slice within it.** Two decomposition levels answer two different questions:
+**One design doc = one PR; one requirement = one testable slice within it.**
 
-- **How many PRs?** — split a large issue into **multiple design docs** only when each part could ship as its own PR (independently reviewable and mergeable). Each design doc runs its own plan → execute → finalize pipeline → its own PR. Example: "add OAuth" and "add dark mode" are unrelated → two design docs.
-- **How to build one PR incrementally?** — within a design doc, decompose the work into **requirements**, each "one testable behavior." The plan covers all of them; the executor builds them one at a time. Example: "add OAuth" = R1 redirect flow, R2 token refresh, R3 error states → one design doc, three requirements, one PR.
-
-Requirements are the leaf unit — never split further. Decision rule: **could this part be reviewed and merged on its own?** Yes → separate design doc. No → one design doc, multiple requirements. Most work is a single design doc; splitting is opt-in.
+- Split into **multiple design docs** only when each part could ship as its own PR (independently reviewable and mergeable). Each runs its own plan → execute → finalize pipeline.
+- Within a doc, decompose into **requirements**, each one testable behavior. Decision rule: could this part be reviewed and merged on its own? Yes → separate design doc. No → one doc, multiple requirements. Most work is a single doc; splitting is opt-in.
 
 ## Process
 
-1. **Check git state** — run `git status` and `git log --oneline -5`. If there's uncommitted work, ask the user what to do with it first.
-2. **Discovery** *(skip if this is a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md`. Report active topics found (e.g. `In-flight: auth (plan), billing (brainstorm)`). Multiple designs may run in parallel. If the new idea continues an existing topic, ask the human whether to extend it or start fresh before designing.
-3. **Understand the idea** — read existing code, docs, and recent commits. Grep for related functionality, check package.json/dependencies and module structure. **Check `docs/lessons.md`** if it exists — known constraints and patterns may affect the design. Read only what's necessary to ground the design — don't read the entire codebase. Ask questions to refine the idea. Prefer multiple choice when possible. After each question, check: can you clearly articulate (a) what the user wants to build, (b) why, and (c) key constraints? If yes, present your understanding as a short summary and ask: "Should I proceed with this, or is there more to add?" The human decides when to move on.
-4. **Explore approaches** — propose 2-3 approaches. For each approach, sketch the concrete interface (types, method signatures, example caller code) so the comparison is grounded in actual code, not abstract descriptions. Lead with your recommendation.
-5. **Present the design** — present the **whole design in one pass**, organized into focused sections (one screen of reading each): architecture, components, data flow, error handling, testing. The human can comment on any section; you don't gate on each section serially. On feedback, incorporate it and re-present only the revised sections. This keeps the human's review one-to-two stops instead of one-stop-per-section, while still letting them focus on whichever section they care about.
+1. **Check git state** — `git status` + `git log --oneline -5`. Uncommitted work? Ask the user what to do first.
+2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md`; report in-flight topics. If the new idea continues an existing topic, ask whether to extend it or start fresh.
+3. **Understand the idea** — read only enough code/docs/commits to ground the design. **Check `docs/lessons.md`** — known constraints may shape it. Ask questions one at a time, prefer multiple choice. Once you can articulate what/why/constraints, present a short summary and ask: "Should I proceed, or is there more?" The human decides when to move on.
+4. **Explore approaches** — propose 2–3, leading with your recommendation. Sketch the concrete interface (types, signatures, example caller) for each so the comparison is grounded in code, not abstractions.
+5. **Present the design** in one pass, organized into sections (architecture, components, data flow, error handling, testing) — the human comments on any section; re-present only revised sections.
 
-   When a significant architectural decision is identified, offer to write a lightweight ADR to `docs/adr/`. Only write an ADR when all three are true:
+   Identified a significant architectural decision? Offer an ADR in `docs/adr/`. Only when all three hold: **hard to reverse**, **surprising without context**, **a real trade-off**. Format: title + 1–3 sentences of context/decision/why. ADRs are permanent institutional memory — they stay out of archive/rotation forever. (Guard note: `docs/adr/` is outside the writable `docs/plans/`; write it only after the user approves and unlocks.)
+6. **Write the design doc** — `docs/plans/YYYY-MM-DD-<topic>-design.md`, descriptive (not a task list). **Open with `## Requirements`** — one testable behavior each; `pwk-writing-plans` derives acceptance criteria and tests from these. Then: problem, approaches considered, architecture, components, data flow, error handling, testing.
 
-   1. **Hard to reverse** — changing your mind later has meaningful cost
-   2. **Surprising without context** — a future reader will wonder "why?"
-   3. **A real trade-off** — there were genuine alternatives
+   Touches a production-risk area (DB schema/migrations, auth, external APIs, concurrency/batch, uploads/large data flows, Redis/caching/queues)? Add a brief `## Production-risk areas` — `pwk-writing-plans` carries it into the plan and `pwk-code-review` audits it per requirement.
 
-   ADR format — a title and 1-3 sentences covering context, decision, and why:
-
-   ```markdown
-   # <Short title of the decision>
-
-   <1-3 sentences: context, decision, and why.>
-   ```
-
-   ADRs live under `docs/adr/` permanently — they are institutional memory, never archived.
-
-6. **Write the design doc** — save it to `docs/plans/YYYY-MM-DD-<topic>-design.md` as a descriptive document (not a task list). **Open with a `## Requirements` list** — each requirement one testable behavior the user will get (`pwk-writing-plans` derives acceptance criteria + integration tests per requirement). Then cover: problem, approaches considered, architecture, components, data flow, error handling, and testing.
-
-   If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` carries these notes into the plan, and `pwk-code-review` audits them after each requirement.
-
-   **End with a `## Feature acceptance` section** — one or more end-to-end `Given/When/Then` scenarios that prove the requirements *compose* into the feature the PRD describes. This is the feature's definition-of-done: a scenario that exercises the full chain of requirements together, not any single requirement in isolation. The human approves these as what "the feature works" means. `pwk-writing-plans` derives a feature-level integration test from this section, and `pwk-executing-tasks` runs it at the integration gate. If you cannot write a Feature acceptance scenario, the requirements don't yet compose into a coherent feature — keep designing.
+   **End with `## Feature acceptance`** — one or more end-to-end `Given/When/Then` scenarios proving the requirements *compose* into the feature. This is the feature's definition-of-done; the human approves it as what "the feature works" means. `pwk-writing-plans` derives a feature-level test from it; `pwk-executing-tasks` runs it at the integration gate. Treat "I can write this scenario" as the green light to finish designing — if you can't, keep designing because the requirements don't yet compose into a coherent feature.
 
    ```markdown
    ## Feature acceptance
 
-   - Given <starting state that satisfies the monitor criteria>, When <the triggering condition from the PRD>, Then <the end-to-end outcome the PRD promises>.
+   - Given <starting state>, When <trigger>, Then <end-to-end outcome the feature promises>.
    ```
 
-   Example (a rate-limiting feature): "Given a new API consumer with no prior usage history, When they exceed 100 requests per minute for 3 consecutive minutes, Then they're added to the throttle list, a `rate_limited` event is emitted, and further requests return 429."
+   Example (rate limiting): "Given a new API consumer with no prior usage, When they exceed 100 requests/minute for 3 consecutive minutes, Then they're throttled, a `rate_limited` event is emitted, and further requests return 429."
 
-   **Splitting large issues:** if the work is large enough to be multiple PRs, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`) and get the human's approval first — see [Granularity](#granularity) for the decision rule. Each design doc then runs its own pipeline.
+   **Splitting large issues:** propose multiple design docs (one `<topic>` per sub-issue) and get human approval first — see [Granularity](#granularity). Each runs its own pipeline.
 
-   Branch creation and workspace setup happen at the end of `/skill:pwk-writing-plans` (after the plan is approved); the design + plan docs are committed at the start of `pwk-executing-tasks`. Until then the session is read-only and uncommitted.
+The session stays read-only and uncommitted through brainstorm and plan: branch creation happens at the end of `/skill:pwk-writing-plans`; plan docs are committed at the start of `pwk-executing-tasks`.
 
 ## Principles
 
 - One question at a time
 - YAGNI — remove unnecessary features
 - Design for testability
-- Always explore alternatives before settling
+- Explore alternatives before settling
 
 ## After the design
 

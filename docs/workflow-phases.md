@@ -88,7 +88,7 @@ No write restrictions.
 /skill:pwk-status
 ```
 
-Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight. Not a pipeline phase.
+Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight. Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the brainstorm/plan write block, so the boundary stays up).
 
 ## diagnose
 
@@ -96,7 +96,7 @@ Read-only overview of all active pipeline topics (phase + progress) when several
 /skill:pwk-diagnose
 ```
 
-Not a pipeline phase. A utility skill invoked on demand when debugging is needed.
+Not a pipeline phase. A utility skill invoked on demand when debugging is needed. Invoking it **exits the gated phase** — diagnosis needs to write failing tests and `[DEBUG-…]` instrumentation. To stay read-only mid-brainstorm, use `/skill:pwk-status` instead, or re-lock with `/pwk-guard on`.
 
 No write restrictions.
 

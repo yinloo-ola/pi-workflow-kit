@@ -9,70 +9,35 @@ Ship the completed work.
 
 ## Pre-finalization checks
 
-1. **Run the FULL test suite.** Every test must pass. Resume spans sessions — don't assume the last execute session left the suite green. If anything fails, stop and send the user back to `/skill:pwk-executing-tasks` to fix; never archive or open a PR against a red suite.
-
-2. Read the progress file (`docs/plans/*-progress.md`). Check for failed or skipped rows:
-
-   - **Any `❌ failed`** → **block**. Present the count and reasons to the user. Do not continue until one of:
-     - The user sends the task back to `/skill:pwk-executing-tasks` to fix the failures, or
-     - The user explicitly types `--force-failed` to acknowledge shipping with known incomplete requirements.
-
-     Never merge a branch that carries incomplete requirements without explicit acknowledgment.
-
-   - **Only `⏭ skipped`** (no `❌ failed`) → present a warning and confirm:
-
-     ```
-     ⚠️ Requirement 4 was skipped. Continue with finalizing, or go back?
-     ```
-
-     Continue on confirmation; abort otherwise.
+1. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
+2. Read the progress file (`docs/plans/*-progress.md`):
+   - **Any `❌ failed`** → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
+   - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
 
 ## Process
 
-1. **Derive the topic** — from the progress file → its `Plan:` ref → the plan's `Design:` ref → the design-doc filename → `<topic>`. If several designs are in flight and it's ambiguous, ask which is being shipped.
-
-2. **Delete consumed plan docs** — only this design's artifacts; leave other (un-started) design docs in place:
+1. **Derive the topic** — progress file → `Plan:` ref → plan's `Design:` ref → design-doc filename → `<topic>`. Ambiguous with several designs in flight? Ask.
+2. **Delete consumed plan docs** — only this design's three artifacts, matched by the exact topic slug (with the `YYYY-MM-DD-` prefix) so similarly-named plans for other topics survive:
 
    ```bash
-   rm -f docs/plans/*<topic>*-design.md
-   rm -f docs/plans/*<topic>*-implementation.md
-   rm -f docs/plans/*<topic>*-progress.md
+   rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md
    ```
 
-   Each `rm -f` gracefully handles a missing file. **Do not touch `docs/adr/`**, `docs/lessons.md`, `CHANGELOG.md`, or `README.md` — those are permanent.
+   The `????-??-??-` glob enforces the dated filename; a bare `*<topic>*` would over-match unrelated docs (e.g. topic `auth` would also hit `feature-auth-redesign-design.md`). Verify with `ls docs/plans/` before and after. `rm -f` handles missing files. `docs/adr/`, `docs/lessons.md`, `CHANGELOG.md`, and `README.md` are permanent — leave them entirely out of the delete set.
+3. **Curate lessons (Agile Scrum Master hat)** — if `docs/lessons.md` exists: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize, retire stale rules. None exists but lessons were learned? Create it.
+4. **Update documentation** — if the API or surface changed: `README.md`, `CHANGELOG.md`, any inline docs.
+5. **Choose a merge strategy** — ask the human:
 
-3. **Review & polish lessons (Agile Scrum Master Hat)** — if `docs/lessons.md` exists, curate it for future sprints: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize under clear headers, retire stale rules. If it doesn't exist but lessons were learned, create it with the standard format.
+   1. **Create PR** — `git push origin <branch>` then `gh pr create`.
+   2. **Rebase & merge** *(recommended)* — rebase onto parent, `--ff-only` merge, push parent, delete branch.
+   3. **Squash & merge** — squash onto parent, push, delete branch.
+   4. **Merge commit** — `--no-ff` merge, push parent, delete branch.
 
-4. **Update documentation** — if the API or surface changed: update `README.md`, `CHANGELOG.md`, and any inline docs.
-
-5. **Choose a merge strategy** — ask the human which they prefer:
-
-   1. **Create PR** — push and open a PR for external review:
-      ```
-      git push origin <branch>
-      gh pr create --title "feat: <summary>" --body "<summary>"
-      ```
-   2. **Rebase & merge** *(recommended)* — rebase onto parent, fast-forward merge, push parent, delete branch:
-      ```
-      parent=$(git show-branch -a 2>/dev/null | grep '\*' | grep -v "$(git branch --show-current)" | head -1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//')
-      git checkout "$parent" && git pull
-      git checkout - && git rebase "$parent"
-      git checkout "$parent" && git merge --ff-only -
-      git push origin "$parent"
-      git branch -d - && git push origin --delete -
-      ```
-   3. **Squash & merge** — squash all commits into one on parent, push, delete branch.
-   4. **Merge commit** — merge with `--no-ff`, push parent, delete branch.
-
-   For options 2–4, confirm the detected parent branch before proceeding.
-
-6. **Clean up** — if a worktree was used, remove it:
-   ```
-   git worktree remove ../<repo>-<topic>
-   ```
+   For 2–4, confirm the detected parent branch before proceeding.
+6. **Clean up** — remove the worktree if one was used: `git worktree remove ../<repo>-<topic>`.
 
 ## Principles
 
 - Delete **only** the active design's artifacts — un-started designs (from a split) stay in `docs/plans/`.
-- ADRs are never archived.
-- Bump the package version if this is a published change (major bump for breaking changes).
+- ADRs are permanent institutional memory — they stay out of archive/rotation forever.
+- Bump the package version if this is a published change (major for breaking changes).

@@ -7,32 +7,24 @@ description: "Turn a design doc's requirements into a behavioral spec — accept
 
 Turn the design doc's requirements into a **behavioral spec** the executor implements against.
 
-One design doc = one plan = one PR. The plan lists **all** the design's requirements; the executor builds them one at a time, in the order you list them (see **Ordering** below).
+One design doc = one plan = one PR. The plan lists **all** the design's requirements in build order; the executor builds them one at a time.
 
-You may only create or edit files under `docs/plans/`. Do not modify source code or configuration.
+Your writes go into `docs/plans/` and nowhere else. Source code and configuration get written later, in `pwk-executing-tasks` — this phase produces the document the executor builds from.
 
 ## Process
 
-1. **Find the design doc** — look for `docs/plans/*-design.md`. (For a full multi-topic overview when several are in flight, use `/skill:pwk-status`.) If none, ask the user to run `/skill:pwk-brainstorming` first. If several exist (a large issue was split), list them and ask which to plan. **Read `docs/lessons.md`** if it exists — incorporate known patterns into the acceptance criteria and tests.
-2. **Create the feature branch first** — `git checkout -b <topic>` (branch creation is allowed in the plan phase). The design + plan docs are written on this branch (committed at the start of `pwk-executing-tasks`), not `main`.
-3. **Read the Requirements** — the design doc opens with a `## Requirements` list; each requirement is one testable behavior the user will get. This plan covers **all** requirements in the design doc (one pipeline per design doc). If the design has no Requirements list, derive the requirements from its described behaviors and confirm them with the human before proceeding.
-
-4. **Write the plan — acceptance criteria + integration tests per requirement.** For each requirement specify:
-   - **Acceptance criteria** — `Given/When/Then` behavioral statements that define "done" for that requirement.
-   - **Integration tests** — the concrete test cases that encode the acceptance criteria: a test name and what each asserts. This is the spec the executor writes and implements against.
-   - **Challenge the design first** *(if `## Production-risk areas` exists)* — before writing acceptance criteria, stress-test the design against the flagged risks: ask the uncomfortable "what breaks under load / on failure / on bad input" questions and confirm the approach holds. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
-   - **Ordering** — list requirements in the order they should be built. If a requirement depends on another, the dependency must come **earlier in the list**; the executor runs requirements in listed order and does not reorder. Aim for each requirement to be a vertical slice that merges cleanly on its own — if a dependency can't be sliced away, position resolves it (there is no parsed dependency graph).
-   - **Production-risk notes** *(if the design flagged any in `## Production-risk areas`)* — carried forward so the executor and `pwk-code-review` account for them.
-   - **Checkpoint level** — how many human stops this requirement needs. Default `full`.
-     - `full` — two checkpoints (after tests written, after implementation complete). The current behavior; use for anything non-trivial.
-     - `spec` — one checkpoint, the **tests** checkpoint only (after tests written, before implementation). Use for requirements with a clear spec but low implementation risk: catching a wrong spec is cheap here, and implementation quality is covered by the downstream review. The complete checkpoint is dropped.
-     - `none` — no checkpoints. Use only for trivial requirements (e.g. a single config line, a one-line typo fix). The executor writes tests, implements, commits, and reviews with no human stop in between.
-   - **Review level** — how this requirement is reviewed. Default `parallel`.
-     - `parallel` — four specialized reviewers via the `subagent` tool (current behavior). Best for non-trivial diffs.
-     - `inline` — a single `/skill:pwk-code-review` pass. Use for small/medium diffs where one reviewer is enough.
-     - `skip` — no review. Use only for trivial diffs with no behavioral surface (e.g. version bumps, comment-only).
-
-   The human approves these tags at plan approval (step 7); defaults are conservative, so behavior is unchanged unless the human opts in to lighter levels. Tag every requirement — missing tags default to `full` / `parallel`. **`spec` requires at least `inline` review** — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `Checkpoints: spec` with `Review: skip` (use `Checkpoints: none` for truly trivial diffs instead).
+1. **Find the design doc** — glob `docs/plans/*-design.md`. If none, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. **Read `docs/lessons.md`** if it exists — known patterns belong in the acceptance criteria.
+2. **Create the feature branch** — `git checkout -b <topic>` (branch creation is allowed in the plan phase). Design + plan docs live on this branch, committed at the start of `pwk-executing-tasks`.
+3. **Read the `## Requirements` list** — the plan covers **all** of them. If the design has none, derive requirements from its described behaviors and confirm with the human before proceeding.
+4. **Write the plan** — for each requirement:
+   - **Acceptance criteria** — `Given/When/Then` behavioral statements defining "done". Write observable behaviors, not implementation steps; cover edge and error cases.
+   - **Integration tests** — test name + what each asserts. This is the spec the executor writes tests from.
+   - **`### Checkpoints: full | spec | none`** — how many human stops. `full` = tests + complete (default); `spec` = tests stop only (clear spec, low implementation risk — the complete checkpoint is dropped); `none` = trivial only (config line, typo).
+   - **`### Review: parallel | inline | skip`** — `parallel` = four reviewers via subagent (default, non-trivial diffs); `inline` = one `pwk-code-review` pass (small/medium diffs); `skip` = trivial diffs with no behavioral surface.
+   - Tag every requirement — missing tags default to `full` / `parallel`. **`spec` requires at least `inline` review** — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
+   - **Production-risk notes** — carry forward the design's `## Production-risk areas`, if any.
+   - **Challenge the design first** *(if production-risk areas exist)* — stress-test the design against the flagged risks before writing criteria. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
+   - **Ordering** — dependencies come **earlier** in the list; the executor runs in listed order with no dependency graph. Aim for vertical slices that merge cleanly on their own.
 
    Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`:
 
@@ -62,44 +54,25 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    …
 
    ## Feature acceptance
-   Derived from the design doc's `## Feature acceptance` section. One end-to-end integration test that exercises the requirements *together* — not a per-requirement test. The executor writes and runs this test at the integration gate; it must pass before `/skill:pwk-finalizing`.
-
+   Derived from the design doc. One end-to-end test exercising the requirements *together*:
    - `should <the PRD's end-to-end claim>` — Given <starting state>, When <trigger>, Then <composed outcome across requirements>.
    ```
 
-   **If the design has no `## Feature acceptance` section**, stop and ask the human to run `/skill:pwk-brainstorming` to add one — the feature's definition-of-done is missing, and the integration gate later will have nothing concrete to check. (A design for a trivial single-requirement change may fold the feature scenario into that requirement's acceptance criteria; in that case note it here and skip the separate section.)
+   **If the design has no `## Feature acceptance` section**, stop and ask the human to run `/skill:pwk-brainstorming` to add one — the feature's definition-of-done is missing. (A trivial single-requirement design may fold the scenario into that requirement's criteria; note it and skip the separate section.)
 
-   **If the design has `## Production-risk areas`** that flag schema migrations, new dependencies, external API integrations, or seed data, emit a `## Setup` section between `## Overview` and `## Requirement 1`:
+   **If `## Production-risk areas` flagged** schema migrations, new dependencies, external APIs, or seed data, emit a `## Setup` section between `## Overview` and `## Requirement 1` (dependencies, migrations, seed data, and how to verify setup worked).
 
-   ```markdown
-   ## Setup
-
-   - **Dependencies:** what to install (and how)
-   - **Migrations:** each migration with a brief description
-   - **Seed / test data:** what data to prepare
-   - **Verify:** how to confirm setup worked (e.g. `npm test` still passes)
-   ```
-
-5. **Before presenting — audit the spec:**
-   - Every requirement has acceptance criteria **and** matching integration tests.
-   - Every requirement has a checkpoint level and a review level (default `full` / `parallel` if omitted).
-   - No requirement combines `Checkpoints: spec` with `Review: skip` — `spec` needs at least `inline` review to cover implementation quality.
-   - **A `## Feature acceptance` section exists** with an end-to-end scenario derived from the design's Feature acceptance (or a note explaining why it's folded into a single requirement for trivial work). This is what the integration gate checks later — without it, "the feature works" is undefined.
-   - Acceptance criteria are observable behaviors, not implementation steps.
-   - Edge/error cases are covered.
+5. **Audit before presenting:**
+   - Every requirement has criteria **and** matching tests, a checkpoint tag, a review tag.
+   - No `spec` + `skip` combination.
+   - A `## Feature acceptance` section exists (or the trivial-fold note).
    - Production-risk areas from the design are reflected.
-   Fix gaps before presenting.
+6. **Workspace isolation** — you're on the `<topic>` branch. For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
+7. **Present the plan** and wait for approval. On approval, hand off: "Ready to execute? Run `/skill:pwk-executing-tasks`" (running it is what exits the gated plan phase).
 
-6. **Set up workspace isolation** *(before approving)* — you're already on the `<topic>` feature branch (step 2); the design + plan docs live here, not on `main` (committed at the start of `pwk-executing-tasks`). For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
-7. **Present the plan** — show the complete plan and wait for approval. On approval, hand off to `/skill:pwk-executing-tasks` — running it is what transitions out of the gated plan phase (the guard unlocks on the skill, not on the word "approve").
+## What belongs in the plan — and what stays out
 
-## What the plan is NOT
-
-- **Not an implementation recipe** — no exact code, no file-by-file breakdowns, no signatures, no stubs. (A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria + integration tests survive implementation changes.)
-- **Not micro-tasks** — one coarse block per requirement. The executor decides how to structure and slice the implementation.
-- **Not the tests themselves** — the plan specifies *what* the tests prove (names + assertions); `pwk-executing-tasks` writes the actual test files first (red), then implements to green.
-
-The executor has **full autonomy** to choose structure, signatures, and internals — bounded only by the acceptance criteria, the integration tests, and the per-requirement checkpoints (default two; fewer if the plan tags the requirement `spec` or `none`), enforced by `pwk-executing-tasks`.
+The plan carries: observable behavior (acceptance criteria), the test names + assertions that prove it, and per-requirement tags. Everything about implementation *how* — code, signatures, file-by-file breakdowns, micro-task decomposition — stays with the executor, which picks structure against the spec. That's the division that keeps the plan stable when a detail shifts mid-implementation.
 
 ## After the plan
 
