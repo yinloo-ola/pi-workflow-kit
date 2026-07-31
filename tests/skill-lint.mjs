@@ -151,6 +151,24 @@ if (et && /\bspec\b/.test(et.content) && /at least `inline`/.test(et.content)) {
   fail("pwk-executing-tasks: missing spec+inline guard note");
 }
 
+// --- Check 5: Feature acceptance contract across the pipeline ---
+// brainstorm emits `## Feature acceptance` in the design doc; writing-plans derives it
+// into the plan and checks for it at audit; executing-tasks runs it at the integration gate.
+// All three must use the same section name so the contract is followable.
+console.log("feature acceptance contract:");
+const bs = loadSkills().find((s) => s.name === "pwk-brainstorming");
+// A real section header line: optional leading indent, then `## Feature acceptance`,
+// NOT wrapped in backticks (prose mentions like `## Feature acceptance` don't count).
+const faHeader = /^[ \t]*## Feature acceptance\b/m;
+if (!bs) fail("pwk-brainstorming skill missing");
+else if (faHeader.test(bs.content)) ok("pwk-brainstorming: emits `## Feature acceptance` in the design doc");
+else fail("pwk-brainstorming: missing `## Feature acceptance` section header");
+if (wp && faHeader.test(wp.content)) ok("pwk-writing-plans: derives `## Feature acceptance` into the plan + audits it");
+else if (wp) fail("pwk-writing-plans: missing `## Feature acceptance` section header");
+if (et && /Feature acceptance/.test(et.content))
+  ok("pwk-executing-tasks: runs the feature-acceptance test at the integration gate");
+else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the integration gate");
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

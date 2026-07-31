@@ -60,7 +60,14 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
 
    ## Requirement 2: <name>
    …
+
+   ## Feature acceptance
+   Derived from the design doc's `## Feature acceptance` section. One end-to-end integration test that exercises the requirements *together* — not a per-requirement test. The executor writes and runs this test at the integration gate; it must pass before `/skill:pwk-finalizing`.
+
+   - `should <the PRD's end-to-end claim>` — Given <starting state>, When <trigger>, Then <composed outcome across requirements>.
    ```
+
+   **If the design has no `## Feature acceptance` section**, stop and ask the human to run `/skill:pwk-brainstorming` to add one — the feature's definition-of-done is missing, and the integration gate later will have nothing concrete to check. (A design for a trivial single-requirement change may fold the feature scenario into that requirement's acceptance criteria; in that case note it here and skip the separate section.)
 
    **If the design has `## Production-risk areas`** that flag schema migrations, new dependencies, external API integrations, or seed data, emit a `## Setup` section between `## Overview` and `## Requirement 1`:
 
@@ -77,6 +84,7 @@ You may only create or edit files under `docs/plans/`. Do not modify source code
    - Every requirement has acceptance criteria **and** matching integration tests.
    - Every requirement has a checkpoint level and a review level (default `full` / `parallel` if omitted).
    - No requirement combines `Checkpoints: spec` with `Review: skip` — `spec` needs at least `inline` review to cover implementation quality.
+   - **A `## Feature acceptance` section exists** with an end-to-end scenario derived from the design's Feature acceptance (or a note explaining why it's folded into a single requirement for trivial work). This is what the integration gate checks later — without it, "the feature works" is undefined.
    - Acceptance criteria are observable behaviors, not implementation steps.
    - Edge/error cases are covered.
    - Production-risk areas from the design are reflected.

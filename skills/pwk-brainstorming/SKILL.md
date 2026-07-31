@@ -57,6 +57,16 @@ Requirements are the leaf unit — never split further. Decision rule: **could t
 
    If the design touches any production-risk area — database schema changes or migrations, authentication or authorization, external API or service integrations, concurrency or batch processing, file uploads or large data flows, Redis/caching/message queues — add a short `## Production-risk areas` section noting them. `pwk-writing-plans` carries these notes into the plan, and `pwk-code-review` audits them after each requirement.
 
+   **End with a `## Feature acceptance` section** — one or more end-to-end `Given/When/Then` scenarios that prove the requirements *compose* into the feature the PRD describes. This is the feature's definition-of-done: a scenario that exercises the full chain of requirements together, not any single requirement in isolation. The human approves these as what "the feature works" means. `pwk-writing-plans` derives a feature-level integration test from this section, and `pwk-executing-tasks` runs it at the integration gate. If you cannot write a Feature acceptance scenario, the requirements don't yet compose into a coherent feature — keep designing.
+
+   ```markdown
+   ## Feature acceptance
+
+   - Given <starting state that satisfies the monitor criteria>, When <the triggering condition from the PRD>, Then <the end-to-end outcome the PRD promises>.
+   ```
+
+   Example (a rate-limiting feature): "Given a new API consumer with no prior usage history, When they exceed 100 requests per minute for 3 consecutive minutes, Then they're added to the throttle list, a `rate_limited` event is emitted, and further requests return 429."
+
    **Splitting large issues:** if the work is large enough to be multiple PRs, propose splitting it into multiple design docs (one per sub-issue, each with its own `<topic>`) and get the human's approval first — see [Granularity](#granularity) for the decision rule. Each design doc then runs its own pipeline.
 
    Branch creation and workspace setup happen at the end of `/skill:pwk-writing-plans` (after the plan is approved); the design + plan docs are committed at the start of `pwk-executing-tasks`. Until then the session is read-only and uncommitted.

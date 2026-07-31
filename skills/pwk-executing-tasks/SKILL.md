@@ -131,9 +131,10 @@ When the user shares review feedback outside a checkpoint: verify the criticism 
 When no `⬜ pending` or `❌ failed` requirements remain, run the **integration gate** before suggesting finalize. Per-requirement code-review only saw each requirement's diff in isolation — this is where you prove the requirements *compose* into the feature:
 
 1. **Run the FULL test suite** (not just the last requirement's tests). Every test must pass. A failure here means one requirement regressed another — fix it now, in execute context, while the progress file and fix autonomy are at hand.
-2. **Confirm the requirements compose** into the feature the design doc described. Each requirement passed alone; do they deliver the intended end-to-end behavior *together*? If integration exposes a gap, fix it here (with tests) before shipping.
+2. **Run the feature-acceptance test** — the plan's `## Feature acceptance` section specified an end-to-end test that exercises the requirements *together* against the PRD's claim. Write it if it isn't already implemented, then run it. This is the concrete check that the composed feature does what the design promised — not just that each requirement's tests still pass. If it fails, the requirements don't compose correctly: fix it here (with tests) before shipping. If the plan has no Feature acceptance section, stop and tell the human — the integration gate has nothing concrete to verify against.
+3. **Confirm the requirements compose** into the feature the design doc described. Each requirement passed alone; do they deliver the intended end-to-end behavior *together*? If integration exposes a gap, fix it here (with tests) before shipping.
 
-Only when the full suite is green and the feature works end-to-end:
+Only when the full suite is green **and the feature-acceptance test passes** and the feature works end-to-end:
 
 ```
 ✅ All requirements complete — integration verified!

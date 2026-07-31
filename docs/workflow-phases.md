@@ -16,7 +16,7 @@ A design doc is one PR; a requirement is one testable slice within it. For multi
 ```
 
 - Explore requirements and shape the design.
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list.
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list, ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
 - May split a large issue into multiple design docs (human-approved).
 - ADRs go to `docs/adr/` (permanent, never archived).
 
@@ -30,6 +30,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 - Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
 - Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
+- Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — an end-to-end integration test that exercises the requirements together (distinct from per-requirement tests). If the design has none, stops and asks the human to brainstorm one.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Write boundary: only `docs/plans/` is writable.
@@ -44,7 +45,7 @@ Write boundary: only `docs/plans/` is writable.
 - Two **mandatory** human checkpoints per requirement — unless the plan tags a requirement lighter (see [Proportionality](#proportionality)).
 - **Composition check after each commit** — if a requirement touched shared code, the executor runs the full suite now and fixes cross-requirement regressions immediately, rather than discovering them only at the integration gate.
 - Progress tracked in `docs/plans/*-progress.md`.
-- After all requirements: **integration gate** — run the full suite and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
+- After all requirements: **integration gate** — run the full suite, **run the feature-acceptance test** (the end-to-end check from the plan's `## Feature acceptance` section), and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
 
 No write restrictions. All tools available.
 
