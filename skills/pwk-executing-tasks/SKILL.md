@@ -68,19 +68,19 @@ For each requirement:
 
 1. **Mark in-progress** — `🔄 in-progress`. Read this requirement's `### Checkpoints` and `### Review` tags (defaults `full` / `parallel` if missing).
 2. **Write the integration tests (red).** Read the requirement's acceptance criteria + integration-test cases from the plan and write the actual test files. Run them — confirm they **fail** (red). If they pass immediately, the behavior may already exist or the tests are wrong; investigate before proceeding.
-3. **⏸ CHECKPOINT: tests** *(only if checkpoint level is `full`)*. Stop. Do not implement yet. Mark `⏸ tests-review`. Present the integration tests and the failing output to the human, and wait for approval. The human reviews whether the right behaviors are being specified.
+3. **⏸ CHECKPOINT: tests** *(fires for `full` and `spec`)*. Stop. Do not implement yet. Mark `⏸ tests-review`. Present the integration tests and the failing output to the human, and wait for approval. The human reviews whether the right behaviors are being specified.
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise the tests, re-run, re-present.
-   - **`lite` / `none`** → skip this stop. Show the red output inline and proceed; do not mark `⏸ tests-review`.
+   - **`none`** → skip this stop. Show the red output inline and proceed; do not mark `⏸ tests-review`.
 4. **Implement (green).** With full autonomy, implement whatever is needed to make the integration tests pass and satisfy the acceptance criteria — you choose the structure, modules, signatures, and internals. Run the tests after each meaningful change. Refactor for clarity (shallow modules, no duplication, seam discipline) while tests stay green.
 5. **Learn.** If you caught a repeat mistake, append a **generic** rule to `docs/lessons.md` (strip domain specifics).
-6. **⏸ CHECKPOINT: complete** *(only if checkpoint level is `full` or `lite`)*. Stop. Do **not** commit yet. Mark `⏸ complete-review`. Run the tests (show passing output) and `git diff`, present the implementation to the human, and wait for approval.
+6. **⏸ CHECKPOINT: complete** *(fires for `full` only)*. Stop. Do **not** commit yet. Mark `⏸ complete-review`. Run the tests (show passing output) and `git diff`, present the implementation to the human, and wait for approval.
    - **approve** → return to `🔄 in-progress` and continue.
    - **request changes** → revise, re-run, re-present at this same checkpoint.
-   - **`none`** → skip this stop. Show the green output and `git diff` inline and proceed to commit.
+   - **`spec` / `none`** → skip this stop. Implementation quality is covered by the downstream review (`spec` requires at least `inline` review). Show the green output and `git diff` inline and proceed to commit.
 7. **Commit.** `git add` the relevant files and commit with a clear message. (Status stays `🔄 in-progress` — not done yet.)
 8. **Composition check** *(after each commit)* — if this requirement's diff touched **shared code** (modules imported by other requirements in the plan), run the **full test suite** now and flag any cross-requirement regression to fix immediately, while the context is fresh. If it touched only this requirement's own files, keep running just this requirement's tests (current behavior). This catches composition regressions early instead of discovering them only at the integration gate.
-9. **Code review.** Mark `🔎 review`. Drive review by the requirement's `### Review` tag:
+9. **Code review.** Mark `🔎 review`. Drive review by the requirement's `### Review` tag (accepted values: `parallel | inline | skip`):
    - **`parallel`** — attempt isolated review via the `subagent` tool (four agents, fresh context each), as below.
    - **`inline`** — run `/skill:pwk-code-review` for this requirement as a single pass.
    - **`skip`** — no review. Mark the requirement `✅ done` and proceed to the next.
@@ -106,10 +106,12 @@ For each requirement:
 
 ### Checkpoint gates are mandatory (when the tag says so)
 
-A checkpoint fires only when the requirement's `### Checkpoints` tag calls for it (`full` → both, `lite` → complete only, `none` → none). When a checkpoint fires it is a **hard stop**: when it doesn't, proceed without stopping. When a checkpoint fires:
+A checkpoint fires only when the requirement's `### Checkpoints` tag calls for it. Accepted values: `full | spec | none`. (`full` → both tests + complete; `spec` → tests only; `none` → none.) When a checkpoint fires it is a **hard stop**: when it doesn't, proceed without stopping. When a checkpoint fires:
 - Stop executing immediately. Do not pass it without explicit human approval.
 - **Never** `git add` or `git commit` before the human approves at a checkpoint.
 - Mark the progress file to the review status **before** pausing.
+
+**`spec` trusts review to cover implementation quality** — so a `spec` requirement must keep at least `inline` review. If a plan combines `Checkpoints: spec` with `Review: skip`, stop and ask the human to fix the tags (use `Checkpoints: none` for truly trivial diffs instead).
 
 ## User override commands
 

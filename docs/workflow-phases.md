@@ -52,7 +52,7 @@ No write restrictions. All tools available.
 
 The defaults preserve the 1.0.0 behavior (two checkpoints + parallel review per requirement). At plan time the human can tag each requirement lighter to right-size the workflow:
 
-- **Checkpoints** — `full` (both stops, default) | `lite` (one stop, after implementation) | `none` (no stops, trivial only). Test-first is preserved either way: even `none` writes tests first (red) and implements to green; only the human *stops* are optional.
+- **Checkpoints** — `full` (both stops, default) | `spec` (tests stop only — cheap spec-correctness gate, implementation covered by review) | `none` (no stops, trivial only). Test-first is preserved either way: even `none` writes tests first (red) and implements to green; only the human *stops* are optional. `spec` requires at least `inline` review (never combine with `skip`).
 - **Review** — `parallel` (four fresh-context reviewers, default) | `inline` (single `pwk-code-review` pass) | `skip` (trivial diffs with no behavioral surface only).
 
 A trivial fix can also skip the multi-turn brainstorm dialogue via the brainstorming trivial fast-path (compress to one turn, minimal design doc) — the guard still enforces read-only. Tags default conservatively, so nothing changes unless the human opts in.

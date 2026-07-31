@@ -16,7 +16,8 @@
   "scripts": {
     "test": "vitest run",
     "lint": "biome check .",
-    "check": "biome check . && vitest run"
+    "skill-lint": "node tests/skill-lint.mjs",
+    "check": "biome check . && vitest run && node tests/skill-lint.mjs"
   },
   "license": "MIT",
   "author": "yinloo-ola",

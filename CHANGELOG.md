@@ -23,12 +23,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Proportional workflow** — right-size the pipeline per change, without restoring the old complexity.
+- **Proportional workflow** — right-size the pipeline per change and cut human iterations, without restoring the old complexity.
   - **Trivial fast-path** in `pwk-brainstorming`: classify trivial vs non-trivial at the start; trivial changes (typo, obvious fix, config bump) compress brainstorm to one turn with a minimal design doc. The guard still enforces read-only — the phase isn't skipped, just compressed.
-  - **Per-requirement tags at plan time** in `pwk-writing-plans`: `### Checkpoints` (`full` default | `lite` one stop | `none` no stops) and `### Review` (`parallel` default | `inline` | `skip`). Defaults preserve 1.0.0 behavior; the human opts in to lighter levels at plan approval. Test-first is preserved regardless — even `none` writes tests first (red) and implements to green; only the human *stops* are optional.
-  - **`pwk-executing-tasks` honors the tags**: `full` runs both checkpoints, `lite` runs the complete checkpoint only, `none` runs none; review dispatch follows `parallel`/`inline`/`skip`.
+  - **Batched design presentation** in `pwk-brainstorming`: the whole design is presented in one pass (organized into sections); the human comments on any section and only revised sections are re-presented. One-to-two stops instead of one-stop-per-section.
+  - **Per-requirement tags at plan time** in `pwk-writing-plans`: `### Checkpoints` (`full` default | `spec` tests-stop only | `none` no stops) and `### Review` (`parallel` default | `inline` | `skip`). Defaults preserve 1.0.0 behavior; the human opts in to lighter levels at plan approval. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review) — the lowest-iteration option that doesn't sacrifice quality — but requires at least `inline` review (never combine `spec` with `skip`). Test-first is preserved regardless — even `none` writes tests first (red) and implements to green; only the human *stops* are optional.
+  - **`pwk-executing-tasks` honors the tags**: `full` runs both checkpoints, `spec` runs the tests checkpoint only, `none` runs none; review dispatch follows `parallel`/`inline`/`skip`. Stops and asks the human if a plan combines `spec` with `skip`.
   - **Composition check after each commit** in `pwk-executing-tasks`: when a requirement touches shared code (modules imported by other requirements), the executor runs the full suite now and fixes cross-requirement regressions immediately, instead of discovering them only at the integration gate.
   - Skill-text only — no extension or runtime changes; the guard is untouched.
+- **Static skill-lint** (`tests/skill-lint.mjs`, wired into `npm run check`): verifies skill frontmatter, tag-vocabulary consistency across the pipeline skills (`full`/`spec`/`none`, `parallel`/`inline`/`skip`), that the plan template emits what the executor parses, and that the `spec`+`inline` guard is documented. Catches the class of skill-content drift that previously went uncaught (the vitest suite only covers the guard's pure functions).
 
 ## [1.0.0] - 2026-07-30
 
