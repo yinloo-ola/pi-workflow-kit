@@ -27,12 +27,14 @@ The `workflow-guard` extension enforces one rule:
 
 The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
-During executing-tasks, code-review, and finalizing, nothing is restricted.
+During executing-tasks, code-review, finalizing, **and diagnose**, nothing is restricted (diagnosis needs to write failing tests and debug instrumentation, so it exits the gate). `pwk-status` stays inside the gate.
 
-Phases follow the skill you invoke — there is no message-keyword unlock. `/pwk-guard on|off|auto` manually overrides the guard (`on` = force read-only lock, `off` = disabled, `auto` = skill-driven, the default); subcommands autocomplete.
+Reviewer-agent checklists live only in `agents/pwk-*-reviewer.md` (single source of truth); `pwk-executing-tasks` passes each reviewer just the requirement scope + diff and names the agent.
+
+Phases follow the skill you invoke — there is no message-keyword unlock. Invoking `/skill:pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, or `pwk-diagnose` exits the gated phase (those skills write source); `pwk-status` deliberately does **not** (read-only orientation). `/pwk-guard on|off|auto` manually overrides the guard.
 
 ## Enforcement style
 
-Hard block for write boundaries during gated phases. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked.
+Hard block for write boundaries during gated phases. No warnings, no escalation, no prompts. Either the tool call is allowed or it's blocked. The unlock list is hard-coded in the extension and verified by `tests/skill-lint.mjs` against the skills' claims, so a skill that promises "read-only" can't silently unlock.
 
 TDD, checkpoints, debugging, and code review are guidance in the skill instructions, not runtime-enforced. The bash blacklist covers common destructive vectors only; exotic escapes (interpreter one-liners, piped shells) rely on the phase reminder — the guard is advisory, not a security boundary.

@@ -53,7 +53,7 @@ docs/adr/     # permanent ADRs (never archived)
 
 ## Editing workflow-guard.ts
 
-- Single ~320-line file: pure helpers (~lines 13–173) + default-export factory wiring `pi.on(...)` handlers (~lines 180–322).
+- Single file: exported pure helpers (`isSafeCommand`, `shouldBlockFilePath`, `getCurrentPhase`, `UNLOCK_SKILLS`) + a default-export factory wiring `pi.on(...)` handlers. The `UNLOCK_SKILLS` export is the single source of truth for which skills exit a gated phase — `tests/skill-lint.mjs` asserts the export against the skills' claims and that the input handler dereferences it.
 - **Cache-safe reminders:** append phase reminders as tail messages via `before_agent_start`, never as system-prompt mutations.
 - **`/pwk-guard on|off|auto`** pins the guard independent of phase; override state is separate from `phase` so `auto` recovers correct enforcement.
 - **Bash guarding:** `isSafeCommand` splits on `&&`/`||`/`;` (not `|`, to allow pipes), strips cosmetic stderr redirects, blanks quoted substrings, then tests against `DESTRUCTIVE_PATTERNS`. Allowed unless matched.
