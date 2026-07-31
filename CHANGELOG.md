@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-31
+
 ### Added
 
 - **`/pwk-guard` command** — manual override of the workflow guard: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Mirrors the `/fog` escape hatch in pi-wayfinder.
@@ -268,7 +270,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [0.15.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.18.0...HEAD
+[1.1.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.0.0...v1.1.0
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.1.0...HEAD
 [0.18.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...v0.17.0
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
