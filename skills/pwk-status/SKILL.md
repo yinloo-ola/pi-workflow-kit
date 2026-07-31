@@ -5,7 +5,7 @@ description: "Show all active pipeline topics and their phase/progress. Use when
 
 # Status
 
-Report on all in-flight pipelines (split designs may run in parallel across worktrees). Read-only.
+Report on all in-flight pipelines (split designs may run in parallel across worktrees). Read-only. This skill **does not unlock the guard** — it needs no writes, so it runs fine inside the brainstorm/plan read-only phase. If you want source edits after a status check, invoke the skill for the next phase yourself (the guard follows the skill).
 
 ## Process
 

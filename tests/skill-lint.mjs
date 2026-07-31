@@ -169,6 +169,61 @@ if (et && /Feature acceptance/.test(et.content))
   ok("pwk-executing-tasks: runs the feature-acceptance test at the integration gate");
 else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the integration gate");
 
+// --- Check 6: phase-unlock list consistency (guard ↔ skills ↔ docs) ---
+// The guard hard-codes which /skill: commands exit a gated phase. The skills and docs must
+// agree, or the write boundary silently moves. Keep this in sync with workflow-guard.ts.
+console.log("phase unlock list:");
+const guardSrc = readFileSync(join(root, "extensions/workflow-guard.ts"), "utf8");
+// The guard exports UNLOCK_SKILLS as the single source of truth, and the input handler
+// dereferences it (`UNLOCK_SKILLS.some(...)`). Verify both halves: the export's contents,
+// and that the handler genuinely reads the export (an inline list crept back in would drift).
+const unlockSet = new Set();
+const exportMatch = guardSrc.match(/export const UNLOCK_SKILLS = \[([^\]]+)\]/);
+if (!exportMatch) {
+  fail("workflow-guard.ts: missing exported UNLOCK_SKILLS const");
+} else {
+  for (const m of exportMatch[1].matchAll(/"(pwk-[\w-]+)"/g)) unlockSet.add(m[1]);
+}
+if (!/UNLOCK_SKILLS\.some\(/.test(guardSrc)) {
+  fail("workflow-guard.ts: input handler does not dereference UNLOCK_SKILLS");
+}
+const EXPECTED_UNLOCK = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"];
+let unlockOk = true;
+for (const s of EXPECTED_UNLOCK) {
+  if (!unlockSet.has(s)) {
+    fail(`guard unlock list missing ${s}`);
+    unlockOk = false;
+  }
+}
+for (const s of unlockSet) {
+  if (!EXPECTED_UNLOCK.includes(s)) {
+    fail(`guard unlock list has unexpected ${s} (not in EXPECTED_UNLOCK)`);
+    unlockOk = false;
+  }
+}
+if (unlockOk) ok(`guard unlock list {${EXPECTED_UNLOCK.join(", ")}} consistent (export + handler)`);
+// pwk-status must claim it does NOT unlock.
+const status = loadSkills().find((s) => s.name === "pwk-status");
+if (status && /does not unlock/i.test(status.content)) {
+  ok("pwk-status: documents it does not unlock the guard");
+} else if (status) {
+  fail("pwk-status: must state it does not unlock the guard");
+}
+// pwk-diagnose must claim it exits the gated phase.
+const diag = loadSkills().find((s) => s.name === "pwk-diagnose");
+if (diag && /exits the gated/i.test(diag.content)) {
+  ok("pwk-diagnose: documents it exits the gated phase");
+} else if (diag) {
+  fail("pwk-diagnose: must state invoking it exits the gated phase");
+}
+// pwk-code-review must claim it is unlocked.
+const crSkill = loadSkills().find((s) => s.name === "pwk-code-review");
+if (crSkill && /unlocked/i.test(crSkill.content)) {
+  ok("pwk-code-review: documents it is unlocked");
+} else if (crSkill) {
+  fail("pwk-code-review: must state it is unlocked (may edit code)");
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

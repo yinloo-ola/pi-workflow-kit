@@ -16,7 +16,17 @@ import { describe, it, expect } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { isSafeCommand, shouldBlockFilePath } from "../extensions/workflow-guard";
+import { isSafeCommand, shouldBlockFilePath, UNLOCK_SKILLS } from "../extensions/workflow-guard";
+
+describe("guard phase transitions", () => {
+  it("unlocks on write-needing skills only", () => {
+    expect([...UNLOCK_SKILLS]).toEqual(["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"]);
+  });
+
+  it("does not unlock on pwk-status (read-only orientation stays gated)", () => {
+    expect(UNLOCK_SKILLS).not.toContain("pwk-status");
+  });
+});
 
 describe("isSafeCommand", () => {
   it("allows safe read-only commands", () => {

@@ -128,6 +128,10 @@ const SKILL_TO_PHASE: Record<string, Phase> = {
   "pwk-writing-plans": "plan",
 };
 
+/** Skills whose invocation exits a gated phase (used by the input handler; exported for tests/
+ *  skill-lint). Deliberately excludes pwk-status (read-only by design; stays gated). */
+export const UNLOCK_SKILLS = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"] as const;
+
 /** Phase-aware reminder appended after the user's message each turn while a gated phase is active.
  *  Returned as a message (not a system-prompt change) so it sits at the tail of the request and
  *  never invalidates the cached prefix. */
@@ -247,14 +251,14 @@ export default function (pi: ExtensionAPI) {
       }
     }
     // Phase transitions happen only via skills — no message keyword unlocks the plan phase.
-    // Run /skill:pwk-executing-tasks (or any non-gated skill) to leave a gated phase.
-    if (
-      text.startsWith("/skill:pwk-executing-tasks") ||
-      text.startsWith("/skill:pwk-finalizing") ||
-      text.startsWith("/skill:pwk-code-review") ||
-      text.startsWith("/skill:pwk-diagnose") ||
-      text.startsWith("/skill:pwk-status")
-    ) {
+    // Run /skill:pwk-executing-tasks (or another write-needing skill) to leave a gated phase.
+    //
+    // Unlock list rationale: execute/finalize/code-review/diagnose all need to write source
+    // (implement, edit review fixes, add [DEBUG-] instrumentation), so they exit the gate.
+    // pwk-status is NOT here on purpose: it is read-only orientation, so it stays inside the
+    // gated phase and never drops the write boundary the user is relying on.
+    // (Orientation never needs write access; see skills/pwk-status.)
+    if (UNLOCK_SKILLS.some((s) => text.startsWith(`/skill:${s}`))) {
       phase = null;
     }
   });

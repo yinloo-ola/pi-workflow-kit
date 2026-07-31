@@ -7,6 +7,8 @@ description: "Disciplined debugging loop for hard bugs and performance regressio
 
 A 6-phase debugging discipline. Phase 1 is the skill — spend disproportionate effort here.
 
+Invoking `/skill:pwk-diagnose` **exits the gated brainstorm/plan phase** (the workflow guard unlocks) — diagnosis needs to write failing tests and `[DEBUG-…]` instrumentation. If you only wanted read-only investigation, use `/skill:pwk-status` (stays gated) or reinstate the lock with `/pwk-guard on`.
+
 ## Phase 1 — Build a feedback loop
 
 Create a fast, deterministic, agent-runnable pass/fail signal for the bug before doing anything else. Try in this order: failing test, curl script, CLI invocation, headless browser script.
@@ -19,7 +21,7 @@ The loop must produce the failure mode the **user** described — not a nearby b
 
 If you genuinely cannot build a loop, stop and say so. List what you tried. Ask for access to a reproducing environment or a captured artifact.
 
-Do not proceed until you have a loop you believe in.
+Hold at Phase 1 until you have a loop you believe in. Everything downstream — hypotheses, instrumentation, the fix — depends on that loop actually reproducing the user's symptom.
 
 ## Phase 2 — Reproduce
 
