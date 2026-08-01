@@ -18,16 +18,41 @@ When unsure, ask: "This looks trivial — fast-path it, or full brainstorm?" Def
 
 ## Granularity
 
-**One design doc = one PR; one requirement = one testable slice within it.**
+**One design doc = one PR; one requirement = one testable slice within it.** Most work is a single design doc.
 
-- Split into **multiple design docs** only when each part could ship as its own PR (independently reviewable and mergeable). Each runs its own plan → execute → finalize pipeline.
-- Within a doc, decompose into **requirements**, each one testable behavior. Decision rule: could this part be reviewed and merged on its own? Yes → separate design doc. No → one doc, multiple requirements. Most work is a single doc; splitting is opt-in.
-- **Splitting across PRs — brainstorm once, write every sub-design doc.** This one brainstorm writes the overarching `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (goal, the sub-design `<topic>`s in build/dependency order, a one-line status per sub-design, initially `not started`) **and every sub-design's `-design.md`**, each opening with `Part of: docs/plans/YYYY-MM-DD-<umbrella>-overview.md`. Don't re-brainstorm per sub-design — each then goes straight to `pwk-writing-plans` → execute → finalize, issue by issue. Re-brainstorm a single sub-design only if an earlier one's implementation made its design stale. `pwk-finalizing` marks each sub-design shipped in the overview and disposes the overview once the last one lands (it isn't matched by the per-`<topic>` globs, so it survives every finalize until then).
+- Within a doc, decompose into **requirements**, each one testable behavior.
+- A requirement too big for one design doc but shipping as a single PR is an **umbrella** — multiple design docs decomposed under one overview, on one branch, finalized once. See [Umbrella](#umbrella) below.
+
+## Umbrella
+
+An umbrella splits one large requirement into multiple design docs that ship together as **one PR**. One branch; one `pwk-finalizing` at the end. The split is intra-PR decomposition — a way to keep each design/plan/execute cycle small and focused, not a multi-PR strategy.
+
+**First brainstorm** (the requirement is too big for one design doc):
+
+1. **Propose the split** — the parts, a one-line scope each, and build order. Get human approval before writing anything beyond discovery.
+2. **Write the overview** — `docs/plans/YYYY-MM-DD-<umbrella>-overview.md`, a **status-free roster**:
+
+   ```markdown
+   # Overview: <umbrella>
+
+   Goal: <one line — what the whole requirement delivers>
+
+   ## Parts (build order)
+   1. <topic> — <one-line scope>
+   2. <topic> — <one-line scope>
+   ```
+
+   Goal, parts with one-line scopes, build order — **no status column**. No skill mutates the overview between this write and `pwk-finalizing` (which disposes it); part-completion is inferred from each part's own `*-progress.md`.
+3. **Write the first part's** `YYYY-MM-DD-<part>-design.md`, then hand off to `/skill:pwk-writing-plans`.
+
+**Later parts** — re-run `/skill:pwk-brainstorming` for the next part. Read the overview for big-picture/roster context (which slice is yours, which siblings exist), then explore the codebase to design your slice **as brainstorm always does** — prior parts are just implemented code in the repo by then. There is no special "read your predecessors" step; cross-slice decisions that must persist go in an ADR, not the overview.
+
+The whole umbrella is one branch and one PR: `pwk-writing-plans` creates the branch on the first part and reuses it for later parts; `pwk-executing-tasks` suggests the next part (or finalize after the last); `pwk-finalizing` disposes the overview + every part's docs and ships one PR.
 
 ## Process
 
 1. **Check git state** — `git status` + `git log --oneline -5`. Uncommitted work? Ask the user what to do first.
-2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md` and `*-overview.md`; report in-flight topics and any active split. If the new idea continues an existing topic, ask whether to extend it or start fresh. Resuming a split? An existing `*-overview.md` means the decomposition is already done — reuse it and refresh the relevant sub-design docs rather than writing a new overview.
+2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md` and `*-overview.md`; report in-flight topics and any active umbrella. If the new idea continues an existing topic, ask whether to extend it or start fresh. Part of an umbrella? An existing `*-overview.md` means the split is already decided — read it for the roster and design this part's `-design.md` against it (see [Umbrella](#umbrella)).
 3. **Understand the idea** — read only enough code/docs/commits to ground the design. **Check `docs/lessons.md`** — known constraints may shape it. Ask questions one at a time, prefer multiple choice. Once you can articulate what/why/constraints, present a short summary and ask: "Should I proceed, or is there more?" The human decides when to move on.
 4. **Explore approaches** — propose 2–3, leading with your recommendation. Sketch the concrete interface (types, signatures, example caller) for each so the comparison is grounded in code, not abstractions.
 5. **Present the design** in one pass, organized into sections (architecture, components, data flow, error handling, testing) — the human comments on any section; re-present only revised sections.
@@ -47,7 +72,7 @@ When unsure, ask: "This looks trivial — fast-path it, or full brainstorm?" Def
 
    Example (rate limiting): "Given a new API consumer with no prior usage, When they exceed 100 requests/minute for 3 consecutive minutes, Then they're throttled, a `rate_limited` event is emitted, and further requests return 429."
 
-   **Splitting large issues:** propose multiple design docs (one `<topic>` per sub-issue) and get human approval first — see [Granularity](#granularity). On approval, this one brainstorm writes the overarching `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` **and every sub-design's `-design.md`** (each with `Part of: docs/plans/YYYY-MM-DD-<umbrella>-overview.md`). Then hand the first sub-design (build order) to `/skill:pwk-writing-plans`; the rest follow issue-by-issue, each straight to planning — no re-brainstorm unless a later slice's design went stale.
+   **Splitting large issues:** if the requirement needs more than one design doc, propose an umbrella split (one `<topic>` per part) and get human approval first — see [Umbrella](#umbrella). On approval, write the status-free `*-overview.md` and the **first part's** `-design.md`, then hand off to `/skill:pwk-writing-plans`. Later parts are brainstormed one by one (each re-reading the overview) — do not write every part's design doc up front.
 
 The session stays read-only and uncommitted through brainstorm and plan: branch creation happens at the end of `/skill:pwk-writing-plans`; plan docs are committed at the start of `pwk-executing-tasks`.
 

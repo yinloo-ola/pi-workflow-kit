@@ -224,6 +224,18 @@ if (crSkill && /unlocked/i.test(crSkill.content)) {
   fail("pwk-code-review: must state it is unlocked (may edit code)");
 }
 
+// --- Check 7: umbrella contract (multi-design-doc requirement = one PR) ---
+// An umbrella splits one large requirement into multiple design docs that ship together as
+// one PR, via a status-free overview roster + per-part cycle + finalize-once. Each pipeline
+// skill must document its half so the contract is followable. Grown per-requirement.
+console.log("umbrella contract:");
+if (bs && /^## Umbrella\b/m.test(bs.content))
+  ok("pwk-brainstorming: documents the umbrella (multi-design-doc, one PR)");
+else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, one PR)");
+if (bs && /status-free/i.test(bs.content))
+  ok("pwk-brainstorming: defines the overview as a status-free roster");
+else fail("pwk-brainstorming: overview must be documented as status-free");
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
