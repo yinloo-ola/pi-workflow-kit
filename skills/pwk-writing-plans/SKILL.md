@@ -33,7 +33,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
    ## Overview
    Design: docs/plans/YYYY-MM-DD-<topic>-design.md
-   Part of: docs/plans/YYYY-MM-DD-<umbrella>-overview.md   *(split sub-design only)*
+   Umbrella: docs/plans/YYYY-MM-DD-<umbrella>-overview.md   *(umbrella part only — else omit)*
 
    ## Requirement 1: <name>
 
