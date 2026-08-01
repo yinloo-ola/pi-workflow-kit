@@ -11,14 +11,14 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
 
 1. Glob `docs/plans/*-overview.md`, `*-design.md`, `*-implementation.md`, `*-progress.md` — this working tree only.
 2. For each topic, infer the furthest artifact: only `*-design.md` → plan next; `*-implementation.md` no progress → execute next; `*-progress.md` → execute, show `done/total`.
-3. **Group by split** — for each `*-overview.md`, take its sub-design roster and roll up each by state: **shipped** if the overview row says so; else **in-flight** if it has an active `*-implementation.md`/`*-progress.md`; else **not-started** (in-flight is inferred from the artifacts — no phase writes it). Print one roll-up line (`<umbrella> (split): n shipped · n in-flight · n not-started`), then nest the not-shipped sub-designs under it with their phase. Shipped+archived docs live in `docs/plans/completed/`; shipped+deleted leave no active docs — both count as shipped only. Topics whose design doc has no `Part of:` print flat.
+3. **Group by umbrella** — for each `*-overview.md`, take its **parts** roster and roll up each part by state, inferred from artifacts (the overview is **status-free** — read no status from it): **in-flight** if it has an active `*-implementation.md`/`*-progress.md` (show `done/total`); else **not-started**. Print one roll-up line (`<umbrella> (umbrella): n in-flight · n not-started`), then nest the parts under it with their phase. Once the umbrella finalizes, its docs — overview included — are disposed, so it no longer appears here. Topics not part of an overview print flat.
 4. Print a compact table, grouped under any umbrellas, e.g.:
 
    ```
-   payments-revamp (split): 1 shipped · 1 in-flight · 1 not-started
-     payments-core      ✅ shipped
-     payments-ui        execute  2/3 done
-     payments-webhooks  plan     —
+   payments-revamp (umbrella): 2 in-flight · 1 not-started
+     payments-core      execute  2/3 done
+     payments-ui        plan     —
+     payments-webhooks  not started
    auth                execute  1/2 done
    ```
 
