@@ -241,6 +241,10 @@ else fail("pwk-writing-plans: missing umbrella branch-reuse note");
 if (et && /umbrella/i.test(et.content) && /next part/i.test(et.content))
   ok("pwk-executing-tasks: suggests finalize or brainstorm-next keyed on the overview roster");
 else fail("pwk-executing-tasks: missing umbrella post-gate suggestion logic");
+const fin = loadSkills().find((s) => s.name === "pwk-finalizing");
+if (fin && /umbrella/i.test(fin.content) && /every topic/i.test(fin.content))
+  ok("pwk-finalizing: disposes the overview + every part for an umbrella (one PR)");
+else fail("pwk-finalizing: missing umbrella dispose-all note");
 
 // --- Summary ---
 console.log("");
