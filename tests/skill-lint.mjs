@@ -232,8 +232,7 @@ console.log("umbrella contract:");
 if (bs && /^## Umbrella\b/m.test(bs.content))
   ok("pwk-brainstorming: documents the umbrella (multi-design-doc, one PR)");
 else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, one PR)");
-if (bs && /status-free/i.test(bs.content))
-  ok("pwk-brainstorming: defines the overview as a status-free roster");
+if (bs && /status-free/i.test(bs.content)) ok("pwk-brainstorming: defines the overview as a status-free roster");
 else fail("pwk-brainstorming: overview must be documented as status-free");
 if (wp && /reuse/i.test(wp.content) && /umbrella/i.test(wp.content))
   ok("pwk-writing-plans: documents branch reuse for umbrella later parts");
@@ -249,8 +248,26 @@ const wfPhasesDoc = readFileSync(join(root, "docs/workflow-phases.md"), "utf8");
 const devGuideDoc = readFileSync(join(root, "docs/developer-usage-guide.md"), "utf8");
 if (/status-free/i.test(wfPhasesDoc)) ok("workflow-phases.md: documents the umbrella (status-free overview, one PR)");
 else fail("workflow-phases.md: missing umbrella model (status-free overview)");
-if (/status-free/i.test(devGuideDoc)) ok("developer-usage-guide.md: documents the umbrella (status-free overview, one PR)");
+if (/status-free/i.test(devGuideDoc))
+  ok("developer-usage-guide.md: documents the umbrella (status-free overview, one PR)");
 else fail("developer-usage-guide.md: missing umbrella model (status-free overview)");
+
+// --- Check 8: umbrella adds no skill and no guard phase (regression lock) ---
+// The umbrella feature lives inside the existing 4 pipeline skills; no new skill, no new guard
+// phase. This locks that invariant so a future change can't quietly add a pwk-decomposing skill
+// or a 'decompose' phase. Green by design — it guards against future drift, not new behavior.
+console.log("umbrella scope lock:");
+const skillDirs = readdirSync(skillsDir).filter((d) => statSync(join(skillsDir, d)).isDirectory());
+const straySkill = skillDirs.find((d) => /decompos|split/i.test(d));
+if (!straySkill) ok("no decompose/split skill added (umbrella is skill-free)");
+else fail(`unexpected new skill dir: ${straySkill}`);
+if (!/decompos/i.test(guardSrc)) ok("guard references no decompose phase");
+else fail("guard references a 'decompose' phase — umbrella should add no phase");
+const phaseMatch = guardSrc.match(/SKILL_TO_PHASE[\s\S]*?\{([\s\S]*?)\}/);
+const phaseBlock = phaseMatch ? phaseMatch[1] : "";
+const gatedSkillCount = (phaseBlock.match(/pwk-[\w-]+/g) || []).length;
+if (gatedSkillCount === 2) ok("SKILL_TO_PHASE unchanged (2 gated skills)");
+else fail(`SKILL_TO_PHASE has ${gatedSkillCount} gated skills — expected 2`);
 
 // --- Summary ---
 console.log("");
