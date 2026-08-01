@@ -7,9 +7,9 @@ Last updated: 2026-08-01T15:35:44Z
 
 | # | Status | Requirement | Commit |
 |---|--------|-------------|--------|
-| 1 | ⬜ pending | brainstorm proposes splits; writes status-free overview + first part | — |
-| 2 | ⬜ pending | writing-plans reuses the branch for later parts | — |
-| 3 | ⬜ pending | executing-tasks suggests finalize or brainstorm-next after each part | — |
-| 4 | ⬜ pending | finalizing disposes overview + all parts; ships one PR | — |
-| 5 | ⬜ pending | docs reflect the umbrella model | — |
-| 6 | ⬜ pending | guard + status unchanged; no new skill/phase (regression lock-in) | — |
+| 1 | ✅ done | brainstorm proposes splits; writes status-free overview + first part | 2d24cdc |
+| 2 | ✅ done | writing-plans reuses the branch for later parts | d62e3d1 |
+| 3 | ✅ done | executing-tasks suggests finalize or brainstorm-next after each part | 10723dd |
+| 4 | ✅ done | finalizing disposes overview + all parts; ships one PR | a4b0ab2 |
+| 5 | ✅ done | docs reflect the umbrella model | 179a5f6 |
+| 6 | ✅ done | guard + status unchanged; no new skill/phase (regression lock-in) | da36b7c |
