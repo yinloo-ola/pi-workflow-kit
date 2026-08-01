@@ -54,7 +54,7 @@ brainstorm → writing-plans → executing-tasks → finalizing
                    diagnose (anytime)   ·   status (anytime)
 ```
 
-A **design doc is one PR**; a **requirement is one testable slice within it**. For multi-design work (a large issue split into several design docs — each its own PR), run the pipeline once per design doc.
+A **design doc is one PR**; a **requirement is one testable slice within it**. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once.
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|

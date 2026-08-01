@@ -7,7 +7,7 @@ brainstorm → writing-plans → executing-tasks → finalizing
                           (per requirement: tests → ⏸ checkpoint → implement → ⏸ checkpoint → code-review)
 ```
 
-A design doc is one PR; a requirement is one testable slice within it. For multi-design work (a large issue split into several design docs — each its own PR), run the pipeline once per design doc.
+A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella**: multiple design docs under one status-free overview, on one branch, finalized once (`(brainstorm → plan → execute) × N → finalize`).
 
 ## brainstorm
 
@@ -17,7 +17,7 @@ A design doc is one PR; a requirement is one testable slice within it. For multi
 
 - Explore requirements and shape the design.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list, ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
-- May split a large issue into multiple design docs (human-approved). One brainstorm writes the overarching `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` **and every sub-design's `-design.md`** (each with a `Part of:` link); each sub-design then goes straight to planning — no re-brainstorm.
+- May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (roster of parts + build order) and the **first** part's `-design.md`. Later parts are brainstormed one by one against the overview + implemented predecessors.
 - ADRs go to `docs/adr/` (permanent, never archived).
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
@@ -30,7 +30,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 - Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
 - Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
-- For a split sub-design, follows the design's `Part of:` overview to plan one slice of the overarching issue (composing with shipped siblings) and carries the link into the plan.
+- For an umbrella part, reads the `*-overview.md` to plan one slice (composing with earlier parts' code) and reuses the existing feature branch instead of creating a new one.
 - Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — an end-to-end integration test that exercises the requirements together (distinct from per-requirement tests). If the design has none, stops and asks the human to brainstorm one.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
@@ -78,7 +78,7 @@ No write restrictions.
 ```
 
 - **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history). ADRs stay at `docs/adr/`. For a split, marks the sub-design **shipped** in the overview first, then disposes the overview (same choice) once the last sub-design lands.
+- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history). ADRs stay at `docs/adr/`. For an umbrella (an `*-overview.md` exists), disposes the overview **and every part's** docs in one pass and ships **one PR**.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.
@@ -89,7 +89,7 @@ No write restrictions.
 /skill:pwk-status
 ```
 
-Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight; a split rolls up under its overview (shipped / in-flight / not-started). Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the brainstorm/plan write block, so the boundary stays up).
+Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight; an umbrella rolls up under its overview (shipped / in-flight / not-started). Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the brainstorm/plan write block, so the boundary stays up).
 
 ## diagnose
 

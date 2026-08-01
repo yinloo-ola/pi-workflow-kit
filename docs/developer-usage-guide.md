@@ -32,7 +32,7 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 
 ## The workflow
 
-You control each phase by invoking the skill. A design doc is one PR; a requirement is one testable slice within it. For multi-design work (a large issue split), run the pipeline once per design doc:
+You control each phase by invoking the skill. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once:
 
 ```
 /skill:pwk-brainstorming  →  /skill:pwk-writing-plans  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
@@ -46,7 +46,7 @@ You control each phase by invoking the skill. A design doc is one PR; a requirem
 
 Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review.
 
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list. May split a large issue into multiple design docs. ADRs go to `docs/adr/` (permanent).
+Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
 
 ### 2. Plan
 

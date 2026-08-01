@@ -245,6 +245,12 @@ const fin = loadSkills().find((s) => s.name === "pwk-finalizing");
 if (fin && /umbrella/i.test(fin.content) && /every topic/i.test(fin.content))
   ok("pwk-finalizing: disposes the overview + every part for an umbrella (one PR)");
 else fail("pwk-finalizing: missing umbrella dispose-all note");
+const wfPhasesDoc = readFileSync(join(root, "docs/workflow-phases.md"), "utf8");
+const devGuideDoc = readFileSync(join(root, "docs/developer-usage-guide.md"), "utf8");
+if (/status-free/i.test(wfPhasesDoc)) ok("workflow-phases.md: documents the umbrella (status-free overview, one PR)");
+else fail("workflow-phases.md: missing umbrella model (status-free overview)");
+if (/status-free/i.test(devGuideDoc)) ok("developer-usage-guide.md: documents the umbrella (status-free overview, one PR)");
+else fail("developer-usage-guide.md: missing umbrella model (status-free overview)");
 
 // --- Summary ---
 console.log("");
