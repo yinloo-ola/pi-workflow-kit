@@ -123,7 +123,12 @@ When no `⬜ pending` or `🔄 in-progress` requirements remain, run the **integ
 2. **Run the feature-acceptance test.** The plan's `## Feature acceptance` section specifies one end-to-end test exercising the requirements *together* against the design's claim. Write it if missing; run it; it must pass. If the plan has no such section, stop and tell the human — the gate has nothing concrete to verify.
 3. **Confirm composition.** Do the requirements together deliver the end-to-end behavior the design doc described? Fix gaps here, with tests, before shipping.
 
-Then present:
+Then determine the next step from the artifacts (the human drives every transition — this is a suggestion, not a gate):
+
+- **Standalone design doc** (no `docs/plans/*-overview.md`) → suggest `/skill:pwk-finalizing`.
+- **Umbrella part** (an `*-overview.md` exists) → read the overview roster and find this part's `<topic>`. If it's the **last** in build order, the umbrella is complete → suggest `/skill:pwk-finalizing` (one PR for the whole umbrella). If **more parts remain**, suggest `/skill:pwk-brainstorming` for the next part (the next `<topic>` in the roster).
+
+Present:
 
 ```
 ✅ All requirements complete — integration verified!
@@ -133,7 +138,8 @@ Then present:
 | 1 | ✅ done | <name> |
 | … | … | … |
 
-   - Ship: /skill:pwk-finalizing
+   - Next part: /skill:pwk-brainstorming (<next topic>)   ← umbrella, more parts remain
+   - Ship: /skill:pwk-finalizing                          ← standalone, or last umbrella part
 ```
 
 ## If you're stuck

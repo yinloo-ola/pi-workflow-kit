@@ -238,6 +238,9 @@ else fail("pwk-brainstorming: overview must be documented as status-free");
 if (wp && /reuse/i.test(wp.content) && /umbrella/i.test(wp.content))
   ok("pwk-writing-plans: documents branch reuse for umbrella later parts");
 else fail("pwk-writing-plans: missing umbrella branch-reuse note");
+if (et && /umbrella/i.test(et.content) && /next part/i.test(et.content))
+  ok("pwk-executing-tasks: suggests finalize or brainstorm-next keyed on the overview roster");
+else fail("pwk-executing-tasks: missing umbrella post-gate suggestion logic");
 
 // --- Summary ---
 console.log("");
