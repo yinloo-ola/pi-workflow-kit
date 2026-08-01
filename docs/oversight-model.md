@@ -6,11 +6,11 @@
 
 Skills teach the agent the workflow. There are 5 pipeline skills:
 
-- **pwk-brainstorming** — explore ideas, produce a descriptive design doc that opens with a `## Requirements` list
+- **pwk-brainstorming** — explore ideas, produce a descriptive design doc that opens with a `## Requirements` list. For a requirement too big for one design doc, may start an **umbrella** (multiple design docs under one status-free overview, shipping as one PR)
 - **pwk-writing-plans** — turn each requirement into acceptance criteria + integration-test cases (a behavioral spec, no implementation code)
 - **pwk-executing-tasks** — implement requirement-by-requirement, test-first, with two mandatory human checkpoints per requirement
 - **pwk-code-review** — the inline reviewer (code tracing, spec alignment, code smells, production hazards). During `pwk-executing-tasks`, per-requirement review instead runs **four specialized reviewers in parallel** via the `subagent` tool, each from a fresh context (spec gaps & scope creep, tracing, smells, hazards). These ship as package agents (`agents/pwk-*.md`) discovered natively by the optional **`pi-subagents`** package; all report findings only — fixes are applied by the executing-tasks main agent. Falls back to inline `/skill:pwk-code-review` when `pi-subagents` is not installed.
-- **pwk-finalizing** — archive or delete consumed plan docs, curate lessons, update docs, create PR or merge
+- **pwk-finalizing** — dispose consumed plan docs (archive or delete; for an umbrella, the overview + every part), curate lessons, update docs, create PR or merge
 
 Plus 2 on-demand skills:
 

@@ -9,5 +9,7 @@ Retire rules that no longer apply during finalizing.
 
 ## Cross-Skill Consistency
 
+- **skill-lint assertions for new behavior need a marker that distinguishes new from old.** A token present in both models gives a false green — e.g. `/umbrella/` matched the old `<umbrella>-overview.md` filename placeholder before the new behavior landed; switched to `/status-free/`, a property only the new model has.
+- **Test-first for skill/doc content:** add the skill-lint assertion first (red — the skill doesn't yet claim the behavior), then edit the skill markdown to satisfy it (green). After edits run biome — it collapses short `if (cond) ok();` to one line and rejects array holes like `[, ""]` (restructure instead).
 
 ## Documentation
