@@ -235,6 +235,9 @@ else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, o
 if (bs && /status-free/i.test(bs.content))
   ok("pwk-brainstorming: defines the overview as a status-free roster");
 else fail("pwk-brainstorming: overview must be documented as status-free");
+if (wp && /reuse/i.test(wp.content) && /umbrella/i.test(wp.content))
+  ok("pwk-writing-plans: documents branch reuse for umbrella later parts");
+else fail("pwk-writing-plans: missing umbrella branch-reuse note");
 
 // --- Summary ---
 console.log("");
