@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+### Changed
+
+## [1.2.0] - 2026-08-01
+
+### Added
+
 - **Umbrella: multi-design-doc requirements ship as one PR.** A requirement too big for one design doc is an *umbrella*: `pwk-brainstorming` proposes the split and writes a **status-free** `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (roster of parts + build order) plus the **first** part's design doc; later parts are brainstormed one by one against the overview + implemented predecessors (no special "read predecessors" step). The umbrella lives on one branch — `pwk-writing-plans` creates it on the first part and reuses it for later parts; `pwk-executing-tasks` suggests the next part (or finalize after the last); `pwk-finalizing` disposes the overview + every part's docs and ships **one PR**. `pwk-status` rolls an umbrella's parts up under its overview. Replaces the earlier 'one brainstorm writes every sub-design, each its own PR' model.
 
 ### Changed
