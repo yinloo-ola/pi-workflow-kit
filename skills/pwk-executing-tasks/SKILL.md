@@ -19,7 +19,7 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests) — 
 
 1. **Parse the plan** — read every `## Requirement N:` heading and its `### Checkpoints` / `### Review` tags (defaults `full` / `parallel`). Requirements run in **listed order** — the plan is already in build order; do not reorder.
 2. **Setup pre-flight** *(only if the plan has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval. Record `setup: done` in the progress-file header so a resume can confirm it rather than assume it.
-3. **Create the progress file** `docs/plans/<plan-name>-progress.md`:
+3. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the implementation doc, so `pwk-finalizing`'s glob matches):
 
    ```markdown
    # Progress: <topic>

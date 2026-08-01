@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Coherent multi-PR splits (one brainstorm, full lifecycle).** A split is brainstormed **once**: `pwk-brainstorming` writes the overarching `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (goal, sub-design list in build order, per-sub-design status) **and every sub-design's `-design.md`**, each opening with `Part of: …overview.md`. Each sub-design then goes straight to `pwk-writing-plans` (no re-brainstorm) — the planner follows `Part of:` to compose with siblings (archived in `docs/plans/completed/`, or code + `docs/adr/` if deleted) and threads the link into the plan. `pwk-finalizing` marks the sub-design **shipped** in the overview, then disposes the overview (same archive-or-delete choice) once the last sub-design lands — closing the lifecycle. `pwk-status` rolls each split up under its umbrella (shipped / in-flight / not-started). Re-brainstorm a single slice only if an earlier sub-design's implementation made its design stale.
+
+### Changed
+
+- **`pwk-finalizing` offers archive-or-delete for consumed plan docs** — instead of always deleting, it now asks the human: **delete** (default — code + tests are the source of truth; avoids stale plan docs misleading future sessions) or **archive** to `docs/plans/completed/` (keep planning history). Re-introduces the archive path removed in `de8ee16`, now as a human-chosen option alongside delete. ADRs, `docs/lessons.md`, `CHANGELOG.md`, `README.md`, and any overarching `*-overview.md` (until the split completes) are never touched either way.
+- **`pwk-status` is scoped to the current working tree** (a worktree has its own `docs/plans/`) and no longer overclaims cross-worktree visibility; it now groups a split's sub-designs under their overview.
+- **`pwk-executing-tasks` progress file** is now named `YYYY-MM-DD-<topic>-progress.md` explicitly (was the undefined `<plan-name>` token), matching `pwk-finalizing`'s dated glob.
+
 ## [1.1.0] - 2026-07-31
 
 ### Added

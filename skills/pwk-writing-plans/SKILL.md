@@ -13,7 +13,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
 ## Process
 
-1. **Find the design doc** — glob `docs/plans/*-design.md`. If none, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. **Read `docs/lessons.md`** if it exists — known patterns belong in the acceptance criteria.
+1. **Find the design doc** — glob `docs/plans/*-design.md`. If none, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. **Read `docs/lessons.md`** if it exists — known patterns belong in the acceptance criteria. **Split sub-design?** If the doc carries a `Part of: docs/plans/…-overview.md` line, read that overview — the overarching issue and which sibling sub-designs already shipped. Plan as one slice of it, composing your criteria with what siblings established (their detail is in the design doc, in `docs/plans/completed/` if a sibling was archived, or in the code + `docs/adr/` if one was deleted). Carry the `Part of:` line into the plan's Overview so the executor inherits it.
 2. **Create the feature branch** — `git checkout -b <topic>` (branch creation is allowed in the plan phase). Design + plan docs live on this branch, committed at the start of `pwk-executing-tasks`.
 3. **Read the `## Requirements` list** — the plan covers **all** of them. If the design has none, derive requirements from its described behaviors and confirm with the human before proceeding.
 4. **Write the plan** — for each requirement:
@@ -33,6 +33,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
    ## Overview
    Design: docs/plans/YYYY-MM-DD-<topic>-design.md
+   Part of: docs/plans/YYYY-MM-DD-<umbrella>-overview.md   *(split sub-design only)*
 
    ## Requirement 1: <name>
 
