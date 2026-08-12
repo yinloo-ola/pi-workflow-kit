@@ -295,6 +295,9 @@ fgMark("pwk-writing-plans", wp.content, "Test observable behavior", "meaningful-
 fgMark("pwk-executing-tasks", et.content, "Test observable behavior", "meaningful-test rule (executing-tasks)");
 const lessonsMd = readFileSync(join(root, "docs/lessons.md"), "utf8");
 fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-test rule (lessons)");
+// Requirement 4 — code-review + brainstorming wording
+fgMark("pwk-code-review", crSkill && crSkill.content, "whole feature diff", "whole-feature-diff scope");
+fgMark("pwk-brainstorming", bs && bs.content, "primary enforced spec", "Feature acceptance as primary spec");
 
 // --- Summary ---
 console.log("");
