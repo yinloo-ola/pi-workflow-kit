@@ -4,7 +4,7 @@ How to install and use `pi-workflow-kit` with the Pi coding agent.
 
 ## What you get
 
-- **5 pipeline skills** — brainstorm → writing-plans → executing-tasks → finalizing, with code-review running per requirement during execution.
+- **5 pipeline skills** — brainstorm → writing-plans → executing-tasks → finalizing, with code-review running at the feature level during execution.
 - **2 utility skills** — diagnose (debugging) and status (multi-topic overview), both on demand.
 - **1 extension** — hard-blocks source writes during brainstorm and writing-plans, and blocks destructive bash via a simple common-blacklist.
 
@@ -64,11 +64,11 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 /skill:pwk-executing-tasks
 ```
 
-Implement requirement-by-requirement with **full autonomy**: write the integration tests (red) → **checkpoint: tests** → implement to green → **checkpoint: complete** → commit → code-review. Two mandatory human checkpoints per requirement. After all requirements, an **integration gate** runs the full suite and confirms the requirements compose into the feature before finalize.
+Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → **checkpoint: feature-complete** (full suite + E2E green) → feature review. Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
 
-### 4. Code review (per requirement)
+### 4. Code review (feature level)
 
-The `pwk-executing-tasks` skill invokes the `subagent` tool automatically (programmatic, not user-driven). Four specialized reviewers launch in parallel — each reviewing from a different dimension (spec gaps & scope creep, end-to-end code tracing, code smells, production hazards). The reviewers ship as **package agents** (`agents/pwk-*.md`, declared via the `pi-subagents.agents` manifest key) and are discovered natively by the optional **`pi-subagents`** package — no copy step. All report findings only; no agent edits files or produces commits. The main agent collects results, applies smell fixes itself, runs integration tests after each fix, then updates progress to `✅ done`.
+The `pwk-executing-tasks` skill invokes the `subagent` tool automatically at the feature-level review (programmatic, not user-driven). Four specialized reviewers launch in parallel over the whole feature diff — each from a different dimension (spec gaps & scope creep, end-to-end code tracing, code smells, production hazards). A per-requirement review runs the same way for a tagged requirement. The reviewers ship as **package agents** (`agents/pwk-*.md`, declared via the `pi-subagents.agents` manifest key) and are discovered natively by the optional **`pi-subagents`** package — no copy step. All report findings only; no agent edits files or produces commits. The main agent collects results, applies smell fixes itself, runs integration tests after each fix, then updates progress to `✅ done`.
 
 *Fallback:* if `pi-subagents` is not installed (so the `subagent` tool is unavailable), the skill falls back to inline `/skill:pwk-code-review` as before. Install it to enable parallel review:
 
@@ -120,6 +120,6 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 
 - Start with brainstorming for anything non-trivial.
 - The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
-- Each requirement has two mandatory checkpoints by default: use them to steer test design and implementation.
-- **Right-size each requirement at plan time** with the `### Checkpoints` (`full`/`spec`/`none`) and `### Review` (`parallel`/`inline`/`skip`) tags — defaults are conservative (`full` + `parallel`), so behavior is unchanged unless you opt in. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it's the lowest-iteration option that doesn't sacrifice quality — but it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc).
+- The feature-gate flow has two checkpoints by default (feature-spec + feature-complete): use them to steer the E2E spec and the finished implementation.
+- **Right-size each requirement at plan time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc).
 - Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.

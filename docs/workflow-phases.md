@@ -4,7 +4,7 @@
 
 ```
 brainstorm → writing-plans → executing-tasks → finalizing
-                          (per requirement: tests → ⏸ checkpoint → implement → ⏸ checkpoint → code-review)
+                          (feature-gate: write feature E2E → ⏸ feature-spec → implement requirements → ⏸ feature-complete → feature review)
 ```
 
 A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella**: multiple design docs under one status-free overview, on one branch, finalized once (`(brainstorm → plan → execute) × N → finalize`).
@@ -31,7 +31,8 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 - Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
 - Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
 - For an umbrella part, reads the `*-overview.md` to plan one slice (composing with earlier parts' code) and reuses the existing feature branch instead of creating a new one.
-- Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — an end-to-end integration test that exercises the requirements together (distinct from per-requirement tests). If the design has none, stops and asks the human to brainstorm one.
+- Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — the **primary enforced spec**, an end-to-end test the executor gates on first. If the design has none, stops and asks the human to brainstorm one.
+- Tags the plan: per-requirement `### Checkpoints`/`### Review` default to `none`/`skip` (opt-in), plus an always-on feature-level `### Feature review`. Flags only requirements with complex logic, the main part of the feature, or production-risk.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Write boundary: only `docs/plans/` is writable.
@@ -42,22 +43,22 @@ Write boundary: only `docs/plans/` is writable.
 /skill:pwk-executing-tasks
 ```
 
-- Per requirement: write the integration tests (red) → **⏸ checkpoint: tests** → implement to green (full autonomy — the executor chooses structure/signatures/internals) → **⏸ checkpoint: complete** → commit → **per-requirement review** (four parallel reviewers via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
-- Two **mandatory** human checkpoints per requirement — unless the plan tags a requirement lighter (see [Proportionality](#proportionality)).
-- **Composition check after each commit** — if a requirement touched shared code, the executor runs the full suite now and fixes cross-requirement regressions immediately, rather than discovering them only at the integration gate.
-- Progress tracked in `docs/plans/*-progress.md`.
-- After all requirements: **integration gate** — run the full suite, **run the feature-acceptance test** (the end-to-end check from the plan's `## Feature acceptance` section), and confirm the requirements compose into the feature before `/skill:pwk-finalizing`.
+- **Feature-gate flow:** write the feature-acceptance E2E test (red) → **⏸ checkpoint: feature-spec** (human confirms the E2E proves the feature) → implement the requirements back-to-back with full autonomy (the executor chooses structure/signatures/internals) → **⏸ checkpoint: feature-complete** (full suite + feature E2E green) → **feature review** (four parallel reviewers over the whole feature diff via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
+- Per-requirement checkpoints/reviews are **opt-in** — they fire only for requirements the plan tags (default off); see [Proportionality](#proportionality).
+- **Regression check after each commit** — run the full existing suite to catch cross-requirement regressions immediately. The feature E2E stays red until the last requirement and is gated only at `feature-complete` (the old integration gate folds into it).
+- Progress tracked in `docs/plans/*-progress.md` (feature phase + requirement checklist).
 
 No write restrictions. All tools available.
 
 ## Proportionality
 
-The defaults preserve the 1.0.0 behavior (two checkpoints + parallel review per requirement). At plan time the human can tag each requirement lighter to right-size the workflow:
+The **feature-gate flow** is the default: write the feature E2E first, implement the requirements, then one feature-level review. Per-requirement ceremony is opt-in — at plan time the human (or planner) tags only the requirements that need it:
 
-- **Checkpoints** — `full` (both stops, default) | `spec` (tests stop only — cheap spec-correctness gate, implementation covered by review) | `none` (no stops, trivial only). Test-first is preserved either way: even `none` writes tests first (red) and implements to green; only the human *stops* are optional. `spec` requires at least `inline` review (never combine with `skip`).
-- **Review** — `parallel` (four fresh-context reviewers, default) | `inline` (single `pwk-code-review` pass) | `skip` (trivial diffs with no behavioral surface only).
+- **Checkpoints** — `none` (no per-requirement stop, **default**) | `full` (both stops) | `spec` (tests stop only — cheap spec-correctness gate, implementation covered by review). Test-first is preserved either way: even `none` writes a meaningful test first (red) and implements to green; only the human *stops* are optional. `spec` requires at least `inline` review (never combine with `skip`).
+- **Review** — `skip` (no per-requirement review, **default**) | `parallel` (four fresh-context reviewers) | `inline` (single `pwk-code-review` pass).
+- **Feature review** — `parallel` (four reviewers over the whole feature diff, **default**) | `inline` (one pass, small features). Always on.
 
-A trivial fix can also skip the multi-turn brainstorm dialogue via the brainstorming trivial fast-path (compress to one turn, minimal design doc) — the guard still enforces read-only. Tags default conservatively, so nothing changes unless the human opts in.
+Flag a requirement for a checkpoint when it has complex logic or is the main part of the feature; for a review when it touches production-risk. A trivial fix can also skip the multi-turn brainstorm dialogue via the brainstorming trivial fast-path (compress to one turn, minimal design doc) — the guard still enforces read-only.
 
 ## code-review
 
@@ -67,7 +68,7 @@ A trivial fix can also skip the multi-turn brainstorm dialogue via the brainstor
 
 The **inline reviewer**: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked — may modify code to fix smells.
 
-**Not a phase you drive manually.** During `pwk-executing-tasks`, per-requirement review runs **four specialized reviewers in parallel** via the `subagent` tool (spec, tracing, smell, hazard — each fresh-context, read-only reporters); this skill is the **fallback** when [`pi-subagents`](https://pi.dev/packages/pi-subagents) is not installed. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
+**Not a phase you drive manually.** During `pwk-executing-tasks`, the **feature-level review** (the default) runs **four specialized reviewers in parallel** over the whole feature diff via the `subagent` tool (spec, tracing, smell, hazard — each fresh-context, read-only reporters); a per-requirement review runs the same way for a tagged requirement. This skill is the **fallback** when [`pi-subagents`](https://pi.dev/packages/pi-subagents) is not installed. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
 
 No write restrictions.
 

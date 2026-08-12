@@ -1,6 +1,6 @@
 # pi-workflow-kit
 
-> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→finalize workflow with test-first discipline and per-requirement code review.
+> Stop AI agents from rushing to code. Enforce a structured brainstorm→plan→execute→finalize workflow with test-first discipline and a feature-gate execution model.
 
 AI coding agents tend to skip design and jump straight into implementation, producing over-engineered or misaligned code. **pi-workflow-kit** solves this by hard-blocking write operations during brainstorm and planning phases — the agent *literally cannot modify your source files* until you approve the design.
 
@@ -20,7 +20,7 @@ No setup needed — skills and guards activate automatically after install.
 pi -e npm:@tianhai/pi-workflow-kit
 ```
 
-**Optional — parallel code review.** Per-requirement review can run four specialized reviewers in parallel via the `subagent` tool. Install [`pi-subagents`](https://pi.dev/packages/pi-subagents) to enable it:
+**Optional — parallel code review.** The feature-level review can run four specialized reviewers in parallel over the whole feature diff via the `subagent` tool. Install [`pi-subagents`](https://pi.dev/packages/pi-subagents) to enable it:
 
 ```bash
 pi install npm:pi-subagents
@@ -49,7 +49,7 @@ Guide the agent through a disciplined development process:
 
 ```
 brainstorm → writing-plans → executing-tasks → finalizing
-                             (per requirement: tests → checkpoint → implement → checkpoint → code-review)
+                             (feature-gate: write feature E2E → feature-spec → implement → feature-complete → review)
                                 ↕
                    diagnose (anytime)   ·   status (anytime)
 ```
@@ -60,8 +60,8 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list |
 | **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code) |
-| **Execute** | `/skill:pwk-executing-tasks` | Per requirement: write tests (red) → **checkpoint: tests** → implement (green) → **checkpoint: complete** → code-review |
-| **Code review** | `/skill:pwk-code-review` | Per requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
+| **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → **checkpoint: feature-complete** → feature review |
+| **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
 | **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase; **does not exit the gated phase**. |
@@ -75,8 +75,8 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 ```
 /skill:pwk-brainstorming   →  discuss and design (lists Requirements)
 /skill:pwk-writing-plans   →  turn each Requirement into acceptance criteria + integration tests
-/skill:pwk-executing-tasks →  implement per requirement with two mandatory checkpoints
-/skill:pwk-code-review     →  auto-runs per-requirement inside executing-tasks; also invocable manually for ad-hoc reviews
+/skill:pwk-executing-tasks →  feature-gate flow: E2E-first, implement, feature review (two checkpoints)
+/skill:pwk-code-review     →  auto-runs at the feature level inside executing-tasks; also invocable manually for ad-hoc reviews
 /skill:pwk-finalizing       →  ship it
 ```
 
@@ -84,15 +84,17 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 
 Plans specify *what*, not *how*. For each requirement, the plan gives **acceptance criteria + integration-test cases** — no implementation code, no file-by-file recipe. The executor has full autonomy to choose structure, signatures, and internals. A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria + integration tests survive implementation changes.
 
-### Test-First per Requirement
+### Feature-Gate Execution
 
-Each requirement is implemented test-first:
+The feature is implemented via the feature-gate flow:
 
-1. Write the integration tests (red)
-2. ⏸ **checkpoint: tests** — you review the test design
-3. Implement to green (full autonomy)
-4. ⏸ **checkpoint: complete** — you review the implementation
-5. Commit → code review
+1. Write the feature-acceptance E2E test (red)
+2. ⏸ **checkpoint: feature-spec** — you confirm the E2E proves the feature
+3. Implement the requirements back-to-back (TDD: meaningful test → red → green per slice; full autonomy)
+4. ⏸ **checkpoint: feature-complete** — full suite + feature E2E green, you review the whole diff
+5. Feature review → commit
+
+Per-requirement checkpoints/reviews are opt-in (default off); the feature-level review covers everything.
 
 ### Lessons Learned
 
@@ -113,20 +115,20 @@ Rules are simple imperative bullets:
 
 No configuration needed — the file ships with starter rules and grows as the agent learns.
 
-### Two Mandatory Checkpoints per Requirement
+### Two Feature-Level Checkpoints
 
-Each requirement has **two hard human-review gates** (not optional):
+The feature-gate flow has **two hard human-review gates** (not optional):
 
 | Checkpoint | What's done | What you review |
 |---|---|---|
-| **tests** | Integration tests written, confirmed failing | Are the right behaviors being specified? |
-| **complete** | Implemented, tests green, refactored | Is the implementation correct before committing? |
+| **feature-spec** | Feature-acceptance E2E written, confirmed failing | Does the E2E actually prove the feature? |
+| **feature-complete** | All requirements implemented; full suite + E2E green | Is the whole feature correct before review? |
 
 The agent stops and waits at each — approve, request changes, or send it back.
 
-### Before You Ship: the Integration Gate
+### Before You Ship: the Feature-Complete Gate
 
-Per-requirement review checks each diff in isolation. Before finalizing, the agent runs an **integration gate**: the **full test suite** (not just the last requirement's) must pass, and it confirms the requirements compose into the feature the design described. Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
+The feature-level review checks the whole diff composed. The **feature-complete** checkpoint already ran the full suite + the feature-acceptance E2E green — that *is* the integration check (there is no separate end pass). Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
 
 ## Quick Start
 
@@ -147,7 +149,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 > /skill:pwk-executing-tasks
 
-# (per requirement: writes tests → checkpoint → implements → checkpoint → code-review)
+# (feature-gate: writes feature E2E → checkpoint → implements requirements → checkpoint → feature review)
 
 > /skill:pwk-finalizing
 
@@ -158,7 +160,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 - **AI agents skip design.** Left unchecked, they jump to code and over-engineer. This forces a think-first workflow.
 - **Specs beat recipes.** Plans are behavioral specs (acceptance criteria + tests), not implementation recipes — they don't invalidate when details change.
-- **You stay in control.** Two mandatory checkpoints per requirement let you approve test design and implementation before the agent commits.
+- **You stay in control.** Two feature-level checkpoints let you approve the feature spec (E2E) and the finished implementation before the agent ships.
 - **Enforced, not suggested.** Hard blocks mean the agent can't ignore the rules — not even accidentally.
 
 ## Project
