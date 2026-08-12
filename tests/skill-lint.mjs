@@ -269,6 +269,22 @@ const gatedSkillCount = (phaseBlock.match(/pwk-[\w-]+/g) || []).length;
 if (gatedSkillCount === 2) ok("SKILL_TO_PHASE unchanged (2 gated skills)");
 else fail(`SKILL_TO_PHASE has ${gatedSkillCount} gated skills — expected 2`);
 
+// --- Check 9: feature-gate execution model (grown per-requirement) ---
+// Feature-acceptance E2E is the primary gate; per-requirement checkpoints/reviews are opt-in
+// (default off); two always-on feature checkpoints + one feature-level review; meaningful-test
+// rules. Each marker is a string only the new model has, so a stale skill fails (no false green).
+console.log("feature-gate model:");
+const fgMark = (file, content, marker, label) => {
+  if (content?.includes(marker)) ok(`${file}: ${label}`);
+  else fail(`${file}: missing ${label} — marker "${marker}"`);
+};
+// Requirement 1 — pwk-writing-plans tag defaults + feature-level review
+if (wp) {
+  fgMark("pwk-writing-plans", wp.content, "### Feature review", "feature-level review tag");
+  fgMark("pwk-writing-plans", wp.content, "default to `none` / `skip`", "flipped per-requirement defaults");
+  fgMark("pwk-writing-plans", wp.content, "primary enforced spec", "Feature acceptance as primary spec");
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

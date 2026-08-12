@@ -9,6 +9,8 @@ Turn the design doc's requirements into a **behavioral spec** the executor imple
 
 One design doc = one plan = one PR. The plan lists **all** the design's requirements in build order; the executor builds them one at a time.
 
+The executor runs the **feature-gate flow**: it writes the feature-acceptance E2E first, implements the requirements back-to-back, then runs one feature-level review. Per-requirement checkpoints/reviews happen only for requirements you tag (default off) — so tag only the slices that genuinely need a human stop or a focused review.
+
 Your writes go into `docs/plans/` and nowhere else. Source code and configuration get written later, in `pwk-executing-tasks` — this phase produces the document the executor builds from.
 
 ## Process
@@ -19,9 +21,10 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 4. **Write the plan** — for each requirement:
    - **Acceptance criteria** — `Given/When/Then` behavioral statements defining "done". Write observable behaviors, not implementation steps; cover edge and error cases.
    - **Integration tests** — test name + what each asserts. This is the spec the executor writes tests from.
-   - **`### Checkpoints: full | spec | none`** — how many human stops. `full` = tests + complete (default); `spec` = tests stop only (clear spec, low implementation risk — the complete checkpoint is dropped); `none` = trivial only (config line, typo).
-   - **`### Review: parallel | inline | skip`** — `parallel` = four reviewers via subagent (default, non-trivial diffs); `inline` = one `pwk-code-review` pass (small/medium diffs); `skip` = trivial diffs with no behavioral surface.
-   - Tag every requirement — missing tags default to `full` / `parallel`. **`spec` requires at least `inline` review** — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
+   - **`### Checkpoints: none | full | spec`** — how many human stops. `none` = no per-requirement stop (default — the feature gate covers it); `full` = tests + complete stops; `spec` = tests stop only. Flag a requirement `full` or `spec` when it contains complex logic or is the main part of the feature — where a human look at the slice is worth the stop.
+   - **`### Review: skip | parallel | inline`** — `skip` = no per-requirement review (default — the feature-level review covers it); `parallel` = four reviewers via subagent; `inline` = one `pwk-code-review` pass. Flag a requirement for `parallel` or `inline` when it touches production-risk areas.
+   - **`### Feature review: parallel | inline`** — one review over the **whole feature diff**, always present (the single thorough pass). `parallel` (default — thoroughness lives here, since it is the only review in the common case); `inline` for small features.
+   - Tag every requirement — missing tags default to `none` / `skip`. **`spec` requires at least `inline` review** — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
    - **Production-risk notes** — carry forward the design's `## Production-risk areas`, if any.
    - **Challenge the design first** *(if production-risk areas exist)* — stress-test the design against the flagged risks before writing criteria. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
    - **Ordering** — dependencies come **earlier** in the list; the executor runs in listed order with no dependency graph. Aim for vertical slices that merge cleanly on their own.
@@ -45,8 +48,8 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
    - `should <behavior>` — asserts <observable outcome>
    - `should <error case>` — asserts <failure outcome>
 
-   ### Checkpoints: full | spec | none
-   ### Review: parallel | inline | skip
+   ### Checkpoints: none | full | spec
+   ### Review: skip | parallel | inline
 
    ### Production-risk notes
    - <from the design's Production-risk areas, if any>
@@ -55,8 +58,10 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
    …
 
    ## Feature acceptance
-   Derived from the design doc. One end-to-end test exercising the requirements *together*:
+   The **primary enforced spec** — the definition of done for the feature, and the test the executor gates on first. Derived from the design doc: one end-to-end test exercising the requirements *together*. Make it concrete — a named test + the assertion that proves the composed behavior:
    - `should <the PRD's end-to-end claim>` — Given <starting state>, When <trigger>, Then <composed outcome across requirements>.
+   ### Feature review: parallel | inline
+   One review over the whole feature diff (always). Default `parallel`; `inline` for small features.
    ```
 
    **If the design has no `## Feature acceptance` section**, stop and ask the human to run `/skill:pwk-brainstorming` to add one — the feature's definition-of-done is missing. (A trivial single-requirement design may fold the scenario into that requirement's criteria; note it and skip the separate section.)
@@ -66,7 +71,9 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 5. **Audit before presenting:**
    - Every requirement has criteria **and** matching tests, a checkpoint tag, a review tag.
    - No `spec` + `skip` combination.
-   - A `## Feature acceptance` section exists (or the trivial-fold note).
+   - A `## Feature acceptance` section exists as the primary enforced spec (or the trivial-fold note).
+   - A feature-level `### Feature review` tag is present.
+   - Per-requirement tags default to `none` / `skip`; only requirements with complex logic, the main part of the feature, or production-risk are flagged heavier.
    - Production-risk areas from the design are reflected.
 6. **Workspace isolation** — you're on the `<topic>` branch. For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
 7. **Present the plan** and wait for approval. On approval, hand off: "Ready to execute? Run `/skill:pwk-executing-tasks`" (running it is what exits the gated plan phase).
