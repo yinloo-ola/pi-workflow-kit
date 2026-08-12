@@ -1,23 +1,23 @@
 ---
 name: pwk-executing-tasks
-description: "Implement a plan requirement-by-requirement with test-first discipline and full autonomy. Run after pwk-writing-plans. Each requirement: write integration tests (red) → checkpoint → implement to green → checkpoint → pwk-code-review."
+description: "Implement a plan via the feature-gate flow: write the feature-acceptance E2E first, implement requirements back-to-back, then one feature-level review. Run after pwk-writing-plans. Per-requirement checkpoints/reviews are opt-in (default off)."
 ---
 
 # Executing Tasks
 
-Implement the plan from `docs/plans/*-implementation.md` requirement by requirement, tracking progress in a file.
+Implement the plan from `docs/plans/*-implementation.md` via the **feature-gate flow**. The plan is a behavioral spec (acceptance criteria + integration tests) — you choose structure, signatures, internals; the criteria define *what*, you decide *how*.
 
-The plan is a **behavioral spec** (acceptance criteria + integration tests) — it deliberately contains no implementation steps. You choose structure, signatures, and internals; the criteria define *what*, you decide *how*.
+The feature-acceptance E2E test is the primary enforced gate. The flow is always on: write the E2E first (red), implement the requirements back-to-back, then run one feature-level review over the whole diff. Per-requirement checkpoints and reviews are **opt-in** — they fire only for requirements the plan tags (default off); the feature gate covers everything else.
 
 ## Before you start
 
 1. **Git state** — `git status` + `git log --oneline -5`; note uncommitted changes.
-2. **Find the plan** — glob `docs/plans/*-implementation.md`; if several, ask which. Report one line, e.g. `Found: design "auth" — execute phase (1/3 done)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)).
+2. **Find the plan** — glob `docs/plans/*-implementation.md`; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (feature-spec done, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)).
 3. **Workspace** — `pwk-writing-plans` already created the branch/worktree. If you're still on `main`, tell the user the workspace wasn't set up and suggest fixing that before executing.
 
 ## First run
 
-1. **Parse the plan** — read every `## Requirement N:` heading and its `### Checkpoints` / `### Review` tags (defaults `full` / `parallel`). Requirements run in **listed order** — the plan is already in build order; do not reorder.
+1. **Parse the plan** — read every `## Requirement N:` heading and its `### Checkpoints` / `### Review` tags (defaults `none` / `skip`), plus the feature-level `### Feature review` tag. Requirements run in **listed order** (build order); do not reorder. Read the `## Feature acceptance` section — it is the E2E you gate on first.
 2. **Setup pre-flight** *(only if the plan has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval. Record `setup: done` in the progress-file header so a resume can confirm it rather than assume it.
 3. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the implementation doc, so `pwk-finalizing`'s glob matches):
 
@@ -28,86 +28,107 @@ The plan is a **behavioral spec** (acceptance criteria + integration tests) — 
    Branch: <branch>
    Started: <ISO timestamp>
    Last updated: <ISO timestamp>
+   Feature phase: e2e-written
 
-   | # | Status | Requirement | Commit |
-   |---|--------|-------------|--------|
-   | 1 | ⬜ pending | <requirement name> | — |
+   ## Requirements
+   | # | Done | Requirement | Per-req ceremony | Commit |
+   |---|------|-------------|-----------------|--------|
+   | 1 | ⬜ | <requirement name> | — | — |
    ```
+
+   `Feature phase` is one of: `e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `feature-complete-paused`, `reviewing`, `done`.
+
 4. **Commit the plan docs** — `git add docs/plans/ && git commit -m "docs: add implementation plan"`.
-5. Start requirement 1.
+5. **Write the feature-acceptance E2E test (red).** Read the plan's `## Feature acceptance` section and encode it as a real test file; run it; confirm it **fails** (it must — little or none of the feature exists yet). If it passes immediately, the behavior may already exist or the test is wrong — investigate before proceeding.
+6. **⏸ CHECKPOINT: feature-spec** — set `Feature phase: feature-spec-paused`, present the E2E test + failing output, and wait. This is where the human confirms the E2E actually proves the feature (the definition of done). **request changes** → revise, re-run, re-present.
 
 ## Resume
 
-Find the first row that is `⬜ pending`, `🔄 in-progress`, `⏸ tests-review`, or `⏸ complete-review`:
-- `⏸ *-review` → re-present that checkpoint and wait.
-- `🔄 in-progress` → continue the requirement.
-- `⬜ pending` → start it.
+Read the progress file's `Feature phase`:
+- `e2e-written` → write the E2E if not yet present, then present the **feature-spec** checkpoint.
+- `feature-spec-paused` → re-present the feature-spec checkpoint and wait.
+- `implementing (k/N)` → continue the next not-yet-✅ requirement.
+- `feature-complete-paused` → re-present the feature-complete checkpoint and wait.
+- `reviewing` → continue/finish the feature review.
 
 ## Progress file
 
-Update the matching row directly (not via pattern matching that could corrupt the table). Update `Last updated` on every change.
+Update the matching requirement row directly (not via pattern matching that could corrupt the table). Update `Last updated` and `Feature phase` on every change. The `Per-req ceremony` column records a requirement's tagged checkpoint/review status when it has one (e.g. `⏸ tests`, `🔎 inline`); leave `—` for default (`none`/`skip`) requirements.
 
-| Status | Meaning |
-|--------|---------|
-| `⬜ pending` | Not started |
-| `🔄 in-progress` | Writing tests or implementing |
-| `⏸ tests-review` | Paused at tests checkpoint, awaiting approval |
-| `⏸ complete-review` | Paused at complete checkpoint, awaiting approval |
-| `🔎 review` | Committed; code review in progress |
-| `✅ done` | Reviewed (smells fixed, hazards noted), all green |
-| `❌ failed` | Abandoned; partial work discarded/reverted (append `Failed: <reason>`) |
-| `⏭ skipped` | User chose to skip |
+## Implement phase (after feature-spec is approved)
 
-## Per-requirement execution
+Set `Feature phase: implementing (0/N)` and work the requirements in listed order. For each:
 
-1. **Mark 🔄 in-progress** and read this requirement's `### Checkpoints` / `### Review` tags.
-2. **Write the integration tests (red).** Encode the acceptance criteria + test cases from the plan as real test files; run them; confirm they **fail**. If they pass immediately, the behavior may already exist or the tests are wrong — investigate before proceeding.
-3. **⏸ CHECKPOINT: tests** *(fires for `full` and `spec`)* — mark `⏸ tests-review`, present the tests + failing output, wait. **request changes** → revise, re-run, re-present. With `none`, show the red output inline and proceed.
-4. **Implement (green)** with full autonomy. Run tests after each meaningful change; refactor for clarity (deep modules, no duplication, seam discipline) while tests stay green.
+1. **Mark the requirement 🔄** (Done column) and read its `### Checkpoints` / `### Review` tags.
+2. **Write a meaningful test (red), then implement (green)** — TDD discipline. Encode the requirement's acceptance criteria as a real test through the public interface; run it; confirm it fails; implement to green. Skip the per-slice test only when the slice has no independent observable behavior (the feature E2E covers it). Follow the meaningful-test rules in `docs/lessons.md`: assert on what the feature produces or changes, not on source text or internals.
+3. **⏸ per-requirement checkpoint** *(fires only when the tag says so — opt-in)* — if `### Checkpoints: full` or `spec`, stop and present per the tag (`full` = after tests and after complete; `spec` = after tests only). With the default `none`, show the red→green inline and proceed.
+4. **Regression check after each commit** — run the **full existing suite**. This is what catches cross-requirement regressions (a later requirement breaking an earlier one's test). The **feature E2E stays red until the last requirement lands**; you may run it to watch the failure point advance, but it is gated only at `feature-complete` — never expect it green per-commit.
 5. **Learn.** Caught a repeat mistake? Append a **generic** rule to `docs/lessons.md` (strip domain specifics).
-6. **⏸ CHECKPOINT: complete** *(fires for `full` only)* — mark `⏸ complete-review`, show passing tests + `git diff`, wait. With `spec`/`none`, show them inline and proceed (**review** covers implementation quality; `spec` requires at least `inline` review).
-7. **Commit** the relevant files with a clear message. Status stays `🔄 in-progress` — not done yet.
-8. **Composition check** — if this diff touched code shared with other requirements in the plan, run the **full test suite** now and fix any cross-requirement regression while the context is fresh. Otherwise keep running just this requirement's tests.
-9. **Code review** — mark `🔎 review`; drive review by the `### Review` tag (`parallel | inline | skip`):
-   - **`parallel`** — four fresh-context reviewers via the `subagent` tool (see below).
-   - **`inline`** — run `/skill:pwk-code-review` as a single pass.
-   - **`skip`** — mark `✅ done` and move to the next requirement.
+6. **Commit** the requirement with a clear message; mark its row ✅; advance `Feature phase: implementing (k/N)`.
 
-   **Parallel path** — gather scope (acceptance criteria, test cases, `git log --oneline -5 && git diff HEAD~N..HEAD`) and invoke:
-   ```json
-   {
-     "tasks": [
-       {"agent": "pwk-spec-reviewer", "task": "<scope + diff here>"},
-       {"agent": "pwk-tracing-reviewer", "task": "<scope + diff here>"},
-       {"agent": "pwk-smell-reviewer", "task": "<scope + diff here>"},
-       {"agent": "pwk-hazard-reviewer", "task": "<scope + diff here>"}
-     ],
-     "agentScope": "both",
-     "cwd": "<repo-root>"
-   }
-   ```
-   The reviewer checklists live only in `agents/pwk-*-reviewer.md` — don't restate them in the task strings (duplication guarantees drift). Reviewers are read-only reporters; the executing agent applies fixes and commits.
+### Per-requirement review (opt-in)
 
-   **On success** — apply smell fixes yourself (re-run integration tests, must stay green, commit), flag trace/spec/hazard findings as follow-ups for the human, mark `✅ done`.
+If the requirement's `### Review` tag is `parallel` or `inline` (default `skip`), review that slice now — same mechanics as the [feature review](#feature-review), scoped to the requirement's diff. With `skip`, no per-requirement review; the feature-level review covers it.
 
-   **Fallback** — subagent tool unavailable or errors → run `/skill:pwk-code-review` inline instead.
-10. **Loop** to step 1 for the next `⬜ pending` requirement, or see [After all requirements](#after-all-requirements).
+`Checkpoints: spec` requires at least `inline` review — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
 
 ### Checkpoint gates are mandatory (when the tag says so)
 
-`### Checkpoints` accepted values: `full | spec | none` → both stops / tests stop only / no stops. When a checkpoint fires it is a **hard stop**:
+When a per-requirement checkpoint fires it is a **hard stop**:
 - Stop immediately; never proceed without explicit human approval.
 - **Never** `git add` or `git commit` before approval at a checkpoint.
-- Mark the progress file to the review status **before** pausing.
+- Set the progress phase/status **before** pausing.
 
-`Checkpoints: spec` with `Review: skip` is invalid (nothing would cover implementation quality) — stop and ask the human to fix the tags; use `Checkpoints: none` for truly trivial diffs.
+## Feature-complete checkpoint
+
+When every requirement's Done column is ✅:
+
+1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
+2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the plan declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
+3. **Set `Feature phase: feature-complete-paused`** and **⏸ CHECKPOINT: feature-complete** — present the green full suite + green feature E2E + the whole diff (`git diff <merge-base>...HEAD`), and wait for approval.
+
+The old "integration gate" is gone — the feature E2E at `feature-complete` *is* the gate; there is no separate end pass.
+
+## Feature review
+
+After `feature-complete` is approved, run **one** review over the **whole feature diff**, driven by the plan's feature-level `### Feature review` tag. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
+
+- **`parallel`** (default) — four fresh-context reviewers via the `subagent` tool. Gather scope (the plan's acceptance criteria + Feature acceptance, `git log --oneline && git diff <merge-base>...HEAD`) and invoke:
+
+  ```json
+  {
+    "tasks": [
+      {"agent": "pwk-spec-reviewer", "task": "<scope + whole diff here>"},
+      {"agent": "pwk-tracing-reviewer", "task": "<scope + whole diff here>"},
+      {"agent": "pwk-smell-reviewer", "task": "<scope + whole diff here>"},
+      {"agent": "pwk-hazard-reviewer", "task": "<scope + whole diff here>"}
+    ],
+    "agentScope": "both",
+    "cwd": "<repo-root>"
+  }
+  ```
+
+  The reviewer checklists live only in `agents/pwk-*-reviewer.md` — don't restate them in the task strings (duplication guarantees drift). Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
+
+- **`inline`** — run `/skill:pwk-code-review` over the whole diff as a single pass.
+- **Fallback** — subagent tool unavailable or errors → run `/skill:pwk-code-review` inline instead.
+
+On success, set `Feature phase: done`.
+
+## Tags reference
+
+The plan tags each requirement and the feature level:
+
+- **`### Checkpoints: none | full | spec`** — per-requirement human stops. `none` (default) = no per-requirement stop; `full` = tests + complete; `spec` = tests only.
+- **`### Review: skip | parallel | inline`** — per-requirement review. `skip` (default) = none; `parallel` = four reviewers; `inline` = one `pwk-code-review` pass.
+- **`### Feature review: parallel | inline`** — the one whole-feature review (always present). Default `parallel`; `inline` for small features.
 
 ## User override commands
 
 | User says | Agent does |
 |-----------|-----------|
-| `skip` | Mark current requirement `⏭ skipped`, move to next |
-| `status` | Show the progress table |
+| `skip` | Mark current requirement skipped, move to next |
+| `status` | Show the progress file (feature phase + requirement table) |
 | `stop` | Restore current requirement to its pre-in-progress state, suggest `/new` |
 | `retry` | Re-read the requirement, start over |
 
@@ -115,27 +136,22 @@ Update the matching row directly (not via pattern matching that could corrupt th
 
 Verify the criticism against the code, evaluate the suggestion, then implement (with tests) or push back with evidence. Don't blindly apply.
 
-## After all requirements
+## After the feature review
 
-When no `⬜ pending` or `🔄 in-progress` requirements remain, run the **integration gate** before suggesting finalize — per-requirement review only saw each diff in isolation; this proves the requirements *compose* into the feature:
-
-1. **Run the FULL test suite.** A failure here means one requirement regressed another — fix it now, in execute context.
-2. **Run the feature-acceptance test.** The plan's `## Feature acceptance` section specifies one end-to-end test exercising the requirements *together* against the design's claim. Write it if missing; run it; it must pass. If the plan has no such section, stop and tell the human — the gate has nothing concrete to verify.
-3. **Confirm composition.** Do the requirements together deliver the end-to-end behavior the design doc described? Fix gaps here, with tests, before shipping.
-
-Then determine the next step from the artifacts (the human drives every transition — this is a suggestion, not a gate):
+The feature is implemented and reviewed. Determine the next step from the artifacts (the human drives every transition — this is a suggestion, not a gate):
 
 - **Standalone design doc** (no `docs/plans/*-overview.md`) → suggest `/skill:pwk-finalizing`.
-- **Umbrella part** (an `*-overview.md` exists) → read the overview roster and find this part's `<topic>`. If it's the **last** in build order, the umbrella is complete → suggest `/skill:pwk-finalizing` (one PR for the whole umbrella). If **more parts remain**, suggest `/skill:pwk-brainstorming` for the next part (the next `<topic>` in the roster).
+- **Umbrella part** (an `*-overview.md` exists) → read the overview roster and find this part's `<topic>`. If it is the **last** in build order, the umbrella is complete → suggest `/skill:pwk-finalizing` (one PR for the whole umbrella). If **more parts remain**, suggest `/skill:pwk-brainstorming` for the **next part** (the next `<topic>` in the roster).
 
 Present:
 
 ```
-✅ All requirements complete — integration verified!
+✅ Feature complete — feature E2E green, feature review done!
 
-| # | Status | Requirement |
-|---|--------|-------------|
-| 1 | ✅ done | <name> |
+Feature phase: done
+| # | Done | Requirement |
+|---|------|-------------|
+| 1 | ✅ | <name> |
 | … | … | … |
 
    - Next part: /skill:pwk-brainstorming (<next topic>)   ← umbrella, more parts remain
@@ -147,4 +163,4 @@ Present:
 1. Re-read the requirement's acceptance criteria — you may have drifted.
 2. Check `git log` for context. Ask the user — clarify beats guessing.
 3. Still stuck → discard uncommitted changes (`git restore .`); if already committed, also `git revert` the requirement's commit(s). **Never leave a failed requirement's partial work on the shipped branch.**
-4. Mark `❌ failed` with the reason and move on. Check `docs/lessons.md` — a prior lesson may apply.
+4. Mark the requirement failed with the reason and move on. Check `docs/lessons.md` — a prior lesson may apply.

@@ -284,6 +284,12 @@ if (wp) {
   fgMark("pwk-writing-plans", wp.content, "default to `none` / `skip`", "flipped per-requirement defaults");
   fgMark("pwk-writing-plans", wp.content, "primary enforced spec", "Feature acceptance as primary spec");
 }
+// Requirement 2 — pwk-executing-tasks feature-gate flow
+if (et) {
+  fgMark("pwk-executing-tasks", et.content, "feature-spec", "feature-spec checkpoint");
+  fgMark("pwk-executing-tasks", et.content, "feature-complete", "feature-complete checkpoint");
+  fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");
+}
 
 // --- Summary ---
 console.log("");
