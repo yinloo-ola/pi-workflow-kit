@@ -10,6 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+## [1.3.0] - 2026-08-12
+
+### Added
+
+- **Feature-gate execution model (default).** The feature-acceptance E2E test is now the primary enforced gate. `pwk-executing-tasks` runs one always-on flow: write the feature E2E (red) → **checkpoint: feature-spec** (human confirms the E2E proves the feature) → implement the requirements back-to-back → **checkpoint: feature-complete** (full suite + feature E2E green) → one **feature-level review** over the whole diff. The old per-requirement loop and separate integration gate fold into `feature-complete`. See ADR-0002.
+- **Meaningful-test rules** mirrored across `pwk-writing-plans`, `pwk-executing-tasks`, and `docs/lessons.md`: test observable behavior (assert on what the feature produces or changes through its public interface); write a per-slice test only when the slice has its own observable behavior.
+- **skill-lint Check 9 (feature-gate model)** — asserts the new tag defaults, the feature-spec/feature-complete checkpoints, opt-in per-requirement ceremony, and the meaningful-test rules.
+
+### Changed
+
+- **Per-requirement tag defaults flipped**: `### Checkpoints: none` (was `full`), `### Review: skip` (was `parallel`); a feature-level `### Feature review: parallel | inline` (always on, default `parallel`) is added. Per-requirement ceremony is now opt-in — the plan tags only requirements with complex logic / the main part of the feature (checkpoint) or production-risk (review). Existing in-flight plans are unaffected (they carry explicit tags). `spec` still requires at least `inline` review.
+- **`## Feature acceptance` is the primary enforced spec** in `pwk-writing-plans` and `pwk-brainstorming` — the test the executor gates on first.
+- Docs (`workflow-phases.md`, `developer-usage-guide.md`, `oversight-model.md`, `README.md`) updated to describe the feature-gate flow.
+
 ## [1.2.0] - 2026-08-01
 
 ### Added
@@ -287,7 +301,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
 [1.1.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.0.0...v1.1.0
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.1.0...HEAD
+[1.2.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.1.0...v1.2.0
+[1.3.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.2.0...v1.3.0
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.3.0...HEAD
 [0.18.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...v0.17.0
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
