@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`## Feature acceptance` is the primary enforced spec** in `pwk-writing-plans` and `pwk-brainstorming` — the test the executor gates on first.
 - Docs (`workflow-phases.md`, `developer-usage-guide.md`, `oversight-model.md`, `README.md`) updated to describe the feature-gate flow.
 
+### Fixed
+
+- **`docs/lessons.md` no longer ships in the npm tarball.** It held kit-development lessons (skill-lint, skill-markdown editing) irrelevant to users; the skills read the user's project `docs/lessons.md` (creating it on first use), never the package copy. Removed from `package.json` `files`; corrected the README claim that it "ships with starter rules".
+
 ## [1.2.0] - 2026-08-01
 
 ### Added

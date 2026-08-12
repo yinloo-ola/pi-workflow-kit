@@ -113,7 +113,7 @@ Rules are simple imperative bullets:
 - Never import `testify` in this project
 - Always check for existing test helpers before writing new ones
 
-No configuration needed — the file ships with starter rules and grows as the agent learns.
+No configuration needed — the agent creates `docs/lessons.md` on first use and it grows as the agent learns.
 
 ### Two Feature-Level Checkpoints
 
