@@ -13,4 +13,8 @@ Retire rules that no longer apply during finalizing.
 - **Test-first for skill/doc content:** add the skill-lint assertion first (red — the skill doesn't yet claim the behavior), then edit the skill markdown to satisfy it (green). After edits run biome — it collapses short `if (cond) ok();` to one line and rejects array holes like `[, ""]` (restructure instead).
 - **Editing skill markdown: anchor edit-tool oldText on apostrophe-free text.** These docs use curly apostrophes (U+2019) in contractions and possessives; an oldText written with a straight ASCII apostrophe fails to match silently and aborts the whole edit batch (zero blocks replaced). Pick anchors that avoid apostrophes, and rephrase newText to stay apostrophe-free for consistency.
 
+## Testing
+
+- **Meaningful tests, mirrored across writing-plans, executing-tasks, and here.** (1) **Test observable behavior** — assert on what the feature produces or changes (a return value, persisted/updated data, an emitted event, an HTTP response) through its public interface; these assertions keep passing as the implementation changes. (2) **Write a per-slice test when the slice has its own observable behavior** — when a slice is pure config or a trivial extraction, the feature E2E covers it and a per-slice test is unnecessary.
+
 ## Documentation

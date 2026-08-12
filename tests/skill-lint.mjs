@@ -290,6 +290,11 @@ if (et) {
   fgMark("pwk-executing-tasks", et.content, "feature-complete", "feature-complete checkpoint");
   fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");
 }
+// Requirement 3 — meaningful-test rules mirrored across writing-plans, executing-tasks, lessons
+fgMark("pwk-writing-plans", wp.content, "Test observable behavior", "meaningful-test rule (writing-plans)");
+fgMark("pwk-executing-tasks", et.content, "Test observable behavior", "meaningful-test rule (executing-tasks)");
+const lessonsMd = readFileSync(join(root, "docs/lessons.md"), "utf8");
+fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-test rule (lessons)");
 
 // --- Summary ---
 console.log("");
