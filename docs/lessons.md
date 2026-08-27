@@ -13,6 +13,7 @@ Retire rules that no longer apply during finalizing.
 - **Test-first for skill/doc content:** add the skill-lint assertion first (red — the skill doesn't yet claim the behavior), then edit the skill markdown to satisfy it (green). After edits run biome — it collapses short `if (cond) ok();` to one line and rejects array holes like `[, ""]` (restructure instead).
 - **Editing skill markdown: anchor edit-tool oldText on apostrophe-free text.** These docs use curly apostrophes (U+2019) in contractions and possessives; an oldText written with a straight ASCII apostrophe fails to match silently and aborts the whole edit batch (zero blocks replaced). Pick anchors that avoid apostrophes, and rephrase newText to stay apostrophe-free for consistency.
 - **skill-lint.mjs: use optional chaining.** Biome enforces `useOptionalChain` — write `x?.method()`, not `x && x.method()` (the `fgMark` helper treats undefined content as a fail).
+- **Keep one commit per topic in docs/plans/.** When more than one in-flight brainstorm has artifacts under docs/plans/, the plan-phase `git add docs/plans/` sweeps unrelated drafts into the topic PR. Reset --soft HEAD~1, then re-commit with explicit `-- <files>` per topic so each PR has only its own design + implementation + progress (and any parked `*draft`/`*revised` files land on their own commit). Mirrors the same hygiene as `pwk-finalizing` use of the `????-??-??-<topic>-*` glob instead of bare `*<topic>*`.
 
 ## Testing
 
