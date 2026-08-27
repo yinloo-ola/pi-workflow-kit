@@ -299,6 +299,126 @@ fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-tes
 fgMark("pwk-code-review", crSkill?.content, "whole feature diff", "whole-feature-diff scope");
 fgMark("pwk-brainstorming", bs?.content, "primary enforced spec", "Feature acceptance as primary spec");
 
+// --- Check 10: parallelize-workflow (R1 scout + R2 auto-tag + R3 cross-skill) ---
+// pwk-recon-scout is a new read-only package agent dispatched from pwk-brainstorming before
+// design; pwk-writing-plans auto-tags `### Review: parallel` for requirements with a
+// non-empty `### Production-risk notes` section; the other skills + docs reference (not
+// restate) the rule. Markers are unique to the new behavior so a stale skill fails (no false
+// green). See docs/plans/2026-08-27-parallelize-workflow-design.md.
+console.log("parallelize-workflow:");
+// R1: scout agent shape (YAML frontmatter, read-only tools, systemPromptMode replace)
+const scoutPath = join(root, "agents", "pwk-recon-scout.md");
+let scoutContent;
+try {
+  scoutContent = readFileSync(scoutPath, "utf8");
+  ok("agents/pwk-recon-scout.md: exists");
+} catch {
+  fail("agents/pwk-recon-scout.md: missing");
+}
+if (scoutContent) {
+  const scoutFm = parseFrontmatter(scoutContent);
+  if (scoutFm?.name === "pwk-recon-scout") ok("scout: frontmatter name matches");
+  else fail("scout: frontmatter name must be `pwk-recon-scout`");
+  // The harness's parseFrontmatter only reads `name` + `description`; read tools/systemPromptMode
+  // by re-scanning the YAML block.
+  const fmBlock = scoutContent.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+  if (/tools:\s*read,\s*grep,\s*find,\s*ls,\s*bash\b/.test(fmBlock)) {
+    ok("scout: tools restricted to read, grep, find, ls, bash (read-only set)");
+  } else {
+    fail("scout: tools must be exactly `read, grep, find, ls, bash` (read-only set)");
+  }
+  if (/systemPromptMode:\s*replace/.test(fmBlock)) {
+    ok("scout: systemPromptMode replace");
+  } else {
+    fail("scout: systemPromptMode must be `replace` (mirror reviewer agents)");
+  }
+  // 5-section codebase map: each header must appear, in order.
+  const requiredSections = ["Relevant files", "Existing patterns", "Call sites", "Test layout", "Gotchas"];
+  let lastIdx = -1;
+  let sectionsOk = true;
+  for (const s of requiredSections) {
+    const idx = scoutContent.indexOf(s);
+    if (idx < 0 || idx <= lastIdx) {
+      fail(`scout: missing or out-of-order section "${s}"`);
+      sectionsOk = false;
+    }
+    lastIdx = idx;
+  }
+  if (sectionsOk) {
+    ok("scout: 5-section codebase map (Relevant files → Existing patterns → Call sites → Test layout → Gotchas)");
+  }
+  // Must require file:line citations.
+  if (/file:line|path:line|\bpath:line\b/i.test(scoutContent)) {
+    ok("scout: requires file:line citations per claim");
+  } else {
+    fail("scout: must require `file:line` (or `path:line`) citations per claim");
+  }
+  // Must be observations only (no design recommendations).
+  if (/observations? only/i.test(scoutContent) || /no design (recommendations?|opinion)/i.test(scoutContent)) {
+    ok("scout: framed as observations only (no design opinion)");
+  } else {
+    fail("scout: must be framed as observations only (no design recommendations)");
+  }
+}
+// R1: pwk-brainstorming dispatches the scout and has a graceful fallback.
+if (bs) {
+  if (bs.content.includes("pwk-recon-scout")) {
+    ok("pwk-brainstorming: dispatches pwk-recon-scout by name");
+  } else {
+    fail("pwk-brainstorming: must dispatch pwk-recon-scout (mention by name)");
+  }
+  if (/Scout:\s*unavailable/i.test(bs.content)) {
+    ok("pwk-brainstorming: documents the `Scout: unavailable` fallback when pi-subagents is absent");
+  } else {
+    fail("pwk-brainstorming: must document `Scout: unavailable` fallback (graceful degradation)");
+  }
+  if (/trivial/i.test(bs.content) && /skip/i.test(bs.content) && /scout|recon/i.test(bs.content)) {
+    ok("pwk-brainstorming: skips scout on trivial changes (proportionality shortcut)");
+  } else {
+    fail("pwk-brainstorming: must skip scout on trivial changes (proportionality shortcut)");
+  }
+}
+// R2: pwk-writing-plans auto-tag rule. The marker must be unique to this rule.
+if (wp) {
+  if (/Production-risk notes/.test(wp.content) && /Review:\s*parallel/.test(wp.content)) {
+    ok("pwk-writing-plans: documents Production-risk notes → Review: parallel auto-tag");
+  } else {
+    fail("pwk-writing-plans: must document the auto-tag rule (Production-risk notes ⇒ Review: parallel)");
+  }
+  // The default must still be `skip` for requirements WITHOUT risk notes (no over-broaden).
+  if (/Review:\s*skip/.test(wp.content)) {
+    ok("pwk-writing-plans: still documents `Review: skip` as the default (no over-broaden)");
+  } else {
+    fail("pwk-writing-plans: must keep `Review: skip` as the default for non-risky requirements");
+  }
+  // The auto-tag must be presented as editable (the human can downgrade it).
+  if (/edit/i.test(wp.content) && /downgrade|change|override/i.test(wp.content)) {
+    ok("pwk-writing-plans: auto-tag is editable (human can downgrade before approval)");
+  } else {
+    fail("pwk-writing-plans: must document that the auto-tag is editable");
+  }
+  // The rule phrase must be unique to pwk-writing-plans in the skills directory (single source
+  // of truth — the other skills link by name, they do not restate the rule).
+  const rulePhrase = "Production-risk notes";
+  const restated = loadSkills().filter((s) => s.name !== "pwk-writing-plans");
+  const restateCount = restated.filter(
+    (s) => s.content.includes(rulePhrase) && s.content.includes("Review: parallel"),
+  ).length;
+  if (restateCount === 0) {
+    ok("pwk-writing-plans: auto-tag rule is single-source (other skills do not restate it)");
+  } else {
+    fail(`pwk-writing-plans: auto-tag rule is restated in ${restateCount} other skill(s) (should link, not restate)`);
+  }
+}
+// R3: pwk-executing-tasks must reference pwk-writing-plans for the auto-tag rule (not restate).
+if (et) {
+  if (/pwk-writing-plans/.test(et.content)) {
+    ok("pwk-executing-tasks: references pwk-writing-plans (single source of truth)");
+  } else {
+    fail("pwk-executing-tasks: must reference pwk-writing-plans (do not restate the auto-tag rule)");
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
