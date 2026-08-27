@@ -58,7 +58,7 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
-| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list |
+| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list. On non-trivial topics, dispatches the `pwk-recon-scout` agent (read-only) to map the codebase before design. |
 | **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code) |
 | **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → **checkpoint: feature-complete** → feature review |
 | **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
@@ -177,7 +177,7 @@ pi-workflow-kit/
 │   ├── pwk-finalizing/SKILL.md
 │   ├── pwk-status/SKILL.md
 │   └── pwk-diagnose/SKILL.md
-├── agents/                   # package agents for parallel code-review (discovered by pi-subagents)
+├── agents/                   # package agents for parallel code-review + recon scout (discovered by pi-subagents)
 ├── docs/
 │   ├── developer-usage-guide.md
 │   ├── workflow-phases.md

@@ -44,7 +44,7 @@ You control each phase by invoking the skill. A design doc is one PR; a requirem
 /skill:pwk-brainstorming
 ```
 
-Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review.
+Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review. On non-trivial topics with prior art, the agent dispatches the `pwk-recon-scout` package agent (read-only, fresh context) to map the codebase before design, so the main agent can design against prior art instead of loading files into its own context.
 
 Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
 
@@ -121,5 +121,5 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 - Start with brainstorming for anything non-trivial.
 - The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
 - The feature-gate flow has two checkpoints by default (feature-spec + feature-complete): use them to steer the E2E spec and the finished implementation.
-- **Right-size each requirement at plan time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc).
+- **Right-size each requirement at plan time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc). Production-risk requirements are auto-tagged `### Review: parallel` by `pwk-writing-plans`; the human can override or downgrade before plan approval.
 - Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.

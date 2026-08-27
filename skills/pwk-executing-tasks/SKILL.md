@@ -120,7 +120,7 @@ On success, set `Feature phase: done`.
 The plan tags each requirement and the feature level:
 
 - **`### Checkpoints: none | full | spec`** — per-requirement human stops. `none` (default) = no per-requirement stop; `full` = tests + complete; `spec` = tests only.
-- **`### Review: skip | parallel | inline`** — per-requirement review. `skip` (default) = none; `parallel` = four reviewers; `inline` = one `pwk-code-review` pass.
+- **`### Review: skip | parallel | inline`** — per-requirement review. `skip` (default) = none; `parallel` = four reviewers; `inline` = one `pwk-code-review` pass. The auto-tag default for requirements with non-empty `### Production-risk notes` is `parallel` (see `pwk-writing-plans` for the rule).
 - **`### Feature review: parallel | inline`** — the one whole-feature review (always present). Default `parallel`; `inline` for small features.
 
 ## User override commands

@@ -32,7 +32,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 - Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present.
 - For an umbrella part, reads the `*-overview.md` to plan one slice (composing with earlier parts' code) and reuses the existing feature branch instead of creating a new one.
 - Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — the **primary enforced spec**, an end-to-end test the executor gates on first. If the design has none, stops and asks the human to brainstorm one.
-- Tags the plan: per-requirement `### Checkpoints`/`### Review` default to `none`/`skip` (opt-in), plus an always-on feature-level `### Feature review`. Flags only requirements with complex logic, the main part of the feature, or production-risk.
+- Tags the plan: per-requirement `### Checkpoints`/`### Review` default to `none`/`skip` (opt-in), plus an always-on feature-level `### Feature review`. Flags only requirements with complex logic, the main part of the feature, or production-risk. Requirements with `### Production-risk notes` are auto-tagged `### Review: parallel` (see `pwk-writing-plans` for the rule).
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Write boundary: only `docs/plans/` is writable.
