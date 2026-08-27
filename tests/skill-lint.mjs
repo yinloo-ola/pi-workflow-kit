@@ -397,17 +397,33 @@ if (wp) {
   } else {
     fail("pwk-writing-plans: must document that the auto-tag is editable");
   }
-  // The rule phrase must be unique to pwk-writing-plans in the skills directory (single source
-  // of truth — the other skills link by name, they do not restate the rule).
-  const rulePhrase = "Production-risk notes";
-  const restated = loadSkills().filter((s) => s.name !== "pwk-writing-plans");
-  const restateCount = restated.filter(
-    (s) => s.content.includes(rulePhrase) && s.content.includes("Review: parallel"),
-  ).length;
-  if (restateCount === 0) {
-    ok("pwk-writing-plans: auto-tag rule is single-source (other skills do not restate it)");
+  // Negative case: the auto-tag must require a NON-EMPTY Production-risk notes section, so an
+  // empty notes section does not trigger it. Assert the `non-empty` qualifier sits adjacent to
+  // the rule phrase (within one line) so a future edit that drops the qualifier fails loudly.
+  if (/non-empty[^\n]*Production-risk notes|Production-risk notes[^\n]*non-empty/i.test(wp.content)) {
+    ok("pwk-writing-plans: auto-tag requires non-empty Production-risk notes (negative case)");
   } else {
-    fail(`pwk-writing-plans: auto-tag rule is restated in ${restateCount} other skill(s) (should link, not restate)`);
+    fail("pwk-writing-plans: must qualify the auto-tag with `non-empty` (empty notes must not trigger)");
+  }
+  // The rule must be single-sourced: pwk-writing-plans owns the auto-tag concept pair
+  // (`auto-tag` + `Production-risk notes`). Any other skill that mentions both must do so in
+  // a line that also names `pwk-writing-plans` (link by name, do not restate). A bare
+  // restatement without a link in the same line is a regression against R3.
+  const restated = loadSkills().filter((s) => s.name !== "pwk-writing-plans");
+  let restateViolations = 0;
+  for (const s of restated) {
+    const lines = s.content.split("\n");
+    for (const line of lines) {
+      const hasConcept = /auto-tag/i.test(line) && /Production-risk notes/.test(line);
+      if (!hasConcept) continue;
+      if (!/pwk-writing-plans/.test(line)) {
+        restateViolations++;
+        fail(`${s.name}: restates the auto-tag rule without linking to pwk-writing-plans: "${line.trim()}"`);
+      }
+    }
+  }
+  if (restateViolations === 0) {
+    ok("pwk-writing-plans: auto-tag rule is single-source (other skills do not restate it)");
   }
 }
 // R3: pwk-executing-tasks must reference pwk-writing-plans for the auto-tag rule (not restate).

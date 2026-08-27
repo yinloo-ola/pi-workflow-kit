@@ -155,8 +155,8 @@ new scout + the auto-tag rule.
   contain **at most one sentence** about the auto-tag rule, and that
   sentence refers the reader to `pwk-writing-plans`.
 - Given the new scout agent, When `README.md` is updated, Then it
-  lists `pwk-recon-scout` in the parallel-review model-tiering JSON
-  snippet (as a cheap-model role), adds the agent to the project
+  mentions `pwk-recon-scout` in the brainstorm skill row (one short
+  sentence describing the read-only recon step) and adds the agent to the project
   layout block, and adds one sentence to the brainstorm section
   describing the recon step.
 - Given any of the three sites is updated, When the skill-lint suite
