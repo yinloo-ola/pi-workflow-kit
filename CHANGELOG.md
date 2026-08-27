@@ -8,7 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **pwk-recon-scout package agent** — a new read-only worker that maps how a repo handles a topic before design, dispatched from a new step 4 in `pwk-brainstorming` (between Understand-the-idea and Explore-approaches). Produces a 5-section codebase map (Relevant files, Existing patterns, Call sites, Test layout, Gotchas) with `file:line` citations per claim; observations only, no design recommendations. Trivial changes skip the dispatch. Falls back gracefully when `pi-subagents` is not installed — the design doc gets a literal `Scout: unavailable (pi-subagents not installed) — inline recon used.` line. The main agent reads the report into its context instead of loading the files inline, keeping the brainstorm discussion lean.
+- **skill-lint Check 10 (parallelize-workflow)** — 20 assertions covering the scout (frontmatter, read-only tools, 5-section shape, file:line citations, observations-only), the auto-tag rule (production-risk notes ⇒ `### Review: parallel`, `skip` default preserved, editable, single-source-of-truth), and the cross-skill links. A negative-case assertion guards the `non-empty` qualifier so a future edit cannot silently broaden the auto-tag.
+
 ### Changed
+
+- **`pwk-writing-plans` auto-tags `### Review: parallel`** for any requirement that carries a non-empty `### Production-risk notes` section. The default `### Review: skip` is preserved for requirements without risk notes. The tag is silently applied; the human can override or downgrade it to `inline` or `skip` during plan review before approval, and `pwk-executing-tasks` honors the edited value. The rule is the single source of truth — `pwk-executing-tasks` and the docs (`README.md`, `docs/workflow-phases.md`, `docs/developer-usage-guide.md`) link to it rather than restate it.
+- **`pwk-brainstorming` step numbering** — step 4 (Codebase recon) inserted between Understand-the-idea and Explore-approaches; the subsequent steps renumber to 5, 6, 7. The trivial-skip clause now correctly says `Skip steps 3–7`.
+- **New lesson in `docs/lessons.md`**: "Keep one commit per topic in `docs/plans/`." When more than one in-flight brainstorm has artifacts under `docs/plans/`, the plan-phase `git add docs/plans/` would otherwise sweep unrelated drafts into the topic PR. The discipline mirrors `pwk-finalizing`'s `????-??-??-<topic>-*` glob.
 
 ## [1.3.0] - 2026-08-12
 
