@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-01
+
 ### Added
 
 - **pwk-recon-scout package agent** — a new read-only worker that maps how a repo handles a topic before design, dispatched from a new step 4 in `pwk-brainstorming` (between Understand-the-idea and Explore-approaches). Produces a 5-section codebase map (Relevant files, Existing patterns, Call sites, Test layout, Gotchas) with `file:line` citations per claim; observations only, no design recommendations. Trivial changes skip the dispatch. Falls back gracefully when `pi-subagents` is not installed — the design doc gets a literal `Scout: unavailable (pi-subagents not installed) — inline recon used.` line. The main agent reads the report into its context instead of loading the files inline, keeping the brainstorm discussion lean.
