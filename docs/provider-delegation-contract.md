@@ -108,3 +108,5 @@ Providers may cache role definitions. Hosts should tell the user when `/reload` 
 ## Safety boundary
 
 The provider is responsible for enforcing any capability it advertises. The role prompt is defense in depth, not a security boundary. The Pi workflow guard protects the main Pi session’s brainstorm and plan phases; it does not automatically protect Claude Code or another host, and it does not replace delegated-worker tool restrictions.
+
+The `/pwk-setup` installer itself is hardened in depth — symlink refusal via `lstat` pre-checks, `O_NOFOLLOW` on open, an `fstat` regular-file check on the opened descriptor, and post-write content verification. On platforms where `O_NOFOLLOW` is unavailable, a symlink-to-regular-file swapped in between the pre-check and the open remains a narrow advisory window; setup is a user-invoked development command, not a security boundary.

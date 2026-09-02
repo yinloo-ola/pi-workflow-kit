@@ -1,4 +1,5 @@
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -97,6 +98,21 @@ describe("/pwk-setup", () => {
       expect(readdirSync(projectRoot, { withFileTypes: true })).toHaveLength(0);
       await harness.handlers.get("session_start")?.({}, {});
     }
+  });
+
+  it("refuses non-regular file destinations such as FIFOs", async () => {
+    if (process.platform === "win32") return; // mkfifo is POSIX-only
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-setup-"));
+    const command = harness.commands.get("pwk-setup");
+    const agentsRoot = join(projectRoot, ".agents", "agents");
+    mkdirSync(agentsRoot, { recursive: true });
+    const fifoPath = join(agentsRoot, "pwk-spec-reviewer.md");
+    execSync(`mkfifo ${JSON.stringify(fifoPath)}`);
+
+    await expect(command?.handler("--force", createCommandContext(projectRoot))).rejects.toThrow(
+      /not a regular file|non-regular/i,
+    );
+    expect(lstatSync(fifoPath).isFIFO()).toBe(true);
   });
 
   it("refuses setup under the manual read-only lock even with no active phase", async () => {

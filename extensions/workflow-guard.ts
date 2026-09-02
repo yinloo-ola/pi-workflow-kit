@@ -1,4 +1,4 @@
-import { closeSync, constants, lstatSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
+import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -97,6 +97,14 @@ function writeFileWithoutFollowingSymlink(path: string, content: string, exists:
   const flags = constants.O_WRONLY | noFollow | (exists ? constants.O_TRUNC : constants.O_CREAT | constants.O_EXCL);
   const fd = openSync(path, flags, 0o644);
   try {
+    // TOCTOU hardening: fstat the descriptor itself — what was actually opened, not
+    // what the earlier lstat saw. Refuse anything that is not a regular file (a
+    // FIFO or device swapped in after the pre-check would otherwise block or
+    // corrupt the write). On platforms where O_NOFOLLOW degrades to 0, this does
+    // not stop a followed symlink to a regular file — that residual window stays
+    // documented as advisory in docs/provider-delegation-contract.md.
+    const opened = fstatSync(fd);
+    if (!opened.isFile()) throw new Error(`Refusing non-regular destination: ${path}`);
     writeSync(fd, content, undefined, "utf8");
   } finally {
     closeSync(fd);
