@@ -1,4 +1,15 @@
-import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  ftruncateSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  writeSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -92,24 +103,35 @@ function statNoFollow(path: string): ReturnType<typeof lstatSync> | null {
   }
 }
 
-function writeFileWithoutFollowingSymlink(path: string, content: string, exists: boolean): void {
+/** Read exactly `size` bytes from `fd` starting at position 0, regardless of the fd's cursor. */
+function readAllFromFd(fd: number, size: number): string {
+  const buffer = Buffer.alloc(size);
+  let offset = 0;
+  while (offset < size) {
+    const bytesRead = readSync(fd, buffer, offset, size - offset, offset);
+    if (bytesRead === 0) break;
+    offset += bytesRead;
+  }
+  return buffer.toString("utf8");
+}
+
+/** Write `content` to `fd` at position 0 (truncating first) and verify by reading the same fd back. */
+function overwriteFd(fd: number, content: string, path: string): void {
+  ftruncateSync(fd, 0);
+  const buffer = Buffer.from(content, "utf8");
+  writeSync(fd, buffer, 0, buffer.length, 0);
+  if (readAllFromFd(fd, buffer.length) !== content) throw new Error(`Verification failed after writing: ${path}`);
+}
+
+function writeNewFile(path: string, content: string): void {
   const noFollow = constants.O_NOFOLLOW ?? 0;
-  const flags = constants.O_WRONLY | noFollow | (exists ? constants.O_TRUNC : constants.O_CREAT | constants.O_EXCL);
+  const flags = constants.O_RDWR | noFollow | constants.O_CREAT | constants.O_EXCL;
   const fd = openSync(path, flags, 0o644);
   try {
-    // TOCTOU hardening: fstat the descriptor itself — what was actually opened, not
-    // what the earlier lstat saw. Refuse anything that is not a regular file (a
-    // FIFO or device swapped in after the pre-check would otherwise block or
-    // corrupt the write). On platforms where O_NOFOLLOW degrades to 0, this does
-    // not stop a followed symlink to a regular file — that residual window stays
-    // documented as advisory in docs/provider-delegation-contract.md.
-    const opened = fstatSync(fd);
-    if (!opened.isFile()) throw new Error(`Refusing non-regular destination: ${path}`);
-    writeSync(fd, content, undefined, "utf8");
+    overwriteFd(fd, content, path);
   } finally {
     closeSync(fd);
   }
-  if (readFileSync(path, "utf8") !== content) throw new Error(`Verification failed after writing: ${path}`);
 }
 
 function installRoleFiles(cwd: string, force: boolean): { installed: string[]; skipped: string[] } {
@@ -121,6 +143,7 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
   const installed: string[] = [];
   const skipped: string[] = [];
   const failures: string[] = [];
+  const noFollow = constants.O_NOFOLLOW ?? 0;
 
   for (const roleName of ROLE_NAMES) {
     const sourcePath = join(CANONICAL_AGENTS_DIR, `${roleName}.md`);
@@ -131,11 +154,35 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
       // instead of aborting the whole install and hiding other roles' results.
       const content = readFileSync(sourcePath, "utf8");
 
-      const stats = statNoFollow(targetPath);
-      if (stats) {
-        if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${targetPath}`);
-        if (!stats.isFile()) throw new Error(`Destination is not a regular file: ${targetPath}`);
-        if (readFileSync(targetPath, "utf8") === content) {
+      // Open the existing target (if any) once and do every check/read/write through
+      // that single fd — the fd names one fixed inode, so nothing swapped in on the
+      // path between checks (TOCTOU) can affect what gets read or written.
+      let fd: number | null;
+      try {
+        fd = openSync(targetPath, constants.O_RDWR | noFollow);
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        if (err.code === "ENOENT") {
+          fd = null;
+        } else if (err.code === "ELOOP") {
+          throw new Error(`Refusing symlink destination: ${targetPath}`);
+        } else {
+          throw error;
+        }
+      }
+
+      if (fd === null) {
+        writeNewFile(targetPath, content);
+        installed.push(roleName);
+        continue;
+      }
+
+      try {
+        const stats = fstatSync(fd);
+        if (!stats.isFile()) throw new Error(`Refusing non-regular destination: ${targetPath}`);
+
+        const existing = readAllFromFd(fd, stats.size);
+        if (existing === content) {
           skipped.push(roleName);
           continue;
         }
@@ -143,10 +190,12 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
           failures.push(`${targetPath}: conflict (use /pwk-setup --force to replace it)`);
           continue;
         }
-      }
 
-      writeFileWithoutFollowingSymlink(targetPath, content, stats !== null);
-      installed.push(roleName);
+        overwriteFd(fd, content, targetPath);
+        installed.push(roleName);
+      } finally {
+        closeSync(fd);
+      }
     } catch (error) {
       failures.push(`${targetPath}: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -331,6 +380,16 @@ function enforceLabel(): string {
   return guardOverride === "on" ? "GUARD ON" : phase ? phase.toUpperCase() : "";
 }
 
+/**
+ * Is `/pwk-setup` blocked right now? Deliberately NOT `enforceActive()`: setup must
+ * refuse during a gated phase even when the tool-call guard is manually disabled
+ * (`/pwk-guard off`), since its own banner promises writes stay confined to
+ * docs/plans/ for the whole gated phase, override or not.
+ */
+function setupBlocked(): boolean {
+  return phase !== null || guardOverride === "on";
+}
+
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", () => {
     phase = null;
@@ -347,7 +406,7 @@ export default function (pi: ExtensionAPI) {
       // Refuse whenever the session is read-only in fact: gated phase (even with the
       // tool-call guard manually disabled — the design mandates that) or the manual
       // read-only lock, whose banner promises "writes only under docs/plans/".
-      if (phase !== null || guardOverride === "on") {
+      if (setupBlocked()) {
         const scope =
           guardOverride === "on"
             ? "the manual read-only lock (/pwk-guard on)"

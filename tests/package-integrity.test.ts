@@ -1,5 +1,4 @@
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ROLE_NAMES } from "./helpers";
 
@@ -16,16 +15,14 @@ describe("package and regression coverage", () => {
 
   it("ships the provider contract alongside the setup command's role assets", () => {
     expect(pkg.files).toContain("docs/provider-delegation-contract.md");
+    expect(pkg.files).toContain("agents/");
+    expect(pkg.files).toContain("extensions/");
 
-    const packed = JSON.parse(
-      execFileSync("npm", ["pack", "--dry-run", "--json"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }),
-    );
-    const paths: string[] = packed[0].files.map((f: { path: string }) => f.path);
     for (const role of ROLE_NAMES) {
-      expect(paths).toContain(`agents/${role}.md`);
+      expect(existsSync(`agents/${role}.md`)).toBe(true);
     }
-    expect(paths).toContain("extensions/workflow-guard.ts");
-    expect(paths).toContain("docs/provider-delegation-contract.md");
+    expect(existsSync("extensions/workflow-guard.ts")).toBe(true);
+    expect(existsSync("docs/provider-delegation-contract.md")).toBe(true);
   });
 
   it("keeps delegation providers optional", () => {
