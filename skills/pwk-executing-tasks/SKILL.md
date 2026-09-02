@@ -7,7 +7,7 @@ description: "Implement a plan via the feature-gate flow: write the feature-acce
 
 Implement the plan from `docs/plans/*-implementation.md` via the **feature-gate flow**. The plan is a behavioral spec (acceptance criteria + integration tests) — you choose structure, signatures, internals; the criteria define *what*, you decide *how*.
 
-The feature-acceptance E2E test is the primary enforced gate. The flow is always on: write the E2E first (red), implement the requirements back-to-back, then run one feature-level review over the whole diff. Per-requirement checkpoints and reviews are **opt-in** — they fire only for requirements the plan tags (default off); the feature gate covers everything else.
+The feature-acceptance E2E test is the primary enforced gate and the primary enforced spec for the feature. The flow is always on: write the E2E first (red), implement the requirements back-to-back, then run one feature-level review over the whole diff. Per-requirement checkpoints and reviews are **opt-in** — they fire only for requirements the plan tags (default off); the feature gate covers everything else.
 
 ## Before you start
 
@@ -93,25 +93,10 @@ The old "integration gate" is gone — the feature E2E at `feature-complete` *is
 
 After `feature-complete` is approved, run **one** review over the **whole feature diff**, driven by the plan's feature-level `### Feature review` tag. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
-- **`parallel`** (default) — four fresh-context reviewers via the `subagent` tool. Gather scope (the plan's acceptance criteria + Feature acceptance, `git log --oneline && git diff <merge-base>...HEAD`) and invoke:
+- **`parallel`** (default) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Gather scope (the plan's acceptance criteria + Feature acceptance, `git log --oneline && git diff <merge-base>...HEAD`) and provide it to every role. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
 
-  ```json
-  {
-    "tasks": [
-      {"agent": "pwk-spec-reviewer", "task": "<scope + whole diff here>"},
-      {"agent": "pwk-tracing-reviewer", "task": "<scope + whole diff here>"},
-      {"agent": "pwk-smell-reviewer", "task": "<scope + whole diff here>"},
-      {"agent": "pwk-hazard-reviewer", "task": "<scope + whole diff here>"}
-    ],
-    "agentScope": "both",
-    "cwd": "<repo-root>"
-  }
-  ```
-
-  The reviewer checklists live only in `agents/pwk-*-reviewer.md` — don't restate them in the task strings (duplication guarantees drift). Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
-
-- **`inline`** — run `/skill:pwk-code-review` over the whole diff as a single pass.
-- **Fallback** — subagent tool unavailable or errors → run `/skill:pwk-code-review` inline instead.
+- **`inline`** — perform `/skill:pwk-code-review` over the whole diff as a single pass.
+- **Fallback** — if the host has no compatible parallel-review capability, cannot prove the requested read-only/fresh-context/bounded constraints, or delegation fails, perform the missing review work inline. Retain successful delegated reports and do not mark the feature fully reviewed while a required role is missing.
 
 On success, set `Feature phase: done`.
 
