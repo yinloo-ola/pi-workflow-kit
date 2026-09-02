@@ -6,10 +6,10 @@
 
 Skills teach the agent the workflow. There are 5 pipeline skills:
 
-- **pwk-brainstorming** — explore ideas, produce a descriptive design doc that opens with a `## Requirements` list. For a requirement too big for one design doc, may start an **umbrella** (multiple design docs under one status-free overview, shipping as one PR)
+- **pwk-brainstorming** — explore ideas, produce a descriptive design doc that opens with a `## Requirements` list. For a requirement too big for one design doc, may start an **umbrella** (multiple design docs under one status-free overview, shipping as one PR). On non-trivial topics, requests the logical `codebase-recon` capability and falls back to the `pwk-recon-scout` role inline when unavailable or unsafe.
 - **pwk-writing-plans** — turn each requirement into acceptance criteria + integration-test cases (a behavioral spec, no implementation code)
 - **pwk-executing-tasks** — feature-gate flow: write the feature E2E first, implement the requirements, then one feature-level review; two mandatory checkpoints at the feature level, per-requirement ceremony opt-in
-- **pwk-code-review** — the inline reviewer (code tracing, spec alignment, code smells, production hazards). During `pwk-executing-tasks`, the **feature-level review** (the default) runs **four specialized reviewers in parallel** over the whole feature diff via the `subagent` tool, each from a fresh context (spec gaps & scope creep, tracing, smells, hazards); a per-requirement review runs the same way for a tagged requirement. These ship as package agents (`agents/pwk-*.md`) discovered natively by the optional **`pi-subagents`** package; all report findings only — fixes are applied by the executing-tasks main agent. Falls back to inline `/skill:pwk-code-review` when `pi-subagents` is not installed.
+- **pwk-code-review** — the inline reviewer (code tracing, spec alignment, code smells, production hazards). During `pwk-executing-tasks`, the feature-level review requests the `parallel-review` capability for four logical fresh-context, read-only roles; successful reports are retained and missing roles are retried or completed inline. It falls back to inline review when no safe compatible provider exists. The canonical provider contract is documented in `docs/provider-delegation-contract.md`.
 - **pwk-finalizing** — dispose consumed plan docs (archive or delete; for an umbrella, the overview + every part), curate lessons, update docs, create PR or merge
 
 Plus 2 on-demand skills:
@@ -21,7 +21,7 @@ They explain *what* to do and *when* to do it. Phase control is manual — you i
 
 ## Extension
 
-The `workflow-guard` extension enforces one rule:
+The `workflow-guard` extension registers the Pi-only `/pwk-setup` command and enforces one workflow rule:
 
 > During brainstorm and plan phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
 
@@ -29,7 +29,7 @@ The agent can still use `read` and `bash` for investigation. During those gated 
 
 During executing-tasks, code-review, finalizing, **and diagnose**, nothing is restricted (diagnosis needs to write failing tests and debug instrumentation, so it exits the gate). `pwk-status` stays inside the gate.
 
-Reviewer-agent checklists live only in `agents/pwk-*-reviewer.md` (single source of truth); `pwk-executing-tasks` passes each reviewer just the requirement scope + diff and names the agent.
+Canonical role contracts live in `agents/pwk-*.md` (single source of truth) and can be installed into `.agents/agents/` with `/pwk-setup`. `pwk-executing-tasks` requests logical review roles through the host’s delegation capabilities and passes each role just the requirement scope + diff.
 
 Phases follow the skill you invoke — there is no message-keyword unlock. Invoking `/skill:pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, or `pwk-diagnose` exits the gated phase (those skills write source); `pwk-status` deliberately does **not** (read-only orientation). `/pwk-guard on|off|auto` manually overrides the guard.
 

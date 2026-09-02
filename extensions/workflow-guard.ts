@@ -1,4 +1,17 @@
-import { resolve } from "node:path";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  ftruncateSync,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  writeSync,
+} from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /**
@@ -11,6 +24,192 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
  */
 
 type Phase = "brainstorm" | "plan" | null;
+
+type DelegationStatus = "completed" | "failed" | "timed-out" | "skipped";
+
+export interface DelegationOutcome {
+  role: string;
+  status: DelegationStatus;
+  report?: string;
+  error?: string;
+  provider?: string;
+  runId?: string;
+}
+
+export interface DelegationCoverage {
+  complete: boolean;
+  missing: string[];
+  retainedReports: string[];
+}
+
+/** Summarize role outcomes without treating failed or empty outcomes as coverage. */
+export function assessDelegationCoverage(
+  requiredRoles: readonly string[],
+  outcomes: readonly DelegationOutcome[],
+): DelegationCoverage {
+  const completedReports = new Map<string, string>();
+  for (const outcome of outcomes) {
+    if (outcome.status === "completed" && outcome.report) {
+      completedReports.set(outcome.role, outcome.report);
+    }
+  }
+
+  const missing = requiredRoles.filter((role) => !completedReports.has(role));
+  return {
+    complete: missing.length === 0,
+    missing,
+    retainedReports: [...completedReports.values()],
+  };
+}
+
+export const ROLE_NAMES = [
+  "pwk-recon-scout",
+  "pwk-spec-reviewer",
+  "pwk-tracing-reviewer",
+  "pwk-smell-reviewer",
+  "pwk-hazard-reviewer",
+] as const;
+
+const CANONICAL_AGENTS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "agents");
+
+function setupUsageError(): Error {
+  return new Error("Usage: /pwk-setup [--force]");
+}
+
+function parseSetupArgs(args: string): { force: boolean } {
+  const normalized = args.trim();
+  if (!normalized) return { force: false };
+  if (normalized === "--force") return { force: true };
+  throw setupUsageError();
+}
+
+function ensureDirectory(path: string): void {
+  const stats = statNoFollow(path);
+  if (!stats) {
+    mkdirSync(path);
+    return;
+  }
+  if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${path}`);
+  if (!stats.isDirectory()) throw new Error(`Destination is not a directory: ${path}`);
+}
+
+/** lstat without following symlinks; null when the path does not exist. */
+function statNoFollow(path: string): ReturnType<typeof lstatSync> | null {
+  try {
+    return lstatSync(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return null;
+  }
+}
+
+/** Read exactly `size` bytes from `fd` starting at position 0, regardless of the fd's cursor. */
+function readAllFromFd(fd: number, size: number): string {
+  const buffer = Buffer.alloc(size);
+  let offset = 0;
+  while (offset < size) {
+    const bytesRead = readSync(fd, buffer, offset, size - offset, offset);
+    if (bytesRead === 0) break;
+    offset += bytesRead;
+  }
+  return buffer.toString("utf8");
+}
+
+/** Write `content` to `fd` at position 0 (truncating first) and verify by reading the same fd back. */
+function overwriteFd(fd: number, content: string, path: string): void {
+  ftruncateSync(fd, 0);
+  const buffer = Buffer.from(content, "utf8");
+  writeSync(fd, buffer, 0, buffer.length, 0);
+  if (readAllFromFd(fd, buffer.length) !== content) throw new Error(`Verification failed after writing: ${path}`);
+}
+
+function writeNewFile(path: string, content: string): void {
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+  const flags = constants.O_RDWR | noFollow | constants.O_CREAT | constants.O_EXCL;
+  const fd = openSync(path, flags, 0o644);
+  try {
+    overwriteFd(fd, content, path);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function installRoleFiles(cwd: string, force: boolean): { installed: string[]; skipped: string[] } {
+  const projectAgentsDir = join(cwd, ".agents");
+  const targetDir = join(projectAgentsDir, "agents");
+  ensureDirectory(projectAgentsDir);
+  ensureDirectory(targetDir);
+
+  const installed: string[] = [];
+  const skipped: string[] = [];
+  const failures: string[] = [];
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+
+  for (const roleName of ROLE_NAMES) {
+    const sourcePath = join(CANONICAL_AGENTS_DIR, `${roleName}.md`);
+    const targetPath = join(targetDir, `${roleName}.md`);
+
+    try {
+      // Read inside the try: one broken canonical source becomes a per-role failure
+      // instead of aborting the whole install and hiding other roles' results.
+      const content = readFileSync(sourcePath, "utf8");
+
+      // Open the existing target (if any) once and do every check/read/write through
+      // that single fd — the fd names one fixed inode, so nothing swapped in on the
+      // path between checks (TOCTOU) can affect what gets read or written.
+      let fd: number | null;
+      try {
+        fd = openSync(targetPath, constants.O_RDWR | noFollow);
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        if (err.code === "ENOENT") {
+          fd = null;
+        } else if (err.code === "ELOOP") {
+          throw new Error(`Refusing symlink destination: ${targetPath}`);
+        } else {
+          throw error;
+        }
+      }
+
+      if (fd === null) {
+        writeNewFile(targetPath, content);
+        installed.push(roleName);
+        continue;
+      }
+
+      try {
+        const stats = fstatSync(fd);
+        if (!stats.isFile()) throw new Error(`Refusing non-regular destination: ${targetPath}`);
+
+        const existing = readAllFromFd(fd, stats.size);
+        if (existing === content) {
+          skipped.push(roleName);
+          continue;
+        }
+        if (!force) {
+          failures.push(`${targetPath}: conflict (use /pwk-setup --force to replace it)`);
+          continue;
+        }
+
+        overwriteFd(fd, content, targetPath);
+        installed.push(roleName);
+      } finally {
+        closeSync(fd);
+      }
+    } catch (error) {
+      failures.push(`${targetPath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  if (failures.length > 0) {
+    const partial =
+      installed.length + skipped.length > 0
+        ? ` (${installed.length} installed, ${skipped.length} skipped before failure — installation is partial)`
+        : "";
+    throw new Error(`PWK setup incomplete${partial}:\n${failures.join("\n")}`);
+  }
+  return { installed, skipped };
+}
 
 // Destructive commands blocked in brainstorm/plan phases (simple common blacklist)
 const DESTRUCTIVE_PATTERNS = [
@@ -181,11 +380,55 @@ function enforceLabel(): string {
   return guardOverride === "on" ? "GUARD ON" : phase ? phase.toUpperCase() : "";
 }
 
+/**
+ * Is `/pwk-setup` blocked right now? Deliberately NOT `enforceActive()`: setup must
+ * refuse during a gated phase even when the tool-call guard is manually disabled
+ * (`/pwk-guard off`), since its own banner promises writes stay confined to
+ * docs/plans/ for the whole gated phase, override or not.
+ */
+function setupBlocked(): boolean {
+  return phase !== null || guardOverride === "on";
+}
+
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", () => {
     phase = null;
     pendingPhaseReminder = false;
     guardOverride = null;
+  });
+
+  // --- Project role setup -------------------------------------------------
+  // This command writes through Node rather than the write tool, so it enforces
+  // the gated-phase boundary itself instead of relying on tool_call interception.
+  pi.registerCommand("pwk-setup", {
+    description: "Install PWK role agents into .agents/agents/",
+    handler: async (args, ctx) => {
+      // Refuse whenever the session is read-only in fact: gated phase (even with the
+      // tool-call guard manually disabled — the design mandates that) or the manual
+      // read-only lock, whose banner promises "writes only under docs/plans/".
+      if (setupBlocked()) {
+        const scope =
+          guardOverride === "on"
+            ? "the manual read-only lock (/pwk-guard on)"
+            : `${(phase as string).toUpperCase()} phase`;
+        const message = `Cannot run /pwk-setup during ${scope}. Run it before entering the gated workflow or after leaving it (guard auto/off).`;
+        ctx.ui.notify(message, "warning");
+        throw new Error(message);
+      }
+
+      const { force } = parseSetupArgs(args ?? "");
+      try {
+        const result = installRoleFiles(ctx.cwd, force);
+        const parts = [`PWK setup complete: ${result.installed.length} installed`];
+        if (result.skipped.length > 0) parts.push(`${result.skipped.length} skipped`);
+        if (force) parts.push("forced conflicts replaced");
+        ctx.ui.notify(`${parts.join(", ")}. Providers may require /reload to discover updated roles.`, "info");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        ctx.ui.notify(message, "error");
+        throw error;
+      }
+    },
   });
 
   // --- Manual override (escape hatch) -----------------------------------

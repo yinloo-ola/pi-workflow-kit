@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.5.0] - 2026-09-02
+
+### Added
+
+- **Harness-neutral delegation.** The workflow skills now express recon and review as logical roles and capabilities (`codebase-recon`, `parallel-review`) instead of a literal `subagent` tool payload, so they can run on Claude Code or any host with a compatible agent mechanism. Role instructions gained explicit authority boundaries, evidence/no-findings reporting rules, and host-neutral wording. Unavailable or unsafe delegation falls back inline (`Scout: unavailable` for recon; retained-successful + retry/inline-completion for review) and never silently omits a required role.
+- **`/pwk-setup` slash command** (Pi-only, registered by the workflow-guard extension). Installs the five canonical role definitions (`pwk-recon-scout` + four reviewers) into the project's `.agents/agents/` so compatible delegation extensions — `@tintinweb/pi-subagents` is one — discover them without pre-creating running subagents. Idempotent; differing files are conflicts preserved unless `/pwk-setup --force`; symlink destinations rejected; refused during brainstorm/plan phases even with `/pwk-guard off` **and under the `/pwk-guard on` read-only lock**; never installs a provider or reloads the session.
+- **`docs/provider-delegation-contract.md`** — the provider-neutral capability/outcome contract (request shape, capability list, normalized `completed|failed|timed-out|skipped` results, deterministic selection, inline fallback protocol) for future host adapters. Shipped in the tarball.
+- **Delegation contract test suite** — role-contract, skill-wording, provider-contract, fallback-behavior, integration-guidance, package-integrity, and a feature E2E; plus a pure `assessDelegationCoverage` helper exported from the guard.
+
+### Changed
+
+- **Docs rewritten for cross-host use** (README, developer-usage-guide, workflow-phases, oversight-model): portable semantics vs. Pi-specific enforcement are now separated; `@tintinweb/pi-subagents` is documented as one compatible Pi mapping (roles via `.agents/agents/`, recon optionally via its read-only `Explore`); other Pi extensions need the documented capabilities or a separate adapter — arbitrary extensions are not automatically compatible.
+- **Legacy `pi-subagents` manifest retained as compatibility-only** (optional peer + `pi-subagents.agents` key); it is no longer presented as the portable delegation contract.
 
 ## [1.4.0] - 2026-09-01
 
