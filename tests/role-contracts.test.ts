@@ -1,26 +1,26 @@
-import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 
 const roleNames = [
-  'pwk-recon-scout',
-  'pwk-spec-reviewer',
-  'pwk-tracing-reviewer',
-  'pwk-smell-reviewer',
-  'pwk-hazard-reviewer',
+  "pwk-recon-scout",
+  "pwk-spec-reviewer",
+  "pwk-tracing-reviewer",
+  "pwk-smell-reviewer",
+  "pwk-hazard-reviewer",
 ];
 
 function readRole(name: string): { frontmatter: string; body: string } {
-  const content = readFileSync(`agents/${name}.md`, 'utf8');
+  const content = readFileSync(`agents/${name}.md`, "utf8");
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) throw new Error(`Role ${name} has invalid frontmatter`);
   return { frontmatter: match[1], body: match[2] };
 }
 
-describe('provider-neutral role contracts', () => {
-  it('defines stable identities and read-only reporter boundaries', () => {
+describe("provider-neutral role contracts", () => {
+  it("defines stable identities and read-only reporter boundaries", () => {
     for (const name of roleNames) {
       const { frontmatter, body } = readRole(name);
-      expect(frontmatter).toMatch(new RegExp(`^name: ${name}$`, 'm'));
+      expect(frontmatter).toMatch(new RegExp(`^name: ${name}$`, "m"));
       expect(frontmatter).toMatch(/^description: .+$/m);
       expect(frontmatter).toMatch(/^tools: read, grep, find, ls, bash$/m);
       expect(body).toMatch(/read-only/i);
@@ -29,9 +29,9 @@ describe('provider-neutral role contracts', () => {
     }
   });
 
-  it('defines the recon report contract without provider-specific instructions', () => {
-    const { body } = readRole('pwk-recon-scout');
-    const sections = ['Relevant files', 'Existing patterns', 'Call sites', 'Test layout', 'Gotchas'];
+  it("defines the recon report contract without provider-specific instructions", () => {
+    const { body } = readRole("pwk-recon-scout");
+    const sections = ["Relevant files", "Existing patterns", "Call sites", "Test layout", "Gotchas"];
     let previous = -1;
 
     for (const section of sections) {
@@ -46,7 +46,7 @@ describe('provider-neutral role contracts', () => {
     expect(body).not.toMatch(/\b(?:subagent|Agent|Task|SubagentWorkflow)\s*\(/);
   });
 
-  it('defines evidence and explicit no-findings behavior for every review role', () => {
+  it("defines evidence and explicit no-findings behavior for every review role", () => {
     for (const name of roleNames.slice(1)) {
       const { body } = readRole(name);
       expect(body).toMatch(/acceptance criteri|changed code|changed files|each changed file/i);

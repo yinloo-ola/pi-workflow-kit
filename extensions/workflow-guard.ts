@@ -1,4 +1,6 @@
-import { resolve } from "node:path";
+import { closeSync, constants, lstatSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /**
@@ -11,6 +13,137 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
  */
 
 type Phase = "brainstorm" | "plan" | null;
+
+type DelegationStatus = "completed" | "failed" | "timed-out" | "skipped";
+
+export interface DelegationOutcome {
+  role: string;
+  status: DelegationStatus;
+  report?: string;
+  error?: string;
+}
+
+export interface DelegationCoverage {
+  complete: boolean;
+  missing: string[];
+  retainedReports: string[];
+}
+
+/** Summarize role outcomes without treating failed or empty outcomes as coverage. */
+export function assessDelegationCoverage(
+  requiredRoles: readonly string[],
+  outcomes: readonly DelegationOutcome[],
+): DelegationCoverage {
+  const completedReports = new Map<string, string>();
+  for (const outcome of outcomes) {
+    if (outcome.status === "completed" && outcome.report) {
+      completedReports.set(outcome.role, outcome.report);
+    }
+  }
+
+  const missing = requiredRoles.filter((role) => !completedReports.has(role));
+  return {
+    complete: missing.length === 0,
+    missing,
+    retainedReports: outcomes
+      .filter((outcome) => outcome.status === "completed" && outcome.report)
+      .map((outcome) => outcome.report as string),
+  };
+}
+
+const ROLE_NAMES = [
+  "pwk-recon-scout",
+  "pwk-spec-reviewer",
+  "pwk-tracing-reviewer",
+  "pwk-smell-reviewer",
+  "pwk-hazard-reviewer",
+] as const;
+
+const CANONICAL_AGENTS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "agents");
+
+function setupUsageError(): Error {
+  return new Error("Usage: /pwk-setup [--force]");
+}
+
+function parseSetupArgs(args: string): { force: boolean } {
+  const normalized = args.trim();
+  if (!normalized) return { force: false };
+  if (normalized === "--force") return { force: true };
+  throw setupUsageError();
+}
+
+function ensureDirectory(path: string): void {
+  try {
+    const stats = lstatSync(path);
+    if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${path}`);
+    if (!stats.isDirectory()) throw new Error(`Destination is not a directory: ${path}`);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    mkdirSync(path);
+  }
+}
+
+function writeFileWithoutFollowingSymlink(path: string, content: string, exists: boolean): void {
+  const noFollow = constants.O_NOFOLLOW ?? 0;
+  const flags = constants.O_WRONLY | noFollow | (exists ? constants.O_TRUNC : constants.O_CREAT | constants.O_EXCL);
+  const fd = openSync(path, flags, 0o644);
+  try {
+    writeSync(fd, content, undefined, "utf8");
+  } finally {
+    closeSync(fd);
+  }
+  if (readFileSync(path, "utf8") !== content) throw new Error(`Verification failed after writing: ${path}`);
+}
+
+function installRoleFiles(cwd: string, force: boolean): { installed: string[]; skipped: string[] } {
+  const projectAgentsDir = join(cwd, ".agents");
+  const targetDir = join(projectAgentsDir, "agents");
+  ensureDirectory(projectAgentsDir);
+  ensureDirectory(targetDir);
+
+  const installed: string[] = [];
+  const skipped: string[] = [];
+  const failures: string[] = [];
+
+  for (const roleName of ROLE_NAMES) {
+    const sourcePath = join(CANONICAL_AGENTS_DIR, `${roleName}.md`);
+    const targetPath = join(targetDir, `${roleName}.md`);
+    const content = readFileSync(sourcePath, "utf8");
+
+    try {
+      let exists = false;
+      try {
+        const stats = lstatSync(targetPath);
+        if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${targetPath}`);
+        if (!stats.isFile()) throw new Error(`Destination is not a regular file: ${targetPath}`);
+        exists = true;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
+
+      if (exists) {
+        if (readFileSync(targetPath, "utf8") === content) {
+          skipped.push(roleName);
+          continue;
+        }
+        if (!force) {
+          failures.push(`${targetPath}: conflict (use /pwk-setup --force to replace it)`);
+          continue;
+        }
+      }
+
+      writeFileWithoutFollowingSymlink(targetPath, content, exists);
+      installed.push(roleName);
+    } catch (error) {
+      failures.push(`${targetPath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`PWK setup incomplete:\n${failures.join("\n")}`);
+  }
+  return { installed, skipped };
+}
 
 // Destructive commands blocked in brainstorm/plan phases (simple common blacklist)
 const DESTRUCTIVE_PATTERNS = [
@@ -186,6 +319,34 @@ export default function (pi: ExtensionAPI) {
     phase = null;
     pendingPhaseReminder = false;
     guardOverride = null;
+  });
+
+  // --- Project role setup -------------------------------------------------
+  // This command writes through Node rather than the write tool, so it enforces
+  // the gated-phase boundary itself instead of relying on tool_call interception.
+  pi.registerCommand("pwk-setup", {
+    description: "Install PWK role agents into .agents/agents/",
+    handler: async (args, ctx) => {
+      if (phase !== null) {
+        const gatedPhase = phase.toUpperCase();
+        const message = `Cannot run /pwk-setup during ${gatedPhase} phase. Run it before entering the gated workflow or after leaving it.`;
+        ctx.ui.notify(message, "warning");
+        throw new Error(message);
+      }
+
+      const { force } = parseSetupArgs(args ?? "");
+      try {
+        const result = installRoleFiles(ctx.cwd, force);
+        const parts = [`PWK setup complete: ${result.installed.length} installed`];
+        if (result.skipped.length > 0) parts.push(`${result.skipped.length} skipped`);
+        if (force) parts.push("forced conflicts replaced");
+        ctx.ui.notify(`${parts.join(", ")}. Providers may require /reload to discover updated roles.`, "info");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        ctx.ui.notify(message, "error");
+        throw error;
+      }
+    },
   });
 
   // --- Manual override (escape hatch) -----------------------------------
