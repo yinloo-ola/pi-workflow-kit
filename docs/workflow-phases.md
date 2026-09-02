@@ -43,7 +43,7 @@ Write boundary: only `docs/plans/` is writable.
 /skill:pwk-executing-tasks
 ```
 
-- **Feature-gate flow:** write the feature-acceptance E2E test (red) → **⏸ checkpoint: feature-spec** (human confirms the E2E proves the feature) → implement the requirements back-to-back with full autonomy (the executor chooses structure/signatures/internals) → **⏸ checkpoint: feature-complete** (full suite + feature E2E green) → **feature review** (four parallel reviewers over the whole feature diff via the `subagent` tool; falls back to inline `/skill:pwk-code-review` when `pi-subagents` is absent — see [code-review](#code-review)).
+- **Feature-gate flow:** write the feature-acceptance E2E test (red) → **⏸ checkpoint: feature-spec** (human confirms the E2E proves the feature) → implement the requirements back-to-back with full autonomy (the executor chooses structure/signatures/internals) → **⏸ checkpoint: feature-complete** (full suite + feature E2E green) → **feature review** (request the `parallel-review` capability for four logical read-only roles when the host supports it; otherwise run `/skill:pwk-code-review` inline — see [code-review](#code-review)).
 - Per-requirement checkpoints/reviews are **opt-in** — they fire only for requirements the plan tags (default off); see [Proportionality](#proportionality).
 - **Regression check after each commit** — run the full existing suite to catch cross-requirement regressions immediately. The feature E2E stays red until the last requirement and is gated only at `feature-complete` (the old integration gate folds into it).
 - Progress tracked in `docs/plans/*-progress.md` (feature phase + requirement checklist).
@@ -68,7 +68,7 @@ Flag a requirement for a checkpoint when it has complex logic or is the main par
 
 The **inline reviewer**: code tracing, spec alignment (vs acceptance criteria), code smells (applies fixes), production hazard check. Unlocked — may modify code to fix smells.
 
-**Not a phase you drive manually.** During `pwk-executing-tasks`, the **feature-level review** (the default) runs **four specialized reviewers in parallel** over the whole feature diff via the `subagent` tool (spec, tracing, smell, hazard — each fresh-context, read-only reporters); a per-requirement review runs the same way for a tagged requirement. This skill is the **fallback** when [`pi-subagents`](https://pi.dev/packages/pi-subagents) is not installed. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
+**Not a phase you drive manually.** During `pwk-executing-tasks`, the feature-level review requests four logical roles (`pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, `pwk-hazard-reviewer`) through the host’s `parallel-review` capability. Roles are fresh-context, read-only reporters; successful reports are retained and failed roles are retried or completed inline. If no compatible provider is available, the whole review runs inline. In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents/`; [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents) is one compatible provider. See `docs/provider-delegation-contract.md` for the provider contract. You can also invoke `/skill:pwk-code-review` standalone for an ad-hoc review of any diff.
 
 No write restrictions.
 

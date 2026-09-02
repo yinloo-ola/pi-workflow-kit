@@ -3,9 +3,9 @@
 Plan: docs/plans/2026-09-02-harness-neutral-delegation-implementation.md
 Branch: harness-neutral-delegation
 Started: 2026-09-02T11:12:30Z
-Last updated: 2026-09-02T11:36:00Z
+Last updated: 2026-09-02T11:44:00Z
 Setup: done — npm test passed; npm pack --dry-run confirmed the current published layout.
-Feature phase: implementing (5/7)
+Feature phase: implementing (7/7)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -15,5 +15,5 @@ Feature phase: implementing (5/7)
 | 3 | ✅ | Harness-neutral workflow skills | ⏸ tests; 🔎 inline | role: harness-neutral skills |
 | 4 | ✅ | Capability contract and normalized outcomes | — | role: provider delegation contract |
 | 5 | ✅ | Safe fallback and partial-failure behavior | — | role: safe fallback behavior |
-| 6 | ⬜ | Cross-host and Pi integration guidance | — | — |
-| 7 | ⬜ | Package and regression coverage | 🔎 inline | — |
+| 6 | ✅ | Cross-host and Pi integration guidance | — | role: integration guidance |
+| 7 | 🔄 | Package and regression coverage | 🔎 inline | — |

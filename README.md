@@ -4,7 +4,7 @@
 
 AI coding agents tend to skip design and jump straight into implementation, producing over-engineered or misaligned code. **pi-workflow-kit** solves this by hard-blocking write operations during brainstorm and planning phases — the agent *literally cannot modify your source files* until you approve the design.
 
-[pi](https://github.com/badlogic/pi-mono) package. Zero configuration required.
+[pi](https://github.com/badlogic/pi-mono) package. Skills are portable; the workflow guard and `/pwk-setup` command are Pi integrations.
 
 ## Install
 
@@ -12,7 +12,13 @@ AI coding agents tend to skip design and jump straight into implementation, prod
 pi install npm:@tianhai/pi-workflow-kit
 ```
 
-No setup needed — skills and guards activate automatically after install.
+For Pi delegation providers that discover project agents, install the canonical PWK roles before starting a gated workflow:
+
+```text
+/pwk-setup
+```
+
+This creates the five role definitions under `.agents/agents/`. It does not install or configure a provider. Existing customized files are preserved; use `/pwk-setup --force` only when you explicitly want to replace differing role files. Run setup before `/skill:pwk-brainstorming`; the command is refused during brainstorm and plan phases.
 
 **Want to try before committing?**
 
@@ -20,13 +26,19 @@ No setup needed — skills and guards activate automatically after install.
 pi -e npm:@tianhai/pi-workflow-kit
 ```
 
-**Optional — parallel code review.** The feature-level review can run four specialized reviewers in parallel over the whole feature diff via the `subagent` tool. Install [`pi-subagents`](https://pi.dev/packages/pi-subagents) to enable it:
+**Optional — delegated recon and review.** The skills request logical capabilities rather than a specific agent tool. If the host has no safe compatible provider, they perform recon and review inline. In Pi, [`@tintinweb/pi-subagents`](https://github.com/tintinweb/pi-subagents) is one compatible provider:
 
 ```bash
-pi install npm:pi-subagents
+pi install npm:@tintinweb/pi-subagents
 ```
 
-The four reviewers (`pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, `pwk-hazard-reviewer`) ship with this kit as **package agents** — `pi-subagents` discovers them automatically, no extra setup. Without `pi-subagents`, `pwk-executing-tasks` falls back to inline `/skill:pwk-code-review`.
+After `/pwk-setup`, Tintinweb can discover the five named roles from `.agents/agents/`; recon can also use its built-in read-only `Explore` agent. No running subagents need to be pre-created. Other Pi extensions require the documented capabilities or a separate adapter; arbitrary extensions are not automatically compatible.
+
+### Using the roles on other hosts
+
+The five role files define portable logical roles, not a required provider API. Claude Code can map them to its native read-only task/subagent mechanism, but must enforce its own permissions or hooks because the Pi workflow guard does not transfer outside Pi. A different Pi extension can use the same roles when it provides the documented capabilities or an adapter; otherwise PWK performs recon and review inline.
+
+See [`docs/provider-delegation-contract.md`](docs/provider-delegation-contract.md) for the normalized capability and outcome contract. The core kit does not install a provider, require `@tintinweb/pi-subagents`, or provide automatic compatibility with every Pi subagent extension.
 
 ## What You Get
 
@@ -58,10 +70,10 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
-| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list. On non-trivial topics, dispatches the `pwk-recon-scout` agent (read-only) to map the codebase before design. |
+| **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc with a `## Requirements` list. On non-trivial topics, requests the logical `codebase-recon` capability; if unavailable or unsafe, performs the `pwk-recon-scout` role inline. |
 | **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code) |
 | **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → **checkpoint: feature-complete** → feature review |
-| **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check |
+| **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check. Delegated review uses four logical roles when a safe provider is available; otherwise it runs inline. |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
 | **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase; **does not exit the gated phase**. |
@@ -177,11 +189,12 @@ pi-workflow-kit/
 │   ├── pwk-finalizing/SKILL.md
 │   ├── pwk-status/SKILL.md
 │   └── pwk-diagnose/SKILL.md
-├── agents/                   # package agents for parallel code-review + recon scout (discovered by pi-subagents)
+├── agents/                   # canonical role contracts; /pwk-setup copies them to .agents/agents/
 ├── docs/
 │   ├── developer-usage-guide.md
 │   ├── workflow-phases.md
 │   ├── oversight-model.md
+│   ├── provider-delegation-contract.md
 │   ├── lessons.md
 │   ├── adr/                  # permanent architectural decisions (never archived)
 │   └── plans/                # active design/plan/progress docs (deleted after finalization)
