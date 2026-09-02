@@ -3,41 +3,17 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import workflowGuard, { assessDelegationCoverage } from "../extensions/workflow-guard";
+import { assessDelegationCoverage } from "../extensions/workflow-guard";
+import { ROLE_NAMES, createCommandContext, createExtensionHarness } from "./helpers";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const roleNames = [
-  "pwk-recon-scout",
-  "pwk-spec-reviewer",
-  "pwk-tracing-reviewer",
-  "pwk-smell-reviewer",
-  "pwk-hazard-reviewer",
-];
-
-function createExtensionHarness() {
-  const handlers = new Map<string, (event: any, ctx: any) => unknown>();
-  const commands = new Map<string, { handler: (args: string, ctx: any) => unknown }>();
-  const pi = {
-    on(event: string, handler: (event: any, ctx: any) => unknown) {
-      handlers.set(event, handler);
-    },
-    registerCommand(name: string, options: { handler: (args: string, ctx: any) => unknown }) {
-      commands.set(name, options);
-    },
-  };
-  workflowGuard(pi as any);
-  return { commands, handlers };
-}
 
 describe("harness-neutral delegation feature", () => {
   it("installs discoverable roles, preserves gated setup, and requires complete review coverage", async () => {
     const projectRoot = mkdtempSync(join(tmpdir(), "pwk-delegation-"));
     const { commands, handlers } = createExtensionHarness();
     const notifications: string[] = [];
-    const context = {
-      cwd: projectRoot,
-      ui: { notify: (message: string) => notifications.push(message) },
-    };
+    const context = createCommandContext(projectRoot, notifications);
 
     expect(commands.has("pwk-setup")).toBe(true);
 
@@ -49,8 +25,8 @@ describe("harness-neutral delegation feature", () => {
     await commands.get("pwk-setup")?.handler("", context);
 
     const installedDir = join(projectRoot, ".agents", "agents");
-    expect(readdirSync(installedDir).sort()).toEqual(roleNames.map((name) => `${name}.md`).sort());
-    for (const roleName of roleNames) {
+    expect(readdirSync(installedDir).sort()).toEqual(ROLE_NAMES.map((name) => `${name}.md`).sort());
+    for (const roleName of ROLE_NAMES) {
       expect(readFileSync(join(installedDir, `${roleName}.md`), "utf8")).toBe(
         readFileSync(join(repoRoot, "agents", `${roleName}.md`), "utf8"),
       );
@@ -87,5 +63,25 @@ describe("harness-neutral delegation feature", () => {
     ]);
     expect(recovered.complete).toBe(true);
     expect(recovered.missing).toEqual([]);
+  });
+
+  it("treats failed, skipped, and empty-report outcomes as missing coverage", () => {
+    const requiredRoles = ["pwk-spec-reviewer", "pwk-hazard-reviewer"] as const;
+    const outcomes = [
+      { role: "pwk-spec-reviewer", status: "failed" as const, error: "provider crashed" },
+      { role: "pwk-hazard-reviewer", status: "skipped" as const },
+    ];
+    const failedOrSkipped = assessDelegationCoverage(requiredRoles, outcomes);
+    expect(failedOrSkipped.complete).toBe(false);
+    expect(failedOrSkipped.missing).toEqual([...requiredRoles]);
+    expect(failedOrSkipped.retainedReports).toEqual([]);
+
+    const emptyReport = assessDelegationCoverage(requiredRoles, [
+      { role: "pwk-spec-reviewer", status: "completed", report: "" },
+      { role: "pwk-hazard-reviewer", status: "completed", report: "hazard report" },
+    ]);
+    expect(emptyReport.complete).toBe(false);
+    expect(emptyReport.missing).toEqual(["pwk-spec-reviewer"]);
+    expect(emptyReport.retainedReports).toEqual(["hazard report"]);
   });
 });

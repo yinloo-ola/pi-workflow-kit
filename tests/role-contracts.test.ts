@@ -1,13 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { ROLE_NAMES } from "./helpers";
 
-const roleNames = [
-  "pwk-recon-scout",
-  "pwk-spec-reviewer",
-  "pwk-tracing-reviewer",
-  "pwk-smell-reviewer",
-  "pwk-hazard-reviewer",
-];
+const roleNames = [...ROLE_NAMES];
 
 function readRole(name: string): { frontmatter: string; body: string } {
   const content = readFileSync(`agents/${name}.md`, "utf8");

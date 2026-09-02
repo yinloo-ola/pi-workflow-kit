@@ -29,7 +29,7 @@ A provider must not claim `read-only-enforcement` when it only adds a prompt ins
 
 ## Request shape
 
-The following TypeScript is illustrative. Implementations may use Pi events, tool calls, CLI processes, native task APIs, or another transport.
+The following TypeScript is illustrative. Implementations may use Pi events, tool calls, CLI processes, native task APIs, or another transport. A reference implementation of the outcome normalization lives in `extensions/workflow-guard.ts` (`assessDelegationCoverage`), exported as a pure helper so future adapters and tests share one definition of complete coverage.
 
 ```ts
 type DelegationOperation = 'codebase-recon' | 'feature-review';

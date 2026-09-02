@@ -21,6 +21,8 @@ export interface DelegationOutcome {
   status: DelegationStatus;
   report?: string;
   error?: string;
+  provider?: string;
+  runId?: string;
 }
 
 export interface DelegationCoverage {
@@ -45,13 +47,11 @@ export function assessDelegationCoverage(
   return {
     complete: missing.length === 0,
     missing,
-    retainedReports: outcomes
-      .filter((outcome) => outcome.status === "completed" && outcome.report)
-      .map((outcome) => outcome.report as string),
+    retainedReports: [...completedReports.values()],
   };
 }
 
-const ROLE_NAMES = [
+export const ROLE_NAMES = [
   "pwk-recon-scout",
   "pwk-spec-reviewer",
   "pwk-tracing-reviewer",
@@ -73,13 +73,22 @@ function parseSetupArgs(args: string): { force: boolean } {
 }
 
 function ensureDirectory(path: string): void {
+  const stats = statNoFollow(path);
+  if (!stats) {
+    mkdirSync(path);
+    return;
+  }
+  if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${path}`);
+  if (!stats.isDirectory()) throw new Error(`Destination is not a directory: ${path}`);
+}
+
+/** lstat without following symlinks; null when the path does not exist. */
+function statNoFollow(path: string): ReturnType<typeof lstatSync> | null {
   try {
-    const stats = lstatSync(path);
-    if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${path}`);
-    if (!stats.isDirectory()) throw new Error(`Destination is not a directory: ${path}`);
+    return lstatSync(path);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    mkdirSync(path);
+    return null;
   }
 }
 
@@ -108,20 +117,16 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
   for (const roleName of ROLE_NAMES) {
     const sourcePath = join(CANONICAL_AGENTS_DIR, `${roleName}.md`);
     const targetPath = join(targetDir, `${roleName}.md`);
-    const content = readFileSync(sourcePath, "utf8");
 
     try {
-      let exists = false;
-      try {
-        const stats = lstatSync(targetPath);
+      // Read inside the try: one broken canonical source becomes a per-role failure
+      // instead of aborting the whole install and hiding other roles' results.
+      const content = readFileSync(sourcePath, "utf8");
+
+      const stats = statNoFollow(targetPath);
+      if (stats) {
         if (stats.isSymbolicLink()) throw new Error(`Refusing symlink destination: ${targetPath}`);
         if (!stats.isFile()) throw new Error(`Destination is not a regular file: ${targetPath}`);
-        exists = true;
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      }
-
-      if (exists) {
         if (readFileSync(targetPath, "utf8") === content) {
           skipped.push(roleName);
           continue;
@@ -132,7 +137,7 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
         }
       }
 
-      writeFileWithoutFollowingSymlink(targetPath, content, exists);
+      writeFileWithoutFollowingSymlink(targetPath, content, stats !== null);
       installed.push(roleName);
     } catch (error) {
       failures.push(`${targetPath}: ${error instanceof Error ? error.message : String(error)}`);
@@ -140,7 +145,11 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
   }
 
   if (failures.length > 0) {
-    throw new Error(`PWK setup incomplete:\n${failures.join("\n")}`);
+    const partial =
+      installed.length + skipped.length > 0
+        ? ` (${installed.length} installed, ${skipped.length} skipped before failure — installation is partial)`
+        : "";
+    throw new Error(`PWK setup incomplete${partial}:\n${failures.join("\n")}`);
   }
   return { installed, skipped };
 }
@@ -327,9 +336,15 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("pwk-setup", {
     description: "Install PWK role agents into .agents/agents/",
     handler: async (args, ctx) => {
-      if (phase !== null) {
-        const gatedPhase = phase.toUpperCase();
-        const message = `Cannot run /pwk-setup during ${gatedPhase} phase. Run it before entering the gated workflow or after leaving it.`;
+      // Refuse whenever the session is read-only in fact: gated phase (even with the
+      // tool-call guard manually disabled — the design mandates that) or the manual
+      // read-only lock, whose banner promises "writes only under docs/plans/".
+      if (phase !== null || guardOverride === "on") {
+        const scope =
+          guardOverride === "on"
+            ? "the manual read-only lock (/pwk-guard on)"
+            : `${(phase as string).toUpperCase()} phase`;
+        const message = `Cannot run /pwk-setup during ${scope}. Run it before entering the gated workflow or after leaving it (guard auto/off).`;
         ctx.ui.notify(message, "warning");
         throw new Error(message);
       }

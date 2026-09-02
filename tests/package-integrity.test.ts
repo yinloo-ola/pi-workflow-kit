@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { ROLE_NAMES } from "./helpers";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -20,13 +21,7 @@ describe("package and regression coverage", () => {
       execFileSync("npm", ["pack", "--dry-run", "--json"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }),
     );
     const paths: string[] = packed[0].files.map((f: { path: string }) => f.path);
-    for (const role of [
-      "pwk-recon-scout",
-      "pwk-spec-reviewer",
-      "pwk-tracing-reviewer",
-      "pwk-smell-reviewer",
-      "pwk-hazard-reviewer",
-    ]) {
+    for (const role of ROLE_NAMES) {
       expect(paths).toContain(`agents/${role}.md`);
     }
     expect(paths).toContain("extensions/workflow-guard.ts");

@@ -5,7 +5,7 @@ Branch: harness-neutral-delegation
 Started: 2026-09-02T11:12:30Z
 Last updated: 2026-09-02T12:00:00Z
 Setup: done — npm test passed; npm pack --dry-run confirmed the current published layout.
-Feature phase: feature-complete-paused
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
