@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.0] - 2026-09-05
+
+### Added
+
+- **Review packet**: the feature review assembles `docs/plans/<dated-stem>-review-packet.md` by fixed shell commands (commits, changed files, acceptance criteria verbatim, feature acceptance, risk notes, raw diff); reviewers spawn with one-liner pointers — packet bytes never pass through spawn arguments. Per-requirement reviews use the same recipe scoped to the requirement.
+- **Tiered reviewers**: smell/hazard roles ship `thinking: low`, `max_turns: 20`, and a commented `# model:` placeholder; spec/tracing ship `max_turns: 40`. Bodies share a byte-identical conduct block (read-only reporter, authority boundary, reporting contract, packet discipline with cited excursions and early-wrap disclosure) with role checklists last.
+- **`/pwk-setup --fast-model <model> [--all-roles]`**: interactive picker (`ctx.scopedModels`, UI-gated, asks only while no hint is installed) or arg form personalizes the fast tier; `applyFastModelHint` is an exported pure helper; installs are substitution-aware (bare runs re-apply the recorded choice, hint-only deltas auto-update, other edits keep conflict/`--force` rules).
+- **Advisory resource hints** in the provider delegation contract: `model`/`thinking`/`max_turns` are advisory per-role; unresolvable models fall back to the host default and must not fail the review.
+- `pwk-finalizing` disposes `-review-packet.md` with the plan docs in both delete and archive paths.
+
 ## [1.5.0] - 2026-09-02
 
 ### Added
