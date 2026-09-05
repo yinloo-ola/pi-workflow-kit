@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.1] - 2026-09-05
+
+### Fixed
+
+- Per-requirement review packets write to a requirement-suffixed stem (`<dated-stem>-review-packet-r<N>.md`) instead of overwriting the feature packet at the shared `review-packet.md` path; `pwk-finalizing` disposal glob loosened to `-review-packet*.md` so both forms are disposed.
+
 ## [1.6.0] - 2026-09-05
 
 ### Added

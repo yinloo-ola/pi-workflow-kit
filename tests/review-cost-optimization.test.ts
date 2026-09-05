@@ -106,6 +106,6 @@ describe("review cost optimization feature (E2E)", () => {
 
     // R8 — finalize disposes the packet with the plan docs (delete and archive paths).
     const finalize = readRepo("skills/pwk-finalizing/SKILL.md");
-    expect((finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 });

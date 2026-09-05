@@ -22,10 +22,10 @@ describe("docs consistency: review packet and resource hints", () => {
 
   it("disposes review packets in both finalize disposal paths", () => {
     const finalize = read("skills/pwk-finalizing/SKILL.md");
-    const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\.md/g) ?? [];
+    const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? [];
     expect(occurrences.length).toBeGreaterThanOrEqual(2);
-    // one in the delete block, one in the archive block
-    expect(finalize).toMatch(/rm -f[\s\S]*review-packet\.md/);
-    expect(finalize).toMatch(/mv [\s\S]*review-packet\.md[\s\S]*completed/);
+    // loosened glob: matches the feature packet AND requirement-suffixed packets (-r1, -r2, ...)
+    expect(finalize).toMatch(/rm -f[\s\S]*review-packet\*.md/);
+    expect(finalize).toMatch(/mv [\s\S]*review-packet\*.md[\s\S]*completed/);
   });
 });

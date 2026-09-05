@@ -107,5 +107,7 @@ describe("review packet recipe", () => {
     expect(executing).toMatch(
       /per-requirement[\s\S]{0,600}review-packet\.md|review-packet\.md[\s\S]{0,600}per-requirement/i,
     );
+    // requirement-suffixed stem: per-requirement packets must not overwrite the feature packet
+    expect(executing).toMatch(/review-packet-r<N>\.md/);
   });
 });
