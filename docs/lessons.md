@@ -9,6 +9,9 @@ Retire rules that no longer apply during finalizing.
 
 ## Cross-Skill Consistency
 
+- **Explicit-path commits: verify the staging list against `git status` before committing.** Dir-scoped adds (`git add -- docs/ skills/`) silently exclude root-level files (README.md, CHANGELOG.md) that the same requirement edited — the committed suite goes red at HEAD while the worktree stays green. After staging, a one-line `git status --short` check (or adding the root files explicitly) catches it before the commit lands.
+- **sed range-extraction of a repeated section: strip the terminator per-range, never to-EOF.** `sed -n '/START/,/END/p' | sed '/END/,$d'` works only for a single occurrence — with repeated sections the delete-to-EOF kills every later group. Use `sed '/END/d'` (strip each terminator line) and prove it with a fixture containing two groups; single-group fixtures cannot catch it.
+
 - **skill-lint assertions for new behavior need a marker that distinguishes new from old.** A token present in both models gives a false green — e.g. `/umbrella/` matched the old `<umbrella>-overview.md` filename placeholder before the new behavior landed; switched to `/status-free/`, a property only the new model has.
 - **Test-first for skill/doc content:** add the skill-lint assertion first (red — the skill doesn't yet claim the behavior), then edit the skill markdown to satisfy it (green). After edits run biome — it collapses short `if (cond) ok();` to one line and rejects array holes like `[, ""]` (restructure instead).
 - **Editing skill markdown: anchor edit-tool oldText on apostrophe-free text.** These docs use curly apostrophes (U+2019) in contractions and possessives; an oldText written with a straight ASCII apostrophe fails to match silently and aborts the whole edit batch (zero blocks replaced). Pick anchors that avoid apostrophes, and rephrase newText to stay apostrophe-free for consistency.
