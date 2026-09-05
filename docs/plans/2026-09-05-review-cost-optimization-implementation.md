@@ -48,10 +48,12 @@ Conventions (from `docs/lessons.md` — apply throughout):
 
 ### Acceptance criteria
 - Given the shared conduct block, When read, Then it contains the packet rule: work from the provided packet; targeted reads of listed files are expected; reads beyond the packet only to verify a specific suspected finding, cited; no scope re-derivation (no re-running `git log`, no repo-wide sweeps).
+- Given the shared conduct block, When read, Then it contains early-wrap disclosure: a reviewer wrapping up before completing its checklist states explicitly what was not covered.
 - Given all four role bodies, When compared after the change, Then the conduct blocks remain byte-identical (the clause is added to all four identically).
 
 ### Integration tests
 - `should include packet discipline in every conduct block` — regex over each body: targeted reads of listed files, cited excursion, no re-derivation markers.
+- `should require early-wrap disclosure in every conduct block` — regex: not covered / did not get to / not reached, present in all four, byte-identical prefix preserved.
 - `should keep conduct blocks byte-identical after adding the clause` — re-run of the Requirement 2 byte-equality assertion.
 
 ### Checkpoints: none
