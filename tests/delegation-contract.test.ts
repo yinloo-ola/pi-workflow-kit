@@ -4,6 +4,14 @@ import { describe, expect, it } from "vitest";
 const contract = readFileSync("docs/provider-delegation-contract.md", "utf8");
 
 describe("provider delegation contract", () => {
+  it("documents advisory role resource hints with silent fallback", () => {
+    expect(contract).toContain("## Role resource hints");
+    expect(contract).toMatch(/Hints are advisory/i);
+    expect(contract).toMatch(/MUST NOT fail the review/i);
+    expect(contract).toContain("max_turns");
+    expect(contract).toMatch(/per-role instance of `bounded-execution`/);
+  });
+
   it("documents independent logical operations and required capabilities", () => {
     expect(contract).toContain("codebase-recon");
     expect(contract).toContain("feature-review");

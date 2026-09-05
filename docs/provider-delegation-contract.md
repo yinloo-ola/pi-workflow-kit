@@ -27,6 +27,14 @@ A provider advertises capabilities independently from its name:
 
 A provider must not claim `read-only-enforcement` when it only adds a prompt instruction. Providers may support `codebase-recon` without supporting `parallel-review`.
 
+## Role resource hints
+
+Role definition frontmatter may declare optional resource hints: `model` (a host-resolvable model name), `thinking` (a reasoning-effort level), and `max_turns` (a turn budget — the per-role instance of `bounded-execution`). Hints are advisory:
+
+- Hosts that support per-role resources SHOULD honor them; hosts that do not ignore them without failing the operation.
+- If a `model` hint cannot be resolved to an available model, the host runs the role on its default model — an unresolvable hint MUST NOT fail the review.
+- `max_turns` is a graceful backstop: the role wraps up and reports rather than running unbounded. A capped role still follows the normalized outcome rules — a non-empty report is required for completion.
+
 ## Request shape
 
 The following TypeScript is illustrative. Implementations may use Pi events, tool calls, CLI processes, native task APIs, or another transport. A reference implementation of the outcome normalization lives in `extensions/workflow-guard.ts` (`assessDelegationCoverage`), exported as a pure helper so future adapters and tests share one definition of complete coverage.
