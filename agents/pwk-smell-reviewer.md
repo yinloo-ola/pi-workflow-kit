@@ -3,6 +3,9 @@ name: pwk-smell-reviewer
 description: Code-smell reviewer — flags shallow modules, duplication, missing seams, premature abstraction, poor naming, magic values, dead code. Read-only reporter.
 tools: read, grep, find, ls, bash
 systemPromptMode: replace
+# model: <fast-tier> — set yours via /pwk-setup
+thinking: low
+max_turns: 20
 ---
 
 # PWK Smell Reviewer

@@ -11,6 +11,34 @@ function readRole(name: string): { frontmatter: string; body: string } {
   return { frontmatter: match[1], body: match[2] };
 }
 
+describe("role resource hints", () => {
+  it("should ship max_turns 40 on judgment roles", () => {
+    for (const name of ["pwk-spec-reviewer", "pwk-tracing-reviewer"]) {
+      const { frontmatter } = readRole(name);
+      expect(frontmatter, name).toMatch(/^max_turns: 40$/m);
+      expect(frontmatter, name).not.toMatch(/^model: \S/m);
+      expect(frontmatter, name).not.toMatch(/^thinking:/m);
+    }
+  });
+
+  it("should ship fast-tier hints on checklist roles", () => {
+    for (const name of ["pwk-smell-reviewer", "pwk-hazard-reviewer"]) {
+      const { frontmatter } = readRole(name);
+      expect(frontmatter, name).toMatch(/^thinking: low$/m);
+      expect(frontmatter, name).toMatch(/^max_turns: 20$/m);
+      expect(frontmatter, name).toMatch(/^# model: /m);
+      expect(frontmatter, name).not.toMatch(/^model: \S/m);
+    }
+  });
+
+  it("should not hardcode a model name in shipped roles", () => {
+    for (const name of roleNames) {
+      const { frontmatter } = readRole(name);
+      expect(frontmatter, name).not.toMatch(/^model: \S/m);
+    }
+  });
+});
+
 describe("provider-neutral role contracts", () => {
   it("defines stable identities and read-only reporter boundaries", () => {
     for (const name of roleNames) {

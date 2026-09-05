@@ -3,6 +3,9 @@ name: pwk-hazard-reviewer
 description: Production-hazard reviewer — audits for unbounded ops, missing indexes, unbounded concurrency, long transactions, injection, silent swallowing loops. Read-only reporter.
 tools: read, grep, find, ls, bash
 systemPromptMode: replace
+# model: <fast-tier> — set yours via /pwk-setup
+thinking: low
+max_turns: 20
 ---
 
 # PWK Hazard Reviewer

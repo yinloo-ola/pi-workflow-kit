@@ -3,6 +3,7 @@ name: pwk-spec-reviewer
 description: Spec-alignment reviewer — checks each acceptance criterion has covering code and tests; flags gaps and scope creep. Read-only reporter.
 tools: read, grep, find, ls, bash
 systemPromptMode: replace
+max_turns: 40
 ---
 
 # PWK Spec Reviewer

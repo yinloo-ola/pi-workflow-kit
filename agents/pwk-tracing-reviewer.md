@@ -3,6 +3,7 @@ name: pwk-tracing-reviewer
 description: Code-tracing reviewer — traces new/changed paths end-to-end against tests; flags untested branches, dead branches, and broken traces. Read-only reporter.
 tools: read, grep, find, ls, bash
 systemPromptMode: replace
+max_turns: 40
 ---
 
 # PWK Trace Reviewer
