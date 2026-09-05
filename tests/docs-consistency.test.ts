@@ -16,9 +16,8 @@ describe("docs consistency: review packet and resource hints", () => {
     for (const rel of ["docs/workflow-phases.md", "docs/developer-usage-guide.md", "README.md"]) {
       const doc = read(rel);
       expect(doc, rel).toMatch(/review packet/i);
+      expect(doc, rel).toMatch(/fast[- ]model|--fast-model/i);
     }
-    const guide = read("docs/developer-usage-guide.md");
-    expect(guide).toMatch(/fast-model|--fast-model/i);
   });
 
   it("disposes review packets in both finalize disposal paths", () => {

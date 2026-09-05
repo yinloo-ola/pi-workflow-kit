@@ -28,6 +28,10 @@ const PLAN_FIXTURE = [
   "### Acceptance criteria",
   "- Given a, When b, Then c.",
   "",
+  "### Production-risk notes",
+  "- alpha: touches auth session storage",
+  "- alpha: rotation window must stay under 30s",
+  "",
   "### Checkpoints: none",
   "### Review: skip",
   "",
@@ -83,9 +87,10 @@ describe("review packet recipe", () => {
     expect(criteria).not.toContain("## Feature acceptance");
     expect(criteria).not.toContain("Feature review: parallel");
 
-    const notes = execSync(`${NOTES_CMD} plan.md | sed '/^## /,$d'`, { cwd: dir }).toString();
+    const notes = execSync(`${NOTES_CMD} plan.md | sed '/^## /d'`, { cwd: dir }).toString();
     expect(notes).toContain("### Production-risk notes");
-    expect(notes).toContain("TTL policy must match session rotation");
+    expect(notes).toContain("alpha: touches auth session storage"); // first group captured
+    expect(notes).toContain("TTL policy must match session rotation"); // second group captured
     expect(notes).toContain("monitor INCR miss rate");
     expect(notes).not.toContain("## Feature acceptance");
 

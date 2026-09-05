@@ -93,7 +93,7 @@ The old "integration gate" is gone — the feature E2E at `feature-complete` *is
 
 After `feature-complete` is approved, run **one** review over the **whole feature diff**, driven by the plan's feature-level `### Feature review` tag. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
-**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not):
+**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
 
 ```bash
 PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the plan docs
@@ -113,7 +113,7 @@ PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the pla
   sed -n '/^## Feature acceptance/,/^### Feature review/p' docs/plans/<dated-stem>-implementation.md | sed '/^### Feature review/,$d'
   echo
   echo "## Production-risk notes (verbatim, if any)"
-  sed -n '/^### Production-risk notes/,/^## /p' docs/plans/<dated-stem>-implementation.md | sed '/^## /,$d'
+  sed -n '/^### Production-risk notes/,/^## /p' docs/plans/<dated-stem>-implementation.md | sed '/^## /d'
   echo
   echo "## Diff"
   git diff <merge-base>...HEAD

@@ -145,7 +145,7 @@ function parseSetupArgs(args: string): { force: boolean; fastModel?: string; all
       fastModel = token.slice("--fast-model=".length);
     } else if (token === "--fast-model") {
       const next = tokens[i + 1];
-      if (next === undefined) throw setupUsageError();
+      if (next === undefined || next.startsWith("--")) throw setupUsageError();
       fastModel = next;
       i += 1;
     } else {
@@ -153,6 +153,7 @@ function parseSetupArgs(args: string): { force: boolean; fastModel?: string; all
     }
   }
   if (fastModel !== undefined && !fastModel.trim()) throw setupUsageError();
+  if (allRoles && fastModel === undefined) throw setupUsageError(); // --all-roles pairs with --fast-model
   return { force, fastModel, allRoles };
 }
 
@@ -266,7 +267,9 @@ function installRoleFiles(
           skipped.push(roleName);
           continue;
         }
-        if (differsOnlyByHint(existing, content)) {
+        if (opts.hint !== undefined && differsOnlyByHint(existing, content)) {
+          // Kit-managed only while a hint choice is active this run: bare runs treat
+          // any delta (including hand-added model lines) as content — conflict rules.
           overwriteFd(fd, content, targetPath);
           installed.push(roleName);
           continue;
@@ -308,16 +311,20 @@ interface FastModelPromptContext {
 }
 
 /** True when an installed fast-tier role already carries a model hint. */
-function installedHintPresent(cwd: string): boolean {
-  for (const role of FAST_TIER_ROLES) {
+function installedHint(cwd: string): { model: string; allRoles: boolean } | undefined {
+  const frontmatterOf = (role: string): string => {
     try {
-      const { frontmatter } = splitFrontmatter(readFileSync(join(cwd, ".agents", "agents", `${role}.md`), "utf8"));
-      if (MODEL_HINT_LINE.test(frontmatter)) return true;
+      return splitFrontmatter(readFileSync(join(cwd, ".agents", "agents", `${role}.md`), "utf8")).frontmatter;
     } catch {
-      // not installed yet — keep looking
+      return "";
     }
-  }
-  return false;
+  };
+  const modelOf = (frontmatter: string): string | undefined =>
+    frontmatter.match(/^model: (\S.*)$/m)?.[1]?.trim() || undefined;
+  const model = FAST_TIER_ROLES.map(frontmatterOf).map(modelOf).find(Boolean);
+  if (!model) return undefined;
+  const allRoles = REVIEWER_ROLES.some((role) => modelOf(frontmatterOf(role)) !== undefined);
+  return { model, allRoles };
 }
 
 /** Ask for the fast-tier model once, only when a picker is available, no hint is
@@ -328,7 +335,7 @@ async function promptFastModelChoice(
 ): Promise<{ model: string; allRoles: boolean } | undefined> {
   const ui = ctx.ui;
   if (typeof ui?.select !== "function" || ctx.hasUI === false) return undefined;
-  if (installedHintPresent(ctx.cwd)) return undefined;
+  if (installedHint(ctx.cwd) !== undefined) return undefined;
   const scoped = Array.isArray(ctx.scopedModels) ? ctx.scopedModels : [];
   const models = scoped
     .map((entry) => (typeof entry?.model === "string" ? entry.model : undefined))
@@ -550,7 +557,13 @@ export default function (pi: ExtensionAPI) {
 
       const { force, fastModel, allRoles } = parseSetupArgs(args ?? "");
       try {
-        const hint = fastModel !== undefined ? { model: fastModel, allRoles } : await promptFastModelChoice(ctx);
+        // Explicit arg wins; else the picker (only while no hint is installed);
+        // else re-apply the installed hint — the recorded choice — so bare runs
+        // are no-ops rather than stripping or conflicting on kit-managed lines.
+        const hint =
+          fastModel !== undefined
+            ? { model: fastModel, allRoles }
+            : ((await promptFastModelChoice(ctx)) ?? installedHint(ctx.cwd));
         const result = installRoleFiles(ctx.cwd, { force, hint });
         const parts = [`PWK setup complete: ${result.installed.length} installed`];
         if (result.skipped.length > 0) parts.push(`${result.skipped.length} skipped`);

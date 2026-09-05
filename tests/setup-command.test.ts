@@ -91,6 +91,28 @@ describe("/pwk-setup fast-model personalization", () => {
     expect(readFileSync(rolePath(projectRoot, "pwk-smell-reviewer"), "utf8")).toBe(edited);
   });
 
+  it("treats a hand-added model line as a local edit on bare runs", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("", createCommandContext(projectRoot));
+    const path = rolePath(projectRoot, "pwk-spec-reviewer");
+    const handEdited = readFileSync(path, "utf8").replace(
+      "systemPromptMode: replace\n",
+      "systemPromptMode: replace\nmodel: my-model\n",
+    );
+    writeFileSync(path, handEdited);
+    await expect(command?.handler("", createCommandContext(projectRoot))).rejects.toThrow(/conflict|incomplete/i);
+    expect(readFileSync(path, "utf8")).toBe(handEdited); // not silently deleted
+  });
+
+  it("rejects --all-roles without --fast-model and --fast-model without a value", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await expect(command?.handler("--all-roles", createCommandContext(projectRoot))).rejects.toThrow(/usage/i);
+    await expect(command?.handler("--fast-model --force", createCommandContext(projectRoot))).rejects.toThrow(/usage/i);
+    expect(readdirSync(projectRoot, { withFileTypes: true })).toHaveLength(0); // rejected before any write
+  });
+
   it("does not prompt headless and installs unhinted", async () => {
     const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
     const command = harness.commands.get("pwk-setup");
