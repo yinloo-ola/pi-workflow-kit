@@ -492,6 +492,28 @@ const GLOB_SITES = [bs, wp, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
   fgMark(s.name, s.content, DIGEST_MARKERS.recursiveGlob, "recursive discovery globs");
 }
+if (et) {
+  fgMark(
+    "pwk-executing-tasks",
+    et.content,
+    "docs/plans/**/overview.md",
+    "post-review umbrella routing uses the recursive overview glob",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.content,
+    "set `Feature phase: reviewing` first",
+    "review phase is set before the review runs (mid-review resume routes in)",
+  );
+}
+if (wp) {
+  fgMark(
+    "pwk-writing-plans",
+    wp.content,
+    "docs/plans/<date>-<umbrella>/overview.md",
+    "plan template umbrella path is folder-based",
+  );
+}
 if (fin) {
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.umbrellaFolder, "umbrella folder disposal as one unit");
 }

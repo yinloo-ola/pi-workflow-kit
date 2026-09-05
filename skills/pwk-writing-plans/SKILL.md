@@ -39,7 +39,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
    ## Overview
    Design: docs/plans/YYYY-MM-DD-<topic>-design.md
-   Umbrella: docs/plans/YYYY-MM-DD-<umbrella>-overview.md   *(umbrella part only — else omit)*
+   Umbrella: docs/plans/<date>-<umbrella>/overview.md   *(umbrella part only — else omit)*
 
    ## Crosswalk
 

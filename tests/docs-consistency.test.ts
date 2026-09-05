@@ -65,6 +65,13 @@ describe("docs consistency: review packet and resource hints", () => {
     expect(read("AGENTS.md")).toMatch(/docs\/plans\/<date>-<umbrella>\//);
   });
 
+  it("keeps the umbrella folder layout consistent in workflow-phases", () => {
+    const doc = read("docs/workflow-phases.md");
+    expect(doc).toContain("docs/plans/<date>-<umbrella>/");
+    expect(doc).not.toMatch(/YYYY-MM-DD-<umbrella>-overview\.md/);
+    expect(doc).not.toMatch(/\*-overview\.md/);
+  });
+
   it("disposes review packets in both finalize disposal paths", () => {
     const finalize = read("skills/pwk-finalizing/SKILL.md");
     const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? [];

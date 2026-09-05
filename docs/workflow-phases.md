@@ -17,7 +17,7 @@ A design doc is one PR; a requirement is one testable slice within it. A require
 
 - Explore requirements and shape the design.
 - Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (2–4 sentence plain-language summary + a `| R# | Requirement in one line | Risk |` table, one row per requirement) immediately before the `## Requirements` list, ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
-- May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (roster of parts + build order) and the **first** part's `-design.md`. Later parts are brainstormed one by one against the overview + implemented predecessors.
+- May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/<date>-<umbrella>/overview.md` (each umbrella in its own folder; roster of parts + build order) and the **first** part's `-design.md` beside it. Later parts are brainstormed one by one against the overview + implemented predecessors.
 - ADRs go to `docs/adr/` (permanent, never archived).
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
@@ -30,7 +30,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 
 - Creates the feature branch first (`git checkout -b <topic>`), so design + plan docs live on the branch, not `main`.
 - Reads the design doc's `## Requirements`; for each, derives **acceptance criteria + integration-test cases** (a behavioral spec, no implementation code), lists requirements in build order (dependencies positioned earlier), and challenges the design when `## Production-risk areas` is present. Emits a `## Crosswalk` (R# → plan section → tests) after `## Overview` — the audit checks every design R# appears exactly once, and the human is shown a **one-line confirmation** ("Plan covers R1–R<N>; tags: …"), not the full plan.
-- For an umbrella part, reads the `*-overview.md` to plan one slice (composing with earlier parts' code) and reuses the existing feature branch instead of creating a new one.
+- For an umbrella part, reads the umbrella folder's `overview.md` to plan one slice (composing with earlier parts' code) and reuses the existing feature branch instead of creating a new one.
 - Derives a **`## Feature acceptance` section** in the plan from the design's Feature acceptance — the **primary enforced spec**, an end-to-end test the executor gates on first. If the design has none, stops and asks the human to brainstorm one.
 - Tags the plan: per-requirement `### Checkpoints`/`### Review` default to `none`/`skip` (opt-in), plus an always-on feature-level `### Feature review`. Flags only requirements with complex logic, the main part of the feature, or production-risk. Requirements with `### Production-risk notes` are auto-tagged `### Review: parallel` (see `pwk-writing-plans` for the rule).
 - Produce `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
@@ -79,7 +79,7 @@ No write restrictions.
 ```
 
 - **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history). ADRs stay at `docs/adr/`. For an umbrella (an `*-overview.md` exists), disposes the overview **and every part's** docs in one pass and ships **one PR**.
+- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history). ADRs stay at `docs/adr/`. For an umbrella (a `docs/plans/**/overview.md` exists), disposes the whole `docs/plans/<date>-<umbrella>/` folder — overview **and every part's** docs — in one pass and ships **one PR**.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.
