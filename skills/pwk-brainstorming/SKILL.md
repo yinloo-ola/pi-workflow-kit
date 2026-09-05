@@ -11,7 +11,7 @@ Read-only exploration of source code; every file you create or edit goes under `
 
 Classify the change at the start.
 
-- **Trivial** — typo or obvious bugfix with no open design questions, config/version bump, single-function change, or anything the human flags as trivial. Skip steps 3–7; write a **minimal** design doc in one turn (one-line context, a `## Requirements` list with the single requirement, optional `## Production-risk areas` line), and hand off to `/skill:pwk-writing-plans`. The guard still enforces read-only — trivial compresses the phase to one turn, it doesn't skip it.
+- **Trivial** — typo or obvious bugfix with no open design questions, config/version bump, single-function change, or anything the human flags as trivial. Skip steps 3–7; write a **minimal** design doc in one turn (an `In short:` one-liner — what + why + approach in plain words, a `## Requirements` list with the single requirement, optional `## Production-risk areas` line), and hand off to `/skill:pwk-writing-plans`. The guard still enforces read-only — trivial compresses the phase to one turn, it doesn't skip it.
 - **Non-trivial** — open design questions, multiple approaches, cross-module impact, or new behavior. Run the full process below.
 
 When unsure, ask: "This looks trivial — fast-path it, or full brainstorm?" Default to full.
@@ -59,7 +59,9 @@ The whole umbrella is one branch and one PR: `pwk-writing-plans` creates the bra
 6. **Present the design** in one pass, organized into sections (architecture, components, data flow, error handling, testing) — the human comments on any section; re-present only revised sections.
 
    Identified a significant architectural decision? Offer an ADR in `docs/adr/`. Only when all three hold: **hard to reverse**, **surprising without context**, **a real trade-off**. Format: title + 1–3 sentences of context/decision/why. ADRs are permanent institutional memory — they stay out of archive/rotation forever. (Guard note: `docs/adr/` is outside the writable `docs/plans/`; write it only after the user approves and unlocks.)
-7. **Write the design doc** — `docs/plans/YYYY-MM-DD-<topic>-design.md`, descriptive (not a task list). **Open with `## Requirements`** — one testable behavior each; `pwk-writing-plans` derives acceptance criteria and tests from these. Then: problem, approaches considered, architecture, components, data flow, error handling, testing.
+7. **Write the design doc** — `docs/plans/YYYY-MM-DD-<topic>-design.md`, descriptive (not a task list). **Open with `## At a glance`** — the human's two-minute digest, immediately before `## Requirements`. It contains (1) a 2–4 sentence plain-language summary: what is wrong or needed, what will be built, the key approach in plain words; (2) a table `| R# | Requirement in one line | Risk |` with exactly one row per requirement, where **R# = the requirement's number in the `## Requirements` list below** — this ID is what every later digest keys on (plan crosswalk, progress rows, reviewer coverage table). Plain language only: short sentences, no jargon, no Given/When/Then — those live in the body sections for the executor. An umbrella overview gains no at-a-glance section; its roster already serves that role.
+
+   Then **`## Requirements`** — one testable behavior each; `pwk-writing-plans` derives acceptance criteria and tests from these. Then: problem, approaches considered, architecture, components, data flow, error handling, testing.
 
    Touches a production-risk area (DB schema/migrations, auth, external APIs, concurrency/batch, uploads/large data flows, Redis/caching/queues)? Add a brief `## Production-risk areas` — `pwk-writing-plans` carries it into the plan and `pwk-code-review` audits it per requirement.
 

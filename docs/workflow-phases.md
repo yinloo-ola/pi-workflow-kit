@@ -16,7 +16,7 @@ A design doc is one PR; a requirement is one testable slice within it. A require
 ```
 
 - Explore requirements and shape the design.
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list, ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
+- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (2–4 sentence plain-language summary + a `| R# | Requirement in one line | Risk |` table, one row per requirement) immediately before the `## Requirements` list, ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
 - May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/YYYY-MM-DD-<umbrella>-overview.md` (roster of parts + build order) and the **first** part's `-design.md`. Later parts are brainstormed one by one against the overview + implemented predecessors.
 - ADRs go to `docs/adr/` (permanent, never archived).
 

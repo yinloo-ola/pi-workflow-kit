@@ -5,6 +5,21 @@ function read(rel: string): string {
   return readFileSync(rel, "utf8");
 }
 
+describe("docs consistency: human review digests", () => {
+  it("mirrors the at-a-glance design opening across user docs", () => {
+    for (const rel of [
+      "docs/workflow-phases.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "README.md",
+    ]) {
+      const doc = read(rel);
+      expect(doc, rel).toMatch(/## At a glance/);
+      expect(doc, rel).toMatch(/\| R# \|/);
+    }
+  });
+});
+
 describe("docs consistency: review packet and resource hints", () => {
   it("fixes oversight-model scope wording to the packet model", () => {
     const oversight = read("docs/oversight-model.md");

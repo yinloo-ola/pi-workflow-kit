@@ -435,6 +435,25 @@ if (et) {
   }
 }
 
+// --- Check 11: human-review-digests (grown per-requirement) ---
+// R1 — design docs open with an at-a-glance digest for the human: a plain-language
+// summary + a one-line-per-requirement R# table; trivial docs get a single In-short line.
+console.log("human-review-digests:");
+if (bs) {
+  fgMark("pwk-brainstorming", bs.content, "## At a glance", "at-a-glance digest mandated");
+  fgMark(
+    "pwk-brainstorming",
+    bs.content,
+    "immediately before `## Requirements`",
+    "at-a-glance sits before Requirements",
+  );
+  fgMark("pwk-brainstorming", bs.content, "| R# | Requirement in one line | Risk |", "R# one-line table");
+  fgMark("pwk-brainstorming", bs.content, "R# = the requirement", "R# numbering linkage");
+  fgMark("pwk-brainstorming", bs.content, "In short:", "trivial fast-path In-short line");
+  if (/plain language/i.test(bs.content)) ok("pwk-brainstorming: at-a-glance plain-language rule");
+  else fail("pwk-brainstorming: at-a-glance must mandate plain language");
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

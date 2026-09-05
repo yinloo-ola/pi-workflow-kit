@@ -54,7 +54,7 @@ The command creates `.agents/agents/` and installs the five PWK roles. It preser
 
 Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review. On non-trivial topics with prior art, the skill requests the logical `codebase-recon` capability using the `pwk-recon-scout` role. A compatible host may dispatch that role in a fresh, bounded, read-only worker; otherwise the skill reports `Scout: unavailable` and performs the same five-section recon inline.
 
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## Requirements` list. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
+Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (plain-language summary + `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` list. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
 
 ### 2. Plan
 
