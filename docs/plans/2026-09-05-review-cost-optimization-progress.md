@@ -11,8 +11,8 @@ Feature phase: implementing (3/8)
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Role frontmatter resource hints | — | f200afd |
 | 2 | ✅ | Shared conduct block in role bodies | — | 0cbd183 |
-| 3 | ✅ | Packet discipline clause | — | 6a7a4d2 |
-| 4 | 🔄 | Script-assembled review packet recipe | ⏸ tests · 🔎 inline | — |
+| 3 | ✅ | Packet discipline clause | — | d50221d |
+| 4 | 🔄 | Script-assembled review packet recipe | ⏸ tests (waiting) · 🔎 inline | — |
 | 5 | ⬜ | One-liner spawn template | — | — |
 | 6 | ⬜ | Advisory resource hints in the delegation contract | — | — |
 | 7 | ⬜ | /pwk-setup fast-model personalization | ⏸ tests · 🔎 inline | — |

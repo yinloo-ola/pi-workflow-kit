@@ -68,7 +68,7 @@ Set `Feature phase: implementing (0/N)` and work the requirements in listed orde
 
 ### Per-requirement review (opt-in)
 
-If the requirement's `### Review` tag is `parallel` or `inline` (default `skip`), review that slice now — same mechanics as the [feature review](#feature-review), scoped to the requirement's diff. With `skip`, no per-requirement review; the feature-level review covers it.
+If the requirement's `### Review` tag is `parallel` or `inline` (default `skip`), review that slice now — same mechanics as the [feature review](#feature-review), with a requirement-scoped packet: the same recipe limited to the commits and criteria sections of that requirement, written to `docs/plans/<dated-stem>-review-packet.md`. With `skip`, no per-requirement review; the feature-level review covers it.
 
 `Checkpoints: spec` requires at least `inline` review — dropping the complete checkpoint is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
 
@@ -93,7 +93,34 @@ The old "integration gate" is gone — the feature E2E at `feature-complete` *is
 
 After `feature-complete` is approved, run **one** review over the **whole feature diff**, driven by the plan's feature-level `### Feature review` tag. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
-- **`parallel`** (default) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Gather scope (the plan's acceptance criteria + Feature acceptance, `git log --oneline && git diff <merge-base>...HEAD`) and provide it to every role. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
+**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not):
+
+```bash
+PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the plan docs
+{
+  echo "# Review packet: <topic> — feature review"
+  echo
+  echo "## Commits"
+  git log --oneline <merge-base>..HEAD
+  echo
+  echo "## Changed files"
+  git diff --stat <merge-base>...HEAD
+  echo
+  echo "## Acceptance criteria (verbatim from the plan)"
+  sed -n '/^## Requirement 1/,/^## Feature acceptance/p' docs/plans/<dated-stem>-implementation.md | sed '/^## Feature acceptance/,$d'
+  echo
+  echo "## Feature acceptance (verbatim)"
+  sed -n '/^## Feature acceptance/,/^### Feature review/p' docs/plans/<dated-stem>-implementation.md | sed '/^### Feature review/,$d'
+  echo
+  echo "## Production-risk notes (verbatim, if any)"
+  grep -A3 '^### Production-risk notes' docs/plans/<dated-stem>-implementation.md || true
+  echo
+  echo "## Diff"
+  git diff <merge-base>...HEAD
+} > "$PACKET"
+```
+
+- **`parallel`** (default) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Spawn each role with a **one-liner** — a pointer to the packet file with the role framing appended last, e.g. `Read docs/plans/<dated-stem>-review-packet.md. Your role: spec alignment.` The packet never appears in spawn arguments. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
 
 - **`inline`** — perform `/skill:pwk-code-review` over the whole diff as a single pass.
 - **Fallback** — if the host has no compatible parallel-review capability, cannot prove the requested read-only/fresh-context/bounded constraints, or delegation fails, perform the missing review work inline. Retain successful delegated reports and do not mark the feature fully reviewed while a required role is missing.
