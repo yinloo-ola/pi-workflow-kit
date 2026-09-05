@@ -27,7 +27,7 @@ Ship the completed work.
 
      ```bash
      # for each <topic> in the set:
-     rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md
+     rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet.md
      # umbrella only:
      rm -f docs/plans/????-??-??-<umbrella>-overview.md
      git add -A docs/plans/ && git commit -m "chore: delete planning docs for <topic-or-umbrella>"
@@ -41,6 +41,7 @@ Ship the completed work.
      mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true
+     mv docs/plans/????-??-??-<topic>-review-packet.md   docs/plans/completed/ 2>/dev/null || true
      # umbrella only:
      mv docs/plans/????-??-??-<umbrella>-overview.md     docs/plans/completed/ 2>/dev/null || true
      git add docs/plans/ && git commit -m "chore: archive planning docs for <topic-or-umbrella>"

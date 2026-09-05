@@ -76,9 +76,9 @@ Implement via the **feature-gate flow** with full autonomy: write the feature-ac
 
 ### 4. Code review (feature level)
 
-The `pwk-executing-tasks` skill requests the `parallel-review` capability for four logical roles over the whole feature diff: spec alignment, code tracing, code smells, and production hazards. The roles are independent, fresh-context, read-only reporters; the main agent collects their results, applies smell fixes itself, runs the tests, and flags other findings for the human.
+The `pwk-executing-tasks` skill requests the `parallel-review` capability for four logical roles over the whole feature diff: spec alignment, code tracing, code smells, and production hazards. The scope is a script-assembled review packet (diff + acceptance criteria verbatim) handed to every role via a one-liner pointer — the packet never rides in spawn arguments. The roles are independent, fresh-context, read-only reporters; the main agent collects their results, applies smell fixes itself, runs the tests, and flags other findings for the human.
 
-In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents/`, where compatible providers such as `@tintinweb/pi-subagents` can discover them. Tintinweb may run the roles through its native `Agent` mechanism or map recon to its built-in read-only `Explore` type. The core kit does not require Tintinweb or any other provider.
+In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents/`, where compatible providers such as `@tintinweb/pi-subagents` can discover them. `/pwk-setup --fast-model <model>` (or the interactive picker) sets the fast-tier model for the smell/hazard reviewers — an advisory hint hosts may honor. Tintinweb may run the roles through its native `Agent` mechanism or map recon to its built-in read-only `Explore` type. The core kit does not require Tintinweb or any other provider.
 
 *Fallback:* if no host/provider can guarantee the requested capabilities, the skill performs the missing recon or review work inline. Other Pi extensions are supported only when they expose the documented capabilities or have a separate adapter; arbitrary extensions are not automatically compatible. See `docs/provider-delegation-contract.md` for the integration contract.
 

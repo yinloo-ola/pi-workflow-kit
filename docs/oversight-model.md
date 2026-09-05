@@ -29,7 +29,7 @@ The agent can still use `read` and `bash` for investigation. During those gated 
 
 During executing-tasks, code-review, finalizing, **and diagnose**, nothing is restricted (diagnosis needs to write failing tests and debug instrumentation, so it exits the gate). `pwk-status` stays inside the gate.
 
-Canonical role contracts live in `agents/pwk-*.md` (single source of truth) and can be installed into `.agents/agents/` with `/pwk-setup`. `pwk-executing-tasks` requests logical review roles through the host’s delegation capabilities and passes each role just the requirement scope + diff.
+Canonical role contracts live in `agents/pwk-*.md` (single source of truth) and can be installed into `.agents/agents/` with `/pwk-setup`. `pwk-executing-tasks` requests logical review roles through the host’s delegation capabilities and passes each role a one-liner pointer to a script-assembled review packet — the packet defines the scope per review level (feature review: the whole feature diff; per-requirement: just that slice).
 
 Phases follow the skill you invoke — there is no message-keyword unlock. Invoking `/skill:pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, or `pwk-diagnose` exits the gated phase (those skills write source); `pwk-status` deliberately does **not** (read-only orientation). `/pwk-guard on|off|auto` manually overrides the guard.
 
