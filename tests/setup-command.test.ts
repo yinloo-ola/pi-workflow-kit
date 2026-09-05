@@ -128,7 +128,6 @@ describe("/pwk-setup fast-model personalization", () => {
     expect(selectCalls).toBe(1); // hint present — never re-prompts
   });
 });
-let harness: ReturnType<typeof createExtensionHarness>;
 describe("/pwk-setup", () => {
   let harness: ReturnType<typeof createExtensionHarness>;
 

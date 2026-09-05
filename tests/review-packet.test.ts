@@ -10,6 +10,7 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 /** The recipe commands exactly as they must appear in the executing skill. */
 const CRITERIA_CMD = "sed -n '/^## Requirement 1/,/^## Feature acceptance/p'";
 const FA_CMD = "sed -n '/^## Feature acceptance/,/^### Feature review/p'";
+const NOTES_CMD = "sed -n '/^### Production-risk notes/,/^## /p'";
 
 /** A plan doc shaped like the template pwk-writing-plans emits. */
 const PLAN_FIXTURE = [
@@ -36,7 +37,10 @@ const PLAN_FIXTURE = [
   "- Given d, When e, Then f.",
   "",
   "### Production-risk notes",
-  "- touches redis",
+  "- touches redis: hot path under login storms",
+  "- TTL policy must match session rotation",
+  "- key cardinality grows with active users",
+  "- monitor INCR miss rate in dashboards",
   "",
   "## Feature acceptance",
   "",
@@ -57,6 +61,7 @@ describe("review packet recipe", () => {
     expect(executing).toContain("no packet byte passes through model output");
     expect(executing).toContain(CRITERIA_CMD);
     expect(executing).toContain(FA_CMD);
+    expect(executing).toContain(NOTES_CMD);
     expect(executing).toContain("git diff <merge-base>...HEAD");
     expect(executing).toMatch(/never appears in spawn arguments/i);
   });
@@ -73,8 +78,16 @@ describe("review packet recipe", () => {
     expect(criteria).toContain("## Requirement 2: beta");
     expect(criteria).toContain("- Given d, When e, Then f.");
     expect(criteria).toContain("### Production-risk notes");
+    expect(criteria).toContain("hot path under login storms");
+    expect(criteria).toContain("monitor INCR miss rate"); // >3 lines: range capture, not grep -A3 truncation
     expect(criteria).not.toContain("## Feature acceptance");
     expect(criteria).not.toContain("Feature review: parallel");
+
+    const notes = execSync(`${NOTES_CMD} plan.md | sed '/^## /,$d'`, { cwd: dir }).toString();
+    expect(notes).toContain("### Production-risk notes");
+    expect(notes).toContain("TTL policy must match session rotation");
+    expect(notes).toContain("monitor INCR miss rate");
+    expect(notes).not.toContain("## Feature acceptance");
 
     const featureAcceptance = execSync(`${FA_CMD} plan.md | sed '/^### Feature review/,$d'`, {
       cwd: dir,
@@ -86,6 +99,8 @@ describe("review packet recipe", () => {
 
   it("should scope per-requirement reviews to the requirement", () => {
     const executing = readExecuting();
-    expect(executing).toMatch(/per-requirement[\s\S]{0,600}review-packet\.md|review-packet\.md[\s\S]{0,600}per-requirement/i);
+    expect(executing).toMatch(
+      /per-requirement[\s\S]{0,600}review-packet\.md|review-packet\.md[\s\S]{0,600}per-requirement/i,
+    );
   });
 });

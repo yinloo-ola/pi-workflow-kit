@@ -113,7 +113,7 @@ PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the pla
   sed -n '/^## Feature acceptance/,/^### Feature review/p' docs/plans/<dated-stem>-implementation.md | sed '/^### Feature review/,$d'
   echo
   echo "## Production-risk notes (verbatim, if any)"
-  grep -A3 '^### Production-risk notes' docs/plans/<dated-stem>-implementation.md || true
+  sed -n '/^### Production-risk notes/,/^## /p' docs/plans/<dated-stem>-implementation.md | sed '/^## /,$d'
   echo
   echo "## Diff"
   git diff <merge-base>...HEAD

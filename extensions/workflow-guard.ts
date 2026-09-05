@@ -70,10 +70,21 @@ export const ROLE_NAMES = [
   "pwk-hazard-reviewer",
 ] as const;
 
-const REVIEWER_ROLES = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
+const REVIEWER_ROLES = ROLE_NAMES.filter((role) => role !== "pwk-recon-scout");
 const FAST_TIER_ROLES = ["pwk-smell-reviewer", "pwk-hazard-reviewer"];
 
 const FAST_MODEL_PLACEHOLDER = "# model: <fast-tier> — set yours via /pwk-setup";
+
+/** Split a role file into its frontmatter block (with fences) and body. */
+function splitFrontmatter(content: string): { frontmatter: string; rest: string } {
+  const match = content.match(/^(---\n[\s\S]*?\n---\n)([\s\S]*)$/);
+  return match ? { frontmatter: match[1], rest: match[2] } : { frontmatter: "", rest: content };
+}
+
+/** A model hint is a `model:` key line — one definition shared by every consumer
+ * (apply, detect, conflict-compare) so the three can never drift apart. Scoped to
+ * frontmatter: a body line that happens to start `model: ` is content, not config. */
+const MODEL_HINT_LINE = /^model: /m;
 
 /** Apply a fast-tier model hint to a role definition.
  *
@@ -85,16 +96,16 @@ const FAST_MODEL_PLACEHOLDER = "# model: <fast-tier> — set yours via /pwk-setu
 export function applyFastModelHint(content: string, model: string, opts?: { insertIfAbsent?: boolean }): string {
   const trimmed = model.trim();
   if (!trimmed || /\s/.test(trimmed)) throw new Error(`Invalid fast model name: ${JSON.stringify(model)}`);
-  if (/^model: /m.test(content)) {
-    return content.replace(/^model: .*$/m, `model: ${trimmed}`);
-  }
-  if (content.includes(FAST_MODEL_PLACEHOLDER)) {
-    return content.replace(FAST_MODEL_PLACEHOLDER, `model: ${trimmed}`);
-  }
-  if (opts?.insertIfAbsent) {
-    return content.replace("systemPromptMode: replace\n", `systemPromptMode: replace\nmodel: ${trimmed}\n`);
-  }
-  return content;
+  const { frontmatter, rest } = splitFrontmatter(content);
+  if (!frontmatter) return content;
+  const hintedFrontmatter = MODEL_HINT_LINE.test(frontmatter)
+    ? frontmatter.replace(/^model: .*$/m, `model: ${trimmed}`)
+    : frontmatter.includes(FAST_MODEL_PLACEHOLDER)
+      ? frontmatter.replace(FAST_MODEL_PLACEHOLDER, `model: ${trimmed}`)
+      : opts?.insertIfAbsent
+        ? frontmatter.replace("systemPromptMode: replace\n", `systemPromptMode: replace\nmodel: ${trimmed}\n`)
+        : frontmatter;
+  return hintedFrontmatter + rest;
 }
 
 /** True when the only difference between two contents is the model hint line
@@ -102,11 +113,14 @@ export function applyFastModelHint(content: string, model: string, opts?: { inse
  * kit-managed config and auto-update without --force; anything else conflicts.
  */
 function differsOnlyByHint(a: string, b: string): boolean {
-  const strip = (content: string) =>
-    content
+  const strip = (content: string) => {
+    const { frontmatter, rest } = splitFrontmatter(content);
+    const stripped = frontmatter
       .split("\n")
-      .filter((line) => !/^model: \S/.test(line) && line !== FAST_MODEL_PLACEHOLDER)
+      .filter((line) => !MODEL_HINT_LINE.test(line) && line !== FAST_MODEL_PLACEHOLDER)
       .join("\n");
+    return stripped + rest;
+  };
   return strip(a) === strip(b);
 }
 
@@ -297,7 +311,8 @@ interface FastModelPromptContext {
 function installedHintPresent(cwd: string): boolean {
   for (const role of FAST_TIER_ROLES) {
     try {
-      if (/^model: /m.test(readFileSync(join(cwd, ".agents", "agents", `${role}.md`), "utf8"))) return true;
+      const { frontmatter } = splitFrontmatter(readFileSync(join(cwd, ".agents", "agents", `${role}.md`), "utf8"));
+      if (MODEL_HINT_LINE.test(frontmatter)) return true;
     } catch {
       // not installed yet — keep looking
     }
