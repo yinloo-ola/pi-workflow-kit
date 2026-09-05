@@ -524,6 +524,12 @@ if (fin) {
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.legacyPaused, "legacy in-flight state named and gated");
 }
+// Post-review hazard fixes — the umbrella rm -rf path is anchored to the discovery
+// glob (never agent-typed) and the folder archive is verified before committing.
+if (fin) {
+  fgMark("pwk-finalizing", fin.content, "verbatim from the discovered", "folder delete path anchored to discovery");
+  fgMark("pwk-finalizing", fin.content, "ls docs/plans/completed/<date>-<umbrella>/", "archive verified before commit");
+}
 
 // --- Summary ---
 console.log("");

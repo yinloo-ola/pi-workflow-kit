@@ -29,7 +29,9 @@ Ship the completed work.
      ```bash
      # for each <topic> in the set:
      rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md
-     # umbrella only — the whole folder goes as one unit (overview + every part):
+     # umbrella only — the whole folder goes as one unit (overview + every part).
+     # The folder path is taken verbatim from the discovered docs/plans/**/overview.md
+     # result — never typed or reconstructed (rm -rf has no dated-glob guard):
      rm -rf docs/plans/<date>-<umbrella>/
      git add -A docs/plans/ && git commit -m "chore: delete planning docs for <topic-or-umbrella>"
      ```
@@ -43,8 +45,12 @@ Ship the completed work.
      mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true
-     # umbrella only — the whole folder goes as one unit (overview + every part):
-     mv docs/plans/<date>-<umbrella>/ docs/plans/completed/ 2>/dev/null || true
+     # umbrella only — the whole folder goes as one unit (overview + every part).
+     # No error suppression on the folder move: verify the archive landed before
+     # committing, or a silently failed move would commit the deletion and destroy
+     # the history the human chose to keep:
+     mv docs/plans/<date>-<umbrella>/ docs/plans/completed/
+     ls docs/plans/completed/<date>-<umbrella>/ >/dev/null
      git add docs/plans/ && git commit -m "chore: archive planning docs for <topic-or-umbrella>"
      ```
 
