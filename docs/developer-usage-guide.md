@@ -72,11 +72,11 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 /skill:pwk-executing-tasks
 ```
 
-Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → **checkpoint: feature-complete** (full suite + E2E green) → feature review. Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
+Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + coverage table — full diff on request). Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
 
 ### 4. Code review (feature level)
 
-The `pwk-executing-tasks` skill requests the `parallel-review` capability for four logical roles over the whole feature diff: spec alignment, code tracing, code smells, and production hazards. The scope is a script-assembled review packet (diff + acceptance criteria verbatim) handed to every role via a one-liner pointer — the packet never rides in spawn arguments. The roles are independent, fresh-context, read-only reporters; the main agent collects their results, applies smell fixes itself, runs the tests, and flags other findings for the human.
+The `pwk-executing-tasks` skill requests the `parallel-review` capability for four logical roles over the whole feature diff: spec alignment, code tracing, code smells, and production hazards. The scope is a script-assembled review packet (diff + acceptance criteria verbatim) handed to every role via a one-liner pointer — the packet never rides in spawn arguments. The roles are independent, fresh-context, read-only reporters; the main agent collects their results, applies smell fixes itself, runs the tests, and flags other findings for the human. The review runs before the ship checkpoint, so your final approval is fully informed: execution summary, per-requirement coverage table, findings status, full diff on request.
 
 In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents/`, where compatible providers such as `@tintinweb/pi-subagents` can discover them. `/pwk-setup --fast-model <model>` (or the interactive picker) sets the fast-tier model for the smell/hazard reviewers — an advisory hint hosts may honor. Tintinweb may run the roles through its native `Agent` mechanism or map recon to its built-in read-only `Explore` type. The core kit does not require Tintinweb or any other provider.
 
@@ -126,6 +126,6 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 
 - Start with brainstorming for anything non-trivial.
 - The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
-- The feature-gate flow has two checkpoints by default (feature-spec + feature-complete): use them to steer the E2E spec and the finished implementation.
+- The feature-gate flow has two checkpoints by default (feature-spec + ship): use them to steer the E2E spec and to sign off the finished implementation (digest + coverage, diff on request).
 - **Right-size each requirement at plan time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc). Production-risk requirements are auto-tagged `### Review: parallel` by `pwk-writing-plans`; the human can override or downgrade before plan approval.
 - Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.

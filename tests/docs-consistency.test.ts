@@ -35,6 +35,20 @@ describe("docs consistency: review packet and resource hints", () => {
     }
   });
 
+  it("describes the ship gate consistently across user docs", () => {
+    for (const rel of [
+      "docs/workflow-phases.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "README.md",
+    ]) {
+      const doc = read(rel);
+      expect(doc, rel).toMatch(/ship checkpoint|ship gate/i);
+      expect(doc, rel).toMatch(/diff on request/i);
+      expect(doc, rel).not.toMatch(/you review the whole diff/i);
+    }
+  });
+
   it("disposes review packets in both finalize disposal paths", () => {
     const finalize = read("skills/pwk-finalizing/SKILL.md");
     const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? [];

@@ -76,7 +76,9 @@ describe("human review digests feature (E2E)", () => {
     expect(executing).toMatch(/ship-paused/);
     expect(executing).toMatch(/coverage table/);
     expect(executing).toMatch(/diff on request/i);
-    expect(executing).not.toMatch(/feature-complete-paused/);
+    const enumLine = executing.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
+    expect(enumLine).toContain("ship-paused");
+    expect(enumLine).not.toContain("feature-complete-paused");
 
     // R4 — the spec-reviewer report opens with a per-requirement coverage table,
     // keyed by the packet's requirement headings, while the four reviewers keep a

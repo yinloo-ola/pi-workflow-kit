@@ -287,7 +287,8 @@ if (wp) {
 // Requirement 2 — pwk-executing-tasks feature-gate flow
 if (et) {
   fgMark("pwk-executing-tasks", et.content, "feature-spec", "feature-spec checkpoint");
-  fgMark("pwk-executing-tasks", et.content, "feature-complete", "feature-complete checkpoint");
+  fgMark("pwk-executing-tasks", et.content, "ship checkpoint", "ship checkpoint (review before final approval)");
+  fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
   fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");
 }
 // Requirement 3 — meaningful-test rules mirrored across writing-plans, executing-tasks, lessons
@@ -466,6 +467,28 @@ if (wp) {
   );
   fgMark("pwk-writing-plans", wp.content, "exactly once", "crosswalk audit: every R# exactly once");
   fgMark("pwk-writing-plans", wp.content, "one-line confirmation", "plan presented as one-line confirmation");
+}
+// R3 — the progress file carries an execution summary filled as requirements land; the
+// ship checkpoint merges feature-complete + review: review runs before the one final
+// approval, presenting digest + coverage table, diff on request.
+if (et) {
+  fgMark("pwk-executing-tasks", et.content, "## Execution summary", "execution summary section");
+  fgMark(
+    "pwk-executing-tasks",
+    et.content,
+    "| R# | Requirement | How it was built | Deviated? |",
+    "execution summary table shape",
+  );
+  fgMark("pwk-executing-tasks", et.content, "same step as marking", "fill-as-you-land rule");
+  fgMark("pwk-executing-tasks", et.content, "when the departure happens", "deviation logged at deviation time");
+  fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
+  fgMark("pwk-executing-tasks", et.content, "diff on request", "ship presentation: diff on request");
+  const enumLine = et.content.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
+  if (enumLine.includes("ship-paused") && !enumLine.includes("feature-complete-paused")) {
+    ok("pwk-executing-tasks: phase enum uses ship-paused (legacy feature-complete-paused gone)");
+  } else {
+    fail("pwk-executing-tasks: phase enum must use ship-paused, not feature-complete-paused");
+  }
 }
 
 // --- Summary ---

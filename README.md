@@ -63,7 +63,7 @@ Guide the agent through a disciplined development process:
 
 ```
 brainstorm → writing-plans → executing-tasks → finalizing
-                             (feature-gate: write feature E2E → feature-spec → implement → feature-complete → review)
+                             (feature-gate: write feature E2E → feature-spec → implement → review → ship checkpoint)
                                 ↕
                    diagnose (anytime)   ·   status (anytime)
 ```
@@ -74,7 +74,7 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc opening with a `## At a glance` digest (plain summary + `| R# | Requirement in one line | Risk |` table) before the `## Requirements` list. On non-trivial topics, requests the logical `codebase-recon` capability; if unavailable or unsafe, performs the `pwk-recon-scout` role inline. |
 | **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code), with a `## Crosswalk` proving every R# is covered; you review a one-line confirmation, not the full plan |
-| **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → **checkpoint: feature-complete** → feature review |
+| **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → feature review → **ship checkpoint** (execution summary + coverage table; full diff on request) |
 | **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check. Delegated review uses four tiered logical roles (smell/hazard on a fast model via `/pwk-setup --fast-model`) over a script-assembled review packet when a safe provider is available; otherwise it runs inline. |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs, update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
@@ -89,7 +89,7 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 ```
 /skill:pwk-brainstorming   →  discuss and design (lists Requirements)
 /skill:pwk-writing-plans   →  turn each Requirement into acceptance criteria + integration tests
-/skill:pwk-executing-tasks →  feature-gate flow: E2E-first, implement, feature review (two checkpoints)
+/skill:pwk-executing-tasks →  feature-gate flow: E2E-first, implement, review, ship checkpoint
 /skill:pwk-code-review     →  auto-runs at the feature level inside executing-tasks; also invocable manually for ad-hoc reviews
 /skill:pwk-finalizing       →  ship it
 ```
@@ -105,8 +105,8 @@ The feature is implemented via the feature-gate flow:
 1. Write the feature-acceptance E2E test (red)
 2. ⏸ **checkpoint: feature-spec** — you confirm the E2E proves the feature
 3. Implement the requirements back-to-back (TDD: meaningful test → red → green per slice; full autonomy)
-4. ⏸ **checkpoint: feature-complete** — full suite + feature E2E green, you review the whole diff
-5. Feature review → commit
+4. Feature review (four fresh-context roles over a script-assembled review packet)
+5. ⏸ **ship checkpoint** — full suite + feature E2E green; you review the execution summary + coverage table (full diff on request)
 
 Per-requirement checkpoints/reviews are opt-in (default off); the feature-level review covers everything.
 
@@ -136,13 +136,13 @@ The feature-gate flow has **two hard human-review gates** (not optional):
 | Checkpoint | What's done | What you review |
 |---|---|---|
 | **feature-spec** | Feature-acceptance E2E written, confirmed failing | Does the E2E actually prove the feature? |
-| **feature-complete** | All requirements implemented; full suite + E2E green | Is the whole feature correct before review? |
+| **ship** | All requirements implemented; full suite + E2E green; feature review collected | Execution summary + per-requirement coverage table — built as promised? (full diff on request) |
 
 The agent stops and waits at each — approve, request changes, or send it back.
 
-### Before You Ship: the Feature-Complete Gate
+### Before You Ship: the Ship Gate
 
-The feature-level review checks the whole diff composed. The **feature-complete** checkpoint already ran the full suite + the feature-acceptance E2E green — that *is* the integration check (there is no separate end pass). Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
+The feature-level review checks the whole diff composed and runs **before** the **ship checkpoint** — so your one final approval is fully informed (execution summary + coverage table; the raw diff stays one command away). The ship checkpoint already ran the full suite + the feature-acceptance E2E green — that *is* the integration check (there is no separate end pass). Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
 
 ## Quick Start
 
