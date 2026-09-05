@@ -30,7 +30,7 @@ An umbrella splits one large requirement into multiple design docs that ship tog
 **First brainstorm** (the requirement is too big for one design doc):
 
 1. **Propose the split** — the parts, a one-line scope each, and build order. Get human approval before writing anything beyond discovery.
-2. **Write the overview** — `docs/plans/YYYY-MM-DD-<umbrella>-overview.md`, a **status-free roster**:
+2. **Write the overview** — `docs/plans/<date>-<umbrella>/overview.md`, in the umbrella's own folder (every part doc lives beside it: `<part>-design.md`, `<part>-implementation.md`, `<part>-progress.md`, `*-review-packet.md`), a **status-free roster**:
 
    ```markdown
    # Overview: <umbrella>
@@ -43,7 +43,7 @@ An umbrella splits one large requirement into multiple design docs that ship tog
    ```
 
    Goal, parts with one-line scopes, build order — **no status column**. No skill mutates the overview between this write and `pwk-finalizing` (which disposes it); part-completion is inferred from each part's own `*-progress.md`.
-3. **Write the first part's** `YYYY-MM-DD-<part>-design.md`, then hand off to `/skill:pwk-writing-plans`.
+3. **Write the first part's** `<part>-design.md` in the same umbrella folder, then hand off to `/skill:pwk-writing-plans`.
 
 **Later parts** — re-run `/skill:pwk-brainstorming` for the next part. Read the overview for big-picture/roster context (which slice is yours, which siblings exist), then explore the codebase to design your slice **as brainstorm always does** — prior parts are just implemented code in the repo by then. There is no special "read your predecessors" step; cross-slice decisions that must persist go in an ADR, not the overview.
 
@@ -52,7 +52,7 @@ The whole umbrella is one branch and one PR: `pwk-writing-plans` creates the bra
 ## Process
 
 1. **Check git state** — `git status` + `git log --oneline -5`. Uncommitted work? Ask the user what to do first.
-2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — glob `docs/plans/*-design.md` and `*-overview.md`; report in-flight topics and any active umbrella. If the new idea continues an existing topic, ask whether to extend it or start fresh. Part of an umbrella? An existing `*-overview.md` means the split is already decided — read it for the roster and design this part's `-design.md` against it (see [Umbrella](#umbrella)).
+2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — glob `docs/plans/**/*-design.md` and `docs/plans/**/overview.md` (recursive — each umbrella lives in its own `docs/plans/<date>-<umbrella>/` folder); report in-flight topics and any active umbrella. If the new idea continues an existing topic, ask whether to extend it or start fresh. Part of an umbrella? An existing `overview.md` means the split is already decided — read it for the roster and design this part's `-design.md` against it (see [Umbrella](#umbrella)).
 3. **Understand the idea** — read only enough code/docs/commits to ground the design. **Check `docs/lessons.md`** — known constraints may shape it. Ask questions one at a time, prefer multiple choice. Once you can articulate what/why/constraints, present a short summary and ask: "Should I proceed, or is there more?" The human decides when to move on.
 4. **(skipped on trivial changes)** **Codebase recon** — for non-trivial topics with prior art, request the host’s `codebase-recon` capability using the logical `pwk-recon-scout` role. Require a fresh-context, read-only, bounded worker and pass the topic, one-line intent, and repo root. Use the returned 5-section codebase map (Relevant files, Existing patterns, Call sites, Test layout, Gotchas) as the grounding context for the next two steps instead of reading those files inline. The scout is observations only — no design recommendations. Skip this step on trivial changes (typo, version bump, single-function edit per the proportionality rule). If no compatible capability is available or the provider cannot enforce the requested constraints, report `Scout: unavailable` and do the same recon inline, preserving the five-section map and `file:line` citations; do not silently omit recon.
 5. **Explore approaches** — propose 2–3, leading with your recommendation. Sketch the concrete interface (types, signatures, example caller) for each so the comparison is grounded in code, not abstractions.

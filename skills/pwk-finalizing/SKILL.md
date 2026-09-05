@@ -10,26 +10,26 @@ Ship the completed work.
 ## Pre-finalization checks
 
 1. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
-2. Read **every** relevant progress file — for an umbrella that's each part's `docs/plans/*-progress.md`; for a standalone design doc, the one:
+2. Read **every** relevant progress file — for an umbrella that's each part's `docs/plans/**/*-progress.md` (recursive — umbrella docs live in `docs/plans/<date>-<umbrella>/` folders); for a standalone design doc, the one:
    - **Any `❌ failed`** (in any part) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
    - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
 
 ## Process
 
 1. **Derive the topic set** —
-   - **Umbrella** (a `docs/plans/*-overview.md` exists): read its roster; the set is every part's `<topic>`. The overview is disposed too.
+   - **Umbrella** (a `docs/plans/**/overview.md` exists): read its roster; the set is every part's `<topic>`. The umbrella folder is disposed too.
    - **Standalone**: progress file → `Plan:` ref → plan's `Design:` ref → design-doc filename → `<topic>`. One topic.
 
    Ambiguous with several designs in flight? Ask.
-2. **Dispose of consumed plan docs — ask archive or delete** — for **every topic** in the set, dispose its `-design.md`, `-implementation.md`, `-progress.md` (matched by the exact dated topic slug so similarly-named plans for other topics survive); for an umbrella, also dispose the `-overview.md`. Each path is matched with the `????-??-??-` prefix. Present both options and let the human choose:
+2. **Dispose of consumed plan docs — ask archive or delete** — for **every topic** in the set, dispose its `-design.md`, `-implementation.md`, `-progress.md` (matched by the exact dated topic slug so similarly-named plans for other topics survive); for an umbrella, dispose the whole `docs/plans/<date>-<umbrella>/` folder — overview + every part — as one unit. Standalone topics keep the per-file paths. Each path is matched with the `????-??-??-` prefix. Present both options and let the human choose:
 
    - **Delete (default)** — code + tests are the source of truth; removing the scaffold prevents stale plan docs from misleading future sessions:
 
      ```bash
      # for each <topic> in the set:
      rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md
-     # umbrella only:
-     rm -f docs/plans/????-??-??-<umbrella>-overview.md
+     # umbrella only — the whole folder goes as one unit (overview + every part):
+     rm -rf docs/plans/<date>-<umbrella>/
      git add -A docs/plans/ && git commit -m "chore: delete planning docs for <topic-or-umbrella>"
      ```
 
@@ -42,8 +42,8 @@ Ship the completed work.
      mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true
      mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true
-     # umbrella only:
-     mv docs/plans/????-??-??-<umbrella>-overview.md     docs/plans/completed/ 2>/dev/null || true
+     # umbrella only — the whole folder goes as one unit (overview + every part):
+     mv docs/plans/<date>-<umbrella>/ docs/plans/completed/ 2>/dev/null || true
      git add docs/plans/ && git commit -m "chore: archive planning docs for <topic-or-umbrella>"
      ```
 

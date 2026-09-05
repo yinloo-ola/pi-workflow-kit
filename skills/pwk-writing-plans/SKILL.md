@@ -15,7 +15,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
 ## Process
 
-1. **Find the design doc** — glob `docs/plans/*-design.md`. If none, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. **Read `docs/lessons.md`** if it exists — known patterns belong in the acceptance criteria. **Umbrella part?** If `docs/plans/*-overview.md` exists and this design is one of its roster parts, read the overview for the umbrella goal + roster — plan this part as one slice, composing with what earlier parts already established in the code. Note the umbrella in the plan's Overview so the executor inherits the context.
+1. **Find the design doc** — glob `docs/plans/**/*-design.md` (recursive — umbrella docs live in `docs/plans/<date>-<umbrella>/` folders). If none, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. **Read `docs/lessons.md`** if it exists — known patterns belong in the acceptance criteria. **Umbrella part?** If a `docs/plans/**/overview.md` exists and this design is one of its roster parts, read the overview for the umbrella goal + roster — plan this part as one slice, composing with what earlier parts already established in the code. Note the umbrella in the plan's Overview so the executor inherits the context.
 2. **Create or reuse the feature branch** — if you're already on a feature branch (not `main`), **reuse** it: a later umbrella part continues on the same umbrella branch. Otherwise `git checkout -b <topic>` — the umbrella's `<topic>` if this is part of an overview, else the design doc's `<topic>` (branch creation is allowed in the plan phase). Design + plan docs live on this branch, committed at the start of `pwk-executing-tasks`.
 3. **Read the `## Requirements` list** — the plan covers **all** of them. If the design has none, derive requirements from its described behaviors and confirm with the human before proceeding.
 4. **Write the plan** — for each requirement:
@@ -32,7 +32,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
    - **Challenge the design first** *(if production-risk areas exist)* — stress-test the design against the flagged risks before writing criteria. If a risk invalidates a design choice, stop and return to `/skill:pwk-brainstorming` rather than planning around a flawed design.
    - **Ordering** — dependencies come **earlier** in the list; the executor runs in listed order with no dependency graph. Aim for vertical slices that merge cleanly on their own.
 
-   Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md`:
+   Save to `docs/plans/YYYY-MM-DD-<topic>-implementation.md` (an umbrella part saves into its umbrella folder as `<part>-implementation.md`):
 
    ```markdown
    # Implementation Plan: <topic>

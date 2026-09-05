@@ -490,6 +490,15 @@ if (et) {
     fail("pwk-executing-tasks: phase enum must use ship-paused, not feature-complete-paused");
   }
 }
+// R5 — umbrella docs live in their own docs/plans/<date>-<umbrella>/ folder; every
+// discovery site globs recursively; finalize disposes the folder as one unit.
+const GLOB_SITES = [bs, wp, et, status, fin].filter(Boolean);
+for (const s of GLOB_SITES) {
+  fgMark(s.name, s.content, "docs/plans/**/", "recursive discovery globs");
+}
+if (fin) {
+  fgMark("pwk-finalizing", fin.content, "docs/plans/<date>-<umbrella>/", "umbrella folder disposal as one unit");
+}
 
 // --- Summary ---
 console.log("");

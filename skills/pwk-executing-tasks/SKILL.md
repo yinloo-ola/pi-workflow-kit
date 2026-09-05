@@ -12,14 +12,14 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 ## Before you start
 
 1. **Git state** — `git status` + `git log --oneline -5`; note uncommitted changes.
-2. **Find the plan** — glob `docs/plans/*-implementation.md`; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (feature-spec done, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)).
+2. **Find the plan** — glob `docs/plans/**/*-implementation.md` (recursive — umbrella parts live in `docs/plans/<date>-<umbrella>/` folders); if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (feature-spec done, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)).
 3. **Workspace** — `pwk-writing-plans` already created the branch/worktree. If you're still on `main`, tell the user the workspace wasn't set up and suggest fixing that before executing.
 
 ## First run
 
 1. **Parse the plan** — read every `## Requirement N:` heading and its `### Checkpoints` / `### Review` tags (defaults `none` / `skip`), plus the feature-level `### Feature review` tag. Requirements run in **listed order** (build order); do not reorder. Read the `## Feature acceptance` section — it is the E2E you gate on first.
 2. **Setup pre-flight** *(only if the plan has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval. Record `setup: done` in the progress-file header so a resume can confirm it rather than assume it.
-3. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the implementation doc, so `pwk-finalizing`'s glob matches):
+3. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the implementation doc, so `pwk-finalizing`'s glob matches; an umbrella part creates `<part>-progress.md` inside its `docs/plans/<date>-<umbrella>/` folder):
 
    ```markdown
    # Progress: <topic>
@@ -114,7 +114,7 @@ This is step 3 of the [ship checkpoint](#ship-checkpoint-feature-complete--revie
 **Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
 
 ```bash
-PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the plan docs
+PACKET="<plan doc's directory>/<plan doc's stem>-review-packet.md"   # beside the plan doc — flat topic: docs/plans/<dated-stem>-review-packet.md; umbrella part: inside the docs/plans/<date>-<umbrella>/ folder
 {
   echo "# Review packet: <topic> — feature review"
   echo
@@ -125,13 +125,13 @@ PACKET="docs/plans/<dated-stem>-review-packet.md"   # same dated stem as the pla
   git diff --stat <merge-base>...HEAD
   echo
   echo "## Acceptance criteria (verbatim from the plan)"
-  sed -n '/^## Requirement 1/,/^## Feature acceptance/p' docs/plans/<dated-stem>-implementation.md | sed '/^## Feature acceptance/,$d'
+  sed -n '/^## Requirement 1/,/^## Feature acceptance/p' <plan-doc path> | sed '/^## Feature acceptance/,$d'
   echo
   echo "## Feature acceptance (verbatim)"
-  sed -n '/^## Feature acceptance/,/^### Feature review/p' docs/plans/<dated-stem>-implementation.md | sed '/^### Feature review/,$d'
+  sed -n '/^## Feature acceptance/,/^### Feature review/p' <plan-doc path> | sed '/^### Feature review/,$d'
   echo
   echo "## Production-risk notes (verbatim, if any)"
-  sed -n '/^### Production-risk notes/,/^## /p' docs/plans/<dated-stem>-implementation.md | sed '/^## /d'
+  sed -n '/^### Production-risk notes/,/^## /p' <plan-doc path> | sed '/^## /d'
   echo
   echo "## Diff"
   git diff <merge-base>...HEAD

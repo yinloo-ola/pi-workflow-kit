@@ -48,7 +48,7 @@ docs/adr/     # permanent ADRs (never archived)
 - **One umbrella = one PR.** A design doc is one PR by default; a requirement too big for one design doc is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once. Each requirement is one testable slice with two human checkpoints (tests, complete).
 - **Phase transitions only via `/skill:pwk-*`** — no message-keyword auto-detection (deliberately removed).
 - **`docs/lessons.md`** persists agent-learned imperative rules across sessions; read at brainstorm/plan/execute, curated at finalize. Survives `/new`.
-- **`docs/plans/` is ephemeral** — archive to `docs/plans/completed/`. ADRs in `docs/adr/` are permanent.
+- **`docs/plans/` is ephemeral** — archive to `docs/plans/completed/`; each umbrella lives in its own `docs/plans/<date>-<umbrella>/` folder, disposed as one unit. ADRs in `docs/adr/` are permanent.
 - **Reviewer agents** use YAML frontmatter (`name`/`description`/`tools`/`systemPromptMode: replace`) and are read-only (`tools: read, grep, find, ls, bash`).
 
 ## Editing workflow-guard.ts

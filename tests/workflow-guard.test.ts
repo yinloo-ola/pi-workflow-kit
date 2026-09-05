@@ -231,6 +231,9 @@ describe("shouldBlockFilePath", () => {
   it("allows writes under docs/plans/", () => {
     expect(shouldBlockFilePath("docs/plans/2026-04-21-feature-design.md", cwd)).toBe(false);
     expect(shouldBlockFilePath("docs/plans/sub/nested.md", cwd)).toBe(false);
+    // umbrella folders: dated dir under docs/plans/ with docs inside
+    expect(shouldBlockFilePath("docs/plans/2026-09-05-auth/overview.md", cwd)).toBe(false);
+    expect(shouldBlockFilePath("docs/plans/2026-09-05-auth/login-design.md", cwd)).toBe(false);
   });
 
   it("blocks writes outside docs/plans/", () => {
