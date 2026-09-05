@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.7.0] - 2026-09-05
+
+### Added
+
+- **Human review digests** — the human reads digests, not full artifacts, with one R# scheme threaded from design to review:
+  - Design docs open with `## At a glance` (plain-language summary + `| R# | Requirement in one line | Risk |` table); trivial docs get an `In short:` line.
+  - Plans carry a `## Crosswalk` (R# → section → tests) placed strictly before `## Requirement 1` (review-packet sed spans unaffected); the plan presentation is a one-line confirmation instead of the full plan.
+  - Progress files gain an `## Execution summary` (how each requirement was built, deviations logged as they happen; plain words, no test names).
+  - Spec-reviewer reports open with a per-requirement coverage table (`covered | gap | scope-creep` + file:line evidence).
+  - Umbrella docs live in their own `docs/plans/<date>-<umbrella>/` folder, discovered via recursive globs and disposed as one unit; standalone topics stay flat.
+  - Finalizing gates on `Feature phase: done` — in-flight features bounce back to executing-tasks.
+
+### Changed
+
+- **Ship gate (ADR 0003):** the feature-complete checkpoint and the post-approval feature review merge into one **ship checkpoint** — the review runs *before* the single final approval, which now presents green gates + execution summary + coverage table + findings status, with the raw diff on request (previously "you review the whole diff"). Phase enum: `ship-paused` replaces `feature-complete-paused` (legacy progress files resume as `reviewing`).
+
+### Fixed
+
+- Umbrella disposal: the `rm -rf` folder path is anchored verbatim to the discovery glob, and the archive move is verified (`ls docs/plans/completed/<date>-<umbrella>/`) before committing.
+- Post-review umbrella routing uses the recursive `docs/plans/**/overview.md` glob (an umbrella part can no longer be misrouted to finalize as its own PR); `Feature phase: reviewing` is set before the feature review runs so mid-review resumes route correctly.
+
 ## [1.6.1] - 2026-09-05
 
 ### Fixed
