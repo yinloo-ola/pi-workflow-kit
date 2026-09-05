@@ -19,6 +19,7 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 2. **Create or reuse the feature branch** — if you're already on a feature branch (not `main`), **reuse** it: a later umbrella part continues on the same umbrella branch. Otherwise `git checkout -b <topic>` — the umbrella's `<topic>` if this is part of an overview, else the design doc's `<topic>` (branch creation is allowed in the plan phase). Design + plan docs live on this branch, committed at the start of `pwk-executing-tasks`.
 3. **Read the `## Requirements` list** — the plan covers **all** of them. If the design has none, derive requirements from its described behaviors and confirm with the human before proceeding.
 4. **Write the plan** — for each requirement:
+   - **Crosswalk** — immediately after `## Overview`, emit `## Crosswalk`: a table `| R# | Plan section | Tests |` with one row per design requirement (R# = the design's numbering from its at-a-glance `## Requirements` list; Tests = that requirement's test names from the plan). Placement is load-bearing: the crosswalk sits strictly before `## Requirement 1` (between `## Overview` and `## Setup`, if present) so the review-packet sed spans (`## Requirement 1` → `## Feature acceptance` → `### Feature review`) stay untouched.
    - **Acceptance criteria** — `Given/When/Then` behavioral statements defining "done". Write observable behaviors, not implementation steps; cover edge and error cases.
    - **Integration tests** — test name + what each asserts. This is the spec the executor writes tests from.
    - **Meaningful tests** — write acceptance criteria and tests as observable behavior: (1) **Test observable behavior** — assert on what the feature produces or changes (a return value, persisted/updated data, an emitted event, an HTTP response) through its public interface; these assertions keep passing as the implementation changes. (2) **Write a per-slice test when the slice has its own observable behavior** — when a slice is pure config or a trivial extraction, the feature E2E covers it and a per-slice test is unnecessary.
@@ -39,6 +40,12 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
    ## Overview
    Design: docs/plans/YYYY-MM-DD-<topic>-design.md
    Umbrella: docs/plans/YYYY-MM-DD-<umbrella>-overview.md   *(umbrella part only — else omit)*
+
+   ## Crosswalk
+
+   | R# | Plan section | Tests |
+   |----|--------------|-------|
+   | 1 | Requirement 1: <name> | `<test name> …` |
 
    ## Requirement 1: <name>
 
@@ -72,13 +79,14 @@ Your writes go into `docs/plans/` and nowhere else. Source code and configuratio
 
 5. **Audit before presenting:**
    - Every requirement has criteria **and** matching tests, a checkpoint tag, a review tag.
+   - The `## Crosswalk` covers every design requirement R# exactly once — none dropped, none duplicated.
    - No `spec` + `skip` combination.
    - A `## Feature acceptance` section exists as the primary enforced spec (or the trivial-fold note).
    - A feature-level `### Feature review` tag is present.
    - Per-requirement tags default to `none` / `skip`; only requirements with complex logic, the main part of the feature, or production-risk are flagged heavier.
    - Production-risk areas from the design are reflected.
 6. **Workspace isolation** — you're on the `<topic>` branch. For larger work, offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
-7. **Present the plan** and wait for approval. On approval, hand off: "Ready to execute? Run `/skill:pwk-executing-tasks`" (running it is what exits the gated plan phase).
+7. **Present the plan** — the human reads a **one-line confirmation**, not the full plan: `Plan covers R1–R<N>; tags: <non-default tags>` plus the feature-acceptance test name. The full plan is available on request. Wait for approval. On approval, hand off: "Ready to execute? Run `/skill:pwk-executing-tasks`" (running it is what exits the gated plan phase).
 
 ## What belongs in the plan — and what stays out
 

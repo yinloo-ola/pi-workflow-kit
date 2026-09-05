@@ -19,6 +19,13 @@ const PLAN_FIXTURE = [
   "## Overview",
   "Design: docs/plans/demo-design.md",
   "",
+  "## Crosswalk",
+  "",
+  "| R# | Plan section | Tests |",
+  "|----|--------------|-------|",
+  "| 1 | Requirement 1: alpha | should-a |",
+  "| 2 | Requirement 2: beta | should-b |",
+  "",
   "## Setup",
   "",
   "n/a",
@@ -100,6 +107,34 @@ describe("review packet recipe", () => {
     expect(featureAcceptance).toContain("## Feature acceptance");
     expect(featureAcceptance).toContain("`should demo` — Given x, When y, Then z.");
     expect(featureAcceptance).not.toContain("Feature review: parallel");
+  });
+
+  it("should keep packet spans intact with a crosswalk present", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pwk-packet-xw-"));
+    writeFileSync(join(dir, "plan.md"), PLAN_FIXTURE);
+
+    // The three sed commands are byte-identical to the pre-crosswalk recipe (see above);
+    // the crosswalk sits before `## Requirement 1`, so no span may reach it.
+    const criteria = execSync(`${CRITERIA_CMD} plan.md | sed '/^## Feature acceptance/,$d'`, {
+      cwd: dir,
+    }).toString();
+    expect(criteria).toContain("## Requirement 1: alpha");
+    expect(criteria).not.toContain("## Crosswalk");
+    expect(criteria).not.toContain("| 1 | Requirement 1: alpha | should-a |");
+    const notes = execSync(`${NOTES_CMD} plan.md | sed '/^## /d'`, { cwd: dir }).toString();
+    expect(notes).not.toContain("Crosswalk");
+    const featureAcceptance = execSync(`${FA_CMD} plan.md | sed '/^### Feature review/,$d'`, {
+      cwd: dir,
+    }).toString();
+    expect(featureAcceptance).not.toContain("Crosswalk");
+
+    // And the skill must place the crosswalk strictly before Requirement 1 with the
+    // sed-span rationale, and present the plan as a one-line confirmation.
+    const writing = readFileSync(join(repoRoot, "skills/pwk-writing-plans/SKILL.md"), "utf8");
+    expect(writing).toContain("## Crosswalk");
+    expect(writing).toContain("strictly before `## Requirement 1`");
+    expect(writing).toContain("| R# | Plan section | Tests |");
+    expect(writing).toContain("one-line confirmation");
   });
 
   it("should scope per-requirement reviews to the requirement", () => {

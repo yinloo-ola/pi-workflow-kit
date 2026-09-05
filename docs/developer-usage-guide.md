@@ -62,7 +62,7 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with
 /skill:pwk-writing-plans
 ```
 
-Read the design doc's Requirements and turn each into **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code).
+Read the design doc's Requirements and turn each into **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code). The plan carries a `## Crosswalk` (one row per design requirement); you review a **one-line confirmation** ("Plan covers R1–R<N>; tags: …") — the full plan is available on request.
 
 Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 

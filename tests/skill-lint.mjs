@@ -453,6 +453,20 @@ if (bs) {
   if (/plain language/i.test(bs.content)) ok("pwk-brainstorming: at-a-glance plain-language rule");
   else fail("pwk-brainstorming: at-a-glance must mandate plain language");
 }
+// R2 — plans carry a crosswalk (one row per design R#) placed strictly before
+// `## Requirement 1` so the packet sed spans stay intact; the human confirms in one line.
+if (wp) {
+  fgMark("pwk-writing-plans", wp.content, "## Crosswalk", "crosswalk section mandated");
+  fgMark("pwk-writing-plans", wp.content, "| R# | Plan section | Tests |", "crosswalk table shape");
+  fgMark(
+    "pwk-writing-plans",
+    wp.content,
+    "strictly before `## Requirement 1`",
+    "crosswalk placement outside sed spans",
+  );
+  fgMark("pwk-writing-plans", wp.content, "exactly once", "crosswalk audit: every R# exactly once");
+  fgMark("pwk-writing-plans", wp.content, "one-line confirmation", "plan presented as one-line confirmation");
+}
 
 // --- Summary ---
 console.log("");
