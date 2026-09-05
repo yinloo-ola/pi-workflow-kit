@@ -499,6 +499,13 @@ for (const s of GLOB_SITES) {
 if (fin) {
   fgMark("pwk-finalizing", fin.content, "docs/plans/<date>-<umbrella>/", "umbrella folder disposal as one unit");
 }
+// R6 — finalizing ships only Feature phase `done`; every other state (including the
+// legacy feature-complete-paused) bounces back to executing-tasks.
+if (fin) {
+  fgMark("pwk-finalizing", fin.content, "Feature phase", "finalizing reads Feature phase");
+  fgMark("pwk-finalizing", fin.content, "must be `done`", "done is the only shippable phase");
+  fgMark("pwk-finalizing", fin.content, "legacy `feature-complete-paused`", "legacy in-flight state named and gated");
+}
 
 // --- Summary ---
 console.log("");

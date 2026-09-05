@@ -49,6 +49,22 @@ describe("docs consistency: review packet and resource hints", () => {
     }
   });
 
+  it("sweeps user docs for the digest flow with no stale defaults", () => {
+    const rels = [
+      "docs/workflow-phases.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "README.md",
+      "AGENTS.md",
+    ];
+    for (const rel of rels) {
+      const doc = read(rel);
+      expect(doc, rel).not.toMatch(/review the whole diff/i);
+      expect(doc, rel).not.toMatch(/read the (?:full|whole) plan/i);
+    }
+    expect(read("AGENTS.md")).toMatch(/docs\/plans\/<date>-<umbrella>\//);
+  });
+
   it("disposes review packets in both finalize disposal paths", () => {
     const finalize = read("skills/pwk-finalizing/SKILL.md");
     const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? [];
