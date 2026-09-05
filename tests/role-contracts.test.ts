@@ -11,6 +11,32 @@ function readRole(name: string): { frontmatter: string; body: string } {
   return { frontmatter: match[1], body: match[2] };
 }
 
+describe("shared conduct block", () => {
+  const REVIEWERS = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
+  const HEADING = "## Your checklist";
+
+  it("should open all four reviewer bodies with a byte-identical conduct block", () => {
+    const blocks = REVIEWERS.map((name) => {
+      const { body } = readRole(name);
+      const end = body.indexOf(HEADING);
+      expect(end, name).toBeGreaterThan(0);
+      return body.slice(0, end + HEADING.length);
+    });
+    expect(blocks[0]).toBe(blocks[1]);
+    expect(blocks[0]).toBe(blocks[2]);
+    expect(blocks[0]).toBe(blocks[3]);
+  });
+
+  it("should place each role checklist after the conduct block", () => {
+    for (const name of REVIEWERS) {
+      const { body } = readRole(name);
+      const tail = body.slice(body.indexOf(HEADING) + HEADING.length);
+      expect(tail.trim().length, name).toBeGreaterThan(40);
+      expect(body.indexOf(HEADING), name).toBeGreaterThan(body.indexOf("## Reporting contract"));
+    }
+  });
+});
+
 describe("role resource hints", () => {
   it("should ship max_turns 40 on judgment roles", () => {
     for (const name of ["pwk-spec-reviewer", "pwk-tracing-reviewer"]) {
