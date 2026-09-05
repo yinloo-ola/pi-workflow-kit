@@ -27,3 +27,11 @@ The task provides a review packet: the diff under review plus the acceptance cri
 ### Spec alignment
 
 For each acceptance criterion, point to the code and the test that satisfy it. A criterion with no covering code or no test is a **gap**. Code that does more than the criteria specify is **scope creep** — flag it.
+
+**Open the report with a coverage table** — one row per requirement, keyed by the packet's `## Requirement N` headings (R# = N):
+
+| R# | Verdict | Evidence |
+|----|---------|----------|
+| 1 | <verdict> | file:line (code), file:line (test) |
+
+Verdict per requirement: `covered | gap | scope-creep` — `covered` = every criterion has covering code and a test; `gap` = a criterion lacks code or a test; `scope-creep` = the code does more than the criteria specify. Findings elaborate on every non-`covered` row; an all-`covered` table still ends with the explicit `No findings` line.

@@ -53,6 +53,22 @@ describe("shared conduct block", () => {
   });
 });
 
+describe("spec-reviewer coverage table", () => {
+  it("should mandate a per-requirement coverage table in the spec-reviewer checklist", () => {
+    const { body } = readRole("pwk-spec-reviewer");
+    const checklist = body.slice(body.indexOf("## Your checklist"));
+    expect(checklist).toMatch(/\| R# \| Verdict \| Evidence \|/);
+    expect(checklist).toMatch(/covered \| gap \| scope-creep/);
+    expect(checklist).toMatch(/## Requirement N/);
+    expect(checklist).toMatch(/No findings/);
+    // The coverage mandate is role-specific: the other three checklists stay untouched.
+    for (const name of ["pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"]) {
+      const other = readRole(name).body.slice(readRole(name).body.indexOf("## Your checklist"));
+      expect(other, name).not.toMatch(/\| R# \| Verdict \| Evidence \|/);
+    }
+  });
+});
+
 describe("role resource hints", () => {
   it("should ship max_turns 40 on judgment roles", () => {
     for (const name of ["pwk-spec-reviewer", "pwk-tracing-reviewer"]) {
