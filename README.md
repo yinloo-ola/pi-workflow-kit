@@ -20,6 +20,8 @@ For Pi delegation providers that discover project agents, install the canonical 
 
 This creates the five role definitions under `.agents/agents/`. It does not install or configure a provider. Existing customized files are preserved; use `/pwk-setup --force` only when you explicitly want to replace differing role files. Run setup before `/skill:pwk-brainstorming`; the command is refused during brainstorm and plan phases.
 
+Optionally set a fast-tier model for the smell/hazard reviewers (they carry `thinking: low` and a turn budget by default): `/pwk-setup --fast-model <model>` — or pick one interactively when setup offers — and `--all-roles` to apply it to all four reviewers. The hint is advisory; hosts that cannot honor it keep the default model. Bare re-runs keep the recorded choice; only `--force` replaces local edits beyond the model line.
+
 **Want to try before committing?**
 
 ```bash
