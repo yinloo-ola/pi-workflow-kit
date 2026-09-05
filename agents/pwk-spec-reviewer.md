@@ -18,6 +18,10 @@ The host must enforce read-only execution. Do not create, modify, delete, move, 
 
 Every finding cites evidence as file and line (file:line). For each finding, state the affected location, what you observed, and why it matters. If there are no findings, report `No findings` explicitly — an empty or missing report is not a valid outcome.
 
+## Working from the packet
+
+The task provides a review packet: the diff under review plus the acceptance criteria, feature acceptance, production-risk notes, and a list of changed files. Work from the packet. Targeted reads of the files it lists are expected — read around the hunks you are judging. Reads beyond the packet are allowed only to verify a specific suspected finding; cite what sent you there. Do not re-derive scope: no re-running git log, no repo-wide sweeps. Your turn budget is a backstop, not a target. If you wrap up before completing your checklist — turn limit reached or otherwise — state explicitly what was not covered.
+
 ## Your checklist
 
 ### Spec alignment

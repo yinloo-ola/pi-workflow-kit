@@ -11,6 +11,22 @@ function readRole(name: string): { frontmatter: string; body: string } {
   return { frontmatter: match[1], body: match[2] };
 }
 
+describe("packet discipline", () => {
+  const REVIEWERS = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
+
+  it("should include packet discipline and early-wrap disclosure in every conduct block", () => {
+    for (const name of REVIEWERS) {
+      const { body } = readRole(name);
+      const block = body.slice(0, body.indexOf("## Your checklist"));
+      expect(block, name).toMatch(/work from the packet/i);
+      expect(block, name).toMatch(/targeted reads? of the files it lists/i);
+      expect(block, name).toMatch(/verify a specific suspected finding[\s\S]*?cite what sent you there/i);
+      expect(block, name).toMatch(/do not re-derive scope|no re-running git log/i);
+      expect(block, name).toMatch(/what was not covered/i);
+    }
+  });
+});
+
 describe("shared conduct block", () => {
   const REVIEWERS = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
   const HEADING = "## Your checklist";

@@ -63,7 +63,7 @@ describe("review cost optimization feature (E2E)", () => {
     expect(shared).toMatch(/no findings/i);
     for (const [i, name] of REVIEW_ROLES.entries()) {
       expect(bodies[i].length, name).toBeGreaterThan(shared.length);
-      expect(bodies[i].slice(shared.length), name).toMatch(/checklist|criteria|hazard|smells/i);
+      expect(bodies[i].slice(shared.length), name).toMatch(/checklist|criteria|hazard|smells|tracing|spec alignment/i);
     }
 
     // R4+R5 — the executing skill builds scope as a packet file (never spawn-carried)
