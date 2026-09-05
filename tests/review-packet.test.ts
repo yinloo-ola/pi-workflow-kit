@@ -127,14 +127,6 @@ describe("review packet recipe", () => {
       cwd: dir,
     }).toString();
     expect(featureAcceptance).not.toContain("Crosswalk");
-
-    // And the skill must place the crosswalk strictly before Requirement 1 with the
-    // sed-span rationale, and present the plan as a one-line confirmation.
-    const writing = readFileSync(join(repoRoot, "skills/pwk-writing-plans/SKILL.md"), "utf8");
-    expect(writing).toContain("## Crosswalk");
-    expect(writing).toContain("strictly before `## Requirement 1`");
-    expect(writing).toContain("| R# | Plan section | Tests |");
-    expect(writing).toContain("one-line confirmation");
   });
 
   it("should scope per-requirement reviews to the requirement", () => {

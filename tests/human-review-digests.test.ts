@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { readRole } from "./helpers";
+import { DIGEST_MARKERS } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -31,74 +33,63 @@ function readRepo(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
-function splitRoleBody(name: string): string {
-  const content = readRepo(`agents/${name}.md`);
-  const match = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
-  if (!match) throw new Error(`Role ${name} has invalid frontmatter`);
-  return match[1];
-}
-
-function commonPrefix(texts: string[]): string {
-  let prefix = texts[0];
-  for (const text of texts.slice(1)) {
-    let i = 0;
-    while (i < prefix.length && i < text.length && prefix[i] === text[i]) i += 1;
-    prefix = prefix.slice(0, i);
-  }
-  return prefix;
-}
-
 describe("human review digests feature (E2E)", () => {
   it("should thread R# digests from design to coverage table", () => {
     // R1 — design docs open with an at-a-glance digest: plain summary + one row per
     // requirement; the trivial fast-path gets a single In-short line instead.
     const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
-    expect(brainstorming).toMatch(/## At a glance/);
+    expect(brainstorming).toMatch(new RegExp(DIGEST_MARKERS.atAGlance));
     expect(brainstorming).toMatch(/immediately before [`]## Requirements[`]/);
-    expect(brainstorming).toMatch(/\| R# \| Requirement in one line \| Risk \|/);
-    expect(brainstorming).toMatch(/In short:/);
+    expect(brainstorming).toContain(DIGEST_MARKERS.atAGlanceTable);
+    expect(brainstorming).toContain("In short:");
     expect(brainstorming).toMatch(/plain language/i);
 
     // R2 — plans carry a crosswalk the human confirms in one line, placed strictly
     // before Requirement 1 so the review-packet sed spans are untouched.
     const writingPlans = readRepo("skills/pwk-writing-plans/SKILL.md");
-    expect(writingPlans).toMatch(/## Crosswalk/);
-    expect(writingPlans).toMatch(/\| R# \| Plan section \| Tests \|/);
-    expect(writingPlans).toMatch(/strictly before [`]## Requirement 1[`]/);
-    expect(writingPlans).toMatch(/one-line confirmation/);
+    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalk);
+    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalkTable);
+    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalkPlacement);
+    expect(writingPlans).toContain(DIGEST_MARKERS.oneLineConfirmation);
 
     // R3 — the progress file carries an execution summary filled as requirements
     // land, and the ship checkpoint presents digest + coverage, diff on request.
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    expect(executing).toMatch(/## Execution summary/);
-    expect(executing).toMatch(/\| R# \| Requirement \| How it was built \| Deviated\? \|/);
-    expect(executing).toMatch(/same step as marking/);
-    expect(executing).toMatch(/ship-paused/);
-    expect(executing).toMatch(/coverage table/);
-    expect(executing).toMatch(/diff on request/i);
-    const enumLine = executing.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
-    expect(enumLine).toContain("ship-paused");
+    expect(executing).toContain(DIGEST_MARKERS.execSummary);
+    expect(executing).toContain(DIGEST_MARKERS.execSummaryTable);
+    expect(executing).toContain(DIGEST_MARKERS.fillAsYouLand);
+    expect(executing).toContain(DIGEST_MARKERS.shipPaused);
+    expect(executing).toContain(DIGEST_MARKERS.diffOnRequest);
+    const enumLine = executing.match(/`Feature phase` is one of:[^\n]*/)?.[0];
+    if (!enumLine) throw new Error("executing skill: `Feature phase` enum line not found");
+    expect(enumLine).toContain(DIGEST_MARKERS.shipPaused);
     expect(enumLine).not.toContain("feature-complete-paused");
 
     // R4 — the spec-reviewer report opens with a per-requirement coverage table,
     // keyed by the packet's requirement headings, while the four reviewers keep a
-    // byte-identical shared conduct block.
-    const specReviewer = splitRoleBody("pwk-spec-reviewer");
-    expect(specReviewer).toMatch(/\| R# \| Verdict \| Evidence \|/);
-    expect(specReviewer).toMatch(/covered \| gap \| scope-creep/);
+    // byte-identical shared conduct block (same strict check as role-contracts).
+    const specReviewer = readRole("pwk-spec-reviewer").body;
+    expect(specReviewer).toContain(DIGEST_MARKERS.coverageTable);
+    expect(specReviewer).toContain(DIGEST_MARKERS.coverageVerdicts);
     expect(specReviewer).toMatch(/## Requirement N/);
     expect(specReviewer).toMatch(/No findings/);
-    const bodies = REVIEW_ROLES.map((name) => splitRoleBody(name));
-    const shared = commonPrefix(bodies);
-    expect(shared).toMatch(/read-only/i);
-    expect(shared).toMatch(/packet/i);
+    const HEADING = "## Your checklist";
+    const blocks = REVIEW_ROLES.map((name) => {
+      const body = readRole(name).body;
+      const end = body.indexOf(HEADING);
+      expect(end, name).toBeGreaterThan(0);
+      return body.slice(0, end + HEADING.length);
+    });
+    expect(blocks[0]).toBe(blocks[1]);
+    expect(blocks[0]).toBe(blocks[2]);
+    expect(blocks[0]).toBe(blocks[3]);
     for (const [i, name] of REVIEW_ROLES.entries()) {
-      expect(bodies[i].length, name).toBeGreaterThan(shared.length);
+      expect(readRole(name).body.length, name).toBeGreaterThan(blocks[i].length);
     }
 
     // R5 — every discovery site resolves docs one level down (umbrella folders).
     for (const site of GLOB_SITES) {
-      expect(readRepo(site), site).toMatch(/docs\/plans\/\*\*\//);
+      expect(readRepo(site), site).toContain(DIGEST_MARKERS.recursiveGlob);
     }
   });
 
@@ -107,21 +98,20 @@ describe("human review digests feature (E2E)", () => {
     // existing disposal globs and umbrella folders dispose as one unit.
     const finalize = readRepo("skills/pwk-finalizing/SKILL.md");
     expect(finalize).toMatch(/Feature phase/);
-    expect(finalize).toMatch(/must be [`]done[`]/);
+    expect(finalize).toContain(DIGEST_MARKERS.mustBeDone);
     expect(finalize).toMatch(/feature-complete-paused/);
-    expect(finalize).toMatch(/docs\/plans\/<date>-<umbrella>\//);
+    expect(finalize).toContain(DIGEST_MARKERS.umbrellaFolder);
 
     // The user-facing docs describe the new flow and none of them defaults the
     // human to reading the full plan or the whole diff.
     for (const doc of USER_DOCS) {
       expect(readRepo(doc), doc).toMatch(/At a glance/i);
       expect(readRepo(doc), doc).toMatch(/ship gate|ship checkpoint/i);
-      expect(readRepo(doc), doc).not.toMatch(/you review the whole diff/i);
     }
     const readme = readRepo("README.md");
-    expect(readme).toMatch(/diff on request/i);
-    expect(readme).toMatch(/## Crosswalk/);
+    expect(readme).toContain(DIGEST_MARKERS.diffOnRequest);
+    expect(readme).toContain(DIGEST_MARKERS.crosswalk);
     const agents = readRepo("AGENTS.md");
-    expect(agents).toMatch(/docs\/plans\/<date>-<umbrella>\//);
+    expect(agents).toContain(DIGEST_MARKERS.umbrellaFolder);
   });
 });

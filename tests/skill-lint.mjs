@@ -10,6 +10,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { DIGEST_MARKERS } from "./markers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillsDir = join(root, "skills");
@@ -441,14 +442,14 @@ if (et) {
 // summary + a one-line-per-requirement R# table; trivial docs get a single In-short line.
 console.log("human-review-digests:");
 if (bs) {
-  fgMark("pwk-brainstorming", bs.content, "## At a glance", "at-a-glance digest mandated");
+  fgMark("pwk-brainstorming", bs.content, DIGEST_MARKERS.atAGlance, "at-a-glance digest mandated");
   fgMark(
     "pwk-brainstorming",
     bs.content,
     "immediately before `## Requirements`",
     "at-a-glance sits before Requirements",
   );
-  fgMark("pwk-brainstorming", bs.content, "| R# | Requirement in one line | Risk |", "R# one-line table");
+  fgMark("pwk-brainstorming", bs.content, DIGEST_MARKERS.atAGlanceTable, "R# one-line table");
   fgMark("pwk-brainstorming", bs.content, "R# = the requirement", "R# numbering linkage");
   fgMark("pwk-brainstorming", bs.content, "In short:", "trivial fast-path In-short line");
   if (/plain language/i.test(bs.content)) ok("pwk-brainstorming: at-a-glance plain-language rule");
@@ -457,34 +458,29 @@ if (bs) {
 // R2 — plans carry a crosswalk (one row per design R#) placed strictly before
 // `## Requirement 1` so the packet sed spans stay intact; the human confirms in one line.
 if (wp) {
-  fgMark("pwk-writing-plans", wp.content, "## Crosswalk", "crosswalk section mandated");
-  fgMark("pwk-writing-plans", wp.content, "| R# | Plan section | Tests |", "crosswalk table shape");
+  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalk, "crosswalk section mandated");
+  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalkTable, "crosswalk table shape");
+  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalkPlacement, "crosswalk placement outside sed spans");
+  fgMark("pwk-writing-plans", wp.content, "exactly once", "crosswalk audit: every R# exactly once");
   fgMark(
     "pwk-writing-plans",
     wp.content,
-    "strictly before `## Requirement 1`",
-    "crosswalk placement outside sed spans",
+    DIGEST_MARKERS.oneLineConfirmation,
+    "plan presented as one-line confirmation",
   );
-  fgMark("pwk-writing-plans", wp.content, "exactly once", "crosswalk audit: every R# exactly once");
-  fgMark("pwk-writing-plans", wp.content, "one-line confirmation", "plan presented as one-line confirmation");
 }
 // R3 — the progress file carries an execution summary filled as requirements land; the
 // ship checkpoint merges feature-complete + review: review runs before the one final
 // approval, presenting digest + coverage table, diff on request.
 if (et) {
-  fgMark("pwk-executing-tasks", et.content, "## Execution summary", "execution summary section");
-  fgMark(
-    "pwk-executing-tasks",
-    et.content,
-    "| R# | Requirement | How it was built | Deviated? |",
-    "execution summary table shape",
-  );
-  fgMark("pwk-executing-tasks", et.content, "same step as marking", "fill-as-you-land rule");
-  fgMark("pwk-executing-tasks", et.content, "when the departure happens", "deviation logged at deviation time");
-  fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
-  fgMark("pwk-executing-tasks", et.content, "diff on request", "ship presentation: diff on request");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.execSummary, "execution summary section");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.execSummaryTable, "execution summary table shape");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.fillAsYouLand, "fill-as-you-land rule");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.deviationAtDeviation, "deviation logged at deviation time");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.shipPaused, "ship-paused phase");
+  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.diffOnRequest, "ship presentation: diff on request");
   const enumLine = et.content.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
-  if (enumLine.includes("ship-paused") && !enumLine.includes("feature-complete-paused")) {
+  if (enumLine.includes(DIGEST_MARKERS.shipPaused) && !enumLine.includes("feature-complete-paused")) {
     ok("pwk-executing-tasks: phase enum uses ship-paused (legacy feature-complete-paused gone)");
   } else {
     fail("pwk-executing-tasks: phase enum must use ship-paused, not feature-complete-paused");
@@ -494,17 +490,17 @@ if (et) {
 // discovery site globs recursively; finalize disposes the folder as one unit.
 const GLOB_SITES = [bs, wp, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
-  fgMark(s.name, s.content, "docs/plans/**/", "recursive discovery globs");
+  fgMark(s.name, s.content, DIGEST_MARKERS.recursiveGlob, "recursive discovery globs");
 }
 if (fin) {
-  fgMark("pwk-finalizing", fin.content, "docs/plans/<date>-<umbrella>/", "umbrella folder disposal as one unit");
+  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.umbrellaFolder, "umbrella folder disposal as one unit");
 }
 // R6 — finalizing ships only Feature phase `done`; every other state (including the
 // legacy feature-complete-paused) bounces back to executing-tasks.
 if (fin) {
   fgMark("pwk-finalizing", fin.content, "Feature phase", "finalizing reads Feature phase");
-  fgMark("pwk-finalizing", fin.content, "must be `done`", "done is the only shippable phase");
-  fgMark("pwk-finalizing", fin.content, "legacy `feature-complete-paused`", "legacy in-flight state named and gated");
+  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
+  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.legacyPaused, "legacy in-flight state named and gated");
 }
 
 // --- Summary ---

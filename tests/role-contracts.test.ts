@@ -1,15 +1,7 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ROLE_NAMES } from "./helpers";
+import { ROLE_NAMES, readRole } from "./helpers";
 
 const roleNames = [...ROLE_NAMES];
-
-function readRole(name: string): { frontmatter: string; body: string } {
-  const content = readFileSync(`agents/${name}.md`, "utf8");
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) throw new Error(`Role ${name} has invalid frontmatter`);
-  return { frontmatter: match[1], body: match[2] };
-}
 
 describe("packet discipline", () => {
   const REVIEWERS = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
