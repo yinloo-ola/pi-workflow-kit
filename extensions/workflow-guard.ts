@@ -70,17 +70,76 @@ export const ROLE_NAMES = [
   "pwk-hazard-reviewer",
 ] as const;
 
+const REVIEWER_ROLES = ["pwk-spec-reviewer", "pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"];
+const FAST_TIER_ROLES = ["pwk-smell-reviewer", "pwk-hazard-reviewer"];
+
+const FAST_MODEL_PLACEHOLDER = "# model: <fast-tier> — set yours via /pwk-setup";
+
+/** Apply a fast-tier model hint to a role definition.
+ *
+ * Replaces an existing `model:` line; else swaps the commented placeholder for
+ * `model: <model>`; else inserts after `systemPromptMode:` when `insertIfAbsent`
+ * (the all-four path for judgment roles, which ship no placeholder). Pure: same
+ * input always yields the same output, so install comparisons stay byte-exact.
+ */
+export function applyFastModelHint(content: string, model: string, opts?: { insertIfAbsent?: boolean }): string {
+  const trimmed = model.trim();
+  if (!trimmed || /\s/.test(trimmed)) throw new Error(`Invalid fast model name: ${JSON.stringify(model)}`);
+  if (/^model: /m.test(content)) {
+    return content.replace(/^model: .*$/m, `model: ${trimmed}`);
+  }
+  if (content.includes(FAST_MODEL_PLACEHOLDER)) {
+    return content.replace(FAST_MODEL_PLACEHOLDER, `model: ${trimmed}`);
+  }
+  if (opts?.insertIfAbsent) {
+    return content.replace("systemPromptMode: replace\n", `systemPromptMode: replace\nmodel: ${trimmed}\n`);
+  }
+  return content;
+}
+
+/** True when the only difference between two contents is the model hint line
+ * (an uncommented `model:` line or the commented placeholder). Such deltas are
+ * kit-managed config and auto-update without --force; anything else conflicts.
+ */
+function differsOnlyByHint(a: string, b: string): boolean {
+  const strip = (content: string) =>
+    content
+      .split("\n")
+      .filter((line) => !/^model: \S/.test(line) && line !== FAST_MODEL_PLACEHOLDER)
+      .join("\n");
+  return strip(a) === strip(b);
+}
+
 const CANONICAL_AGENTS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "agents");
 
 function setupUsageError(): Error {
-  return new Error("Usage: /pwk-setup [--force]");
+  return new Error("Usage: /pwk-setup [--force] [--fast-model <model>] [--all-roles]");
 }
 
-function parseSetupArgs(args: string): { force: boolean } {
-  const normalized = args.trim();
-  if (!normalized) return { force: false };
-  if (normalized === "--force") return { force: true };
-  throw setupUsageError();
+function parseSetupArgs(args: string): { force: boolean; fastModel?: string; allRoles: boolean } {
+  const tokens = args.trim().split(/\s+/).filter(Boolean);
+  let force = false;
+  let allRoles = false;
+  let fastModel: string | undefined;
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    if (token === "--force") {
+      force = true;
+    } else if (token === "--all-roles") {
+      allRoles = true;
+    } else if (token.startsWith("--fast-model=")) {
+      fastModel = token.slice("--fast-model=".length);
+    } else if (token === "--fast-model") {
+      const next = tokens[i + 1];
+      if (next === undefined) throw setupUsageError();
+      fastModel = next;
+      i += 1;
+    } else {
+      throw setupUsageError();
+    }
+  }
+  if (fastModel !== undefined && !fastModel.trim()) throw setupUsageError();
+  return { force, fastModel, allRoles };
 }
 
 function ensureDirectory(path: string): void {
@@ -134,7 +193,10 @@ function writeNewFile(path: string, content: string): void {
   }
 }
 
-function installRoleFiles(cwd: string, force: boolean): { installed: string[]; skipped: string[] } {
+function installRoleFiles(
+  cwd: string,
+  opts: { force: boolean; hint?: { model: string; allRoles: boolean } },
+): { installed: string[]; skipped: string[] } {
   const projectAgentsDir = join(cwd, ".agents");
   const targetDir = join(projectAgentsDir, "agents");
   ensureDirectory(projectAgentsDir);
@@ -152,7 +214,11 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
     try {
       // Read inside the try: one broken canonical source becomes a per-role failure
       // instead of aborting the whole install and hiding other roles' results.
-      const content = readFileSync(sourcePath, "utf8");
+      const canonical = readFileSync(sourcePath, "utf8");
+      const hintApplies =
+        opts.hint !== undefined && (opts.hint.allRoles ? REVIEWER_ROLES : FAST_TIER_ROLES).includes(roleName);
+      const content =
+        hintApplies && opts.hint ? applyFastModelHint(canonical, opts.hint.model, { insertIfAbsent: true }) : canonical;
 
       // Open the existing target (if any) once and do every check/read/write through
       // that single fd — the fd names one fixed inode, so nothing swapped in on the
@@ -186,7 +252,12 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
           skipped.push(roleName);
           continue;
         }
-        if (!force) {
+        if (differsOnlyByHint(existing, content)) {
+          overwriteFd(fd, content, targetPath);
+          installed.push(roleName);
+          continue;
+        }
+        if (!opts.force) {
           failures.push(`${targetPath}: conflict (use /pwk-setup --force to replace it)`);
           continue;
         }
@@ -209,6 +280,52 @@ function installRoleFiles(cwd: string, force: boolean): { installed: string[]; s
     throw new Error(`PWK setup incomplete${partial}:\n${failures.join("\n")}`);
   }
   return { installed, skipped };
+}
+
+/** Minimal structural view of the command context the fast-model prompt needs. */
+interface FastModelPromptContext {
+  cwd: string;
+  hasUI?: boolean;
+  scopedModels?: { model?: string }[];
+  ui?: {
+    select?: (title: string, options: { value: string; label: string; description: string }[]) => Promise<string>;
+    confirm?: (title: string, message: string) => Promise<boolean>;
+  };
+}
+
+/** True when an installed fast-tier role already carries a model hint. */
+function installedHintPresent(cwd: string): boolean {
+  for (const role of FAST_TIER_ROLES) {
+    try {
+      if (/^model: /m.test(readFileSync(join(cwd, ".agents", "agents", `${role}.md`), "utf8"))) return true;
+    } catch {
+      // not installed yet — keep looking
+    }
+  }
+  return false;
+}
+
+/** Ask for the fast-tier model once, only when a picker is available, no hint is
+ * installed, and no --fast-model argument was given. Headless hosts skip silently
+ * and reviewers stay on default models. */
+async function promptFastModelChoice(
+  ctx: FastModelPromptContext,
+): Promise<{ model: string; allRoles: boolean } | undefined> {
+  const ui = ctx.ui;
+  if (typeof ui?.select !== "function" || ctx.hasUI === false) return undefined;
+  if (installedHintPresent(ctx.cwd)) return undefined;
+  const scoped = Array.isArray(ctx.scopedModels) ? ctx.scopedModels : [];
+  const models = scoped
+    .map((entry) => (typeof entry?.model === "string" ? entry.model : undefined))
+    .filter((model): model is string => model !== undefined && model.length > 0);
+  const options = [
+    ...models.map((model) => ({ value: model, label: model, description: "fast-tier reviewer model" })),
+    { value: "skip", label: "skip", description: "reviewers run on default models" },
+  ];
+  const choice = await ui.select("Fast-tier model for smell/hazard reviewers", options);
+  if (!choice || choice === "skip") return undefined;
+  const allRoles = (await ui.confirm?.("Apply to all four reviewers?", "No = smell+hazard only")) ?? false;
+  return { model: choice, allRoles };
 }
 
 // Destructive commands blocked in brainstorm/plan phases (simple common blacklist)
@@ -416,12 +533,17 @@ export default function (pi: ExtensionAPI) {
         throw new Error(message);
       }
 
-      const { force } = parseSetupArgs(args ?? "");
+      const { force, fastModel, allRoles } = parseSetupArgs(args ?? "");
       try {
-        const result = installRoleFiles(ctx.cwd, force);
+        const hint = fastModel !== undefined ? { model: fastModel, allRoles } : await promptFastModelChoice(ctx);
+        const result = installRoleFiles(ctx.cwd, { force, hint });
         const parts = [`PWK setup complete: ${result.installed.length} installed`];
         if (result.skipped.length > 0) parts.push(`${result.skipped.length} skipped`);
         if (force) parts.push("forced conflicts replaced");
+        if (hint) {
+          const scope = hint.allRoles ? "all four reviewers" : "smell+hazard reviewers";
+          parts.push(`fast model ${hint.model} (${scope})`);
+        }
         ctx.ui.notify(`${parts.join(", ")}. Providers may require /reload to discover updated roles.`, "info");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

@@ -14,6 +14,6 @@ Feature phase: implementing (6/8)
 | 3 | ✅ | Packet discipline clause | — | d50221d |
 | 4 | ✅ | Script-assembled review packet recipe | ⏸ tests · 🔎 inline | 8ad839a |
 | 5 | ✅ | One-liner spawn template | — | 8ad839a |
-| 6 | ✅ | Advisory resource hints in the delegation contract | — | 9dfbc56 |
-| 7 | 🔄 | /pwk-setup fast-model personalization | ⏸ tests · 🔎 inline | — |
+| 6 | ✅ | Advisory resource hints in the delegation contract | — | 30a6b73 |
+| 7 | 🔄 | /pwk-setup fast-model personalization | ⏸ tests (waiting) · 🔎 inline | — |
 | 8 | ⬜ | Doc consistency and packet disposal | — | — |

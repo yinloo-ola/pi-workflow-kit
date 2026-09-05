@@ -4,7 +4,131 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ROLE_NAMES, createCommandContext, createExtensionHarness } from "./helpers";
+import { applyFastModelHint } from "../extensions/workflow-guard";
 
+describe("/pwk-setup fast-model personalization", () => {
+  const FAST_PAIR = ["pwk-smell-reviewer", "pwk-hazard-reviewer"];
+  const JUDGMENT_PAIR = ["pwk-spec-reviewer", "pwk-tracing-reviewer"];
+  const ALL_REVIEWERS = [...JUDGMENT_PAIR, ...FAST_PAIR];
+  let harness: ReturnType<typeof createExtensionHarness>;
+
+  beforeEach(async () => {
+    harness = createExtensionHarness();
+    await harness.handlers.get("session_start")?.({}, {});
+  });
+
+  const rolePath = (root: string, name: string) => join(root, ".agents", "agents", `${name}.md`);
+
+  it("applyFastModelHint injects, updates, and stays idempotent", () => {
+    const canonical = readFileSync("agents/pwk-smell-reviewer.md", "utf8");
+    const hinted = applyFastModelHint(canonical, "mimo2.5flash");
+    expect(hinted).toMatch(/^model: mimo2\.5flash$/m);
+    expect(hinted).not.toMatch(/^# model: /m);
+    expect(applyFastModelHint(hinted, "mimo2.5flash")).toBe(hinted);
+    expect(applyFastModelHint(hinted, "other-model")).toMatch(/^model: other-model$/m);
+
+    const spec = readFileSync("agents/pwk-spec-reviewer.md", "utf8");
+    expect(applyFastModelHint(spec, "x")).toBe(spec);
+    const inserted = applyFastModelHint(spec, "x", { insertIfAbsent: true });
+    expect(inserted).toMatch(/^model: x$/m);
+
+    expect(() => applyFastModelHint(canonical, "")).toThrow();
+    expect(() => applyFastModelHint(canonical, "two words")).toThrow();
+  });
+
+  it("installs hinted copies for the default split", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("--fast-model mimo2.5flash", createCommandContext(projectRoot));
+    for (const name of FAST_PAIR) {
+      expect(readFileSync(rolePath(projectRoot, name), "utf8"), name).toMatch(/^model: mimo2\.5flash$/m);
+    }
+    for (const name of [...JUDGMENT_PAIR, "pwk-recon-scout"]) {
+      expect(readFileSync(rolePath(projectRoot, name), "utf8"), name).not.toMatch(/^model: \S/m);
+    }
+  });
+
+  it("applies the fast model to all four reviewers with --all-roles", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("--fast-model m2 --all-roles", createCommandContext(projectRoot));
+    for (const name of ALL_REVIEWERS) {
+      expect(readFileSync(rolePath(projectRoot, name), "utf8"), name).toMatch(/^model: m2$/m);
+    }
+    expect(readFileSync(rolePath(projectRoot, "pwk-recon-scout"), "utf8")).not.toMatch(/^model: \S/m);
+  });
+
+  it("is substitution-aware idempotent on re-run with the same choice", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    const notifications: string[] = [];
+    await command?.handler("--fast-model m1", createCommandContext(projectRoot, notifications));
+    const afterFirst = FAST_PAIR.map((n) => readFileSync(rolePath(projectRoot, n), "utf8"));
+    await command?.handler("--fast-model m1", createCommandContext(projectRoot, notifications));
+    expect(FAST_PAIR.map((n) => readFileSync(rolePath(projectRoot, n), "utf8"))).toEqual(afterFirst);
+    expect(notifications.join("\n")).toMatch(/0 installed, 5 skipped/);
+  });
+
+  it("auto-updates hint-only deltas without --force", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("--fast-model m1", createCommandContext(projectRoot));
+    await command?.handler("--fast-model m2", createCommandContext(projectRoot));
+    for (const name of FAST_PAIR) {
+      expect(readFileSync(rolePath(projectRoot, name), "utf8"), name).toMatch(/^model: m2$/m);
+    }
+  });
+
+  it("preserves conflict rules for non-hint deltas", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("--fast-model m1", createCommandContext(projectRoot));
+    const edited = `${readFileSync(rolePath(projectRoot, "pwk-smell-reviewer"), "utf8")}\nlocal edit\n`;
+    writeFileSync(rolePath(projectRoot, "pwk-smell-reviewer"), edited);
+    await expect(command?.handler("--fast-model m1", createCommandContext(projectRoot))).rejects.toThrow(
+      /conflict|incomplete/i,
+    );
+    expect(readFileSync(rolePath(projectRoot, "pwk-smell-reviewer"), "utf8")).toBe(edited);
+  });
+
+  it("does not prompt headless and installs unhinted", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    await command?.handler("", createCommandContext(projectRoot));
+    for (const name of FAST_PAIR) {
+      const content = readFileSync(rolePath(projectRoot, name), "utf8");
+      expect(content, name).toMatch(/^# model: /m);
+      expect(content, name).not.toMatch(/^model: \S/m);
+    }
+  });
+
+  it("prompts once when a picker is available and no hint is installed, then never while a hint exists", async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), "pwk-fast-"));
+    const command = harness.commands.get("pwk-setup");
+    let selectCalls = 0;
+    const ctx = (cwd: string) => ({
+      cwd,
+      hasUI: true,
+      scopedModels: [{ model: "x/mimo2.5flash" }, { model: "x/frontier" }],
+      ui: {
+        notify() {},
+        select: async (_title: string, options: { value: string }[]) => {
+          selectCalls += 1;
+          const model = options.find((o) => o.value.includes("mimo"));
+          return model ? model.value : "skip";
+        },
+      },
+    });
+
+    await command?.handler("", ctx(projectRoot));
+    expect(selectCalls).toBe(1);
+    expect(readFileSync(rolePath(projectRoot, "pwk-smell-reviewer"), "utf8")).toMatch(/^model: x\/mimo2\.5flash$/m);
+
+    await command?.handler("", ctx(projectRoot));
+    expect(selectCalls).toBe(1); // hint present — never re-prompts
+  });
+});
+let harness: ReturnType<typeof createExtensionHarness>;
 describe("/pwk-setup", () => {
   let harness: ReturnType<typeof createExtensionHarness>;
 
