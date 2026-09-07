@@ -4,7 +4,7 @@ Plan: docs/plans/2026-09-07-code-digest-implementation.md
 Branch: code-digest
 Started: 2026-09-07T12:00:00+08:00
 Last updated: 2026-09-07T12:00:00+08:00
-Feature phase: ship-paused
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
