@@ -122,6 +122,42 @@ describe("code-digest per-slice", () => {
       expect(finalize).toContain(line);
     }
   });
+  it("should replace one-question-at-a-time with frontier rounds", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const step3 = brainstorming.slice(
+      brainstorming.indexOf("**Understand the idea**"),
+      brainstorming.indexOf("**Codebase recon**"),
+    );
+    expect(step3).toContain(CODE_DIGEST_MARKERS.frontier);
+    expect(step3).toContain(CODE_DIGEST_MARKERS.recommendedAnswer);
+    expect(step3).toMatch(/number each question/i);
+    // single-decision carve-out names all four approvals
+    for (const approval of ["approach selection", "umbrella split", "design approval", "ADR unlock"]) {
+      expect(step3).toContain(approval);
+    }
+    const principles = brainstorming.match(/## Principles\n\n- [^\n]*/)?.[0];
+    if (!principles) throw new Error("brainstorming: Principles list not found");
+    expect(principles).not.toContain("One question at a time"); // defining line only
+  });
+
+  it("should walk every checklist dimension visibly", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const step3 = brainstorming.slice(
+      brainstorming.indexOf("**Understand the idea**"),
+      brainstorming.indexOf("**Codebase recon**"),
+    );
+    for (const dimension of [
+      "Goal & scope",
+      "Data & state",
+      "Behavior & edge cases",
+      "Errors & failure",
+      "Integration",
+      "Non-functional",
+    ]) {
+      expect(step3, dimension).toContain(dimension);
+    }
+    expect(step3).toContain(CODE_DIGEST_MARKERS.nothingToAsk);
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

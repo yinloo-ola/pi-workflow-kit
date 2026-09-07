@@ -672,6 +672,40 @@ if (fin) {
   }
 }
 
+// R6 — brainstorming interviews in frontier rounds: numbered questions with
+// recommended answers, dimension checklist walked visibly, approvals single-decision,
+// and the old one-question-at-a-time principle gone from its defining line.
+if (bs) {
+  const step3 = bs.content.slice(
+    bs.content.indexOf("**Understand the idea**"),
+    bs.content.indexOf("**Codebase recon**"),
+  );
+  fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.frontier, "frontier-round protocol");
+  fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.recommendedAnswer, "recommended answer per question");
+  if (/number each question/i.test(step3)) ok("pwk-brainstorming: questions numbered per round");
+  else fail("pwk-brainstorming: questions must be numbered");
+  for (const approval of ["approach selection", "umbrella split", "design approval", "ADR unlock"]) {
+    fgMark("pwk-brainstorming", step3, approval, `single-decision carve-out — ${approval}`);
+  }
+  for (const dimension of [
+    "Goal & scope",
+    "Data & state",
+    "Behavior & edge cases",
+    "Errors & failure",
+    "Integration",
+    "Non-functional",
+  ]) {
+    fgMark("pwk-brainstorming", step3, dimension, `checklist dimension — ${dimension}`);
+  }
+  fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.nothingToAsk, "empty dimensions printed visibly");
+  const principlesLine = bs.content.match(/## Principles\n\n- [^\n]*/)?.[0] ?? "";
+  if (principlesLine && !principlesLine.includes("One question at a time")) {
+    ok("pwk-brainstorming: one-question-at-a-time principle replaced");
+  } else {
+    fail("pwk-brainstorming: Principles must not lead with one-question-at-a-time");
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
