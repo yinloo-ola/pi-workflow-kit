@@ -94,6 +94,34 @@ describe("code-digest per-slice", () => {
     expect(rules).toContain(CODE_DIGEST_MARKERS.honestEmptyGotchas);
     expect(rules).toContain(CODE_DIGEST_MARKERS.keyFilesCap);
   });
+  it("should exclude completed/ from every recursive discovery glob", () => {
+    const sites: Array<[string, string]> = [
+      ["skills/pwk-status/SKILL.md", "1. Glob `docs/plans/**/*-design.md`"],
+      ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
+      ["skills/pwk-executing-tasks/SKILL.md", "**Find the plan**"],
+      ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
+      ["skills/pwk-finalizing/SKILL.md", "**Umbrella** (a `docs/plans/**/overview.md` exists"],
+    ];
+    for (const [file, anchor] of sites) {
+      const content = readRepo(file);
+      const at = content.indexOf(anchor);
+      expect(at, file).toBeGreaterThan(-1);
+      expect(content.slice(at, at + 400), file).toContain(CODE_DIGEST_MARKERS.completedExclusion);
+    }
+    // the post-review routing block states the exclusion too
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const routingAt = executing.indexOf("## After the feature review");
+    expect(routingAt).toBeGreaterThan(-1);
+    const routing = executing.slice(routingAt, executing.indexOf("Present:", routingAt));
+    expect(routing).toContain(CODE_DIGEST_MARKERS.completedExclusion);
+  });
+
+  it("should leave finalize disposal commands unchanged", () => {
+    const finalize = readRepo("skills/pwk-finalizing/SKILL.md");
+    for (const line of FINALIZE_DISPOSAL_LINES) {
+      expect(finalize).toContain(line);
+    }
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

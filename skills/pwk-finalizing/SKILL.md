@@ -10,7 +10,7 @@ Ship the completed work.
 ## Pre-finalization checks
 
 1. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
-2. Read **every** relevant progress file — for an umbrella that's each part's `docs/plans/**/*-progress.md` (recursive — umbrella docs live in `docs/plans/<date>-<umbrella>/` folders); for a standalone design doc, the one:
+2. Read **every** relevant progress file — for an umbrella that's each part's `docs/plans/**/*-progress.md` (recursive — umbrella docs live in `docs/plans/<date>-<umbrella>/` folders, excluding docs/plans/completed/ — archived parts are already shipped); for a standalone design doc, the one:
    - **Any `❌ failed`** (in any part) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
    - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
    - **`Feature phase` must be `done`** in every progress file — any other value (`e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, or a legacy `feature-complete-paused` from before the ship gate) means the feature is still in flight: the ship checkpoint has not been approved. Send the user back to `/skill:pwk-executing-tasks` instead of finalizing.
@@ -18,7 +18,7 @@ Ship the completed work.
 ## Process
 
 1. **Derive the topic set** —
-   - **Umbrella** (a `docs/plans/**/overview.md` exists): read its roster; the set is every part's `<topic>`. The umbrella folder is disposed too.
+   - **Umbrella** (a `docs/plans/**/overview.md` exists — excluding docs/plans/completed/, so an archived umbrella is never the one being finalized): read its roster; the set is every part's `<topic>`. The umbrella folder is disposed too.
    - **Standalone**: progress file → `Plan:` ref → plan's `Design:` ref → design-doc filename → `<topic>`. One topic.
 
    Ambiguous with several designs in flight? Ask.

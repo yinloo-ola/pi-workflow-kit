@@ -627,6 +627,51 @@ if (et) {
   }
 }
 
+// R5 — every recursive discovery glob excludes completed/ (archived work is not
+// in flight), while the finalize disposal commands stay byte-identical.
+const EXCLUSION_SITES = [
+  [status, "1. Glob `docs/plans/**/*-design.md`"],
+  [bs, "**Discovery**"],
+  [et, "**Find the plan**"],
+  [fin, "Read **every** relevant progress file"],
+  [fin, "**Umbrella** (a `docs/plans/**/overview.md` exists"],
+];
+for (const pair of EXCLUSION_SITES) {
+  const s = pair[0];
+  if (!s) continue;
+  const at = s.content.indexOf(pair[1]);
+  if (at === -1) {
+    fail(`${s.name}: discovery anchor not found for the completed/ exclusion`);
+    continue;
+  }
+  fgMark(
+    s.name,
+    s.content.slice(at, at + 400),
+    CODE_DIGEST_MARKERS.completedExclusion,
+    "discovery excludes completed/",
+  );
+}
+if (et) {
+  const routingAt = et.content.indexOf("## After the feature review");
+  if (routingAt !== -1) {
+    const routing = et.content.slice(routingAt, et.content.indexOf("Present:", routingAt));
+    fgMark("pwk-executing-tasks", routing, CODE_DIGEST_MARKERS.completedExclusion, "routing excludes completed/");
+  } else {
+    fail("pwk-executing-tasks: routing block not found");
+  }
+}
+if (fin) {
+  const DISPOSAL_ANCHORS = [
+    "rm -rf docs/plans/<date>-<umbrella>/",
+    "mv docs/plans/<date>-<umbrella>/ docs/plans/completed/",
+    "ls docs/plans/completed/<date>-<umbrella>/ >/dev/null",
+    "verbatim from the discovered",
+  ];
+  for (const anchor of DISPOSAL_ANCHORS) {
+    fgMark("pwk-finalizing", fin.content, anchor, "disposal command unchanged");
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
