@@ -107,6 +107,7 @@ When every requirement's Done column is ✅:
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
    - a green-gates line: full suite green, feature E2E green;
    - the **execution summary** — what each requirement became, deviations included;
+   - the **code digest** — the plain-language change explanation from the progress file (summary, flow, gotchas, key files);
    - the **coverage table** from the spec-reviewer report (one verdict row per R#);
    - findings status: fixed / open for the human;
    - "full diff on request" — the raw diff is one command away; show a hunk only where a verdict or finding makes the human ask.

@@ -67,6 +67,20 @@ describe("code-digest per-slice", () => {
     expect(stepBlock).toMatch(/re-run the recipe/); // stale/missing packet
     expect(stepBlock).toMatch(/`Feature phase: reviewing`/); // resume path fires the same write point
   });
+  it("should present the digest after the execution summary", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const listAt = executing.indexOf("present, in this order:");
+    expect(listAt).toBeGreaterThan(-1);
+    const list = executing.slice(listAt, listAt + 800);
+    const summaryAt = list.indexOf("the **execution summary**");
+    const digestAt = list.indexOf("the **code digest**");
+    const diffAt = list.indexOf("full diff on request");
+    expect(summaryAt).toBeGreaterThan(-1);
+    expect(digestAt).toBeGreaterThan(-1);
+    expect(diffAt).toBeGreaterThan(-1);
+    expect(digestAt).toBeGreaterThan(summaryAt); // after the execution summary
+    expect(digestAt).toBeLessThan(diffAt); // before diff-on-request, which stays last
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

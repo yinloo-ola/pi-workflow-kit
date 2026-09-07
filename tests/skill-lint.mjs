@@ -584,6 +584,25 @@ if (et) {
   }
 }
 
+// R3 — the ship-checkpoint presentation includes the code digest, after the
+// execution summary and before diff-on-request (which stays last).
+if (et) {
+  const listAt = et.content.indexOf("present, in this order:");
+  if (listAt === -1) {
+    fail("pwk-executing-tasks: ship presentation list not found");
+  } else {
+    const list = et.content.slice(listAt, listAt + 800);
+    const summaryAt = list.indexOf("the **execution summary**");
+    const digestAt = list.indexOf("the **code digest**");
+    const diffAt = list.indexOf("full diff on request");
+    if (summaryAt !== -1 && digestAt !== -1 && diffAt !== -1 && digestAt > summaryAt && digestAt < diffAt) {
+      ok("pwk-executing-tasks: digest presented after the summary, before diff-on-request");
+    } else {
+      fail("pwk-executing-tasks: presentation order must be summary → code digest → diff on request");
+    }
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
