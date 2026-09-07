@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.0] - 2026-09-07
+
+### Added
+
+- **Code digest at part completion** — after the feature review passes, `pwk-executing-tasks` writes a plain-language `## Code digest` (Summary / Flow / Gotchas / Key files) into the progress file, derived from the review packet (Commits / Changed files / Diff), and presents it at the ship checkpoint between the execution summary and the coverage table. Fill rules: plain language, arrow-chain flows, `[ALERT]` only for reviewer-confirmed risks (honest empty when none), key files capped at 5, no test names. Rides the existing disposal globs; written once per feature, never a shipping gate.
+- **Frontier-round brainstorming** — `pwk-brainstorming` replaces one-question-at-a-time with dependency-ordered **frontier rounds**: numbered questions each carrying a recommended answer, a six-dimension seed checklist (*Goal & scope · Data & state · Behavior & edge cases · Errors & failure · Integration · Non-functional*) with a visible `— nothing to ask` for empty groups, a facts rule (codebase/docs/tool facts are looked up — recon scout or inline — never asked of the human; pending lookups hold only downstream questions), an **assumption gate** (`Assumptions to confirm`) sweeping the drafted design before it is presented, and a frontier-empty stop rule (nothing left silently assumed). Unwritable feature-acceptance scenario steps bounce back through the gate; `pwk-writing-plans` bounces requirements whose testable acceptance criteria cannot be derived without inventing behavior back to brainstorm, naming the gap.
+
+### Fixed
+
+- **Archived plan docs no longer resurface as active** — every recursive `docs/plans/**` discovery glob (`pwk-status` artifact globs, `pwk-brainstorming` discovery, `pwk-writing-plans` find-the-design + umbrella check, `pwk-executing-tasks` find-the-plan + post-review routing, `pwk-finalizing` umbrella detection + progress reads) now excludes `docs/plans/completed/`. Closes a 1.7.0 regression in which an archived umbrella's `overview.md` could invert finalize's umbrella branch (the anchored `rm -rf` targeting the archive) and misroute standalone post-review routing. Finalize disposal commands are byte-unchanged and regression-guarded by tests.
+
 ## [1.7.0] - 2026-09-05
 
 ### Added
