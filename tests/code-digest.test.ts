@@ -81,6 +81,19 @@ describe("code-digest per-slice", () => {
     expect(digestAt).toBeGreaterThan(summaryAt); // after the execution summary
     expect(digestAt).toBeLessThan(diffAt); // before diff-on-request, which stays last
   });
+  it("should state the digest fill rules", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const rulesAt = executing.indexOf("## Code digest` is filled once");
+    expect(rulesAt).toBeGreaterThan(-1);
+    const rules = executing.slice(rulesAt, rulesAt + 700); // scoped: several phrases exist elsewhere
+    expect(rules).toMatch(/plain language/i);
+    expect(rules).toContain("R# anchors");
+    expect(rules).toContain("no test names");
+    expect(rules).toContain("A -> B -> C");
+    expect(rules).toContain(CODE_DIGEST_MARKERS.alertReviewerConfirmedOnly);
+    expect(rules).toContain(CODE_DIGEST_MARKERS.honestEmptyGotchas);
+    expect(rules).toContain(CODE_DIGEST_MARKERS.keyFilesCap);
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

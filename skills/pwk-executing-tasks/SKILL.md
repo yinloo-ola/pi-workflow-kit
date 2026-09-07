@@ -50,6 +50,8 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
    ### Key files — 3–5 pivotal files, one line each: what shifted inside them.
    ```
 
+   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Flow` uses `A -> B -> C` arrow chains. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
+
    `Feature phase` is one of: `e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`.
 
 4. **Commit the plan docs** — `git add docs/plans/ && git commit -m "docs: add implementation plan"`.

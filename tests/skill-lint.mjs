@@ -603,6 +603,30 @@ if (et) {
   }
 }
 
+// R4 — fill rules stated once next to the template, scoped to that paragraph
+// (several phrases legitimately exist elsewhere in the skill).
+if (et) {
+  const rulesAt = et.content.indexOf("## Code digest` is filled once");
+  if (rulesAt === -1) {
+    fail("pwk-executing-tasks: digest fill-rules paragraph not found");
+  } else {
+    const rules = et.content.slice(rulesAt, rulesAt + 700);
+    const ruleChecks = [
+      [/plain language/i, "plain language"],
+      [/R# anchors/, "R# anchors"],
+      [/no test names/, "no test names"],
+      [/A -> B -> C/, "arrow chains"],
+      [new RegExp(CODE_DIGEST_MARKERS.alertReviewerConfirmedOnly), "[ALERT] reviewer-confirmed only"],
+      [new RegExp(CODE_DIGEST_MARKERS.honestEmptyGotchas), "honest empty gotchas"],
+      [new RegExp(CODE_DIGEST_MARKERS.keyFilesCap), "key files cap"],
+    ];
+    for (const [re, label] of ruleChecks) {
+      if (re.test(rules)) ok(`pwk-executing-tasks: fill rule — ${label}`);
+      else fail(`pwk-executing-tasks: fill rule missing — ${label}`);
+    }
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {
