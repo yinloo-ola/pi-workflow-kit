@@ -48,6 +48,25 @@ describe("code-digest per-slice", () => {
     expect(template.slice(digestAt)).toMatch(/### Summary[\s\S]*### Flow[\s\S]*### Gotchas[\s\S]*### Key files/);
     expect(template).toContain(CODE_DIGEST_MARKERS.digestOnceOnly);
   });
+  it("should write the digest after review success, derived from the packet", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const stepAt = executing.indexOf("**Write the code digest**");
+    expect(stepAt).toBeGreaterThan(-1);
+    // placed between the feature review (step 3) and the ship pause (step 5)
+    const reviewAt = executing.indexOf("**Run the feature review**");
+    const pauseAt = executing.indexOf("**⏸ CHECKPOINT: ship**");
+    expect(reviewAt).toBeGreaterThan(-1);
+    expect(pauseAt).toBeGreaterThan(-1);
+    expect(stepAt).toBeGreaterThan(reviewAt);
+    expect(stepAt).toBeLessThan(pauseAt);
+    const stepLine = executing.slice(stepAt, executing.indexOf("\n", stepAt));
+    expect(stepLine).toContain("`## Commits`");
+    expect(stepLine).toContain("`## Changed files`");
+    expect(stepLine).toContain("`## Diff`");
+    const stepBlock = executing.slice(stepAt, stepAt + 900);
+    expect(stepBlock).toMatch(/re-run the recipe/); // stale/missing packet
+    expect(stepBlock).toMatch(/`Feature phase: reviewing`/); // resume path fires the same write point
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

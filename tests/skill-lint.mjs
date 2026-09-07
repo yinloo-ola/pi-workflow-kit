@@ -560,6 +560,30 @@ if (et) {
   }
 }
 
+// R2 — the digest write point: after review success, before the ship pause,
+// derived from the packet sections; stale packet re-runs the recipe; resume-safe.
+if (et) {
+  const stepAt = et.content.indexOf("**Write the code digest**");
+  const reviewAt = et.content.indexOf("**Run the feature review**");
+  const pauseAt = et.content.indexOf("**⏸ CHECKPOINT: ship**");
+  if (stepAt === -1 || reviewAt === -1 || pauseAt === -1) {
+    fail("pwk-executing-tasks: digest write step / review step / ship pause not found");
+  } else if (stepAt > reviewAt && stepAt < pauseAt) {
+    ok("pwk-executing-tasks: digest written between review success and the pause");
+    const stepLine = et.content.slice(stepAt, et.content.indexOf("\n", stepAt));
+    for (const section of ["`## Commits`", "`## Changed files`", "`## Diff`"]) {
+      fgMark("pwk-executing-tasks", stepLine, section, `digest derives from the packet ${section}`);
+    }
+    const stepBlock = et.content.slice(stepAt, stepAt + 900);
+    if (/re-run the recipe/.test(stepBlock)) ok("pwk-executing-tasks: stale packet re-runs the recipe");
+    else fail("pwk-executing-tasks: digest step must re-run a stale packet first");
+    if (/`Feature phase: reviewing`/.test(stepBlock)) ok("pwk-executing-tasks: resume path hits the same write point");
+    else fail("pwk-executing-tasks: digest step must name the reviewing resume path");
+  } else {
+    fail("pwk-executing-tasks: digest write step must sit after the review, before the pause");
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

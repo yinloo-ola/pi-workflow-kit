@@ -103,7 +103,8 @@ When every requirement's Done column is ✅:
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
 2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the plan declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
 3. **Run the feature review** (below) per the plan's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
-4. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
+4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Written once — never rewritten per requirement, never a gate: it explains the change, it does not block shipping.
+5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
    - a green-gates line: full suite green, feature E2E green;
    - the **execution summary** — what each requirement became, deviations included;
    - the **coverage table** from the spec-reviewer report (one verdict row per R#);
