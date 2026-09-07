@@ -101,6 +101,7 @@ describe("code-digest per-slice", () => {
       ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
       ["skills/pwk-executing-tasks/SKILL.md", "**Find the plan**"],
       ["skills/pwk-writing-plans/SKILL.md", "**Find the design doc**"],
+      ["skills/pwk-writing-plans/SKILL.md", "**Umbrella part?**"],
       ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
       ["skills/pwk-finalizing/SKILL.md", "**Umbrella** (a `docs/plans/**/overview.md` exists"],
     ];
@@ -139,9 +140,11 @@ describe("code-digest per-slice", () => {
     for (const approval of ["approach selection", "umbrella split", "design approval", "ADR unlock"]) {
       expect(step3).toContain(approval);
     }
-    const principles = brainstorming.match(/## Principles\n\n- [^\n]*/)?.[0];
+    const principles = brainstorming.match(/## Principles\n\n(?:- [^\n]*\n?){1,2}/)?.[0];
     if (!principles) throw new Error("brainstorming: Principles list not found");
     expect(principles).not.toContain("One question at a time"); // defining line only
+    expect(principles).toContain("frontier"); // replaced by the frontier principle
+    expect(principles).toContain("No silent assumptions"); // and the no-assumption principle
   });
 
   it("should walk every checklist dimension visibly", () => {

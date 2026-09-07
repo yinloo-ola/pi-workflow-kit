@@ -708,9 +708,14 @@ if (bs) {
     fgMark("pwk-brainstorming", step3, dimension, `checklist dimension — ${dimension}`);
   }
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.nothingToAsk, "empty dimensions printed visibly");
-  const principlesLine = bs.content.match(/## Principles\n\n- [^\n]*/)?.[0] ?? "";
+  const principlesLine = bs.content.match(/## Principles\n\n(?:- [^\n]*\n?){1,2}/)?.[0] ?? "";
   if (principlesLine && !principlesLine.includes("One question at a time")) {
     ok("pwk-brainstorming: one-question-at-a-time principle replaced");
+    if (/frontier/.test(principlesLine) && /No silent assumptions/.test(principlesLine)) {
+      ok("pwk-brainstorming: replacement principles present");
+    } else {
+      fail("pwk-brainstorming: Principles must carry the frontier and no-silent-assumptions replacements");
+    }
   } else {
     fail("pwk-brainstorming: Principles must not lead with one-question-at-a-time");
   }
