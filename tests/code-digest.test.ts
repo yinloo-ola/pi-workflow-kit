@@ -185,6 +185,35 @@ describe("code-digest per-slice", () => {
     expect(gate).toMatch(/woven into/); // confirmed facts woven in
     expect(gate).toMatch(/no new (template )?section/i); // no template churn
   });
+  it("should stop the interview on an empty frontier", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const step3 = brainstorming.slice(
+      brainstorming.indexOf("**Understand the idea**"),
+      brainstorming.indexOf("**Codebase recon**"),
+    );
+    expect(step3).toContain(CODE_DIGEST_MARKERS.nothingSilentlyAssumed);
+    // the old feel-ready stop rule is gone from its defining sentence
+    const summaryLine = step3.match(/[^\n]*present a short summary[^\n]*/)?.[0];
+    if (!summaryLine) throw new Error("brainstorming: proceed-summary sentence not found");
+    expect(summaryLine).not.toContain("Once you can articulate");
+  });
+
+  it("should bounce invented scenario behavior to the gate", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const step7 = brainstorming.slice(
+      brainstorming.indexOf("Write the design doc"),
+      brainstorming.indexOf("Splitting large issues"),
+    );
+    expect(step7).toMatch(/inventing behavior/);
+    expect(step7).toMatch(/back through the assumption gate/);
+  });
+
+  it("should bounce un-derivable requirements to brainstorm", () => {
+    const writingPlans = readRepo("skills/pwk-writing-plans/SKILL.md");
+    expect(writingPlans).toContain(CODE_DIGEST_MARKERS.bounceToBrainstorm);
+    expect(writingPlans).toMatch(/inventing behavior/);
+    expect(writingPlans).toMatch(/naming the specific gap|name the specific gap/);
+  });
 });
 
 describe("code-digest feature (E2E)", () => {

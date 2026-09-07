@@ -745,6 +745,36 @@ if (bs) {
   }
 }
 
+// R9 — checkable termination and the two backstops: frontier-empty stop rule,
+// scenario-step forcing in step 7, and the planner bounce.
+if (bs) {
+  const step3 = bs.content.slice(
+    bs.content.indexOf("**Understand the idea**"),
+    bs.content.indexOf("**Codebase recon**"),
+  );
+  fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.nothingSilentlyAssumed, "frontier-empty stop rule");
+  const summaryLine = step3.match(/[^\n]*present a short summary[^\n]*/)?.[0] ?? "";
+  if (summaryLine && !summaryLine.includes("Once you can articulate")) {
+    ok("pwk-brainstorming: feel-ready stop rule replaced");
+  } else {
+    fail("pwk-brainstorming: stop rule must not be once-you-can-articulate");
+  }
+  const step7 = bs.content.slice(
+    bs.content.indexOf("Write the design doc"),
+    bs.content.indexOf("Splitting large issues"),
+  );
+  if (/inventing behavior/.test(step7) && /back through the assumption gate/.test(step7)) {
+    ok("pwk-brainstorming: unwritable scenario steps bounce to the gate");
+  } else {
+    fail("pwk-brainstorming: step 7 must route invented scenario behavior to the gate");
+  }
+}
+if (wp) {
+  fgMark("pwk-writing-plans", wp.content, CODE_DIGEST_MARKERS.bounceToBrainstorm, "planner bounce to brainstorm");
+  if (/inventing behavior/.test(wp.content)) ok("pwk-writing-plans: bounce names inventing behavior");
+  else fail("pwk-writing-plans: bounce rule must name inventing behavior");
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

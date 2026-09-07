@@ -4,7 +4,7 @@ Plan: docs/plans/2026-09-07-code-digest-implementation.md
 Branch: code-digest
 Started: 2026-09-07T12:00:00+08:00
 Last updated: 2026-09-07T12:00:00+08:00
-Feature phase: implementing (8/10)
+Feature phase: implementing (9/10)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -17,7 +17,7 @@ Feature phase: implementing (8/10)
 | 6 | ✅ | Frontier rounds | — | R6 |
 | 7 | ✅ | Facts vs decisions | — | R7 |
 | 8 | ✅ | Assumption gate | — | R8 |
-| 9 | ⬜ | Termination and backstops | — | — |
+| 9 | ✅ | Termination and backstops | — | R9 |
 | 10 | ⬜ | Docs mirrors | — | — |
 
 ## Execution summary
@@ -31,5 +31,5 @@ Feature phase: implementing (8/10)
 | 6 | Frontier rounds | Step 3 rewritten: question tree seeded by the six-dimension checklist (nothing-to-ask printed), full-frontier rounds of numbered questions each carrying a ➡️ recommendation, four approvals kept single-decision; Principles rewritten. | |
 | 7 | Facts vs decisions | Facts rule added to step 3: codebase/docs/tool facts are looked up (scout or inline), never asked of the human; a pending lookup holds only its downstream questions. | |
 | 8 | Assumption gate | New block at step 6: before presenting the design, every unconfirmed assumption re-opens as a numbered question with a recommendation; honest empty gate; confirmed facts woven in, no new section. | |
-| 9 | Termination and backstops | | |
+| 9 | Termination and backstops | Stop rule rewritten to frontier-empty (nothing silently assumed); unwritable feature-acceptance steps bounce to the gate; writing-plans bounces un-derivable requirements back to brainstorm naming the gap. | |
 | 10 | Docs mirrors | | |
