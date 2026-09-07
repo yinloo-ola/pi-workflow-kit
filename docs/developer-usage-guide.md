@@ -52,7 +52,7 @@ The command creates `.agents/agents/` and installs the five PWK roles. It preser
 /skill:pwk-brainstorming
 ```
 
-Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review. On non-trivial topics with prior art, the skill requests the logical `codebase-recon` capability using the `pwk-recon-scout` role. A compatible host may dispatch that role in a fresh, bounded, read-only worker; otherwise the skill reports `Scout: unavailable` and performs the same five-section recon inline.
+Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review. Questioning runs in **frontier rounds**: numbered questions each carrying a recommended answer, facts looked up rather than asked, an assumption gate before the design is presented, and a frontier-empty stop rule (nothing left silently assumed). On non-trivial topics with prior art, the skill requests the logical `codebase-recon` capability using the `pwk-recon-scout` role. A compatible host may dispatch that role in a fresh, bounded, read-only worker; otherwise the skill reports `Scout: unavailable` and performs the same five-section recon inline.
 
 Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (plain-language summary + `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` list. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
 
@@ -72,7 +72,7 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 /skill:pwk-executing-tasks
 ```
 
-Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + coverage table — full diff on request). Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
+Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + code digest + coverage table — full diff on request). After the review passes, the executor writes the code digest into the progress file from the review packet. Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
 
 ### 4. Code review (feature level)
 
@@ -88,7 +88,7 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 /skill:pwk-finalizing
 ```
 
-**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive or delete consumed plan docs (the human's choice), curate lessons, update CHANGELOG/README, create PR or merge.
+**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive or delete consumed plan docs (the human's choice; archived docs land in `docs/plans/completed/`, and every discovery glob runs excluding docs/plans/completed/ so archived work never resurfaces as in flight), curate lessons, update CHANGELOG/README, create PR or merge.
 
 ### Diagnose (on demand)
 

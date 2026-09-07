@@ -4,7 +4,7 @@ Plan: docs/plans/2026-09-07-code-digest-implementation.md
 Branch: code-digest
 Started: 2026-09-07T12:00:00+08:00
 Last updated: 2026-09-07T12:00:00+08:00
-Feature phase: implementing (9/10)
+Feature phase: reviewing
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -18,7 +18,7 @@ Feature phase: implementing (9/10)
 | 7 | ✅ | Facts vs decisions | — | R7 |
 | 8 | ✅ | Assumption gate | — | R8 |
 | 9 | ✅ | Termination and backstops | — | R9 |
-| 10 | ⬜ | Docs mirrors | — | — |
+| 10 | ✅ | Docs mirrors | — | R10 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
@@ -32,4 +32,4 @@ Feature phase: implementing (9/10)
 | 7 | Facts vs decisions | Facts rule added to step 3: codebase/docs/tool facts are looked up (scout or inline), never asked of the human; a pending lookup holds only its downstream questions. | |
 | 8 | Assumption gate | New block at step 6: before presenting the design, every unconfirmed assumption re-opens as a numbered question with a recommendation; honest empty gate; confirmed facts woven in, no new section. | |
 | 9 | Termination and backstops | Stop rule rewritten to frontier-empty (nothing silently assumed); unwritable feature-acceptance steps bounce to the gate; writing-plans bounces un-derivable requirements back to brainstorm naming the gap. | |
-| 10 | Docs mirrors | | |
+| 10 | Docs mirrors | README, workflow-phases, and developer-usage-guide now describe the ship-checkpoint code digest, the completed/ exclusion at archive time, and frontier-round questioning. | |

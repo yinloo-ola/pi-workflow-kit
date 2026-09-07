@@ -214,6 +214,14 @@ describe("code-digest per-slice", () => {
     expect(writingPlans).toMatch(/inventing behavior/);
     expect(writingPlans).toMatch(/naming the specific gap|name the specific gap/);
   });
+  it("should mirror digest, exclusion, and frontier wording in user docs", () => {
+    for (const doc of MIRROR_DOCS) {
+      const content = readRepo(doc);
+      expect(content, doc).toMatch(/code digest/i);
+      expect(content, doc).toContain(CODE_DIGEST_MARKERS.completedExclusion);
+      expect(content, doc).toMatch(/frontier/i);
+    }
+  });
 });
 
 describe("code-digest feature (E2E)", () => {
