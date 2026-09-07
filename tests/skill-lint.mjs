@@ -723,6 +723,28 @@ if (bs) {
   }
 }
 
+// R8 — assumption gate before the design presentation: numbered confirm/strike
+// items with recommendations, honest when empty, woven not new-sectioned.
+if (bs) {
+  const gate = bs.content.slice(
+    bs.content.indexOf("**Present the design**"),
+    bs.content.indexOf("Identified a significant architectural decision"),
+  );
+  fgMark("pwk-brainstorming", gate, CODE_DIGEST_MARKERS.assumptionGate, "assumption gate before the summary");
+  const gateChecks = [
+    [/numbered question/, "assumptions re-opened as numbered questions"],
+    [/recommended answer/, "each carries a recommended answer"],
+    [/no unconfirmed assumptions/i, "honest empty gate"],
+    [/no business behavior enters the design doc on the agent/, "hard rule stated"],
+    [/woven into/, "confirmed facts woven into existing sections"],
+    [/no new (template )?section/i, "no new template section"],
+  ];
+  for (const [re, label] of gateChecks) {
+    if (re.test(gate)) ok(`pwk-brainstorming: gate — ${label}`);
+    else fail(`pwk-brainstorming: gate missing — ${label}`);
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

@@ -171,6 +171,20 @@ describe("code-digest per-slice", () => {
     expect(step3).toMatch(/downstream/);
     expect(step3).toMatch(/asked now/);
   });
+  it("should sweep assumptions before the design summary", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const gate = brainstorming.slice(
+      brainstorming.indexOf("**Present the design**"),
+      brainstorming.indexOf("Identified a significant architectural decision"),
+    );
+    expect(gate).toContain(CODE_DIGEST_MARKERS.assumptionGate);
+    expect(gate).toMatch(/numbered question/);
+    expect(gate).toMatch(/recommended answer/);
+    expect(gate).toMatch(/honest empty gate|no unconfirmed assumptions/i); // honest when clean
+    expect(gate).toMatch(/no business behavior enters the design doc on the agent/); // hard rule
+    expect(gate).toMatch(/woven into/); // confirmed facts woven in
+    expect(gate).toMatch(/no new (template )?section/i); // no template churn
+  });
 });
 
 describe("code-digest feature (E2E)", () => {
