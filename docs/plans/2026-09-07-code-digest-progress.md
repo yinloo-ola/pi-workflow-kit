@@ -4,12 +4,12 @@ Plan: docs/plans/2026-09-07-code-digest-implementation.md
 Branch: code-digest
 Started: 2026-09-07T12:00:00+08:00
 Last updated: 2026-09-07T12:00:00+08:00
-Feature phase: e2e-written
+Feature phase: implementing (1/10)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ⬜ | Digest template | — | — |
+| 1 | ✅ | Digest template | — | R1 |
 | 2 | ⬜ | Digest write point | — | — |
 | 3 | ⬜ | Checkpoint presentation | — | — |
 | 4 | ⬜ | Fill rules | — | — |
@@ -23,7 +23,7 @@ Feature phase: e2e-written
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
 |----|-------------|------------------|-----------|
-| 1 | Digest template | | |
+| 1 | Digest template | Progress template gains a ## Code digest block under the execution summary: four subsections (Summary/Flow/Gotchas/Key files) plus a once-only placeholder note. | |
 | 2 | Digest write point | | |
 | 3 | Checkpoint presentation | | |
 | 4 | Fill rules | | |

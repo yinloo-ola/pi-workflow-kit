@@ -39,6 +39,15 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
    | R# | Requirement | How it was built | Deviated? |
    |----|-------------|------------------|-----------|
    | 1 | <requirement name> | | |
+
+   ## Code digest
+
+   <!-- Written once, after the feature review passes; never back-filled per requirement. -->
+
+   ### Summary — 2–3 sentences: what the code now does differently, and why.
+   ### Flow — execution/data movement through the changed code, as arrow chains.
+   ### Gotchas — edge cases, implicit assumptions; [ALERT]-prefixed real risks.
+   ### Key files — 3–5 pivotal files, one line each: what shifted inside them.
    ```
 
    `Feature phase` is one of: `e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`.

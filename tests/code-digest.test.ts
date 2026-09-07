@@ -13,11 +13,7 @@ const DISCOVERY_SITES = [
   "skills/pwk-finalizing/SKILL.md",
 ] as const;
 
-const MIRROR_DOCS = [
-  "README.md",
-  "docs/workflow-phases.md",
-  "docs/developer-usage-guide.md",
-] as const;
+const MIRROR_DOCS = ["README.md", "docs/workflow-phases.md", "docs/developer-usage-guide.md"] as const;
 
 // Byte-identical regression guard (R5): the finalize disposal commands and
 // their anchoring comments must not change — the exclusion is wording-only.
@@ -37,6 +33,22 @@ const FINALIZE_DISPOSAL_LINES = [
 function readRepo(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
+
+describe("code-digest per-slice", () => {
+  it("should add the code-digest section to the progress template", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    // The progress-file template is the ```markdown fence containing "# Progress:".
+    const start = executing.indexOf("# Progress:");
+    if (start === -1) throw new Error("executing skill: progress template not found");
+    const end = executing.indexOf("```", start);
+    const template = executing.slice(start, end);
+    const execSummaryAt = template.indexOf("## Execution summary");
+    const digestAt = template.indexOf(CODE_DIGEST_MARKERS.codeDigest);
+    expect(digestAt).toBeGreaterThan(execSummaryAt); // directly below the execution summary
+    expect(template.slice(digestAt)).toMatch(/### Summary[\s\S]*### Flow[\s\S]*### Gotchas[\s\S]*### Key files/);
+    expect(template).toContain(CODE_DIGEST_MARKERS.digestOnceOnly);
+  });
+});
 
 describe("code-digest feature (E2E)", () => {
   it("should compose digest-at-completion, archive-blind discovery, and frontier questioning across the kit", () => {

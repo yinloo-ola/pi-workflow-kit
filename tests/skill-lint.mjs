@@ -10,7 +10,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DIGEST_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, DIGEST_MARKERS } from "./markers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillsDir = join(root, "skills");
@@ -529,6 +529,35 @@ if (fin) {
 if (fin) {
   fgMark("pwk-finalizing", fin.content, "verbatim from the discovered", "folder delete path anchored to discovery");
   fgMark("pwk-finalizing", fin.content, "ls docs/plans/completed/<date>-<umbrella>/", "archive verified before commit");
+}
+
+// --- Check 12: code-digest feature (grown per-requirement) ---
+// R1 — the progress-file template carries a code-digest section below the
+// execution summary: four subsections, filled once after the review passes.
+console.log("code-digest:");
+if (et) {
+  fgMark("pwk-executing-tasks", et.content, CODE_DIGEST_MARKERS.codeDigest, "code-digest section in template");
+  fgMark(
+    "pwk-executing-tasks",
+    et.content,
+    CODE_DIGEST_MARKERS.digestOnceOnly,
+    "digest written once, post-review, never back-filled",
+  );
+  const tStart = et.content.indexOf("# Progress:");
+  const tEnd = tStart === -1 ? -1 : et.content.indexOf("```", tStart);
+  if (tStart !== -1 && tEnd !== -1) {
+    const template = et.content.slice(tStart, tEnd);
+    const shape = /### Summary[\s\S]*### Flow[\s\S]*### Gotchas[\s\S]*### Key files/.test(template);
+    if (shape) ok("pwk-executing-tasks: digest subsection shape in template");
+    else fail("pwk-executing-tasks: digest must carry Summary/Flow/Gotchas/Key files in order");
+    if (template.indexOf("## Code digest") > template.indexOf("## Execution summary")) {
+      ok("pwk-executing-tasks: digest sits below the execution summary");
+    } else {
+      fail("pwk-executing-tasks: digest must sit directly below the execution summary");
+    }
+  } else {
+    fail("pwk-executing-tasks: progress template not found");
+  }
 }
 
 // --- Summary ---
