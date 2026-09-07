@@ -88,7 +88,7 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 /skill:pwk-finalizing
 ```
 
-**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive or delete consumed plan docs (the human's choice; archived docs land in `docs/plans/completed/`, and every discovery glob runs excluding docs/plans/completed/ so archived work never resurfaces as in flight), curate lessons, update CHANGELOG/README, create PR or merge.
+**Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive or delete consumed plan docs (the human's choice; archived docs land in `docs/plans/completed/`, and every discovery glob runs excluding docs/plans/completed/ so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording), curate lessons, update CHANGELOG/README, create PR or merge.
 
 ### Diagnose (on demand)
 

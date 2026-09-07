@@ -80,7 +80,7 @@ No write restrictions.
 ```
 
 - **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight). ADRs stay at `docs/adr/`. For an umbrella (a `docs/plans/**/overview.md` exists), disposes the whole `docs/plans/<date>-<umbrella>/` folder — overview **and every part's** docs — in one pass and ships **one PR**.
+- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording). ADRs stay at `docs/adr/`. For an umbrella (a `docs/plans/**/overview.md` exists), disposes the whole `docs/plans/<date>-<umbrella>/` folder — overview **and every part's** docs — in one pass and ships **one PR**.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.

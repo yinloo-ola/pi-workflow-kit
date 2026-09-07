@@ -633,12 +633,16 @@ const EXCLUSION_SITES = [
   [status, "1. Glob `docs/plans/**/*-design.md`"],
   [bs, "**Discovery**"],
   [et, "**Find the plan**"],
+  [wp, "**Find the design doc**"],
   [fin, "Read **every** relevant progress file"],
   [fin, "**Umbrella** (a `docs/plans/**/overview.md` exists"],
 ];
 for (const pair of EXCLUSION_SITES) {
   const s = pair[0];
-  if (!s) continue;
+  if (!s) {
+    fail(`skill file missing from load: ${pair[1]}`);
+    continue;
+  }
   const at = s.content.indexOf(pair[1]);
   if (at === -1) {
     fail(`${s.name}: discovery anchor not found for the completed/ exclusion`);
@@ -653,16 +657,22 @@ for (const pair of EXCLUSION_SITES) {
 }
 if (et) {
   const routingAt = et.content.indexOf("## After the feature review");
-  if (routingAt !== -1) {
-    const routing = et.content.slice(routingAt, et.content.indexOf("Present:", routingAt));
+  const presentAt = et.content.indexOf("Present:", routingAt);
+  if (routingAt !== -1 && presentAt !== -1) {
+    const routing = et.content.slice(routingAt, presentAt);
     fgMark("pwk-executing-tasks", routing, CODE_DIGEST_MARKERS.completedExclusion, "routing excludes completed/");
   } else {
-    fail("pwk-executing-tasks: routing block not found");
+    fail("pwk-executing-tasks: routing block anchors not found");
   }
 }
 if (fin) {
   const DISPOSAL_ANCHORS = [
+    "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md",
     "rm -rf docs/plans/<date>-<umbrella>/",
+    "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
+    "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
+    "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
+    "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
     "mv docs/plans/<date>-<umbrella>/ docs/plans/completed/",
     "ls docs/plans/completed/<date>-<umbrella>/ >/dev/null",
     "verbatim from the discovered",

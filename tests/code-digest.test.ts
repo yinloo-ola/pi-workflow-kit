@@ -8,6 +8,7 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const DISCOVERY_SITES = [
   "skills/pwk-brainstorming/SKILL.md",
+  "skills/pwk-writing-plans/SKILL.md",
   "skills/pwk-executing-tasks/SKILL.md",
   "skills/pwk-status/SKILL.md",
   "skills/pwk-finalizing/SKILL.md",
@@ -99,6 +100,7 @@ describe("code-digest per-slice", () => {
       ["skills/pwk-status/SKILL.md", "1. Glob `docs/plans/**/*-design.md`"],
       ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
       ["skills/pwk-executing-tasks/SKILL.md", "**Find the plan**"],
+      ["skills/pwk-writing-plans/SKILL.md", "**Find the design doc**"],
       ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
       ["skills/pwk-finalizing/SKILL.md", "**Umbrella** (a `docs/plans/**/overview.md` exists"],
     ];
@@ -111,8 +113,10 @@ describe("code-digest per-slice", () => {
     // the post-review routing block states the exclusion too
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
     const routingAt = executing.indexOf("## After the feature review");
+    const presentAt = executing.indexOf("Present:", routingAt);
     expect(routingAt).toBeGreaterThan(-1);
-    const routing = executing.slice(routingAt, executing.indexOf("Present:", routingAt));
+    expect(presentAt, "routing end anchor missing").toBeGreaterThan(routingAt);
+    const routing = executing.slice(routingAt, presentAt);
     expect(routing).toContain(CODE_DIGEST_MARKERS.completedExclusion);
   });
 
@@ -220,6 +224,9 @@ describe("code-digest per-slice", () => {
       expect(content, doc).toMatch(/code digest/i);
       expect(content, doc).toContain(CODE_DIGEST_MARKERS.completedExclusion);
       expect(content, doc).toMatch(/frontier/i);
+      // AC4: each doc links to the single source rather than restating the rule as its own
+      expect(content, doc).toContain("single source");
+      expect(content, doc).toContain("pwk-executing-tasks");
     }
   });
 });
