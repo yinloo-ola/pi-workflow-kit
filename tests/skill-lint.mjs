@@ -706,6 +706,23 @@ if (bs) {
   }
 }
 
+// R7 — facts are looked up, never asked; pending lookups hold only downstream
+// questions while the rest of the frontier proceeds.
+if (bs) {
+  const step3 = bs.content.slice(
+    bs.content.indexOf("**Understand the idea**"),
+    bs.content.indexOf("**Codebase recon**"),
+  );
+  fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.factsNeverAsked, "facts never asked of the human");
+  if (/only decisions are asked/i.test(step3)) ok("pwk-brainstorming: only decisions are asked");
+  else fail("pwk-brainstorming: facts rule must state only decisions are asked");
+  if (/downstream/.test(step3) && /asked now/.test(step3)) {
+    ok("pwk-brainstorming: pending lookups hold only downstream questions");
+  } else {
+    fail("pwk-brainstorming: fact-finding must be non-blocking");
+  }
+}
+
 // --- Summary ---
 console.log("");
 if (failures === 0) {

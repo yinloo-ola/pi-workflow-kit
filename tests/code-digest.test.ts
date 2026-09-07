@@ -158,6 +158,19 @@ describe("code-digest per-slice", () => {
     }
     expect(step3).toContain(CODE_DIGEST_MARKERS.nothingToAsk);
   });
+  it("should look up facts instead of asking the human", () => {
+    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const step3 = brainstorming.slice(
+      brainstorming.indexOf("**Understand the idea**"),
+      brainstorming.indexOf("**Codebase recon**"),
+    );
+    expect(step3).toContain(CODE_DIGEST_MARKERS.factsNeverAsked);
+    expect(step3).toMatch(/looked up/);
+    expect(step3).toMatch(/only decisions are asked/i);
+    // non-blocking: a pending lookup holds only its downstream questions
+    expect(step3).toMatch(/downstream/);
+    expect(step3).toMatch(/asked now/);
+  });
 });
 
 describe("code-digest feature (E2E)", () => {
