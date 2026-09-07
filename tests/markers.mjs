@@ -27,3 +27,25 @@ export const DIGEST_MARKERS = {
   mustBeDone: "must be `done`",
   legacyPaused: "legacy `feature-complete-paused`",
 };
+
+/**
+ * Markers for the code-digest feature: the ship-time code digest, the
+ * completed/ exclusion on recursive discovery globs, and frontier-round
+ * brainstorm questioning. Same contract as DIGEST_MARKERS — one canonical
+ * string per behavior, shared by skill-lint and the vitest suites.
+ */
+export const CODE_DIGEST_MARKERS = {
+  codeDigest: "## Code digest",
+  digestOnceOnly: "never back-filled per requirement",
+  alertReviewerConfirmedOnly: "reviewer-confirmed",
+  honestEmptyGotchas: "none beyond review findings",
+  keyFilesCap: "at 5",
+  completedExclusion: "excluding docs/plans/completed/",
+  frontier: "frontier",
+  recommendedAnswer: "recommended answer",
+  nothingToAsk: "nothing to ask",
+  factsNeverAsked: "never asked of the human",
+  assumptionGate: "Assumptions to confirm",
+  nothingSilentlyAssumed: "nothing left silently assumed",
+  bounceToBrainstorm: "back to `/skill:pwk-brainstorming`",
+};
