@@ -464,6 +464,36 @@ if (bs) {
   else fail("pwk-brainstorming: must not instruct a crosswalk mapping table");
   if (!/pwk-writing-plans/.test(bs.content)) ok("pwk-brainstorming: no plan-phase hand-off");
   else fail("pwk-brainstorming: must hand off to pwk-executing-tasks, not a plan phase");
+  // pwk 2.0 R2 — decisions-first At a glance: summary, then Key decisions (honest-empty
+  // rejected-alternative clauses — never manufactured), then the R#/risk table.
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.keyDecisions, "decisions-first at-a-glance");
+  fgMark(
+    "pwk-brainstorming",
+    bs.content,
+    SINGLE_DOC_MARKERS.neverManufactured,
+    "honest-empty rejected alternatives",
+  );
+  const glanceDecisionsIdx = bs.content.indexOf(SINGLE_DOC_MARKERS.keyDecisions);
+  const glanceTableIdx = bs.content.indexOf(DIGEST_MARKERS.atAGlanceTable);
+  if (glanceDecisionsIdx !== -1 && glanceTableIdx > glanceDecisionsIdx) {
+    ok("pwk-brainstorming: Key decisions sit before the R# table");
+  } else {
+    fail("pwk-brainstorming: Key decisions must precede the R#/risk table");
+  }
+  const userDocsDecisions = [
+    join(root, "docs/workflow-phases.md"),
+    join(root, "docs/developer-usage-guide.md"),
+    join(root, "docs/oversight-model.md"),
+    join(root, "README.md"),
+  ];
+  let docsOk = true;
+  for (const f of userDocsDecisions) {
+    if (!/Key decisions/i.test(readFileSync(f, "utf8"))) {
+      fail(`${f.split("/").pop()}: must mirror the decisions-first At a glance`);
+      docsOk = false;
+    }
+  }
+  if (docsOk) ok("user docs mirror the decisions-first At a glance");
 }
 // R2 — plans carry a crosswalk (one row per design R#) placed strictly before
 // `## Requirement 1` so the packet sed spans stay intact; the human confirms in one line.

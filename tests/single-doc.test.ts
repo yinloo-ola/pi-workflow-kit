@@ -39,3 +39,29 @@ describe("single-doc: merged design doc (R1)", () => {
     expect(bs).toMatch(/pwk-executing-tasks/);
   });
 });
+
+describe("single-doc: decisions-first At a glance (R2)", () => {
+  it("should open At a glance summary → decisions → table", () => {
+    const bs = read("skills/pwk-brainstorming/SKILL.md");
+    expect(bs).toContain(SINGLE_DOC_MARKERS.keyDecisions);
+    expect(bs).toContain(SINGLE_DOC_MARKERS.neverManufactured);
+    const glanceIdx = bs.indexOf("## At a glance");
+    const decisionsIdx = bs.indexOf(SINGLE_DOC_MARKERS.keyDecisions);
+    const tableIdx = bs.indexOf("| R# | Requirement in one line | Risk |");
+    expect(glanceIdx).toBeGreaterThan(-1);
+    expect(decisionsIdx).toBeGreaterThan(glanceIdx);
+    expect(tableIdx).toBeGreaterThan(decisionsIdx);
+    expect(bs).toContain("(rejected:");
+  });
+
+  it("should mirror decisions-first digest across README and user docs", () => {
+    for (const rel of [
+      "docs/workflow-phases.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "README.md",
+    ]) {
+      expect(read(rel), rel).toMatch(/Key decisions/i);
+    }
+  });
+});
