@@ -3,8 +3,8 @@
 Plan: docs/plans/2026-09-08-pwk2-single-doc-implementation.md
 Branch: pwk2-single-doc
 Started: 2026-09-08T11:19:03+08:00
-Last updated: 2026-09-08T11:19:40+08:00
-Feature phase: reviewing
+Last updated: 2026-09-08T15:35:00+08:00
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -26,9 +26,10 @@ Feature phase: reviewing
 
 ## Code digest
 
-<!-- Written once, after the feature review passes; never back-filled per requirement. -->
+### Summary — The kit collapsed from four phases to three: `pwk-writing-plans` and its `-implementation.md` are gone; `pwk-brainstorming` now ends with one buildable design doc (`### R<n>` blocks carrying criteria + review tags), executing parses it and creates the branch itself, and finalize harvests durable knowledge (decisions, deviations, alerts) into ADRs/lessons before disposing the planning docs. A new on-demand `pwk-walkthrough` skill generates file-anchored implementation explainers into `docs/walkthroughs/`.
 
-### Summary — 2–3 sentences: what the code now does differently, and why.
-### Flow — execution/data movement through the changed code, as arrow chains.
-### Gotchas — edge cases, implicit assumptions; [ALERT]-prefixed real risks.
-### Key files — 3–5 pivotal files, one line each: what shifted inside them.
+### Flow — /skill:pwk-brainstorming -> design doc (At a glance: summary -> Key decisions -> R#/risk table; ### R<n> blocks with criteria + tags; Feature acceptance + review tag) -> /skill:pwk-executing-tasks (pre-flight branch -> E2E red -> blocks back-to-back -> feature review over a packet sed-extracted from the design doc -> ship checkpoint) -> /skill:pwk-finalizing (learning sweep -> ADR offers + lessons -> disposal -> merge). Guard: skill invocation sets/clears the single brainstorm phase; UNLOCK_SKILLS (execute/finalize/code-review/diagnose/walkthrough) exits it.
+
+### Gotchas — Reviewers assessed a packet snapshot; the tracing and spec findings landed as post-packet fix commits, verified by the gates plus targeted assertions rather than a re-review. The branch base carries the unrelated setup-fix commit (user decision) — it rides in the PR diff. In-flight 1.x features route via stem-matched `-implementation.md` (old flow) — the only legacy path, covered by both-suffixes discovery. [ALERT] none beyond review findings — no open reviewer-confirmed risks.
+
+### Key files — skills/pwk-brainstorming/SKILL.md: single buildable doc (blocks, tags, decisions-first At a glance); skills/pwk-executing-tasks/SKILL.md: branch pre-flight, ### R<n> parsing, design-doc packet; skills/pwk-finalizing/SKILL.md: learning sweep before disposal; skills/pwk-walkthrough/SKILL.md: new on-demand explainer; extensions/workflow-guard.ts: Phase = brainstorm|null, UNLOCK_SKILLS gains walkthrough.
