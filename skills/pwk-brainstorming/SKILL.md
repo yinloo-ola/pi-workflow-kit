@@ -73,7 +73,7 @@ The whole umbrella is one branch and one PR: `pwk-executing-tasks` creates the b
    ### R1: <name>
    <one-line testable behavior — what the feature produces or changes, through its public interface>
 
-   **Acceptance criteria** — Given/When/Then criteria defining "done". Observable behavior only, not implementation steps; cover edge and error cases.
+   **Acceptance criteria** — Given/When/Then criteria defining "done". Test observable behavior — what the feature produces or changes through its public interface; not implementation steps. Cover edge and error cases.
    - Given … When … Then …
    - Given … When … Then … (edge case)
 
@@ -100,7 +100,7 @@ The whole umbrella is one branch and one PR: `pwk-executing-tasks` creates the b
 
    Touches a production-risk area (DB schema/migrations, auth, external APIs, concurrency/batch, uploads/large data flows, Redis/caching/queues)? Add a brief `## Production-risk areas` — `pwk-code-review` audits it per requirement, and finalize's learning sweep reads it.
 
-   **End with `## Feature acceptance`** — one or more end-to-end `Given/When/Then` scenarios proving the requirements *compose* into the feature. This is the feature's definition-of-done; the human approves it as what "the feature works" means. `pwk-executing-tasks` writes it as the E2E test first and runs it as the **primary enforced spec** (the test it gates on first). Treat "I can write this scenario" as the green light to finish designing — if you can't, keep designing because the requirements don't yet compose into a coherent feature. If writing a scenario step would require inventing behavior, that invention goes back through the assumption gate — it may never be silently written into the scenario; an unwritable step means an unspecified requirement, so keep designing.
+   **End with `## Feature acceptance`** — one or more end-to-end `Given/When/Then` scenarios proving the requirements *compose* into the feature. This is the feature's definition-of-done; the human approves it as what "the feature works" means. `pwk-executing-tasks` writes it as the E2E test first and runs it as the **primary enforced spec** (the test it gates on first). The section carries the feature-level `### Feature review: parallel | inline` tag — the one whole-feature review; default `parallel` (thoroughness lives here — it is the only review in the common case), `inline` for small features. Treat "I can write this scenario" as the green light to finish designing — if you can't, keep designing because the requirements don't yet compose into a coherent feature. If writing a scenario step would require inventing behavior, that invention goes back through the assumption gate — it may never be silently written into the scenario; an unwritable step means an unspecified requirement, so keep designing.
 
    ```markdown
    ## Feature acceptance

@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. If you also mainta
 
 ## Project
 
-`pi-workflow-kit` (npm `@tianhai/pi-workflow-kit`) is an extension + skill kit for the [pi](https://github.com/badlogic/pi-mono) AI-coding-agent runtime. It enforces a **brainstorm → plan → execute → finalize** workflow with test-first discipline. During the brainstorm and plan phases the guard physically blocks writes to source files — only `docs/plans/` is writable, and a destructive-bash blacklist is enforced.
+`pi-workflow-kit` (npm `@tianhai/pi-workflow-kit`) is an extension + skill kit for the [pi](https://github.com/badlogic/pi-mono) AI-coding-agent runtime. It enforces a **design → execute → finalize** workflow with test-first discipline: one buildable design doc per feature (requirements carry their own acceptance criteria + review tags — no separate plan phase). During the design phase the guard physically blocks writes to source files — only `docs/plans/` is writable, and a destructive-bash blacklist is enforced.
 
 Three components:
 - `extensions/workflow-guard.ts` — the single code file: the enforcement engine plus the Pi-only `/pwk-setup` command that installs role definitions into `.agents/agents/`.
@@ -27,7 +27,7 @@ No build step. No typecheck script (`tsconfig.json` is IDE-only). No watch mode.
 ```
 extensions/   # TS source — workflow-guard.ts only (guard + /pwk-setup)
 tests/        # vitest — workflow-guard.test.ts + delegation contract tests
-skills/       # 7 SKILL.md dirs, pwk-* namespaced, harness-neutral
+skills/       # SKILL.md dirs, pwk-* namespaced, harness-neutral
 agents/       # canonical role contracts (recon scout + 4 reviewers)
 docs/         # developer-usage-guide, workflow-phases, oversight-model, provider-delegation-contract, lessons
 docs/plans/   # ephemeral active plans (deleted after finalize)

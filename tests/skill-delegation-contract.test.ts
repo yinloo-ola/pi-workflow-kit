@@ -3,12 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const brainstorming = readFileSync("skills/pwk-brainstorming/SKILL.md", "utf8");
 const executing = readFileSync("skills/pwk-executing-tasks/SKILL.md", "utf8");
-const relatedSkills = [
-  brainstorming,
-  executing,
-  readFileSync("skills/pwk-code-review/SKILL.md", "utf8"),
-  readFileSync("skills/pwk-writing-plans/SKILL.md", "utf8"),
-];
+const relatedSkills = [brainstorming, executing, readFileSync("skills/pwk-code-review/SKILL.md", "utf8")];
 
 describe("portable skill delegation contract", () => {
   it("requests logical recon capability with safety constraints and fallback", () => {

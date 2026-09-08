@@ -50,7 +50,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 
 | Phase | `write` / `edit` | `bash` |
 |-------|:-:|:-:|
-| **Brainstorm** / **Plan** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
+| **Design** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
 | **Execute** / **Code-review** / **Finalize** / **Diagnose** / **Status** | ✅ Full access | ✅ Full access |
 
 The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
@@ -62,7 +62,7 @@ Phases transition only when you invoke a skill (`/skill:pwk-brainstorming` → r
 Guide the agent through a disciplined development process:
 
 ```
-brainstorm → writing-plans → executing-tasks → finalizing
+brainstorm → executing-tasks → finalizing
                              (feature-gate: write feature E2E → feature-spec → implement → review → ship checkpoint)
                                 ↕
                    diagnose (anytime)   ·   status (anytime)
@@ -73,8 +73,7 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc opening with a `## At a glance` digest (plain summary → **Key decisions** — rejected-alternative clauses only for real forks — → `| R# | Requirement in one line | Risk |` table) before the `## Requirements` blocks; each requirement block carries its own acceptance criteria + review tags. Interviews in **frontier rounds**: numbered questions each with a recommended answer, facts looked up rather than asked, an assumption gate before the design is presented. On non-trivial topics, requests the logical `codebase-recon` capability; if unavailable or unsafe, performs the `pwk-recon-scout` role inline. |
-| **Plan** | `/skill:pwk-writing-plans` | Turn each requirement into **acceptance criteria + integration tests** — a behavioral spec (no implementation code), with a `## Crosswalk` proving every R# is covered; you review a one-line confirmation, not the full plan |
-| **Execute** | `/skill:pwk-executing-tasks` | Write the feature E2E (red) → **checkpoint: feature-spec** → implement requirements → feature review → **ship checkpoint** (execution summary + code digest + coverage table; full diff on request) |
+| **Execute** | `/skill:pwk-executing-tasks` | Create the feature branch, then: write the feature E2E (red) → **checkpoint: feature-spec** → implement the design doc's `### R<n>` requirement blocks → feature review → **ship checkpoint** (execution summary + code digest + coverage table; full diff on request) |
 | **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check. Delegated review uses four tiered logical roles (smell/hazard on a fast model via `/pwk-setup --fast-model`) over a script-assembled review packet when a safe provider is available; otherwise it runs inline. |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs or archive them under `docs/plans/completed/` (discovery always runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording), update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
@@ -87,16 +86,15 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 You control each phase — the agent never advances on its own. Invoke a skill to move forward:
 
 ```
-/skill:pwk-brainstorming   →  discuss and design (lists Requirements)
-/skill:pwk-writing-plans   →  turn each Requirement into acceptance criteria + integration tests
-/skill:pwk-executing-tasks →  feature-gate flow: E2E-first, implement, review, ship checkpoint
+/skill:pwk-brainstorming   →  discuss and design — the design doc IS the buildable spec
+/skill:pwk-executing-tasks →  feature-gate flow: branch, E2E-first, implement ### R<n> blocks, review, ship checkpoint
 /skill:pwk-code-review     →  auto-runs at the feature level inside executing-tasks; also invocable manually for ad-hoc reviews
 /skill:pwk-finalizing       →  ship it
 ```
 
-### Behavioral-Spec Planning
+### Behavioral-Spec Design
 
-Plans specify *what*, not *how*. For each requirement, the plan gives **acceptance criteria + integration-test cases** — no implementation code, no file-by-file recipe. The executor has full autonomy to choose structure, signatures, and internals. A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria + integration tests survive implementation changes.
+The design doc specifies *what*, not *how*. Each `### R<n>:` requirement block gives **acceptance criteria** (Given/When/Then, edge and error cases included) — no implementation code, no file-by-file recipe, no test-name lists. The executor has full autonomy to choose structure, signatures, and internals. A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria survive implementation changes.
 
 ### Feature-Gate Execution
 
@@ -154,16 +152,13 @@ pi install npm:@tianhai/pi-workflow-kit
 > /skill:pwk-brainstorming
 > I want to add OAuth2 login to our API
 
-# (agent explores approaches, writes a design doc with a Requirements list)
+# (agent explores approaches, writes the buildable design doc: At a glance,
+#  ### R<n> blocks with acceptance criteria + review tags, Feature acceptance E2E)
 # (write/edit are blocked — your code is safe)
-
-> /skill:pwk-writing-plans
-
-# (agent turns each Requirement into acceptance criteria + integration tests)
 
 > /skill:pwk-executing-tasks
 
-# (feature-gate: writes feature E2E → checkpoint → implements requirements → checkpoint → feature review)
+# (feature-gate: creates the branch, writes feature E2E → checkpoint → implements the blocks → checkpoint → feature review)
 
 > /skill:pwk-finalizing
 
@@ -185,7 +180,6 @@ pi-workflow-kit/
 │   └── workflow-guard.ts      # Write blocker during brainstorm/plan; destructive-bash blacklist
 ├── skills/
 │   ├── pwk-brainstorming/SKILL.md
-│   ├── pwk-writing-plans/SKILL.md
 │   ├── pwk-executing-tasks/SKILL.md
 │   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md

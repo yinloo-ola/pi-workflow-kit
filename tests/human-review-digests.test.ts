@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -23,7 +23,6 @@ const USER_DOCS = [
 
 const GLOB_SITES = [
   "skills/pwk-brainstorming/SKILL.md",
-  "skills/pwk-writing-plans/SKILL.md",
   "skills/pwk-executing-tasks/SKILL.md",
   "skills/pwk-status/SKILL.md",
   "skills/pwk-finalizing/SKILL.md",
@@ -44,13 +43,19 @@ describe("human review digests feature (E2E)", () => {
     expect(brainstorming).toContain("In short:");
     expect(brainstorming).toMatch(/plain language/i);
 
-    // R2 — plans carry a crosswalk the human confirms in one line, placed strictly
-    // before Requirement 1 so the review-packet sed spans are untouched.
-    const writingPlans = readRepo("skills/pwk-writing-plans/SKILL.md");
-    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalk);
-    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalkTable);
-    expect(writingPlans).toContain(DIGEST_MARKERS.crosswalkPlacement);
-    expect(writingPlans).toContain(DIGEST_MARKERS.oneLineConfirmation);
+    // R2 — the crosswalk and its plan phase are gone entirely (pwk 2.0): the
+    // design doc's ### R<n> blocks are the map; no skill restates one.
+    expect(existsSync(join(repoRoot, "skills/pwk-writing-plans"))).toBe(false);
+    for (const site of [
+      "skills/pwk-brainstorming/SKILL.md",
+      "skills/pwk-executing-tasks/SKILL.md",
+      "skills/pwk-status/SKILL.md",
+      "skills/pwk-finalizing/SKILL.md",
+      "skills/pwk-code-review/SKILL.md",
+      "skills/pwk-diagnose/SKILL.md",
+    ]) {
+      expect(readRepo(site), site).not.toMatch(/crosswalk/i);
+    }
 
     // R3 — the progress file carries an execution summary filled as requirements
     // land, and the ship checkpoint presents digest + coverage, diff on request.
@@ -110,7 +115,7 @@ describe("human review digests feature (E2E)", () => {
     }
     const readme = readRepo("README.md");
     expect(readme).toContain(DIGEST_MARKERS.diffOnRequest);
-    expect(readme).toContain(DIGEST_MARKERS.crosswalk);
+    expect(readme).not.toMatch(/crosswalk/i);
     const agents = readRepo("AGENTS.md");
     expect(agents).toContain(DIGEST_MARKERS.umbrellaFolder);
   });

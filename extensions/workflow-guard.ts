@@ -17,13 +17,13 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 /**
  * Workflow Guard extension.
  *
- * Blocks write/edit outside docs/plans/ and destructive bash during brainstorm and plan phases.
+ * Blocks write/edit outside docs/plans/ and destructive bash during the design phase.
  * Bash uses a simple common-blacklist (DESTRUCTIVE_PATTERNS) — a command is allowed unless it matches
  * a destructive pattern. A short phase reminder is appended after the user's message each turn via
  * before_agent_start. You control phases explicitly via /skill: commands — no auto-detection, no prompts.
  */
 
-type Phase = "brainstorm" | "plan" | null;
+type Phase = "brainstorm" | null;
 
 type DelegationStatus = "completed" | "failed" | "timed-out" | "skipped";
 
@@ -360,7 +360,7 @@ async function promptFastModelChoice(
   return { model: choice, allRoles };
 }
 
-// Destructive commands blocked in brainstorm/plan phases (simple common blacklist)
+// Destructive commands blocked in the design phase (simple common blacklist)
 const DESTRUCTIVE_PATTERNS = [
   /\brm\b/i,
   /\brmdir\b/i,
@@ -384,7 +384,7 @@ const DESTRUCTIVE_PATTERNS = [
   /\bbrew\s+(install|uninstall|upgrade)/i,
   // git add/commit/apply merge files and are blocked below. Plain `git branch`/`checkout`/`switch`
   // only create or move between branches (no source-file changes), so they are intentionally allowed
-  // during gated phases — pwk-writing-plans creates the feature branch before authoring the plan.
+  // during gated phases — executing-tasks creates the feature branch in its pre-flight.
   /\bgit\s+(add|commit|push|pull|merge|rebase|reset|branch\s+-[dD]|stash(?!\s+list)|cherry-pick|revert|tag(?!\s+(-l|--list))|init|clone|apply)/i,
   // Edit-via-bash vectors: in-place editors, patch appliers, find-delete (bypass the write/edit tool block)
   /\bsed\b.*\s-i\b/i,
@@ -473,7 +473,6 @@ export function isSafeCommand(command: string): boolean {
 
 const SKILL_TO_PHASE: Record<string, Phase> = {
   "pwk-brainstorming": "brainstorm",
-  "pwk-writing-plans": "plan",
 };
 
 /** Skills whose invocation exits a gated phase (used by the input handler; exported for tests/
@@ -485,12 +484,11 @@ export const UNLOCK_SKILLS = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code
  *  never invalidates the cached prefix. */
 const PHASE_REMINDERS: Record<Exclude<Phase, null>, string> = {
   brainstorm:
-    "[pi-workflow-kit] BRAINSTORM phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
-  plan: "[pi-workflow-kit] PLAN phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
+    "[pi-workflow-kit] DESIGN phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
 };
 
 /** Determine if a write/edit to filePath should be blocked during the given phase.
- *  Only writes under docs/plans/ are allowed during brainstorm and plan phases.
+ *  Only writes under docs/plans/ are allowed during the design phase.
  */
 export function shouldBlockFilePath(filePath: string, cwd: string): boolean {
   const absolute = resolve(cwd, filePath);
@@ -653,7 +651,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
     }
-    // Phase transitions happen only via skills — no message keyword unlocks the plan phase.
+    // Phase transitions happen only via skills — no message keyword unlocks the design phase.
     // Run /skill:pwk-executing-tasks (or another write-needing skill) to leave a gated phase.
     //
     // Unlock list rationale: execute/finalize/code-review/diagnose all need to write source
@@ -722,7 +720,7 @@ export default function (pi: ExtensionAPI) {
     return {
       block: true,
       reason: `⚠️ ${label}: Cannot ${event.toolName} to ${filePath}. Only docs/plans/ is writable${
-        manual ? " under the manual read-only lock" : " during brainstorming and planning"
+        manual ? " under the manual read-only lock" : " during the design phase"
       }.`,
     };
   });

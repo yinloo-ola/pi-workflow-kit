@@ -4,9 +4,9 @@ How to install and use `pi-workflow-kit` with Pi, and how its workflow roles map
 
 ## What you get
 
-- **5 pipeline skills** — brainstorm → writing-plans → executing-tasks → finalizing, with code-review running at the feature level during execution.
+- **4 pipeline skills** — brainstorm → executing-tasks → finalizing, with code-review running at the feature level during execution.
 - **2 utility skills** — diagnose (debugging) and status (multi-topic overview), both on demand.
-- **1 extension** — hard-blocks source writes during brainstorm and writing-plans, and blocks destructive bash via a simple common-blacklist.
+- **1 extension** — hard-blocks source writes during the design phase, and blocks destructive bash via a simple common-blacklist.
 
 ## Installation
 
@@ -35,7 +35,7 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 You control each phase by invoking the skill. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once:
 
 ```
-/skill:pwk-brainstorming  →  /skill:pwk-writing-plans  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
+/skill:pwk-brainstorming  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
 ```
 
 ### 1. Brainstorm
@@ -56,17 +56,7 @@ Explore the idea through collaborative dialogue. The agent reads code, asks ques
 
 Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (plain-language summary → **Key decisions** — `(rejected: …)` clauses only for real forks — → `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` blocks. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
 
-### 2. Plan
-
-```
-/skill:pwk-writing-plans
-```
-
-Read the design doc's Requirements and turn each into **acceptance criteria + integration-test cases** — a behavioral spec (no implementation code). The plan carries a `## Crosswalk` (one row per design requirement); you review a **one-line confirmation** ("Plan covers R1–R<N>; tags: …") — the full plan is available on request.
-
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
-
-### 3. Execute
+### 2. Execute
 
 ```
 /skill:pwk-executing-tasks
@@ -74,7 +64,7 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-implementation.md`.
 
 Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + code digest + coverage table — full diff on request). After the review passes, the executor writes the code digest into the progress file from the review packet. Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
 
-### 4. Code review (feature level)
+### 3. Code review (feature level)
 
 The `pwk-executing-tasks` skill requests the `parallel-review` capability for four logical roles over the whole feature diff: spec alignment, code tracing, code smells, and production hazards. The scope is a script-assembled review packet (diff + acceptance criteria verbatim) handed to every role via a one-liner pointer — the packet never rides in spawn arguments. The roles are independent, fresh-context, read-only reporters; the main agent collects their results, applies smell fixes itself, runs the tests, and flags other findings for the human. The review runs before the ship checkpoint, so your final approval is fully informed: execution summary, per-requirement coverage table, findings status, full diff on request.
 
@@ -82,7 +72,7 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 
 *Fallback:* if no host/provider can guarantee the requested capabilities, the skill performs the missing recon or review work inline. Other Pi extensions are supported only when they expose the documented capabilities or have a separate adapter; arbitrary extensions are not automatically compatible. See `docs/provider-delegation-contract.md` for the integration contract.
 
-### 5. Finalize
+### 4. Finalize
 
 ```
 /skill:pwk-finalizing
@@ -110,7 +100,7 @@ A read-only overview of all active design topics — which phase each is in and 
 
 The `workflow-guard` extension registers `/pwk-setup` and watches `write`/`edit` and `bash` tool calls:
 
-- **During brainstorm and writing-plans**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is shown once when the gated phase begins so the model self-restricts.
+- **During the design phase**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 - **During executing-tasks, code-review, finalizing, diagnose**: no restrictions.
 - **Phases are skill-driven**: the guard follows the skill you invoke — it never unlocks on message keywords. The exact unlock set is `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose`; `pwk-status` stays gated. To override, run `/pwk-guard on` (force read-only), `off` (disable), or `auto` (default; skill-driven). Subcommands autocomplete.
 
@@ -125,7 +115,7 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 ## Tips
 
 - Start with brainstorming for anything non-trivial.
-- The plan is a behavioral spec, not an implementation recipe — let the executor choose how.
+- The design doc is a behavioral spec, not an implementation recipe — let the executor choose how.
 - The feature-gate flow has two checkpoints by default (feature-spec + ship): use them to steer the E2E spec and to sign off the finished implementation (digest + coverage, diff on request).
-- **Right-size each requirement at plan time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc). Production-risk requirements are auto-tagged `### Review: parallel` by `pwk-writing-plans`; the human can override or downgrade before plan approval.
-- Put all plan artifacts under `docs/plans/`; ADRs under `docs/adr/`.
+- **Right-size each requirement at design time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc). Production-risk requirements are auto-tagged `### Review: parallel` by `pwk-brainstorming`; the human can override or downgrade before design approval.
+- Put all design artifacts under `docs/plans/`; ADRs under `docs/adr/`.

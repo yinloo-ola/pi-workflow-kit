@@ -1,7 +1,7 @@
 # Lessons Learned
 
 <!--
-Agent: read this during brainstorm (design), writing-plans (acceptance criteria + tests), executing-tasks (per requirement), and finalizing (curation).
+Agent: read this during brainstorm (design), executing-tasks (per requirement), and finalizing (curation).
 Follow every rule. Add new rules when you catch yourself making repeat mistakes.
 Rules must be generic patterns applicable to any domain or feature — not specific to one service, entity, or use case.
 Retire rules that no longer apply during finalizing.
@@ -24,7 +24,7 @@ Retire rules that no longer apply during finalizing.
 
 ## Testing
 
-- **Meaningful tests, mirrored across writing-plans, executing-tasks, and here.** (1) **Test observable behavior** — assert on what the feature produces or changes (a return value, persisted/updated data, an emitted event, an HTTP response) through its public interface; these assertions keep passing as the implementation changes. (2) **Write a per-slice test when the slice has its own observable behavior** — when a slice is pure config or a trivial extraction, the feature E2E covers it and a per-slice test is unnecessary.
+- **Meaningful tests, mirrored across brainstorming, executing-tasks, and here.** (1) **Test observable behavior** — assert on what the feature produces or changes (a return value, persisted/updated data, an emitted event, an HTTP response) through its public interface; these assertions keep passing as the implementation changes. (2) **Write a per-slice test when the slice has its own observable behavior** — when a slice is pure config or a trivial extraction, the feature E2E covers it and a per-slice test is unnecessary.
 - **Reset module-level extension state per test.** Extensions keep `let` module state (e.g. the guard's `phase`); tests that drive phase transitions must fire `session_start` in `beforeEach` (or at test start), otherwise declaration order silently determines pass/fail — green until a reorder, `.only`, or `--sequence.shuffle` breaks it. Verify with a shuffled run before shipping.
 - **Test-doc wording assertions should match behavior, not exact sentences.** Prefer regexes over `toContain("exact phrase")` when asserting documentation; minor rewording of a doc sentence should not break three suites. Keep one canonical marker per contract (or a shared assertions helper) instead of copy-pasting the same phrase into multiple test files.
 

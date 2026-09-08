@@ -234,7 +234,7 @@ describe("/pwk-setup", () => {
   it("refuses setup in brainstorm and plan phases even when the manual guard is off", async () => {
     const command = harness.commands.get("pwk-setup");
 
-    for (const skill of ["pwk-brainstorming", "pwk-writing-plans"] as const) {
+    for (const skill of ["pwk-brainstorming"] as const) {
       const projectRoot = mkdtempSync(join(tmpdir(), "pwk-setup-"));
       await harness.handlers.get("input")?.({ text: `/skill:${skill}` }, {});
       await harness.commands.get("pwk-guard")?.handler("off", { ui: { notify() {} } });

@@ -12,7 +12,6 @@ const portableSkills = [
   read("skills/pwk-brainstorming/SKILL.md"),
   read("skills/pwk-executing-tasks/SKILL.md"),
   read("skills/pwk-code-review/SKILL.md"),
-  read("skills/pwk-writing-plans/SKILL.md"),
 ];
 
 describe("cross-host delegation guidance", () => {

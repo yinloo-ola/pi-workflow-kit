@@ -75,8 +75,8 @@ describe("isSafeCommand", () => {
     expect(isSafeCommand("git add .")).toBe(false);
     expect(isSafeCommand("git commit -m 'msg'")).toBe(false);
     expect(isSafeCommand("git push")).toBe(false);
-    // Allowed: creating/switching branches doesn't modify source files; pwk-writing-plans creates the
-    // feature branch during the plan phase before authoring the plan.
+    // Allowed: creating/switching branches doesn't modify source files; pwk-executing-tasks creates
+    // the feature branch in its pre-flight before implementing.
     expect(isSafeCommand("git checkout -b feature")).toBe(true);
     expect(isSafeCommand("git branch feature")).toBe(true);
     expect(isSafeCommand("git branch -d feature")).toBe(false); // deleting is a mutation

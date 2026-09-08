@@ -8,7 +8,6 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const DISCOVERY_SITES = [
   "skills/pwk-brainstorming/SKILL.md",
-  "skills/pwk-writing-plans/SKILL.md",
   "skills/pwk-executing-tasks/SKILL.md",
   "skills/pwk-status/SKILL.md",
   "skills/pwk-finalizing/SKILL.md",
@@ -99,9 +98,7 @@ describe("code-digest per-slice", () => {
     const sites: Array<[string, string]> = [
       ["skills/pwk-status/SKILL.md", "1. Glob `docs/plans/**/*-design.md`"],
       ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
-      ["skills/pwk-executing-tasks/SKILL.md", "**Find the plan**"],
-      ["skills/pwk-writing-plans/SKILL.md", "**Find the design doc**"],
-      ["skills/pwk-writing-plans/SKILL.md", "**Umbrella part?**"],
+      ["skills/pwk-executing-tasks/SKILL.md", "**Find the doc**"],
       ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
       ["skills/pwk-finalizing/SKILL.md", "**Umbrella** (a `docs/plans/**/overview.md` exists"],
     ];
@@ -215,12 +212,6 @@ describe("code-digest per-slice", () => {
     expect(step7).toMatch(/back through the assumption gate/);
   });
 
-  it("should bounce un-derivable requirements to brainstorm", () => {
-    const writingPlans = readRepo("skills/pwk-writing-plans/SKILL.md");
-    expect(writingPlans).toContain(CODE_DIGEST_MARKERS.bounceToBrainstorm);
-    expect(writingPlans).toMatch(/inventing behavior/);
-    expect(writingPlans).toMatch(/naming the specific gap|name the specific gap/);
-  });
   it("should mirror digest, exclusion, and frontier wording in user docs", () => {
     for (const doc of MIRROR_DOCS) {
       const content = readRepo(doc);
@@ -277,9 +268,6 @@ describe("code-digest feature (E2E)", () => {
     const principlesLine = brainstorming.match(/## Principles\n\n- [^\n]*/)?.[0];
     if (!principlesLine) throw new Error("brainstorming: Principles list not found");
     expect(principlesLine).not.toContain("One question at a time"); // defining line only
-    const writingPlans = readRepo("skills/pwk-writing-plans/SKILL.md");
-    expect(writingPlans).toContain(CODE_DIGEST_MARKERS.bounceToBrainstorm);
-    expect(writingPlans).toMatch(/inventing behavior/);
 
     // R10 — the user docs mirror all three behaviors.
     for (const doc of MIRROR_DOCS) {

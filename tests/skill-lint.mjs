@@ -7,7 +7,7 @@
  *
  * Run via `npm run skill-lint` (or as part of `npm run check`).
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CODE_DIGEST_MARKERS, DIGEST_MARKERS, SINGLE_DOC_MARKERS } from "./markers.mjs";
@@ -86,40 +86,39 @@ function vocabOf(text, kind) {
 }
 
 console.log("tag vocabulary:");
-const wp = loadSkills().find((s) => s.name === "pwk-writing-plans");
+const bs = loadSkills().find((s) => s.name === "pwk-brainstorming");
 const et = loadSkills().find((s) => s.name === "pwk-executing-tasks");
-if (!wp) fail("pwk-writing-plans skill missing");
+if (!bs) fail("pwk-brainstorming skill missing");
 if (!et) fail("pwk-executing-tasks skill missing");
-if (wp && et) {
+if (bs && et) {
   for (const [kind, vocab] of [
     ["checkpoint", CHECKPOINT_VOCAB],
     ["review", REVIEW_VOCAB],
   ]) {
-    const wpV = vocabOf(wp.content, kind);
+    const bsV = vocabOf(bs.content, kind);
     const etV = vocabOf(et.content, kind);
     const label = kind === "checkpoint" ? "checkpoint" : "review";
     for (const v of vocab) {
-      if (!wpV.has(v)) fail(`pwk-writing-plans: ${label} vocab missing "${v}"`);
+      if (!bsV.has(v)) fail(`pwk-brainstorming: ${label} vocab missing "${v}"`);
       if (!etV.has(v)) fail(`pwk-executing-tasks: ${label} vocab missing "${v}"`);
     }
     // No stray tokens
-    for (const t of wpV) if (!vocab.includes(t)) fail(`pwk-writing-plans: unknown ${label} token "${t}"`);
+    for (const t of bsV) if (!vocab.includes(t)) fail(`pwk-brainstorming: unknown ${label} token "${t}"`);
     for (const t of etV) if (!vocab.includes(t)) fail(`pwk-executing-tasks: unknown ${label} token "${t}"`);
-    if (failures === 0) ok(`${label} vocab {${vocab.join(", ")}} consistent across writing-plans + executing-tasks`);
+    if (failures === 0) ok(`${label} vocab {${vocab.join(", ")}} consistent across brainstorming + executing-tasks`);
   }
 }
 
-// --- Check 3: plan template emits what executing-tasks parses ---
-console.log("plan template coverage:");
-if (wp && et) {
-  const templateNeeds = ["### Checkpoints", "### Review", "## Requirement", "## Setup"];
+// --- Check 3: the design-doc template emits what executing-tasks parses ---
+console.log("design template coverage:");
+if (bs && et) {
+  const templateNeeds = ["### Checkpoints", "### Review", "### R", "## Setup"];
   for (const tok of templateNeeds) {
-    // The writing-plans template should emit each; executing-tasks should reference each.
-    const inTemplate = wp.content.includes(tok);
-    const inConsumer = et.content.includes(tok.replace("### ", "### ").replace("## ", "## "));
-    if (!inTemplate) fail(`pwk-writing-plans template missing "${tok}"`);
+    // The brainstorming template should emit each; executing-tasks should reference each.
+    const inTemplate = bs.content.includes(tok);
+    if (!inTemplate) fail(`pwk-brainstorming template missing "${tok}"`);
     if (!et.content.includes(tok)) fail(`pwk-executing-tasks doesn't reference "${tok}"`);
-    if (inTemplate && et.content.includes(tok)) ok(`"${tok}" emitted by writing-plans, parsed by executing-tasks`);
+    if (inTemplate && et.content.includes(tok)) ok(`"${tok}" emitted by brainstorming, parsed by executing-tasks`);
   }
 }
 
@@ -141,10 +140,10 @@ for (const f of docsToCheck) {
   else fail(`${f.split("/").pop()}: missing spec+inline guard note`);
 }
 // And in the skills themselves
-if (wp && /\bspec\b/.test(wp.content) && /requires at least `inline`/.test(wp.content)) {
-  ok("pwk-writing-plans: documents spec requires inline review");
-} else if (wp) {
-  fail("pwk-writing-plans: missing spec+inline guard note");
+if (bs && /\bspec\b/.test(bs.content) && /requires at least `inline`/.test(bs.content)) {
+  ok("pwk-brainstorming: documents spec requires inline review");
+} else if (bs) {
+  fail("pwk-brainstorming: missing spec+inline guard note");
 }
 if (et && /\bspec\b/.test(et.content) && /at least `inline`/.test(et.content)) {
   ok("pwk-executing-tasks: documents spec requires inline review");
@@ -153,19 +152,15 @@ if (et && /\bspec\b/.test(et.content) && /at least `inline`/.test(et.content)) {
 }
 
 // --- Check 5: Feature acceptance contract across the pipeline ---
-// brainstorm emits `## Feature acceptance` in the design doc; writing-plans derives it
-// into the plan and checks for it at audit; executing-tasks runs it at the integration gate.
-// All three must use the same section name so the contract is followable.
+// brainstorm emits `## Feature acceptance` in the design doc; executing-tasks writes it
+// as the E2E and gates on it. Both must use the same section name so the contract is followable.
 console.log("feature acceptance contract:");
-const bs = loadSkills().find((s) => s.name === "pwk-brainstorming");
 // A real section header line: optional leading indent, then `## Feature acceptance`,
 // NOT wrapped in backticks (prose mentions like `## Feature acceptance` don't count).
 const faHeader = /^[ \t]*## Feature acceptance\b/m;
 if (!bs) fail("pwk-brainstorming skill missing");
 else if (faHeader.test(bs.content)) ok("pwk-brainstorming: emits `## Feature acceptance` in the design doc");
 else fail("pwk-brainstorming: missing `## Feature acceptance` section header");
-if (wp && faHeader.test(wp.content)) ok("pwk-writing-plans: derives `## Feature acceptance` into the plan + audits it");
-else if (wp) fail("pwk-writing-plans: missing `## Feature acceptance` section header");
 if (et && /Feature acceptance/.test(et.content))
   ok("pwk-executing-tasks: runs the feature-acceptance test at the integration gate");
 else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the integration gate");
@@ -235,9 +230,9 @@ if (bs && /^## Umbrella\b/m.test(bs.content))
 else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, one PR)");
 if (bs && /status-free/i.test(bs.content)) ok("pwk-brainstorming: defines the overview as a status-free roster");
 else fail("pwk-brainstorming: overview must be documented as status-free");
-if (wp && /reuse/i.test(wp.content) && /umbrella/i.test(wp.content))
-  ok("pwk-writing-plans: documents branch reuse for umbrella later parts");
-else fail("pwk-writing-plans: missing umbrella branch-reuse note");
+if (et && /reuse/i.test(et.content) && /umbrella/i.test(et.content))
+  ok("pwk-executing-tasks: documents branch reuse for umbrella later parts");
+else fail("pwk-executing-tasks: missing umbrella branch-reuse note");
 if (et && /umbrella/i.test(et.content) && /next part/i.test(et.content))
   ok("pwk-executing-tasks: suggests finalize or brainstorm-next keyed on the overview roster");
 else fail("pwk-executing-tasks: missing umbrella post-gate suggestion logic");
@@ -267,8 +262,8 @@ else fail("guard references a 'decompose' phase — umbrella should add no phase
 const phaseMatch = guardSrc.match(/SKILL_TO_PHASE[\s\S]*?\{([\s\S]*?)\}/);
 const phaseBlock = phaseMatch ? phaseMatch[1] : "";
 const gatedSkillCount = (phaseBlock.match(/pwk-[\w-]+/g) || []).length;
-if (gatedSkillCount === 2) ok("SKILL_TO_PHASE unchanged (2 gated skills)");
-else fail(`SKILL_TO_PHASE has ${gatedSkillCount} gated skills — expected 2`);
+if (gatedSkillCount === 1) ok("SKILL_TO_PHASE unchanged (1 gated skill — the design phase)");
+else fail(`SKILL_TO_PHASE has ${gatedSkillCount} gated skills — expected 1`);
 
 // --- Check 9: feature-gate execution model (grown per-requirement) ---
 // Feature-acceptance E2E is the primary gate; per-requirement checkpoints/reviews are opt-in
@@ -279,11 +274,11 @@ const fgMark = (file, content, marker, label) => {
   if (content?.includes(marker)) ok(`${file}: ${label}`);
   else fail(`${file}: missing ${label} — marker "${marker}"`);
 };
-// Requirement 1 — pwk-writing-plans tag defaults + feature-level review
-if (wp) {
-  fgMark("pwk-writing-plans", wp.content, "### Feature review", "feature-level review tag");
-  fgMark("pwk-writing-plans", wp.content, "default to `none` / `skip`", "flipped per-requirement defaults");
-  fgMark("pwk-writing-plans", wp.content, "primary enforced spec", "Feature acceptance as primary spec");
+// Requirement 1 — brainstorming tag defaults + feature-level review
+if (bs) {
+  fgMark("pwk-brainstorming", bs.content, "### Feature review", "feature-level review tag");
+  fgMark("pwk-brainstorming", bs.content, "default to `none` / `skip`", "per-requirement defaults");
+  fgMark("pwk-brainstorming", bs.content, "primary enforced spec", "Feature acceptance as primary spec");
 }
 // Requirement 2 — pwk-executing-tasks feature-gate flow
 if (et) {
@@ -292,8 +287,8 @@ if (et) {
   fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
   fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");
 }
-// Requirement 3 — meaningful-test rules mirrored across writing-plans, executing-tasks, lessons
-fgMark("pwk-writing-plans", wp.content, "Test observable behavior", "meaningful-test rule (writing-plans)");
+// Requirement 3 — meaningful-test rules mirrored across brainstorming, executing-tasks, lessons
+fgMark("pwk-brainstorming", bs?.content, "Test observable behavior", "meaningful-test rule (brainstorming)");
 fgMark("pwk-executing-tasks", et.content, "Test observable behavior", "meaningful-test rule (executing-tasks)");
 const lessonsMd = readFileSync(join(root, "docs/lessons.md"), "utf8");
 fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-test rule (lessons)");
@@ -427,12 +422,12 @@ if (bs) {
     ok("pwk-brainstorming: auto-tag rule is single-source (other skills do not restate it)");
   }
 }
-// R3: pwk-executing-tasks must reference pwk-writing-plans for the auto-tag rule (not restate).
+// R3: pwk-executing-tasks must reference pwk-brainstorming for the auto-tag rule (not restate).
 if (et) {
-  if (/pwk-writing-plans/.test(et.content)) {
-    ok("pwk-executing-tasks: references pwk-writing-plans (single source of truth)");
+  if (/pwk-brainstorming/.test(et.content)) {
+    ok("pwk-executing-tasks: references pwk-brainstorming (single source of truth)");
   } else {
-    fail("pwk-executing-tasks: must reference pwk-writing-plans (do not restate the auto-tag rule)");
+    fail("pwk-executing-tasks: must reference pwk-brainstorming (do not restate the auto-tag rule)");
   }
 }
 
@@ -467,12 +462,7 @@ if (bs) {
   // pwk 2.0 R2 — decisions-first At a glance: summary, then Key decisions (honest-empty
   // rejected-alternative clauses — never manufactured), then the R#/risk table.
   fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.keyDecisions, "decisions-first at-a-glance");
-  fgMark(
-    "pwk-brainstorming",
-    bs.content,
-    SINGLE_DOC_MARKERS.neverManufactured,
-    "honest-empty rejected alternatives",
-  );
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.neverManufactured, "honest-empty rejected alternatives");
   const glanceDecisionsIdx = bs.content.indexOf(SINGLE_DOC_MARKERS.keyDecisions);
   const glanceTableIdx = bs.content.indexOf(DIGEST_MARKERS.atAGlanceTable);
   if (glanceDecisionsIdx !== -1 && glanceTableIdx > glanceDecisionsIdx) {
@@ -495,20 +485,21 @@ if (bs) {
   }
   if (docsOk) ok("user docs mirror the decisions-first At a glance");
 }
-// R2 — plans carry a crosswalk (one row per design R#) placed strictly before
-// `## Requirement 1` so the packet sed spans stay intact; the human confirms in one line.
-if (wp) {
-  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalk, "crosswalk section mandated");
-  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalkTable, "crosswalk table shape");
-  fgMark("pwk-writing-plans", wp.content, DIGEST_MARKERS.crosswalkPlacement, "crosswalk placement outside sed spans");
-  fgMark("pwk-writing-plans", wp.content, "exactly once", "crosswalk audit: every R# exactly once");
-  fgMark(
-    "pwk-writing-plans",
-    wp.content,
-    DIGEST_MARKERS.oneLineConfirmation,
-    "plan presented as one-line confirmation",
-  );
+// R2 — the crosswalk is GONE with the plan phase (pwk 2.0): no skill may emit one,
+// and the pwk-writing-plans skill must not exist at all.
+if (existsSync(join(skillsDir, "pwk-writing-plans"))) {
+  fail("pwk-writing-plans: skill still exists — the plan phase was removed in pwk 2.0");
+} else {
+  ok("pwk-writing-plans: removed (no plan phase)");
 }
+let crosswalkFree = true;
+for (const s of loadSkills()) {
+  if (/crosswalk/i.test(s.content)) {
+    fail(`${s.name}: still mentions a crosswalk — the plan-phase artifact is gone`);
+    crosswalkFree = false;
+  }
+}
+if (crosswalkFree) ok("no skill mentions a crosswalk (plan-phase artifact gone)");
 // R3 — the progress file carries an execution summary filled as requirements land; the
 // ship checkpoint merges feature-complete + review: review runs before the one final
 // approval, presenting digest + coverage table, diff on request.
@@ -528,7 +519,7 @@ if (et) {
 }
 // R5 — umbrella docs live in their own docs/plans/<date>-<umbrella>/ folder; every
 // discovery site globs recursively; finalize disposes the folder as one unit.
-const GLOB_SITES = [bs, wp, et, status, fin].filter(Boolean);
+const GLOB_SITES = [bs, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
   fgMark(s.name, s.content, DIGEST_MARKERS.recursiveGlob, "recursive discovery globs");
 }
@@ -544,14 +535,6 @@ if (et) {
     et.content,
     "set `Feature phase: reviewing` first",
     "review phase is set before the review runs (mid-review resume routes in)",
-  );
-}
-if (wp) {
-  fgMark(
-    "pwk-writing-plans",
-    wp.content,
-    "docs/plans/<date>-<umbrella>/overview.md",
-    "plan template umbrella path is folder-based",
   );
 }
 if (fin) {
@@ -672,8 +655,7 @@ if (et) {
 const EXCLUSION_SITES = [
   [status, "1. Glob `docs/plans/**/*-design.md`"],
   [bs, "**Discovery**"],
-  [et, "**Find the plan**"],
-  [wp, "**Find the design doc**"],
+  [et, "**Find the doc**"],
   [fin, "Read **every** relevant progress file"],
   [fin, "**Umbrella** (a `docs/plans/**/overview.md` exists"],
 ];
@@ -824,11 +806,8 @@ if (bs) {
     fail("pwk-brainstorming: step 7 must route invented scenario behavior to the gate");
   }
 }
-if (wp) {
-  fgMark("pwk-writing-plans", wp.content, CODE_DIGEST_MARKERS.bounceToBrainstorm, "planner bounce to brainstorm");
-  if (/inventing behavior/.test(wp.content)) ok("pwk-writing-plans: bounce names inventing behavior");
-  else fail("pwk-writing-plans: bounce rule must name inventing behavior");
-}
+// (pwk 2.0: the planner bounce is gone with the planner — the assumption gate in
+// brainstorm catches underivable criteria in-session; no separate bounce rule remains.)
 
 // --- Summary ---
 console.log("");

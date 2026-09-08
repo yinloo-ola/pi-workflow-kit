@@ -9,10 +9,6 @@
 export const DIGEST_MARKERS = {
   atAGlance: "## At a glance",
   atAGlanceTable: "| R# | Requirement in one line | Risk |",
-  crosswalk: "## Crosswalk",
-  crosswalkTable: "| R# | Plan section | Tests |",
-  crosswalkPlacement: "strictly before `## Requirement 1`",
-  oneLineConfirmation: "one-line confirmation",
   execSummary: "## Execution summary",
   execSummaryTable: "| R# | Requirement | How it was built | Deviated? |",
   fillAsYouLand: "same step as marking",
