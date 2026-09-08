@@ -76,7 +76,7 @@ No write restrictions.
 /skill:pwk-status
 ```
 
-Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight; an umbrella rolls up under its overview (shipped / in-flight / not-started). Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the brainstorm/plan write block, so the boundary stays up).
+Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight; an umbrella rolls up under its overview (shipped / in-flight / not-started). Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the design-phase write block, so the boundary stays up).
 
 ## diagnose
 

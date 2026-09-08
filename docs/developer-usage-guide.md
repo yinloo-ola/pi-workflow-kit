@@ -94,7 +94,7 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 
 Generate a detailed, file:line-anchored walkthrough of a shipped feature or branch into `docs/walkthroughs/<topic>.md` — Summary / How it works / Key flows / Gotchas & invariants / Change map — stamped with the commit range, regenerated wholesale on re-run, never disposed. Exits the gated design phase.
 
-A debugging loop you invoke when something is broken. Not a pipeline phase. **Invoking it exits the gated brainstorm/plan phase** — diagnosis needs to write failing tests and debug instrumentation. If you only want read-only investigation mid-design, use `pwk-status` or re-lock with `/pwk-guard on`.
+A debugging loop you invoke when something is broken. Not a pipeline phase. **Invoking it exits the gated design phase** — diagnosis needs to write failing tests and debug instrumentation. If you only want read-only investigation mid-design, use `pwk-status` or re-lock with `/pwk-guard on`.
 
 ### Status (on demand)
 
@@ -102,7 +102,7 @@ A debugging loop you invoke when something is broken. Not a pipeline phase. **In
 /skill:pwk-status
 ```
 
-A read-only overview of all active design topics — which phase each is in and how far along. Use when resuming work or juggling several designs in parallel (e.g. across worktrees) and you're unsure which topic to continue. Not a pipeline phase, and **it does not exit the gated phase** — it needs no writes, so the brainstorm/plan write boundary stays up.
+A read-only overview of all active design topics — which phase each is in and how far along. Use when resuming work or juggling several designs in parallel (e.g. across worktrees) and you're unsure which topic to continue. Not a pipeline phase, and **it does not exit the gated phase** — it needs no writes, so the design-phase write boundary stays up.
 
 ## What the extension does
 

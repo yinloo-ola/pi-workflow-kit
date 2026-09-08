@@ -53,7 +53,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 | **Design** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
 | **Execute** / **Code-review** / **Finalize** / **Diagnose** / **Status** | ✅ Full access | ✅ Full access |
 
-The agent can read code and discuss design with you during brainstorm/plan, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
+The agent can read code and discuss design with you during the design phase, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
 Phases transition only when you invoke a skill (`/skill:pwk-brainstorming` → read-only; `/skill:pwk-executing-tasks` → unrestricted) — no message keyword unlocks the guard. Unlocking skills: `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose` (all need source writes); `pwk-status` deliberately stays gated (read-only orientation). The canonical list is the exported `UNLOCK_SKILLS` in `extensions/workflow-guard.ts`, lint-asserted against the skills by `npm run check`. Need to override it? `/pwk-guard on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. The subcommands autocomplete after the command.
 
@@ -178,7 +178,7 @@ pi install npm:@tianhai/pi-workflow-kit
 ```
 pi-workflow-kit/
 ├── extensions/
-│   └── workflow-guard.ts      # Write blocker during brainstorm/plan; destructive-bash blacklist
+│   └── workflow-guard.ts      # Write blocker during the design phase; destructive-bash blacklist
 ├── skills/
 │   ├── pwk-brainstorming/SKILL.md
 │   ├── pwk-executing-tasks/SKILL.md
