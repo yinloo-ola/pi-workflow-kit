@@ -299,13 +299,16 @@ function installRoleFiles(
   return { installed, skipped };
 }
 
-/** Minimal structural view of the command context the fast-model prompt needs. */
+/** Minimal structural view of the command context the fast-model prompt needs.
+ * Mirrors pi's ExtensionContext contract: scopedModels carry Model objects
+ * (`{ id, name, provider, ... }` — use `.id`), and `ui.select` takes plain
+ * strings and resolves to the chosen string (undefined when cancelled). */
 interface FastModelPromptContext {
   cwd: string;
   hasUI?: boolean;
-  scopedModels?: { model?: string }[];
+  scopedModels?: readonly { model?: { id?: string } | string }[];
   ui?: {
-    select?: (title: string, options: { value: string; label: string; description: string }[]) => Promise<string>;
+    select?: (title: string, options: string[]) => Promise<string | undefined>;
     confirm?: (title: string, message: string) => Promise<boolean>;
   };
 }
@@ -338,13 +341,20 @@ async function promptFastModelChoice(
   if (installedHint(ctx.cwd) !== undefined) return undefined;
   const scoped = Array.isArray(ctx.scopedModels) ? ctx.scopedModels : [];
   const models = scoped
-    .map((entry) => (typeof entry?.model === "string" ? entry.model : undefined))
-    .filter((model): model is string => model !== undefined && model.length > 0);
-  const options = [
-    ...models.map((model) => ({ value: model, label: model, description: "fast-tier reviewer model" })),
-    { value: "skip", label: "skip", description: "reviewers run on default models" },
-  ];
-  const choice = await ui.select("Fast-tier model for smell/hazard reviewers", options);
+    .map((entry) => {
+      const model = entry?.model;
+      if (typeof model === "string") return model; // tolerated for minimal fake contexts
+      return typeof model?.id === "string" && model.id.length > 0 ? model.id : undefined;
+    })
+    .filter((model): model is string => model !== undefined);
+  // ui.select renders options verbatim and resolves to the chosen option, which is
+  // then written verbatim into role frontmatter — so options must be bare model ids.
+  const unique = [...new Set(models)];
+  if (unique.length === 0) return undefined; // nothing to offer: behave like headless
+  const choice = await ui.select("Fast-tier model for smell/hazard reviewers (skip = default models)", [
+    ...unique,
+    "skip",
+  ]);
   if (!choice || choice === "skip") return undefined;
   const allRoles = (await ui.confirm?.("Apply to all four reviewers?", "No = smell+hazard only")) ?? false;
   return { model: choice, allRoles };

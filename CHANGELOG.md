@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`/pwk-setup` fast-model picker rendered `[object Object]`** — `promptFastModelChoice` violated pi's extension API contract twice: it passed `{ value, label, description }` objects to `ctx.ui.select`, which only accepts plain strings (every option rendered as `[object Object]` and a selection would write garbage into role frontmatter), and it read `ctx.scopedModels[].model` as a string although pi supplies `Model` objects (`{ id, name, provider, … }`), so the model list was always empty. The picker now offers bare model ids (deduped) plus `skip`, extracts ids from `Model` objects, and silently skips the dialog when no scoped models exist (consistent with headless behavior). Tests updated to the real contract.
 - **Archived plan docs no longer resurface as active** — every recursive `docs/plans/**` discovery glob (`pwk-status` artifact globs, `pwk-brainstorming` discovery, `pwk-writing-plans` find-the-design + umbrella check, `pwk-executing-tasks` find-the-plan + post-review routing, `pwk-finalizing` umbrella detection + progress reads) now excludes `docs/plans/completed/`. Closes a 1.7.0 regression in which an archived umbrella's `overview.md` could invert finalize's umbrella branch (the anchored `rm -rf` targeting the archive) and misroute standalone post-review routing. Finalize disposal commands are byte-unchanged and regression-guarded by tests.
 
 ## [1.7.0] - 2026-09-05

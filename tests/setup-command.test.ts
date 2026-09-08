@@ -131,13 +131,14 @@ describe("/pwk-setup fast-model personalization", () => {
     const ctx = (cwd: string) => ({
       cwd,
       hasUI: true,
-      scopedModels: [{ model: "x/mimo2.5flash" }, { model: "x/frontier" }],
+      // Real pi passes Model objects ({ id, name, provider, ... }) in scopedModels
+      // and ui.select takes plain strings, resolving to the chosen string.
+      scopedModels: [{ model: { id: "x/mimo2.5flash" } }, { model: { id: "x/frontier" } }],
       ui: {
         notify() {},
-        select: async (_title: string, options: { value: string }[]) => {
+        select: async (_title: string, options: string[]) => {
           selectCalls += 1;
-          const model = options.find((o) => o.value.includes("mimo"));
-          return model ? model.value : "skip";
+          return options.find((option) => option.includes("mimo")) ?? "skip";
         },
       },
     });
