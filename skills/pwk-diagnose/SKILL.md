@@ -7,7 +7,7 @@ description: "Disciplined debugging loop for hard bugs and performance regressio
 
 A 6-phase debugging discipline. Phase 1 is the skill — spend disproportionate effort here.
 
-Invoking `/skill:pwk-diagnose` **exits the gated brainstorm/plan phase** (the workflow guard unlocks) — diagnosis needs to write failing tests and `[DEBUG-…]` instrumentation. If you only wanted read-only investigation, use `/skill:pwk-status` (stays gated) or reinstate the lock with `/pwk-guard on`.
+Invoking `/skill:pwk-diagnose` **exits the gated design phase** (the workflow guard unlocks) — diagnosis needs to write failing tests and `[DEBUG-…]` instrumentation. If you only wanted read-only investigation, use `/skill:pwk-status` (stays gated) or reinstate the lock with `/pwk-guard on`.
 
 ## Phase 1 — Build a feedback loop
 

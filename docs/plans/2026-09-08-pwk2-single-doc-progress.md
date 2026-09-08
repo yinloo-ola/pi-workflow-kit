@@ -4,14 +4,14 @@ Plan: docs/plans/2026-09-08-pwk2-single-doc-implementation.md
 Branch: pwk2-single-doc
 Started: 2026-09-08T11:19:03+08:00
 Last updated: 2026-09-08T11:19:40+08:00
-Feature phase: implementing (2/5)
+Feature phase: implementing (3/5)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Merged design doc | 🔎 parallel | 474ac6c |
 | 2 | ✅ | Decisions-first At a glance | — | c6430da |
-| 3 | 🔄 | Plan phase removed, execution rewired | ⏸ spec 🔎 parallel | — |
+| 3 | ✅ | Plan phase removed, execution rewired | ⏸ spec 🔎 parallel | 9a5c272 |
 | 4 | ⬜ | Finalize learning sweep | — | — |
 | 5 | ⬜ | pwk-walkthrough skill | 🔎 parallel | — |
 
@@ -20,7 +20,7 @@ Feature phase: implementing (2/5)
 |----|-------------|------------------|-----------|
 | 1 | Merged design doc | Brainstorming skill rewritten: `### R<n>: <name>` blocks carry one-liner + Given/When/Then criteria (incl. edges) + both tags; no test-name lists/mapping tables; auto-tag single-source moved in (writing-plans left a pointer); audit rule kept; hand-off re-pointed to executing. | |
 | 2 | Decisions-first At a glance | At a glance now summary → Key decisions (honest-empty rejected clauses) → R#/risk table; mirrored in README + 3 user docs. | |
-| 3 | Plan phase removed, execution rewired | | |
+| 3 | Plan phase removed, execution rewired | pwk-writing-plans deleted (23 files, net −144 lines); guard Phase = brainstorm\|null; executing: pre-flight branch creation, ### R<n> parsing, stem-matched legacy routing, packet sed re-anchored on the design doc; status+finalize cover both suffixes; README/dev-guide/workflow-phases/oversight/AGENTS rethreaded; ADR 0004 written. | Kept the branch base with the unmerged setup fix (user decision, not a plan departure) — the commit rides in the PR diff. |
 | 4 | Finalize learning sweep | | |
 | 5 | pwk-walkthrough skill | | |
 

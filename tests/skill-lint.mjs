@@ -63,7 +63,7 @@ for (const skill of loadSkills()) {
 }
 
 // --- Check 2: tag vocabulary consistency across the pipeline ---
-// The canonical vocabularies, defined in pwk-writing-plans and consumed by pwk-executing-tasks.
+// The canonical vocabularies, defined in pwk-brainstorming and consumed by pwk-executing-tasks.
 const CHECKPOINT_VOCAB = ["full", "spec", "none"];
 const REVIEW_VOCAB = ["parallel", "inline", "skip"];
 

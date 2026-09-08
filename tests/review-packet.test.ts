@@ -11,7 +11,8 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const CRITERIA_CMD = "sed -n '/^### R1/,/^## Feature acceptance/p'";
 const LEGACY_CRITERIA_CMD = "sed -n '/^## Requirement 1/,/^## Feature acceptance/p'";
 const FA_CMD = "sed -n '/^## Feature acceptance/,/^### Feature review/p'";
-const NOTES_CMD = "sed -n '/^### Production-risk notes/,/^## /p'";
+const NOTES_CMD = "sed -nE '/^### Production-risk notes/,/^(## |### R[0-9])/p'";
+const NOTES_STRIP = "sed -E '/^(## |### R[0-9])/d'";
 
 /** A design doc shaped like the template pwk-brainstorming emits (pwk 2.0). */
 const DESIGN_FIXTURE = [
@@ -100,12 +101,14 @@ describe("review packet recipe", () => {
     expect(criteria).not.toContain("Feature review: parallel");
     expect(criteria).not.toContain("## At a glance");
 
-    const notes = execSync(`${NOTES_CMD} design.md | sed '/^## /d'`, { cwd: dir }).toString();
+    const notes = execSync(`${NOTES_CMD} design.md | ${NOTES_STRIP}`, { cwd: dir }).toString();
     expect(notes).toContain("### Production-risk notes");
     expect(notes).toContain("alpha: touches auth session storage"); // first group captured
     expect(notes).toContain("TTL policy must match session rotation"); // second group captured
     expect(notes).toContain("monitor INCR miss rate");
     expect(notes).not.toContain("## Feature acceptance");
+    expect(notes).not.toContain("### R2: beta"); // the ### R terminator stops each group: no R2 duplication
+    expect(notes).not.toContain("- Given d, When e, Then f.");
 
     const featureAcceptance = execSync(`${FA_CMD} design.md | sed '/^### Feature review/,$d'`, {
       cwd: dir,
@@ -113,6 +116,49 @@ describe("review packet recipe", () => {
     expect(featureAcceptance).toContain("## Feature acceptance");
     expect(featureAcceptance).toContain("`should demo` — Given x, When y, Then z.");
     expect(featureAcceptance).not.toContain("Feature review: parallel");
+  });
+
+  it("should extract criteria verbatim from a legacy plan fixture (in-flight 1.x flow)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pwk-packet-legacy-"));
+    const legacyFixture = [
+      "# Implementation Plan: demo",
+      "",
+      "## Overview",
+      "Design: docs/plans/demo-design.md",
+      "",
+      "## Requirement 1: alpha",
+      "",
+      "### Acceptance criteria",
+      "- Given a, When b, Then c.",
+      "",
+      "### Production-risk notes",
+      "- touches redis: hot path",
+      "",
+      "## Requirement 2: beta",
+      "",
+      "### Acceptance criteria",
+      "- Given d, When e, Then f.",
+      "",
+      "## Feature acceptance",
+      "",
+      "- `should demo` — Given x, When y, Then z.",
+      "",
+      "### Feature review: parallel",
+      "",
+    ].join("\n");
+    writeFileSync(join(dir, "plan.md"), legacyFixture);
+
+    const criteria = execSync(`${LEGACY_CRITERIA_CMD} plan.md | sed '/^## Feature acceptance/,$d'`, {
+      cwd: dir,
+    }).toString();
+    expect(criteria).toContain("## Requirement 1: alpha");
+    expect(criteria).toContain("- Given a, When b, Then c.");
+    expect(criteria).toContain("## Requirement 2: beta");
+    expect(criteria).not.toContain("## Feature acceptance");
+
+    const notes = execSync(`${NOTES_CMD} plan.md | ${NOTES_STRIP}`, { cwd: dir }).toString();
+    expect(notes).toContain("touches redis: hot path");
+    expect(notes).not.toContain("## Requirement 2: beta");
   });
 
   it("should scope per-requirement reviews to the requirement", () => {

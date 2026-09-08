@@ -231,7 +231,7 @@ describe("/pwk-setup", () => {
     expect(readdirSync(cleanRoot, { withFileTypes: true })).toHaveLength(0);
   });
 
-  it("refuses setup in brainstorm and plan phases even when the manual guard is off", async () => {
+  it("refuses setup in the design phase even when the manual guard is off", async () => {
     const command = harness.commands.get("pwk-setup");
 
     for (const skill of ["pwk-brainstorming"] as const) {

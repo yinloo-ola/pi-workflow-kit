@@ -16,11 +16,35 @@ import { describe, it, expect } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { isSafeCommand, shouldBlockFilePath, UNLOCK_SKILLS } from "../extensions/workflow-guard";
+import { getCurrentPhase, isSafeCommand, shouldBlockFilePath, UNLOCK_SKILLS } from "../extensions/workflow-guard";
+import { createExtensionHarness } from "./helpers";
 
 describe("guard phase transitions", () => {
   it("unlocks on write-needing skills only", () => {
     expect([...UNLOCK_SKILLS]).toEqual(["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"]);
+  });
+
+  it("gates only brainstorming; a removed skill no longer enters a phase", () => {
+    const harness = createExtensionHarness();
+    harness.handlers.get("session_start")?.({}, {});
+    expect(getCurrentPhase()).toBeNull();
+    // pwk-writing-plans was removed in 2.0: invoking it must NOT enter any phase
+    harness.handlers.get("input")?.({ text: "/skill:pwk-writing-plans" }, {});
+    expect(getCurrentPhase()).toBeNull();
+    harness.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});
+    expect(getCurrentPhase()).toBe("brainstorm");
+    harness.handlers.get("input")?.({ text: "/skill:pwk-executing-tasks" }, {});
+    expect(getCurrentPhase()).toBeNull();
+  });
+
+  it("announces the DESIGN phase reminder once on entry", async () => {
+    const harness = createExtensionHarness();
+    harness.handlers.get("session_start")?.({}, {});
+    harness.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});
+    const first = await harness.handlers.get("before_agent_start")?.({}, {});
+    expect((first as { message?: { content?: string } })?.message?.content).toContain("DESIGN phase");
+    const second = await harness.handlers.get("before_agent_start")?.({}, {});
+    expect(second ?? {}).toEqual({});
   });
 
   it("does not unlock on pwk-status (read-only orientation stays gated)", () => {

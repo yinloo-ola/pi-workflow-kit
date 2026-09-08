@@ -47,6 +47,9 @@ describe("pwk 2.0 single-doc feature (E2E)", () => {
     expect(executing).toContain(SINGLE_DOC_MARKERS.packetDesignSpan);
     expect(read("skills/pwk-status/SKILL.md")).toContain(SINGLE_DOC_MARKERS.bothSuffixes);
     expect(existsSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"))).toBe(true);
+    const adr = readFileSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"), "utf8");
+    expect(adr).toContain("plan phase merged into brainstorm");
+    expect(adr).toContain("learning sweep");
 
     // R4 — finalize sweeps learning (decisions + Approaches considered + deviations
     // + alerts) before disposal, asking rather than fabricating when material is thin.
