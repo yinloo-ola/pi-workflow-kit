@@ -29,6 +29,41 @@ export const DIGEST_MARKERS = {
 };
 
 /**
+ * Markers for the pwk 2.0 single-doc feature: the merged design doc (### R<n> blocks
+ * with criteria + tags), decisions-first At a glance, the removed plan phase, the
+ * finalize learning sweep, and the on-demand walkthrough skill. Same contract as
+ * DIGEST_MARKERS — one canonical string per behavior, shared by skill-lint and the
+ * vitest suites. Chosen to distinguish new shapes from old (### R<n>: vs ## Requirement N:).
+ */
+export const SINGLE_DOC_MARKERS = {
+  rBlock: "### R<n>: <name>",
+  criteriaInBlock: "Given/When/Then criteria",
+  noTestNameLists: "no test-name lists",
+  auditExactlyOnce: "exactly once",
+  autoTagTruth: "one source of truth for the auto-tag rule",
+  keyDecisions: "Key decisions",
+  neverManufactured: "never manufactured",
+  designFlow: "design → execute → finalize",
+  preFlightBranch: "create the feature branch",
+  parseRBlocks: "### R<n> blocks",
+  legacyStem: "stem-matched",
+  bothSuffixes: "both suffixes",
+  packetDesignSpan: "### R1",
+  learningSweep: "learning sweep",
+  beforeDisposal: "before any disposal",
+  sweepApproaches: "Approaches considered",
+  askNotFabricate: "rather than fabricating",
+  deviationRecord: "at deviation time",
+  walkthroughDir: "docs/walkthroughs/",
+  walkthroughTemplate: "Summary / How it works / Key flows / Gotchas & invariants / Change map",
+  fileLineAnchors: "file:line",
+  shaStamp: "stamped with the commit range",
+  regenWholesale: "overwrites wholesale",
+  neverDisposed: "never disposed",
+  onDemand: "on demand",
+};
+
+/**
  * Markers for the code-digest feature: the ship-time code digest, the
  * completed/ exclusion on recursive discovery globs, and frontier-round
  * brainstorm questioning. Same contract as DIGEST_MARKERS — one canonical

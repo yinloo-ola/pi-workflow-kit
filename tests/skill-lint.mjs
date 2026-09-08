@@ -10,7 +10,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CODE_DIGEST_MARKERS, DIGEST_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, DIGEST_MARKERS, SINGLE_DOC_MARKERS } from "./markers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillsDir = join(root, "skills");
@@ -380,52 +380,51 @@ if (bs) {
     fail("pwk-brainstorming: must skip scout on trivial changes (proportionality shortcut)");
   }
 }
-// R2: pwk-writing-plans auto-tag rule. The marker must be unique to this rule.
-if (wp) {
-  if (/Production-risk notes/.test(wp.content) && /Review:\s*parallel/.test(wp.content)) {
-    ok("pwk-writing-plans: documents Production-risk notes → Review: parallel auto-tag");
+// R2: auto-tag rule — since pwk 2.0 the tags live in the design doc's requirement
+// blocks, so pwk-brainstorming owns the rule (non-empty Production-risk notes ⇒
+// Review: parallel). The marker must be unique to this rule.
+if (bs) {
+  if (/Production-risk notes/.test(bs.content) && /Review:\s*parallel/.test(bs.content)) {
+    ok("pwk-brainstorming: documents Production-risk notes → Review: parallel auto-tag");
   } else {
-    fail("pwk-writing-plans: must document the auto-tag rule (Production-risk notes ⇒ Review: parallel)");
+    fail("pwk-brainstorming: must document the auto-tag rule (Production-risk notes ⇒ Review: parallel)");
   }
   // The default must still be `skip` for requirements WITHOUT risk notes (no over-broaden).
-  if (/Review:\s*skip/.test(wp.content)) {
-    ok("pwk-writing-plans: still documents `Review: skip` as the default (no over-broaden)");
+  if (/Review:\s*skip/.test(bs.content)) {
+    ok("pwk-brainstorming: still documents `Review: skip` as the default (no over-broaden)");
   } else {
-    fail("pwk-writing-plans: must keep `Review: skip` as the default for non-risky requirements");
+    fail("pwk-brainstorming: must keep `Review: skip` as the default for non-risky requirements");
   }
   // The auto-tag must be presented as editable (the human can downgrade it).
-  if (/edit/i.test(wp.content) && /downgrade|change|override/i.test(wp.content)) {
-    ok("pwk-writing-plans: auto-tag is editable (human can downgrade before approval)");
+  if (/edit/i.test(bs.content) && /downgrade|change|override/i.test(bs.content)) {
+    ok("pwk-brainstorming: auto-tag is editable (human can downgrade before approval)");
   } else {
-    fail("pwk-writing-plans: must document that the auto-tag is editable");
+    fail("pwk-brainstorming: must document that the auto-tag is editable");
   }
-  // Negative case: the auto-tag must require a NON-EMPTY Production-risk notes section, so an
-  // empty notes section does not trigger it. Assert the `non-empty` qualifier sits adjacent to
-  // the rule phrase (within one line) so a future edit that drops the qualifier fails loudly.
-  if (/non-empty[^\n]*Production-risk notes|Production-risk notes[^\n]*non-empty/i.test(wp.content)) {
-    ok("pwk-writing-plans: auto-tag requires non-empty Production-risk notes (negative case)");
+  // Negative case: the auto-tag must require a NON-EMPTY Production-risk notes section.
+  if (/non-empty[^\n]*Production-risk notes|Production-risk notes[^\n]*non-empty/i.test(bs.content)) {
+    ok("pwk-brainstorming: auto-tag requires non-empty Production-risk notes (negative case)");
   } else {
-    fail("pwk-writing-plans: must qualify the auto-tag with `non-empty` (empty notes must not trigger)");
+    fail("pwk-brainstorming: must qualify the auto-tag with `non-empty` (empty notes must not trigger)");
   }
-  // The rule must be single-sourced: pwk-writing-plans owns the auto-tag concept pair
-  // (`auto-tag` + `Production-risk notes`). Any other skill that mentions both must do so in
-  // a line that also names `pwk-writing-plans` (link by name, do not restate). A bare
-  // restatement without a link in the same line is a regression against R3.
-  const restated = loadSkills().filter((s) => s.name !== "pwk-writing-plans");
+  // The rule must be single-sourced: pwk-brainstorming owns the auto-tag concept pair
+  // (`auto-tag` + `Production-risk notes`). Any other skill that mentions both must do so
+  // in a line that also names `pwk-brainstorming` (link by name, do not restate).
+  const restated = loadSkills().filter((s) => s.name !== "pwk-brainstorming");
   let restateViolations = 0;
   for (const s of restated) {
     const lines = s.content.split("\n");
     for (const line of lines) {
       const hasConcept = /auto-tag/i.test(line) && /Production-risk notes/.test(line);
       if (!hasConcept) continue;
-      if (!/pwk-writing-plans/.test(line)) {
+      if (!/pwk-brainstorming/.test(line)) {
         restateViolations++;
-        fail(`${s.name}: restates the auto-tag rule without linking to pwk-writing-plans: "${line.trim()}"`);
+        fail(`${s.name}: restates the auto-tag rule without linking to pwk-brainstorming: "${line.trim()}"`);
       }
     }
   }
   if (restateViolations === 0) {
-    ok("pwk-writing-plans: auto-tag rule is single-source (other skills do not restate it)");
+    ok("pwk-brainstorming: auto-tag rule is single-source (other skills do not restate it)");
   }
 }
 // R3: pwk-executing-tasks must reference pwk-writing-plans for the auto-tag rule (not restate).
@@ -454,6 +453,17 @@ if (bs) {
   fgMark("pwk-brainstorming", bs.content, "In short:", "trivial fast-path In-short line");
   if (/plain language/i.test(bs.content)) ok("pwk-brainstorming: at-a-glance plain-language rule");
   else fail("pwk-brainstorming: at-a-glance must mandate plain language");
+  // pwk 2.0 R1 — the design doc is the single buildable artifact: one block per
+  // requirement carrying criteria + tags; the plan phase's re-derivations are gone.
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.rBlock, "R<n> requirement blocks");
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.criteriaInBlock, "criteria inside the block");
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.noTestNameLists, "no test-name lists");
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.auditExactlyOnce, "audit: criteria + tags exactly once");
+  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.autoTagTruth, "auto-tag rule single source of truth");
+  if (!/crosswalk/i.test(bs.content)) ok("pwk-brainstorming: no mapping-table instruction");
+  else fail("pwk-brainstorming: must not instruct a crosswalk mapping table");
+  if (!/pwk-writing-plans/.test(bs.content)) ok("pwk-brainstorming: no plan-phase hand-off");
+  else fail("pwk-brainstorming: must hand off to pwk-executing-tasks, not a plan phase");
 }
 // R2 — plans carry a crosswalk (one row per design R#) placed strictly before
 // `## Requirement 1` so the packet sed spans stay intact; the human confirms in one line.
