@@ -65,3 +65,28 @@ describe("single-doc: decisions-first At a glance (R2)", () => {
     }
   });
 });
+
+describe("single-doc: finalize learning sweep (R4)", () => {
+  const finalize = read("skills/pwk-finalizing/SKILL.md");
+
+  it("should sweep learning before disposal", () => {
+    expect(finalize).toContain(SINGLE_DOC_MARKERS.learningSweep);
+    expect(finalize).toContain(SINGLE_DOC_MARKERS.beforeDisposal);
+    expect(finalize).toContain(SINGLE_DOC_MARKERS.sweepApproaches);
+    expect(finalize).toContain(SINGLE_DOC_MARKERS.askNotFabricate);
+    const sweepIdx = finalize.indexOf(SINGLE_DOC_MARKERS.learningSweep);
+    const disposalIdx = finalize.indexOf("Dispose of consumed plan docs");
+    expect(sweepIdx).toBeGreaterThan(-1);
+    expect(disposalIdx).toBeGreaterThan(-1);
+    expect(sweepIdx).toBeLessThan(disposalIdx);
+    // ADR offers via the three gates; honest-empty when nothing qualifies
+    expect(finalize).toMatch(/hard to reverse/);
+    expect(finalize).toMatch(/honest-empty|honest empty/i);
+  });
+
+  it("should record architectural deviations at deviation time", () => {
+    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    expect(executing).toContain(SINGLE_DOC_MARKERS.deviationRecord);
+    expect(executing).toMatch(/what changed, why, what was rejected/);
+  });
+});
