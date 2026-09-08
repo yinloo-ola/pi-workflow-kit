@@ -50,6 +50,10 @@ describe("pwk 2.0 single-doc feature (E2E)", () => {
     const adr = readFileSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"), "utf8");
     expect(adr).toContain("plan phase merged into brainstorm");
     expect(adr).toContain("learning sweep");
+    // 2.0.0 ships with the migration note the ADR promises
+    const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8");
+    expect(changelog).toContain("## [2.0.0]");
+    expect(changelog).toMatch(/migration/i);
 
     // R4 — finalize sweeps learning (decisions + Approaches considered + deviations
     // + alerts) before disposal, asking rather than fabricating when material is thin.

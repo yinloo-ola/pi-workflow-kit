@@ -183,13 +183,7 @@ if (!exportMatch) {
 if (!/UNLOCK_SKILLS\.some\(/.test(guardSrc)) {
   fail("workflow-guard.ts: input handler does not dereference UNLOCK_SKILLS");
 }
-const EXPECTED_UNLOCK = [
-  "pwk-executing-tasks",
-  "pwk-finalizing",
-  "pwk-code-review",
-  "pwk-diagnose",
-  "pwk-walkthrough",
-];
+const EXPECTED_UNLOCK = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose", "pwk-walkthrough"];
 let unlockOk = true;
 for (const s of EXPECTED_UNLOCK) {
   if (!unlockSet.has(s)) {
@@ -304,8 +298,8 @@ fgMark("pwk-brainstorming", bs?.content, "primary enforced spec", "Feature accep
 
 // --- Check 10: parallelize-workflow (R1 scout + R2 auto-tag + R3 cross-skill) ---
 // pwk-recon-scout is a new read-only package agent dispatched from pwk-brainstorming before
-// design; pwk-writing-plans auto-tags `### Review: parallel` for requirements with a
-// non-empty `### Production-risk notes` section; the other skills + docs reference (not
+// design; pwk-brainstorming (since pwk 2.0) auto-tags `### Review: parallel` for requirements
+// with a non-empty `### Production-risk notes` section; the other skills + docs reference (not
 // restate) the rule. Markers are unique to the new behavior so a stale skill fails (no false
 // green). See docs/plans/2026-08-27-parallelize-workflow-design.md.
 console.log("parallelize-workflow:");
@@ -839,7 +833,7 @@ if (existsSync(wtPath)) {
   if (unlockSet.has("pwk-walkthrough")) ok("guard unlock list includes pwk-walkthrough");
   else fail("guard unlock list missing pwk-walkthrough");
   if (fin && !/walkthroughs/.test(fin.content)) ok("finalize never disposes walkthroughs");
-  else fail("pwk-finalizing: must not touch docs/walkthroughthroughs/");
+  else fail("pwk-finalizing: must not touch docs/walkthroughs/");
 } else {
   fail("pwk-walkthrough: skill missing");
 }

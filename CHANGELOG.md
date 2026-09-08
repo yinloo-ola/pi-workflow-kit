@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.0] - 2026-09-08
+
+### Breaking / migration
+
+**The plan phase is gone — the design doc is the single buildable artifact.** The kit's flow is now **design → execute → finalize**; `/skill:pwk-writing-plans` no longer ships. **Migration for in-flight features**: a stem-matched legacy `*-implementation.md` still routes the old flow (executing/status/finalize glob both suffixes), so 1.x work in progress can finish; new features brainstorm straight into the buildable doc. The guard's phase map reduces to `brainstorm | null` — the two phases were already behaviorally identical (`docs/plans/`-only writes).
+
+### Added
+
+- **Merged design doc (ADR 0004)** — `pwk-brainstorming` now ends with one buildable doc: each requirement is an `### R<n>:` block carrying its one-line behavior, Given/When/Then acceptance criteria (edge/error cases included), and `### Checkpoints` / `### Review` tags; the Feature-acceptance E2E carries the feature-level `### Feature review` tag. **No test-name lists and no crosswalk** — the block structure is the map; the executor writes and names tests red-green from the criteria. The auto-tag rule's single source of truth moves here from the removed skill.
+- **Decisions-first At a glance** — the human digest is now summary → **Key decisions** (decision + why; a `(rejected: …)` clause only when the fork was real — never manufactured) → R#/risk table. `## Production-risk areas` sits immediately after the last requirement block, inside the packet span, so reviewers see it verbatim.
+- **Finalize learning sweep** — before any disposal command, finalize harvests the design doc's decision bullets + `Approaches considered`, the progress file's `Deviated?` entries (including new deviation decision-records: architectural departures get a what/why/rejected paragraph written at deviation time), and the Code digest's `[ALERT]`s into ADR offers (3-gate test, informed by how decisions played out) and generic `docs/lessons.md` rules; honest-empty when nothing qualifies; asks the human rather than fabricating thin context.
+- **`pwk-walkthrough` skill** — standalone, on demand, exits the gate: given a topic or branch, derives from the diff + code and writes `docs/walkthroughs/<topic>.md` — Summary / How it works / Key flows / Gotchas & invariants / Change map — every claim anchored to `file:line`, stamped with the commit range, regenerated wholesale, never hand-edited, never disposed.
+
+### Changed
+
+- Executing's pre-flight creates the feature branch (moved from the removed skill); it parses `### R<n>` blocks, routes legacy stem-matched `-implementation.md` docs through the old flow, and seds the review packet's criteria from the design doc (`### R1` → `## Feature acceptance`); the packet's notes span stops at the next `### R<n>` block (no cross-block duplication).
+- Guard reminder wording: **DESIGN phase**; `UNLOCK_SKILLS` gains `pwk-walkthrough`.
+- README + user docs + AGENTS rethreaded to the three-skill pipeline.
+
 ## [1.8.0] - 2026-09-07
 
 ### Added

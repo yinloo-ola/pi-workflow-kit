@@ -660,8 +660,9 @@ export default function (pi: ExtensionAPI) {
     // Phase transitions happen only via skills — no message keyword unlocks the design phase.
     // Run /skill:pwk-executing-tasks (or another write-needing skill) to leave a gated phase.
     //
-    // Unlock list rationale: execute/finalize/code-review/diagnose all need to write source
-    // (implement, edit review fixes, add [DEBUG-] instrumentation), so they exit the gate.
+    // Unlock list rationale: execute/finalize/code-review/diagnose/walkthrough all need to write
+    // source or docs outside docs/plans/ (implement, edit review fixes, add [DEBUG-] instrumentation,
+    // generate docs/walkthroughs/), so they exit the gate.
     // pwk-status is NOT here on purpose: it is read-only orientation, so it stays inside the
     // gated phase and never drops the write boundary the user is relying on.
     // (Orientation never needs write access; see skills/pwk-status.)

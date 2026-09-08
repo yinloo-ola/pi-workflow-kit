@@ -4,7 +4,7 @@ Plan: docs/plans/2026-09-08-pwk2-single-doc-implementation.md
 Branch: pwk2-single-doc
 Started: 2026-09-08T11:19:03+08:00
 Last updated: 2026-09-08T11:19:40+08:00
-Feature phase: implementing (5/5)
+Feature phase: reviewing
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |

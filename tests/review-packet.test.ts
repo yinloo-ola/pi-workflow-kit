@@ -57,6 +57,10 @@ const DESIGN_FIXTURE = [
   "- key cardinality grows with active users",
   "- monitor INCR miss rate in dashboards",
   "",
+  "## Production-risk areas",
+  "",
+  "- redis TTL policy is load-bearing for session rotation",
+  "",
   "## Feature acceptance",
   "",
   "- `should demo` — Given x, When y, Then z.",
@@ -97,6 +101,8 @@ describe("review packet recipe", () => {
     expect(criteria).toContain("### Production-risk notes");
     expect(criteria).toContain("hot path under login storms");
     expect(criteria).toContain("monitor INCR miss rate"); // >3 lines: range capture, not grep -A3 truncation
+    expect(criteria).toContain("## Production-risk areas"); // design-level risk section rides the span into the packet
+    expect(criteria).toContain("redis TTL policy is load-bearing");
     expect(criteria).not.toContain("## Feature acceptance");
     expect(criteria).not.toContain("Feature review: parallel");
     expect(criteria).not.toContain("## At a glance");

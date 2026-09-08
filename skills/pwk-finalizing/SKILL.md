@@ -60,9 +60,9 @@ Ship the completed work.
      ```
 
    The `????-??-??-` glob enforces the dated filename; a bare `*<topic>*` would over-match unrelated docs (e.g. topic `auth` would also hit `feature-auth-redesign-design.md`). Verify with `ls docs/plans/` before and after. `rm -f` and each `mv … || true` handle missing files. Both paths commit the disposal so the shipped branch is clean. Neither path touches `docs/adr/`, `docs/lessons.md`, `CHANGELOG.md`, or `README.md` — those are permanent.
-3. **Curate lessons (Agile Scrum Master hat)** — if `docs/lessons.md` exists: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize, retire stale rules. None exists but lessons were learned? Create it. (The learning sweep above feeds this; curation then shapes the whole file.)
-4. **Update documentation** — if the API or surface changed: `README.md`, `CHANGELOG.md`, any inline docs.
-5. **Choose a merge strategy** — ask the human:
+4. **Curate lessons (Agile Scrum Master hat)** — if `docs/lessons.md` exists: add missed lessons, generalize domain-specific rules into generic patterns, de-duplicate, categorize, retire stale rules. None exists but lessons were learned? Create it. (The learning sweep above feeds this; curation then shapes the whole file.)
+5. **Update documentation** — if the API or surface changed: `README.md`, `CHANGELOG.md`, any inline docs. Bump the package version (major for breaking changes).
+6. **Choose a merge strategy** — ask the human:
 
    1. **Create PR** — `git push origin <branch>` then `gh pr create`.
    2. **Rebase & merge** *(recommended)* — rebase onto parent, `--ff-only` merge, push parent, delete branch.
@@ -70,7 +70,7 @@ Ship the completed work.
    4. **Merge commit** — `--no-ff` merge, push parent, delete branch.
 
    For 2–4, confirm the detected parent branch before proceeding.
-6. **Clean up** — remove the worktree if one was used: `git worktree remove ../<repo>-<topic>`.
+7. **Clean up** — remove the worktree if one was used: `git worktree remove ../<repo>-<topic>`.
 
 ## Principles
 

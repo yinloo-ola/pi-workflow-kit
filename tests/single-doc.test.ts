@@ -35,6 +35,13 @@ describe("single-doc: merged design doc (R1)", () => {
     expect(bs).toMatch(/both tags/);
   });
 
+  it("should keep the trivial fast-path shape (In short + single block)", () => {
+    const trivial = bs.match(/[^^]{0,400}In short:[^^]{0,400}/)?.[0] ?? "";
+    expect(trivial).toMatch(/single `### R1:` requirement block/);
+    expect(trivial).toMatch(/criteria and tags/);
+    expect(trivial).toMatch(/pwk-executing-tasks/);
+  });
+
   it("should hand off to executing-tasks (no plan phase in between)", () => {
     expect(bs).not.toMatch(/pwk-writing-plans/);
     expect(bs).toMatch(/pwk-executing-tasks/);
@@ -106,7 +113,11 @@ describe("single-doc: pwk-walkthrough skill (R5)", () => {
     expect(wt).toContain(SINGLE_DOC_MARKERS.onDemand);
     expect(wt).toContain(SINGLE_DOC_MARKERS.walkthroughDir);
     expect(wt).toMatch(/follow with the files open/);
+    expect(wt).toMatch(/No diff found/); // anti-fabrication guard
+    expect(wt).toMatch(/Refuse with a clear reason/);
     expect(UNLOCK_SKILLS).toContain("pwk-walkthrough");
+    const pkg = JSON.parse(read("package.json")) as { files?: string[] };
+    expect(pkg.files).toContain("skills/"); // the walkthrough skill ships in the tarball
     const finalize = read("skills/pwk-finalizing/SKILL.md");
     expect(finalize).not.toMatch(/walkthroughs/);
   });
