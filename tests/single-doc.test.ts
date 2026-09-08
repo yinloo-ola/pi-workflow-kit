@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { UNLOCK_SKILLS } from "../extensions/workflow-guard";
 import { SINGLE_DOC_MARKERS } from "./markers.mjs";
 
 function read(rel: string): string {
@@ -88,5 +89,25 @@ describe("single-doc: finalize learning sweep (R4)", () => {
     const executing = read("skills/pwk-executing-tasks/SKILL.md");
     expect(executing).toContain(SINGLE_DOC_MARKERS.deviationRecord);
     expect(executing).toMatch(/what changed, why, what was rejected/);
+  });
+});
+
+describe("single-doc: pwk-walkthrough skill (R5)", () => {
+  it("should ship an on-demand, anchored walkthrough skill", () => {
+    const wtPath = "skills/pwk-walkthrough/SKILL.md";
+    expect(existsSync(wtPath)).toBe(true);
+    const wt = read(wtPath);
+    expect(wt).toContain("name: pwk-walkthrough");
+    expect(wt).toContain(SINGLE_DOC_MARKERS.walkthroughTemplate);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.fileLineAnchors);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.shaStamp);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.regenWholesale);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.neverDisposed);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.onDemand);
+    expect(wt).toContain(SINGLE_DOC_MARKERS.walkthroughDir);
+    expect(wt).toMatch(/follow with the files open/);
+    expect(UNLOCK_SKILLS).toContain("pwk-walkthrough");
+    const finalize = read("skills/pwk-finalizing/SKILL.md");
+    expect(finalize).not.toMatch(/walkthroughs/);
   });
 });

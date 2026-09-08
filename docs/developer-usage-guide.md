@@ -86,6 +86,14 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 /skill:pwk-diagnose
 ```
 
+### Walkthrough (on demand)
+
+```
+/skill:pwk-walkthrough
+```
+
+Generate a detailed, file:line-anchored walkthrough of a shipped feature or branch into `docs/walkthroughs/<topic>.md` — Summary / How it works / Key flows / Gotchas & invariants / Change map — stamped with the commit range, regenerated wholesale on re-run, never disposed. Exits the gated design phase.
+
 A debugging loop you invoke when something is broken. Not a pipeline phase. **Invoking it exits the gated brainstorm/plan phase** — diagnosis needs to write failing tests and debug instrumentation. If you only want read-only investigation mid-design, use `pwk-status` or re-lock with `/pwk-guard on`.
 
 ### Status (on demand)

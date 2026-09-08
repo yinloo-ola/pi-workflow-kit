@@ -21,7 +21,13 @@ import { createExtensionHarness } from "./helpers";
 
 describe("guard phase transitions", () => {
   it("unlocks on write-needing skills only", () => {
-    expect([...UNLOCK_SKILLS]).toEqual(["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"]);
+    expect([...UNLOCK_SKILLS]).toEqual([
+      "pwk-executing-tasks",
+      "pwk-finalizing",
+      "pwk-code-review",
+      "pwk-diagnose",
+      "pwk-walkthrough",
+    ]);
   });
 
   it("gates only brainstorming; a removed skill no longer enters a phase", () => {

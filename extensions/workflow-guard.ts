@@ -477,7 +477,13 @@ const SKILL_TO_PHASE: Record<string, Phase> = {
 
 /** Skills whose invocation exits a gated phase (used by the input handler; exported for tests/
  *  skill-lint). Deliberately excludes pwk-status (read-only by design; stays gated). */
-export const UNLOCK_SKILLS = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"] as const;
+export const UNLOCK_SKILLS = [
+  "pwk-executing-tasks",
+  "pwk-finalizing",
+  "pwk-code-review",
+  "pwk-diagnose",
+  "pwk-walkthrough",
+] as const;
 
 /** Phase-aware reminder appended after the user's message each turn while a gated phase is active.
  *  Returned as a message (not a system-prompt change) so it sits at the tail of the request and

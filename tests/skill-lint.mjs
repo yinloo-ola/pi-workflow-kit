@@ -183,7 +183,13 @@ if (!exportMatch) {
 if (!/UNLOCK_SKILLS\.some\(/.test(guardSrc)) {
   fail("workflow-guard.ts: input handler does not dereference UNLOCK_SKILLS");
 }
-const EXPECTED_UNLOCK = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose"];
+const EXPECTED_UNLOCK = [
+  "pwk-executing-tasks",
+  "pwk-finalizing",
+  "pwk-code-review",
+  "pwk-diagnose",
+  "pwk-walkthrough",
+];
 let unlockOk = true;
 for (const s of EXPECTED_UNLOCK) {
   if (!unlockSet.has(s)) {
@@ -808,6 +814,35 @@ if (bs) {
 }
 // (pwk 2.0: the planner bounce is gone with the planner — the assumption gate in
 // brainstorm catches underivable criteria in-session; no separate bounce rule remains.)
+
+// --- Check 13: pwk-walkthrough (pwk 2.0 R5) ---
+// A standalone on-demand explainer skill: five-section template, file:line anchors,
+// commit-range stamp, wholesale regeneration, never disposed, unlock-list member.
+console.log("walkthrough skill:");
+const wtPath = join(skillsDir, "pwk-walkthrough", "SKILL.md");
+if (existsSync(wtPath)) {
+  ok("pwk-walkthrough: skill exists");
+  const wtContent = readFileSync(wtPath, "utf8");
+  const wtFm = parseFrontmatter(wtContent);
+  if (wtFm?.name === "pwk-walkthrough") ok("walkthrough: frontmatter name matches");
+  else fail("walkthrough: frontmatter name must be `pwk-walkthrough`");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.walkthroughTemplate, "five-section template");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.fileLineAnchors, "file:line anchors mandated");
+  fgMark("pwk-walkthrough", wtContent, "follow with the files open", "detailed enough to follow along");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.shaStamp, "commit-range stamp");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.regenWholesale, "regeneration overwrites wholesale");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.neverDisposed, "never disposed");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.onDemand, "on demand only");
+  fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.walkthroughDir, "docs/walkthroughs/ output dir");
+  if (/exits (any|the) gated/i.test(wtContent)) ok("walkthrough: documents it exits the gate");
+  else fail("walkthrough: must state it exits the gated phase");
+  if (unlockSet.has("pwk-walkthrough")) ok("guard unlock list includes pwk-walkthrough");
+  else fail("guard unlock list missing pwk-walkthrough");
+  if (fin && !/walkthroughs/.test(fin.content)) ok("finalize never disposes walkthroughs");
+  else fail("pwk-finalizing: must not touch docs/walkthroughthroughs/");
+} else {
+  fail("pwk-walkthrough: skill missing");
+}
 
 // --- Summary ---
 console.log("");

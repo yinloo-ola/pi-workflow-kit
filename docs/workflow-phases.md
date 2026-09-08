@@ -1,6 +1,6 @@
 # Workflow Phases
 
-`pi-workflow-kit` has 4 pipeline skills plus 2 utility skills. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 4 pipeline skills plus 3 utility skills. You invoke each one explicitly with `/skill:`.
 
 ```
 brainstorm → executing-tasks → finalizing
