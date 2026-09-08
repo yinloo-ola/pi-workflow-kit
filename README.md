@@ -185,7 +185,8 @@ pi-workflow-kit/
 │   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md
 │   ├── pwk-status/SKILL.md
-│   └── pwk-diagnose/SKILL.md
+│   ├── pwk-diagnose/SKILL.md
+│   └── pwk-walkthrough/SKILL.md      # on-demand explainer; docs/walkthroughs/ output
 ├── agents/                   # canonical role contracts; /pwk-setup copies them to .agents/agents/
 ├── docs/
 │   ├── developer-usage-guide.md
