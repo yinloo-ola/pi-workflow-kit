@@ -13,7 +13,7 @@ Feature phase: implementing (5/5)
 | 2 | ✅ | Decisions-first At a glance | — | c6430da |
 | 3 | ✅ | Plan phase removed, execution rewired | ⏸ spec 🔎 parallel | 9a5c272 |
 | 4 | ✅ | Finalize learning sweep | — | 1d6ba56 |
-| 5 | ✅ | pwk-walkthrough skill | 🔎 parallel | <r5> |
+| 5 | ✅ | pwk-walkthrough skill | 🔎 parallel | 0ba0bf8 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
