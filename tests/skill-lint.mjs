@@ -10,7 +10,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CODE_DIGEST_MARKERS, DIGEST_MARKERS, SINGLE_DOC_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, DIGEST_MARKERS, SINGLE_DOC_MARKERS, STATUS_STATE_MARKERS } from "./markers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillsDir = join(root, "skills");
@@ -518,10 +518,11 @@ if (et) {
   }
 }
 // R5 — umbrella docs live in their own docs/plans/<date>-<umbrella>/ folder; every
-// discovery site globs recursively; finalize disposes the folder as one unit.
+// discovery site pins the find recipe (recursive by construction); finalize disposes
+// the folder as one unit.
 const GLOB_SITES = [bs, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
-  fgMark(s.name, s.content, DIGEST_MARKERS.recursiveGlob, "recursive discovery globs");
+  fgMark(s.name, s.content, STATUS_STATE_MARKERS.findRecipe, "pinned find discovery recipe");
 }
 if (et) {
   fgMark(
@@ -650,10 +651,10 @@ if (et) {
   }
 }
 
-// R5 — every recursive discovery glob excludes completed/ (archived work is not
+// R5 — every pinned discovery recipe excludes completed/ (archived work is not
 // in flight), while the finalize disposal commands stay byte-identical.
 const EXCLUSION_SITES = [
-  [status, "1. Glob `docs/plans/**/*-design.md`"],
+  [status, "1. **Discover**"],
   [bs, "**Discovery**"],
   [et, "**Find the doc**"],
   [fin, "Read **every** relevant progress file"],

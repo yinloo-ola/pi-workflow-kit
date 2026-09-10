@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { readRole } from "./helpers";
-import { DIGEST_MARKERS } from "./markers.mjs";
+import { DIGEST_MARKERS, STATUS_STATE_MARKERS } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -92,9 +92,9 @@ describe("human review digests feature (E2E)", () => {
       expect(readRole(name).body.length, name).toBeGreaterThan(blocks[i].length);
     }
 
-    // R5 — every discovery site resolves docs one level down (umbrella folders).
+    // R5 — every discovery site pins the find recipe (recursive by construction).
     for (const site of GLOB_SITES) {
-      expect(readRepo(site), site).toContain(DIGEST_MARKERS.recursiveGlob);
+      expect(readRepo(site), site).toContain(STATUS_STATE_MARKERS.findRecipe);
     }
   });
 

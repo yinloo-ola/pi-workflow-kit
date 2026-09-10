@@ -96,7 +96,7 @@ describe("code-digest per-slice", () => {
   });
   it("should exclude completed/ from every recursive discovery glob", () => {
     const sites: Array<[string, string]> = [
-      ["skills/pwk-status/SKILL.md", "1. Glob `docs/plans/**/*-design.md`"],
+      ["skills/pwk-status/SKILL.md", "1. **Discover**"],
       ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
       ["skills/pwk-executing-tasks/SKILL.md", "**Find the doc**"],
       ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
