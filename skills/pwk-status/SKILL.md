@@ -9,6 +9,7 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
 
 ## Process
 
+0. **Verify the root** — run `pwd` and `git rev-parse --show-toplevel`; if they differ, report both paths and stop — tell the user to restart the session at the repo root; never `cd` (a worktree root counts).
 1. **Discover** — run, for each suffix: `/usr/bin/find docs/plans -name '<suffix>' -not -path '*/completed/*'` with `<suffix>` ∈ `*-design.md`, `*-implementation.md` (legacy — a 2.0 feature has no implementation doc; discovery covers both suffixes), `*-progress.md`, `overview.md` — recursive by construction, excluding docs/plans/completed/ (umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived topics are not in flight) — this working tree only.
 2. **State per topic/part — extract, never ingest.** For each progress file read only the header (`head -n 10` — the `Feature phase:` line sits in the first 10 lines of the executor's template); never the file body (execution summary, review reports, code digest), and never open design docs. Map the line to the displayed state:
    - `done` → **`done`** — terminal, never shown as in-flight; append the ✅ tally as `N/N` when wanted (`grep -c '✅' <file>` — a count, not content)
