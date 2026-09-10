@@ -54,7 +54,6 @@ describe("pwk-status phase-driven state (feature E2E)", () => {
     for (const site of DISCOVERY_SITES) {
       const content = readRepo(site);
       expect(content, site).toContain(STATUS_STATE_MARKERS.findRecipe);
-      expect(content, site).toContain(STATUS_STATE_MARKERS.winRecipe);
       expect(content, site).toContain(CODE_DIGEST_MARKERS.completedExclusion);
     }
     const status = readRepo("skills/pwk-status/SKILL.md");
@@ -75,7 +74,8 @@ describe("pwk-status phase-driven state (feature E2E)", () => {
     const status = readRepo("skills/pwk-status/SKILL.md");
     expect(status).toContain(STATUS_STATE_MARKERS.headerRead);
     expect(status).toContain(STATUS_STATE_MARKERS.tallyGrep);
-    expect(status).toMatch(/never[^.\n]{0,60}file body/);
+    expect(status).toMatch(/only the header/);
+    expect(status).toMatch(/carries nothing status needs/);
   });
 
   it("stays read-only orientation and does not unlock the guard", () => {

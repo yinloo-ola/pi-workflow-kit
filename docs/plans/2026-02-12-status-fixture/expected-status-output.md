@@ -17,6 +17,6 @@ Notes:
 
 - `part-c` renders `done 1/1` — the done terminal state; never shown as in-flight.
 - The roll-up hint (`— all parts done, ready for /skill:pwk-finalizing`) appears only when every part is `done` (and on a `done` standalone topic). This fixture intentionally leaves part-d not started and standalone at ship-paused, so no hint fires here.
-- Discovery is the pinned find recipe (`/usr/bin/find docs/plans -name '<suffix>' -not -path '*/completed/*'`; Windows: `Get-ChildItem -Recurse docs/plans -Filter '<suffix>'`) — it reaches this folder one level down and skips `completed/`.
-- Header-only reads: each progress file contributes only its first 10 lines (`head -n 10`); the `Feature phase:` line sits at line 7. Bodies (execution summary, review reports, code digests) are never read.
+- Discovery is a recursive search that skips `completed/` (e.g. `find docs/plans -name '<suffix>' -not -path '*/completed/*'`) — it reaches this folder one level down.
+- Header-only reads: each progress file contributes only its first 10 lines (e.g. `head -n 10`); the `Feature phase:` line sits at line 7 — the bodies (execution summary, review reports, code digests) carry nothing status needs.
 - A standalone topic whose progress says `done` would print with the ready-for-finalize hint; a legacy `*-implementation.md` topic would go through the same phase-line inference.

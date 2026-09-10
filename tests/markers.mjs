@@ -71,7 +71,6 @@ export const STATUS_STATE_MARKERS = {
   rootCheck: "git rev-parse --show-toplevel",
   stopNoCd: "never `cd`",
   rollUp: "n done · n in-flight · n not-started",
-  winRecipe: "Get-ChildItem -Recurse docs/plans -Filter",
   headerRead: "head -n 10",
   tallyGrep: "grep -c '✅'",
 };

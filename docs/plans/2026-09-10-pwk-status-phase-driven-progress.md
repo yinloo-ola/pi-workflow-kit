@@ -28,6 +28,8 @@ Feature phase: ship-paused
 
 - **R2 invariant-over-tool reframe (user feedback at ship)**: pinning exact commands over-specified tooling — the model knows its harness (ffind, ripgrep --files, Glob tools) better than the skill does, and per-platform mandates age badly. The four sites now state the invariant (recursive search under docs/plans reaching nested folders, skipping completed/, NEVER shell glob wildcards — the proven globstar degradation) and carry the POSIX/Windows commands as `e.g.` examples any reliable tool may replace. Status's extraction rules keep their contract (header-only, never the file body) with `head -n 10`/`grep -c '✅'` likewise demoted to examples — the contract is what saves the tokens, not the tool. Rejected: dropping the invariants entirely — both incident failure modes (silent flat-topic drops, ~20k-token full reads) came from unconstrained tool choice.
 
+- **R2 lean positive wording (user feedback at ship, second pass)**: the dual-platform example enumeration became one example per site, and prohibitions rephrased positively — "never rely on shell glob wildcards" became "let the search tool do the recursing (glob patterns like `**` don't recurse in non-interactive shells)"; "never reads the file body" became "the body carries nothing status needs". The invariants are unchanged (recursive, reaches nested folders, skips `completed/`, header-only extraction); the `winRecipe` marker retired — platform coverage now travels with the invariant, not with enumerated commands.
+
 ## Code digest
 
 <!-- Written once, after the feature review passes; never back-filled per requirement. -->
