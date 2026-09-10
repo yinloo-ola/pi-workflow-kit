@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.2] - 2026-09-10
+
+### Changed
+
+- **Discovery wording trimmed** — the harness tool enumeration (`find`, `fffind`, file search) is dropped from all four planning skills; the invariant ("use whatever recurses in your harness") plus the single `find` example carries the contract with less surface to age.
+
 ## [2.1.1] - 2026-09-10
 
 ### Changed
