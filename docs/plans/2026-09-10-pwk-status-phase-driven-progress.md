@@ -3,8 +3,8 @@
 Design: docs/plans/2026-09-10-pwk-status-phase-driven-design.md
 Branch: pwk-status-phase-driven
 Started: 2026-09-10T15:30:00Z
-Last updated: 2026-09-10T16:40:00Z
-Feature phase: implementing (4/4)
+Last updated: 2026-09-10T17:00:00Z
+Feature phase: ship-paused
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -30,7 +30,21 @@ Feature phase: implementing (4/4)
 
 <!-- Written once, after the feature review passes; never back-filled per requirement. -->
 
-### Summary — 2–3 sentences: what the code now does differently, and why.
-### Flow — execution/data movement through the changed code, as arrow chains.
-### Gotchas — edge cases, implicit assumptions; [ALERT]-prefixed real risks.
-### Key files — 3–5 pivotal files, one line each: what shifted inside them.
+### Summary
+pwk-status now infers each topic's state from the progress file's `Feature phase:` header line — the same vocabulary the executor writes and finalizing gates on — giving the model a real terminal `done` state (with an optional `N/N` tally) and honest mid-flight states (feature-spec, review, ship-paused, execute k/N), instead of rendering every progress-bearing topic as in-flight forever. Discovery across all four planning skills became a pinned dual-platform find recipe (POSIX `find` / Windows `Get-ChildItem -Recurse`), immune to the bash-globstar degeneration that silently dropped flat topics, and every discovery step verifies the session is rooted at the repo before globbing.
+
+### Flow
+Status run: verify root (`pwd` == `git rev-parse --show-toplevel`) -> pinned find over docs/plans (design/implementation/progress/overview suffixes, completed/ excluded) -> `head -n 10` per progress file -> `Feature phase:` line -> state per mapping (done terminal; implementing (k/N) -> execute k/N; reviewing/legacy -> review; ship-paused; e2e-written/feature-spec-paused -> feature-spec; design-only -> design; roster-only -> not started; unparseable -> execute fallback) -> umbrella roll-up `n done · n in-flight · n not-started` (+ ready-for-finalize hint when all done) -> compact grouped table.
+
+### Gotchas
+- During this topic's own execution, the committed fixture makes pwk-status report `status-fixture` as an in-flight umbrella and this topic itself as in-flight — expected; both disappear at finalize (fixture disposed).
+- Parts shaped like the incident's city-ambassador (design doc written, progress never created) show `design`, not `done` — status speaks only from artifacts; executor compliance is a separate concern.
+- The root check stops with a message rather than `cd`-ing — a mis-rooted session must be restarted at the repo root by the user (fixed-root-per-session model).
+- `[ALERT]` The 400-char exclusion-window lint anchors (skill-lint EXCLUSION_SITES, code-digest) are position-sensitive: future edits to the four discovery steps must keep the `excluding docs/plans/completed/` phrase within 400 chars of each anchor line, or the suite reds (by design).
+
+### Key files
+- `skills/pwk-status/SKILL.md` — phase-line state model, done terminal, extraction rules, roll-up with hint.
+- `skills/{pwk-brainstorming,pwk-executing-tasks,pwk-finalizing}/SKILL.md` — pinned dual-platform discovery recipe + root check at each site.
+- `tests/markers.mjs` — STATUS_STATE_MARKERS block; `recursiveGlob` marker retired for findRecipe/winRecipe.
+- `tests/pwk-status.test.ts` — the feature E2E: mapping, done terminal, roll-up, recipes, root checks, preserved claims.
+- `docs/plans/2026-02-12-status-fixture/` — walked fixture; expected output matched line-for-line.
