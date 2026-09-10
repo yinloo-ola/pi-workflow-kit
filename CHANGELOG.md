@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.1] - 2026-09-10
+
+### Changed
+
+- **Extract-never-ingest for the finalizing gate and the executing resume** — `pwk-finalizing` pre-check 2 matches the `Feature phase:` line and reads only the matching ❌/⏭ verdict rows in the Requirements table; the `pwk-executing-tasks` resume reads the phase line, the Requirements table (first Done cell ≠ `✅` routes), and the Execution summary rows, stopping before the optional sections. The design doc stays a full read everywhere — it is the executor's input, not history.
+- **Invariant-not-tool wording for discovery and extraction** — example commands are one way to meet each invariant; any harness-native equivalent (`fffind`, ripgrep, Grep tools) is equally compliant. The invariant is the contract, the command is the fallback.
+
 ## [2.1.0] - 2026-09-10
 
 ### Changed
