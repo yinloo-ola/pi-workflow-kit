@@ -67,7 +67,7 @@ export const SINGLE_DOC_MARKERS = {
  */
 export const STATUS_STATE_MARKERS = {
   phaseLine: "Feature phase:",
-  findRecipe: "/usr/bin/find docs/plans -name",
+  findRecipe: "find docs/plans -name",
   rootCheck: "git rev-parse --show-toplevel",
   stopNoCd: "never `cd`",
   rollUp: "n done · n in-flight · n not-started",
