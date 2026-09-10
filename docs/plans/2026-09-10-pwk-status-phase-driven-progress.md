@@ -3,8 +3,8 @@
 Design: docs/plans/2026-09-10-pwk-status-phase-driven-design.md
 Branch: pwk-status-phase-driven
 Started: 2026-09-10T15:30:00Z
-Last updated: 2026-09-10T17:00:00Z
-Feature phase: ship-paused
+Last updated: 2026-09-10T17:20:00Z
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
