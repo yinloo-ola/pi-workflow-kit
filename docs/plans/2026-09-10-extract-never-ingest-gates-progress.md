@@ -3,8 +3,8 @@
 Design: docs/plans/2026-09-10-extract-never-ingest-gates-design.md
 Branch: extract-never-ingest-gates
 Started: 2026-09-10T17:40:00Z
-Last updated: 2026-09-10T18:15:00Z
-Feature phase: ship-paused
+Last updated: 2026-09-10T19:00:00Z
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -14,7 +14,7 @@ Feature phase: ship-paused
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
 |----|-------------|------------------|-----------|
-| 1 | Extract-never-ingest for the last two progress-file reads | Finalizing gate now matches the `Feature phase:` line and reads only the matching ❌/⏭ verdict rows in the Requirements table; executing resume reads header + Requirements table (first Done cell ≠ `✅` routes) + Execution summary rows, stopping before the optional sections; pwk-status aligned (grep -m1 primary, row-count tally). | No |
+| 1 | Extract-never-ingest for the last two progress-file reads | Finalizing gate now matches the `Feature phase:` line and reads only the matching ❌/⏭ verdict rows in the Requirements table; executing resume reads header + Requirements table (first Done cell ≠ `✅` routes) + Execution summary rows, stopping before the optional sections; pwk-status aligned (grep -m1 primary, row-count tally). | Wording strengthened, no reversal |
 
 ## Code digest
 
