@@ -58,7 +58,7 @@ Every skill that discovers in-flight planning artifacts names the exact recipe �
 
 ### R3: Repo-root check, step 0, in all four sites
 
-Before discovering, each of the four skills runs `pwd` and `git rev-parse --show-toplevel`; on mismatch it stops and reports both paths with "restart the session at the repo root" — it never `cd`s.
+Before discovering, each of the four skills runs `pwd` (or the shell's equivalent — PowerShell aliases `pwd` to `Get-Location`) and `git rev-parse --show-toplevel`; on mismatch it stops and reports both paths with "restart the session at the repo root" — it never `cd`s.
 
 **Acceptance criteria**
 - Given a session whose cwd is a subdirectory of the repo, When any of the four skills runs, Then it prints the mismatch (both paths) and stops without printing a topic table — no silent empty report.

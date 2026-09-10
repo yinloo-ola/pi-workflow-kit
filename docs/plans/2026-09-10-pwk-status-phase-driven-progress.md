@@ -11,7 +11,7 @@ Feature phase: ship-paused
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Phase-driven state inference in pwk-status | — | ed223b2 |
 | 2 | ✅ | Pinned find discovery recipe in all four sites | 🔎 deviated | 0880bef |
-| 3 | ✅ | Repo-root check, step 0, in all four sites | — | fa1ac5c |
+| 3 | ✅ | Repo-root check, step 0, in all four sites | cwd phrasing tool-agnostic | fa1ac5c |
 | 4 | ✅ | Recreated fixture + state-model contract tests | — | a796881 |
 
 ## Execution summary

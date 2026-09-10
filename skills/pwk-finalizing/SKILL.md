@@ -10,7 +10,7 @@ Ship the completed work.
 ## Pre-finalization checks
 
 1. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
-2. **Verify the repo root** — run `pwd` and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then:
+2. **Verify the repo root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then:
 3. Read **every** relevant progress file — for an umbrella that's each part's progress file — discovered by `/usr/bin/find docs/plans -name '*-progress.md' -not -path '*/completed/*'`, excluding docs/plans/completed/ (Windows: `Get-ChildItem -Recurse docs/plans -Filter '*-progress.md'`, minus any `completed` folder; recursive by construction — umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived parts are already shipped); for a standalone design doc, the one:
    - **Any `❌ failed`** (in any part) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
    - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
