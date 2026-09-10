@@ -3,8 +3,8 @@
 Design: docs/plans/2026-09-10-pwk-status-phase-driven-design.md
 Branch: pwk-status-phase-driven
 Started: 2026-09-10T15:30:00Z
-Last updated: 2026-09-10T16:25:00Z
-Feature phase: implementing (3/4)
+Last updated: 2026-09-10T16:40:00Z
+Feature phase: implementing (4/4)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -12,7 +12,7 @@ Feature phase: implementing (3/4)
 | 1 | ✅ | Phase-driven state inference in pwk-status | — | ed223b2 |
 | 2 | ✅ | Pinned find discovery recipe in all four sites | 🔎 deviated | 0880bef |
 | 3 | ✅ | Repo-root check, step 0, in all four sites | — | fa1ac5c |
-| 4 | ⬜ | Recreated fixture + state-model contract tests | — | — |
+| 4 | ✅ | Recreated fixture + state-model contract tests | — | a796881 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
@@ -20,7 +20,7 @@ Feature phase: implementing (3/4)
 | 1 | Phase-driven state inference in pwk-status | Steps 2–4 rewritten: state per topic/part from the progress file's `Feature phase:` line (done terminal with optional `N/N` tally, honest mid-flight states, design/not-started/fallback), header-only extraction (`head -n 10`, `grep -c` tallies, never the file body), umbrella roll-up with done counts and a ready-for-finalize hint; example table shows the new states. | No |
 | 2 | Pinned find discovery recipe in all four sites | The abstract "Glob `docs/plans/**/…`" instruction became the exact `/usr/bin/find docs/plans -name '<suffix>' -not -path '*/completed/*'` recipe in status/brainstorming/executing-tasks/finalizing; `recursiveGlob` marker replaced by the find-recipe marker across skill-lint, human-review-digests, and code-digest anchors; finalizing's Process step 1 and disposal lines untouched (byte-identical guard). | Yes — see decision-record below |
 | 3 | Repo-root check, step 0, in all four sites | Status gains step 0; brainstorming/executing-tasks prepend the check to their discovery step; finalizing gains pre-check 2 (old check renumbered); mismatch reports both paths and stops, never `cd`, worktree root counts. | No |
-| 4 | Recreated fixture + state-model contract tests | | |
+| 4 | Recreated fixture + state-model contract tests | Fixture tree rebuilt (overview + part-a design-only / part-b implementing (1/2) / part-c done / part-d roster-only + flat standalone ship-paused); expected-status-output.md rewritten to the R1 model with the old discrepancy note gone; E2E + markers already carry the contract assertions; no test reads docs/plans/**. | No |
 
 ## Deviation decision-records
 
