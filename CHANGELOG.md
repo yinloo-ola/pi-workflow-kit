@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.0] - 2026-09-10
+
+### Changed
+
+- **Phase-driven `pwk-status`** — per-topic state now comes from the progress file's `Feature phase:` header line: `done` is a terminal state (with `N/N` tally), `implementing (k/N)` renders `execute k/N`, and `reviewing` / `ship-paused` / `feature-spec` render honestly; design-only parts show `design`. Umbrella roll-ups count done separately (`n done · n in-flight · n not-started`) and hint `/skill:pwk-finalizing` when every part is done. Status extracts, never ingests — header-only reads and counts, not content; a finished umbrella costs ~300 tokens instead of ~20k.
+- **Invariant-based discovery in all four planning skills** (status, brainstorming, executing-tasks, finalizing): recursively list `docs/plans` reaching the nested umbrella folders and skipping `completed/`, letting the search tool do the recursing — glob patterns like `**` don't recurse in non-interactive shells (globstar off). One example command per site; platform-neutral by construction.
+- **Repo-root check, step 0, in all four sites** — a session started outside the repo root reports both paths and stops instead of silently finding nothing.
+
+### Added
+
+- `STATUS_STATE_MARKERS` in `tests/markers.mjs` and the `tests/pwk-status.test.ts` contract E2E (phase→state mapping, done terminal, roll-up, discovery invariant, root checks); the `recursiveGlob` marker is retired.
+
 ## [2.0.0] - 2026-09-08
 
 ### Breaking / migration

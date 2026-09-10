@@ -1,6 +1,6 @@
 {
   "name": "@tianhai/pi-workflow-kit",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Enforce structured design→execute→finalize workflow with TDD discipline in AI coding agents",
   "keywords": [
     "pi-package",
