@@ -60,6 +60,23 @@ export const SINGLE_DOC_MARKERS = {
 };
 
 /**
+ * Markers for the pwk-status phase-driven state feature: per-part state inferred
+ * from the progress file's `Feature phase:` line (done as the terminal state), the
+ * pinned find discovery recipe, and the repo-root check. Same contract as
+ * DIGEST_MARKERS — one canonical string per behavior, shared by skill-lint and
+ * the vitest suites.
+ */
+export const STATUS_STATE_MARKERS = {
+  phaseLine: "Feature phase:",
+  findRecipe: "/usr/bin/find docs/plans -name",
+  rootCheck: "git rev-parse --show-toplevel",
+  stopNoCd: "never `cd`",
+  rollUp: "n done · n in-flight · n not-started",
+  headerRead: "head -n 10",
+  tallyGrep: "grep -c '✅'",
+};
+
+/**
  * Markers for the code-digest feature: the ship-time code digest, the
  * completed/ exclusion on recursive discovery globs, and frontier-round
  * brainstorm questioning. Same contract as DIGEST_MARKERS — one canonical
