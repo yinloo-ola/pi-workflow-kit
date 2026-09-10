@@ -71,8 +71,10 @@ export const STATUS_STATE_MARKERS = {
   rootCheck: "git rev-parse --show-toplevel",
   stopNoCd: "never `cd`",
   rollUp: "n done · n in-flight · n not-started",
-  headerRead: "head -n 10",
-  tallyGrep: "grep -c '✅'",
+  headerRead: "grep -m1 '^Feature phase:'",
+  tallyGrep: "grep -c '^| [0-9]'",
+  gateExtract: "nothing the gate needs",
+  resumeExtract: "nothing the resume needs",
 };
 
 /**

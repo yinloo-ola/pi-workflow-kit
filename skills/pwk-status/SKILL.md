@@ -11,15 +11,15 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
 
 0. **Verify the root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; if they differ, report both paths and stop — tell the user to restart the session at the repo root; never `cd` (a worktree root counts).
 1. **Discover** — recursively list files under `docs/plans`, excluding docs/plans/completed/, one list per suffix: `*-design.md`, `*-implementation.md` (legacy — a 2.0 feature has no implementation doc; discovery covers both suffixes), `*-progress.md`, `overview.md` (umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived topics are not in flight) — this working tree only. Let the search tool do the recursing (e.g. `find docs/plans -name '<suffix>' -not -path '*/completed/*'`) — glob patterns like `**` don't recurse in non-interactive shells.
-2. **State per topic/part — extract, never ingest.** For each progress file read only the header (e.g. `head -n 10` — the `Feature phase:` line sits in the first 10 lines of the executor's template); the body (execution summary, review reports, code digest) carries nothing status needs, and neither do design docs. Map the line to the displayed state:
-   - `done` → **`done`** — terminal, never shown as in-flight; append the ✅ tally as `N/N` when wanted (e.g. `grep -c '✅' <file>` — a count, not content)
+2. **State per topic/part — extract, never ingest.** For each progress file take the `Feature phase:` line by matching it (e.g. `grep -m1 '^Feature phase:' <file>` — wherever the template puts it); the body (execution summary, review reports, code digest) carries nothing status needs, and neither do design docs. Map the line to the displayed state:
+   - `done` → **`done`** — terminal, never shown as in-flight; append the tally as `N/N` when wanted — the Requirements-table row count (e.g. `grep -c '^| [0-9]' <file>`); at `done` every row is complete
    - `implementing (k/N)` → `execute k/N` (the tally rides on the line itself — no extra read)
    - `e2e-written`, `feature-spec-paused` → `feature-spec`
    - `reviewing`, legacy `feature-complete-paused` → `review`
    - `ship-paused` → `ship-paused`
    - no progress file, only `*-design.md` → `design` — next: `/skill:pwk-executing-tasks`
    - roster-only (named in the overview, no artifacts) → `not started`
-   - no parseable `Feature phase` line → `execute` (with tally if parseable); if the line is missing from the header, `grep -m1 '^Feature phase:' <file>` finds it without a full read.
+   - no parseable `Feature phase` line → `execute` (with tally if parseable).
 
    A legacy 1.x topic (`*-implementation.md` stem-matched) uses the same phase-line inference on its progress file.
 3. **Group by umbrella** — for each umbrella `overview.md` (read it — it is status-free and tiny), take its **parts** roster and roll the parts up by state (the overview carries no status): done parts, in-flight parts (design, execute, feature-spec, review, ship-paused), not-started parts. Print one roll-up line — `<umbrella> (umbrella): n done · n in-flight · n not-started` — and when every part is `done` append `— all parts done, ready for /skill:pwk-finalizing`. A `done` standalone topic gets the same hint. Once the umbrella finalizes, its folder — overview included — is disposed, so it no longer appears here. Topics not part of an overview print flat.

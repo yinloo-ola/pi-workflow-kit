@@ -74,8 +74,24 @@ describe("pwk-status phase-driven state (feature E2E)", () => {
     const status = readRepo("skills/pwk-status/SKILL.md");
     expect(status).toContain(STATUS_STATE_MARKERS.headerRead);
     expect(status).toContain(STATUS_STATE_MARKERS.tallyGrep);
-    expect(status).toMatch(/only the header/);
     expect(status).toMatch(/carries nothing status needs/);
+    expect(status).toMatch(/neither do design docs/);
+  });
+
+  it("applies extract-never-ingest to the finalizing gate and the executing resume", () => {
+    const fin = readRepo("skills/pwk-finalizing/SKILL.md");
+    const et = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    // Finalizing gate: header + Requirements table; body sections are not gate input.
+    expect(fin).toContain(STATUS_STATE_MARKERS.headerRead);
+    expect(fin).toContain(STATUS_STATE_MARKERS.gateExtract);
+    expect(fin).toMatch(/Requirements table/);
+    // Executing resume: header + Requirements table + Execution summary rows.
+    expect(et).toContain(STATUS_STATE_MARKERS.headerRead);
+    expect(et).toContain(STATUS_STATE_MARKERS.resumeExtract);
+    expect(et).toMatch(/Requirements table/);
+    expect(et).toMatch(/Execution summary rows/);
+    // The design doc is the executor's input — still parsed in full.
+    expect(et).toMatch(/Parse the design doc/);
   });
 
   it("stays read-only orientation and does not unlock the guard", () => {

@@ -62,7 +62,7 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
 ## Resume
 
-Read the progress file's `Feature phase`:
+Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not `✅` routes the next requirement — `⬜`, `🔄`, and blank all mean not-done), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs:
 - `e2e-written` → write the E2E if not yet present, then present the **feature-spec** checkpoint.
 - `feature-spec-paused` → re-present the feature-spec checkpoint and wait.
 - `implementing (k/N)` → continue the next not-yet-✅ requirement.
