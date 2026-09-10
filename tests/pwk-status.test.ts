@@ -54,6 +54,7 @@ describe("pwk-status phase-driven state (feature E2E)", () => {
     for (const site of DISCOVERY_SITES) {
       const content = readRepo(site);
       expect(content, site).toContain(STATUS_STATE_MARKERS.findRecipe);
+      expect(content, site).toContain(STATUS_STATE_MARKERS.winRecipe);
       expect(content, site).toContain(CODE_DIGEST_MARKERS.completedExclusion);
     }
     const status = readRepo("skills/pwk-status/SKILL.md");
