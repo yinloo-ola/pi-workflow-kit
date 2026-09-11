@@ -69,7 +69,7 @@ export const STATUS_STATE_MARKERS = {
   stopNoCd: "never `cd`",
   rollUp: "n done · n in-flight · n not-started",
   headerRead: "grep -m1 '^Feature phase:'",
-  tallyGrep: "grep -c '^| [0-9]'",
+  tallyGrep: "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep -c '^| [0-9]'",
   gateExtract: "nothing the gate needs",
   resumeExtract: "nothing the resume needs",
 };

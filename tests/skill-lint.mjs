@@ -1035,6 +1035,133 @@ const specRole = readFileSync(join(root, "agents/pwk-spec-reviewer.md"), "utf8")
 if (/## Requirement N/.test(specRole)) fail("agents/pwk-spec-reviewer.md: retired '## Requirement N' keying returned");
 else ok("agents/pwk-spec-reviewer.md: coverage table keyed to the packet's ### R<n> headings");
 
+// --- Check 13: cross-skill flow coherence (coherence-audit batch) ---
+// Each assertion pins a hand-off point where two skills read the same artifact or
+// state; drift on one side silently routes the human (or a count) wrong.
+console.log("flow coherence:");
+// R1 — the trivial fast-path compresses the design-doc write (step 7), it does not
+// skip it: claiming to skip steps 3–7 contradicts the doc the same bullet mandates.
+if (bs) {
+  if (/Skip steps 3–6/.test(bs.content) && !/3–7/.test(bs.content)) {
+    ok("pwk-brainstorming: trivial fast-path skips steps 3–6 (step 7 is compressed, not skipped)");
+  } else {
+    fail("pwk-brainstorming: trivial fast-path must skip steps 3–6 — step 7 writes the doc and cannot be skipped");
+  }
+  // `auto` resolves from the underlying risk content (the section + the notes), never
+  // the display-only Risk column it shares a sentence with.
+  if (/`auto` reads the underlying risk content/.test(bs.content)) {
+    ok("pwk-brainstorming: `auto` reads the underlying risk content, not the display column");
+  } else {
+    fail("pwk-brainstorming: `auto` resolution must read the underlying risk content, not the Risk column");
+  }
+}
+if (et) {
+  // R2 — umbrella routing: pwk-status maps a design-doc-without-progress leaf to
+  // `design` → execute; the post-review suggestion must agree instead of bouncing a
+  // designed leaf back to brainstorm.
+  const routing = et.content.slice(et.content.indexOf("## After the feature review"));
+  if (
+    /no progress file and no `<leaf>-design\.md`/.test(routing) &&
+    /`<leaf>-design\.md` but no progress file/.test(routing)
+  ) {
+    ok(
+      "pwk-executing-tasks: umbrella routing distinguishes unstarted (brainstorm) from designed-but-unexecuted (execute)",
+    );
+  } else {
+    fail(
+      "pwk-executing-tasks: umbrella routing must key brainstorm-vs-execute on the leaf's design doc, not the progress file alone",
+    );
+  }
+  // R3 — only the spec role owes the coverage table; a blanket "reviewer report" claim
+  // contradicts the tracing/smell/hazard roles' contracts.
+  if (
+    /spec-reviewer report without a per-requirement coverage table/.test(et.content) &&
+    !/A reviewer report without a per-requirement coverage table/.test(et.content)
+  ) {
+    ok("pwk-executing-tasks: coverage-table validity attributed to the spec-reviewer report only");
+  } else {
+    fail(
+      "pwk-executing-tasks: the coverage-table validity rule must name the spec-reviewer report, not every reviewer",
+    );
+  }
+  // R4 — the implement loop reads docs/lessons.md per requirement (lessons.md's own
+  // header claims it is read there; the skill must actually say so).
+  const loopStepAt = et.content.indexOf("Mark the requirement 🔄");
+  if (loopStepAt !== -1 && /lessons\.md/.test(et.content.slice(loopStepAt, loopStepAt + 400))) {
+    ok("pwk-executing-tasks: implement loop checks docs/lessons.md per requirement");
+  } else {
+    fail(
+      "pwk-executing-tasks: the per-requirement step must check docs/lessons.md (lessons.md header claims it is read there)",
+    );
+  }
+  // R5 — the inline Flow truth-check names the inline pass's own tracing findings;
+  // "there is no tracing report" contradicts pwk-code-review, which traces inline.
+  if (/the inline pass itself performs code tracing/.test(et.content)) {
+    ok("pwk-executing-tasks: inline Flow truth-check names the inline pass's tracing findings");
+  } else {
+    fail("pwk-executing-tasks: inline mode must acknowledge the inline pass performs code tracing");
+  }
+}
+if (status) {
+  // R6 — the N/N tally is scoped to the Requirements table: the Execution summary rows
+  // share the `| <n> |` row shape, so a bare grep double-counts every requirement.
+  const SCOPED_TALLY = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep -c '^| [0-9]'";
+  if (/share the same `\| <n> \|` row shape/.test(status.content) && status.content.includes(SCOPED_TALLY)) {
+    ok("pwk-status: Requirements-table tally is scoped past the Execution summary rows");
+  } else {
+    fail("pwk-status: the tally must be scoped to the Requirements table (Execution summary rows share the row shape)");
+  }
+}
+if (fin) {
+  // R7 — finalizing's verdict greps read Requirements-table rows only, matching its own
+  // "verdict rows in the Requirements table" claim (prose elsewhere must not match).
+  if (fin.content.includes("grep '^| [0-9].*❌'") && fin.content.includes("grep '^| [0-9].*⏭'")) {
+    ok("pwk-finalizing: verdict greps are scoped to Requirements-table rows");
+  } else {
+    fail("pwk-finalizing: verdict greps must be scoped to Requirements-table rows (`grep '^| [0-9].*❌'`)");
+  }
+}
+if (crSkill) {
+  // R8 — the executing skill assembles the packet before any review (parallel or
+  // inline); the inline reviewer must say it works from the packet, not re-derive scope.
+  if (/work from the packet/.test(crSkill.content)) {
+    ok("pwk-code-review: works from an assembled review packet when provided");
+  } else {
+    fail("pwk-code-review: must work from the assembled review packet when the invoking skill provides one");
+  }
+}
+// R9 (pass 2) — the doc roll-up vocabulary matches what pwk-status actually prints
+// (done / in-flight / not-started), not a near-miss like "shipped".
+{
+  const rollup = /done \/ in-flight \/ not-started/.test(wfPhasesDoc);
+  if (rollup && !/shipped \/ in-flight/.test(wfPhasesDoc)) {
+    ok("workflow-phases.md: umbrella roll-up names status's real buckets (done / in-flight / not-started)");
+  } else {
+    fail("workflow-phases.md: roll-up must name status's buckets (done / in-flight / not-started), not 'shipped'");
+  }
+}
+if (et) {
+  // R10 (pass 2) — both `Checkpoints: full` stops precede the slice's commit; the
+  // checkpoint rule forbids committing before approval, so "slice is complete" alone
+  // is ambiguous about where the second stop sits.
+  if (/both before its commit/.test(et.content)) {
+    ok("pwk-executing-tasks: `Checkpoints: full` stops are pinned before the slice's commit");
+  } else {
+    fail("pwk-executing-tasks: the two `full` checkpoint stops must be stated to sit before the slice's commit");
+  }
+}
+if (fin) {
+  // R11 (pass 2) — the learning sweep names its inputs, so a trivial doc (no
+  // `## At a glance`, no `Approaches considered`) is an expected honest-empty, not a miss.
+  if (/trivial doc has no `## At a glance`/.test(fin.content)) {
+    ok("pwk-finalizing: learning sweep accounts for the trivial doc's missing sections");
+  } else {
+    fail(
+      "pwk-finalizing: the learning sweep must note the trivial doc has no `## At a glance`/`Approaches considered` to harvest",
+    );
+  }
+}
+
 // --- Summary ---
 // --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---
 // The four inventory docs must name every skill directory under skills/, the unlock-prose

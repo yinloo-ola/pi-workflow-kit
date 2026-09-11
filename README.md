@@ -169,7 +169,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 - **AI agents skip design.** Left unchecked, they jump to code and over-engineer. This forces a think-first workflow.
 - **Specs beat recipes.** Plans are behavioral specs (acceptance criteria + tests), not implementation recipes — they don't invalidate when details change.
-- **You stay in control.** One feature-level checkpoint (ship) lets you sign off the finished implementation — execution summary, code digest, and coverage table — before the agent ships; the E2E is reported before implementation so you can object early.
+- **You stay in control.** One or two feature-level stops (setup when the design carries `## Setup`, then ship) let you sign off the finished implementation — execution summary, code digest, and coverage table — before the agent ships; the E2E is reported before implementation so you can object early.
 - **Enforced, not suggested.** Hard blocks mean the agent can't ignore the rules — not even accidentally.
 
 ## Project
