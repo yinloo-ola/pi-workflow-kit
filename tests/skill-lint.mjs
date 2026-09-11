@@ -327,6 +327,22 @@ fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-tes
 fgMark("pwk-code-review", crSkill?.content, "whole feature diff", "whole-feature-diff scope");
 fgMark("pwk-brainstorming", bs?.content, "primary enforced spec", "Feature acceptance as primary spec");
 
+// leaner-execution-gates R5/R6 — the digest's `### Flow` is a navigable map, and it is
+// written from reviewed reality: it must agree with the tracing report (or, in `inline`
+// mode, the spec-coverage pass), with unresolved disagreements surfaced, not smoothed over.
+console.log("flow truth:");
+if (et) {
+  fgMark("pwk-executing-tasks", et.content, "**Flow shape**", "enriched Flow shape block");
+  fgMark("pwk-executing-tasks", et.content, "tracing report", "Flow truth-checked against the tracing report");
+  if (/inline[\s\S]{0,260}spec-coverage|spec-coverage[\s\S]{0,260}inline/i.test(et.content)) {
+    ok("pwk-executing-tasks: inline mode falls back to the spec-coverage pass");
+  } else {
+    fail("pwk-executing-tasks: must check the Flow against the spec-coverage pass in inline mode");
+  }
+  if (/surfaced/i.test(et.content)) ok("pwk-executing-tasks: unresolved Flow disagreement is surfaced");
+  else fail("pwk-executing-tasks: unresolved Flow disagreement must be surfaced to the human");
+}
+
 // --- Check 10: parallelize-workflow (R1 scout + R2 auto-tag + R3 cross-skill) ---
 // pwk-recon-scout is a new read-only package agent dispatched from pwk-brainstorming before
 // design; pwk-brainstorming (since pwk 2.0) auto-tags `### Review: parallel` for requirements
