@@ -63,7 +63,7 @@ Guide the agent through a disciplined development process:
 
 ```
 brainstorm → executing-tasks → finalizing
-                             (feature-gate: write feature E2E → feature-spec → implement → review → ship checkpoint)
+                             (feature-gate: write feature E2E → report it → implement → review → ⏸ ship checkpoint)
                                 ↕
                    diagnose (anytime)   ·   status (anytime)
 ```
@@ -73,7 +73,7 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|
 | **Brainstorm** | `/skill:pwk-brainstorming` | Explore approaches, produce a design doc opening with a `## At a glance` digest (plain summary → **Key decisions** — rejected-alternative clauses only for real forks — → `| R# | Requirement in one line | Risk |` table) before the `## Requirements` blocks; each requirement block carries its own acceptance criteria + review tags. Interviews in **frontier rounds**: numbered questions each with a recommended answer, facts looked up rather than asked, an assumption gate before the design is presented. On non-trivial topics, requests the logical `codebase-recon` capability; if unavailable or unsafe, performs the `pwk-recon-scout` role inline. |
-| **Execute** | `/skill:pwk-executing-tasks` | Create the feature branch, then: write the feature E2E (red) → **checkpoint: feature-spec** → implement the design doc's `### R<n>` requirement blocks → feature review → **ship checkpoint** (execution summary + code digest + coverage table; full diff on request) |
+| **Execute** | `/skill:pwk-executing-tasks` | Create the feature branch, then: write the feature E2E (red) → **report it, no stop** → implement the design doc's `### R<n>` requirement blocks → feature review (risk-scaled: four roles or one inline pass) → **ship checkpoint** (execution summary + code digest + coverage table; full diff on request) |
 | **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check. Delegated review uses four tiered logical roles (smell/hazard on a fast model via `/pwk-setup --fast-model`) over a script-assembled review packet when a safe provider is available; otherwise it runs inline. |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs or archive them under `docs/plans/completed/` (discovery always runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording), update README/CHANGELOG, create PR |
 | **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
@@ -102,9 +102,9 @@ The design doc specifies *what*, not *how*. Each `### R<n>:` requirement block g
 The feature is implemented via the feature-gate flow:
 
 1. Write the feature-acceptance E2E test (red)
-2. ⏸ **checkpoint: feature-spec** — you confirm the E2E proves the feature
+2. **Report it — no stop** — one or two lines saying what the E2E proves, plus its failing output; the run continues straight into implementation (that text was already approved as `## Feature acceptance` during brainstorm, so this is the window to object before code is written, not a sign-off gate)
 3. Implement the requirements back-to-back (TDD: meaningful test → red → green per slice; full autonomy)
-4. Feature review (four fresh-context roles over a script-assembled review packet)
+4. Feature review — risk-scaled: four fresh-context roles over a script-assembled review packet when the design carries production-risk content, otherwise one inline pass
 5. ⏸ **ship checkpoint** — full suite + feature E2E green; you review the execution summary + coverage table (full diff on request)
 
 Per-requirement checkpoints/reviews are opt-in (default off); the feature-level review covers everything.
@@ -128,16 +128,15 @@ Rules are simple imperative bullets:
 
 No configuration needed — the agent creates `docs/lessons.md` on first use and it grows as the agent learns.
 
-### Two Feature-Level Checkpoints
+### One Feature-Level Checkpoint
 
-The feature-gate flow has **two hard human-review gates** (not optional):
+The feature-gate flow has **one hard human-review gate** (not optional):
 
 | Checkpoint | What's done | What you review |
 |---|---|---|
-| **feature-spec** | Feature-acceptance E2E written, confirmed failing | Does the E2E actually prove the feature? |
-| **ship** | All requirements implemented; full suite + E2E green; feature review collected | Execution summary + per-requirement coverage table — built as promised? (full diff on request) |
+| **ship** | All requirements implemented; full suite + E2E green; feature review collected | Execution summary + code digest + per-requirement coverage table — built as promised? (full diff on request) |
 
-The agent stops and waits at each — approve, request changes, or send it back.
+The agent stops and waits there — approve, request changes, or send it back. The feature-acceptance E2E is still written first and still gated at the ship checkpoint; it is reported before implementation without pausing, because its text was approved as `## Feature acceptance` during brainstorm.
 
 ### Before You Ship: the Ship Gate
 
@@ -170,7 +169,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 - **AI agents skip design.** Left unchecked, they jump to code and over-engineer. This forces a think-first workflow.
 - **Specs beat recipes.** Plans are behavioral specs (acceptance criteria + tests), not implementation recipes — they don't invalidate when details change.
-- **You stay in control.** Two feature-level checkpoints let you approve the feature spec (E2E) and the finished implementation before the agent ships.
+- **You stay in control.** One feature-level checkpoint (ship) lets you sign off the finished implementation — execution summary, code digest, and coverage table — before the agent ships; the E2E is reported before implementation so you can object early.
 - **Enforced, not suggested.** Hard blocks mean the agent can't ignore the rules — not even accidentally.
 
 ## Project

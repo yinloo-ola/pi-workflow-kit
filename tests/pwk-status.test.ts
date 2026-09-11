@@ -22,8 +22,11 @@ describe("pwk-status phase-driven state (feature E2E)", () => {
   it("infers per-topic state from the Feature phase line — every executor phase value maps to a displayed state", () => {
     const status = readRepo("skills/pwk-status/SKILL.md");
     expect(status).toContain(STATUS_STATE_MARKERS.phaseLine);
-    expect(status).toMatch(/`e2e-written`[^→]*→[^→]{0,60}`feature-spec`/);
-    expect(status).toMatch(/`feature-spec-paused`[^→]*→[^→]{0,60}`feature-spec`/);
+    // leaner-execution-gates R3: the pre-implementation states render as execute 0/N;
+    // the retired `feature-spec` display state is gone.
+    expect(status).toMatch(/`e2e-written`[^→]*→[^→]{0,60}`execute 0\/N`/);
+    expect(status).toMatch(/`feature-spec-paused`[^→]*→[^→]{0,60}`execute 0\/N`/);
+    expect(status).not.toMatch(/`feature-spec`/);
     expect(status).toMatch(/`implementing \(k\/N\)`[^→]*→[^→]{0,60}`execute k\/N`/);
     expect(status).toMatch(/`reviewing`[^→]*→[^→]{0,60}`review`/);
     expect(status).toMatch(/legacy `feature-complete-paused`[^→]*→[^→]{0,60}`review`/);

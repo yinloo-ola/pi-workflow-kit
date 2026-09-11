@@ -14,7 +14,8 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
 2. **State per topic/part — extract, never ingest.** For each progress file take the `Feature phase:` line by matching it (e.g. `grep -m1 '^Feature phase:' <file>` — wherever the template puts it); the body (execution summary, review reports, code digest) carries nothing status needs, and neither do design docs. Map the line to the displayed state:
    - `done` → **`done`** — terminal, never shown as in-flight; append the tally as `N/N` when wanted — the Requirements-table row count (e.g. `grep -c '^| [0-9]' <file>`); at `done` every row is complete
    - `implementing (k/N)` → `execute k/N` (the tally rides on the line itself — no extra read)
-   - `e2e-written`, `feature-spec-paused` → `feature-spec`
+   - `e2e-written` → `execute 0/N` (the E2E is written and the run continues into implementation — never shown as a paused state)
+   - `feature-spec-paused` (legacy — a progress file from before the notice replaced the stop) → `execute 0/N`
    - `reviewing`, legacy `feature-complete-paused` → `review`
    - `ship-paused` → `ship-paused`
    - no progress file, only `*-design.md` → `design` — next: `/skill:pwk-executing-tasks`
@@ -22,7 +23,7 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
    - no parseable `Feature phase` line → `execute` (with tally if parseable).
 
    A legacy 1.x topic (`*-implementation.md` stem-matched) uses the same phase-line inference on its progress file.
-3. **Group by umbrella** — for each umbrella `overview.md` (read it — it is status-free and tiny), take its **parts** roster and roll the parts up by state (the overview carries no status): done parts, in-flight parts (design, execute, feature-spec, review, ship-paused), not-started parts. Print one roll-up line — `<umbrella> (umbrella): n done · n in-flight · n not-started` — and when every part is `done` append `— all parts done, ready for /skill:pwk-finalizing`. A `done` standalone topic gets the same hint. Once the umbrella finalizes, its folder — overview included — is disposed, so it no longer appears here. Topics not part of an overview print flat.
+3. **Group by umbrella** — for each umbrella `overview.md` (read it — it is status-free and tiny), take its **parts** roster and roll the parts up by state (the overview carries no status): done parts, in-flight parts (design, execute, review, ship-paused), not-started parts. Print one roll-up line — `<umbrella> (umbrella): n done · n in-flight · n not-started` — and when every part is `done` append `— all parts done, ready for /skill:pwk-finalizing`. A `done` standalone topic gets the same hint. Once the umbrella finalizes, its folder — overview included — is disposed, so it no longer appears here. Topics not part of an overview print flat.
 4. Print a compact table, grouped under any umbrellas, e.g.:
 
    ```text

@@ -4,7 +4,7 @@
 
 ```
 brainstorm → executing-tasks → finalizing
-                (feature-gate: write feature E2E → ⏸ feature-spec → implement requirements → feature review → ⏸ ship)
+                (feature-gate: write feature E2E → report it → implement requirements → feature review → ⏸ ship)
 ```
 
 A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella**: multiple design docs under one status-free overview, on one branch, finalized once (`(brainstorm → execute) × N → finalize`).
@@ -28,7 +28,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 /skill:pwk-executing-tasks
 ```
 
-- **Feature-gate flow:** write the feature-acceptance E2E test (red) → **⏸ checkpoint: feature-spec** (human confirms the E2E proves the feature) → implement the requirements back-to-back with full autonomy (the executor chooses structure/signatures/internals) → **feature review** (request the `parallel-review` capability for four logical read-only roles when the host supports it; otherwise run `/skill:pwk-code-review` inline — see [code-review](#code-review)) → **⏸ checkpoint: ship** (full suite + feature E2E green; present the execution summary + code digest + reviewer coverage table; full diff on request).
+- **Feature-gate flow:** write the feature-acceptance E2E test (red) → **report it, no stop** (1–2 lines saying what the E2E proves, plus its failing output — the `## Feature acceptance` text was already approved in brainstorm, so the run continues straight into implementation; the report is the human's window to object before code is written) → implement the requirements back-to-back with full autonomy (the executor chooses structure/signatures/internals) → **feature review** (one review over the whole feature diff: the `parallel-review` capability for four logical read-only roles when the design carries production-risk content, otherwise one inline `/skill:pwk-code-review` pass — see [code-review](#code-review)) → **⏸ checkpoint: ship** (full suite + feature E2E green; present the execution summary + code digest + reviewer coverage table; full diff on request).
 - After the review passes, the executor writes a **code digest** into the progress file — plain-language summary, execution flow, gotchas, key files — derived from the review packet; it rides the existing disposal globs.
 - Per-requirement checkpoints/reviews are **opt-in** — they fire only for requirements the design doc tags (default off); see [Proportionality](#proportionality).
 - **Regression check after each commit** — run the full existing suite to catch cross-requirement regressions immediately. The feature E2E stays red until the last requirement and is gated only at the ship checkpoint (the old integration gate folds into it).

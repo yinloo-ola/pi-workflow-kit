@@ -303,7 +303,14 @@ if (bs) {
 }
 // Requirement 2 — pwk-executing-tasks feature-gate flow
 if (et) {
-  fgMark("pwk-executing-tasks", et.content, "feature-spec", "feature-spec checkpoint");
+  // leaner-execution-gates R3: the feature-spec checkpoint became a notice — the E2E is still
+  // written first and still gates, it just no longer pauses execution.
+  fgMark("pwk-executing-tasks", et.content, "without waiting for approval", "feature-spec notice (no stop)");
+  if (!/CHECKPOINT: feature-spec/.test(et.content)) {
+    ok("pwk-executing-tasks: the retired feature-spec checkpoint is gone");
+  } else {
+    fail("pwk-executing-tasks: the feature-spec checkpoint must be a notice, not a stop");
+  }
   fgMark("pwk-executing-tasks", et.content, "ship checkpoint", "ship checkpoint (review before final approval)");
   fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
   fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");

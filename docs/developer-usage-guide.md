@@ -62,7 +62,7 @@ Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with
 /skill:pwk-executing-tasks
 ```
 
-Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **checkpoint: feature-spec** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + code digest + coverage table — full diff on request). After the review passes, the executor writes the code digest into the progress file from the review packet. Two mandatory checkpoints at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
+Implement via the **feature-gate flow** with full autonomy: write the feature-acceptance E2E test (red) → **report it (no stop)** → implement the requirements back-to-back → feature review → **ship checkpoint** (full suite + E2E green; you review the execution summary + code digest + coverage table — full diff on request). After the review passes, the executor writes the code digest into the progress file from the review packet. One mandatory checkpoint (ship) at the feature level. Per-requirement checkpoints/reviews are opt-in (default off).
 
 ### 3. Code review (feature level)
 
@@ -124,6 +124,6 @@ Plans specify *what* (acceptance criteria + integration tests); the executor wri
 
 - Start with brainstorming for anything non-trivial.
 - The design doc is a behavioral spec, not an implementation recipe — let the executor choose how.
-- The feature-gate flow has two checkpoints by default (feature-spec + ship): use them to steer the E2E spec and to sign off the finished implementation (digest + coverage, diff on request).
+- The feature-gate flow has **one** mandatory checkpoint (ship): the E2E is written and reported before implementation without pausing (its content was approved as `## Feature acceptance` during brainstorm), and the ship checkpoint signs off the finished implementation (digest + coverage, diff on request).
 - **Right-size each requirement at design time** with the `### Checkpoints` (`none`/`full`/`spec`, default `none`) and `### Review` (`skip`/`parallel`/`inline`, default `skip`) tags — per-requirement ceremony is opt-in. The always-on feature-level `### Feature review` covers the whole diff. `spec` keeps the cheap spec-correctness gate and drops the complete checkpoint (covered by review), so it requires at least `inline` review. A trivial fix can also use the brainstorming trivial fast-path (one-turn brainstorm, minimal design doc). Nothing is tagged silently: **only the human tags** a requirement for a per-requirement review, and the always-on feature-level `### Feature review` covers what is left.
 - Put all design artifacts under `docs/plans/`; ADRs under `docs/adr/`.

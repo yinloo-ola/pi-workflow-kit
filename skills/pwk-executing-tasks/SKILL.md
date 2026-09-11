@@ -58,13 +58,13 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
 4. **Commit the design docs** — `git add docs/plans/ && git commit -m "docs: add design doc"`.
 5. **Write the feature-acceptance E2E test (red).** Read the design doc's `## Feature acceptance` section and encode it as a real test file; run it; confirm it **fails** (it must — little or none of the feature exists yet). If it passes immediately, the behavior may already exist or the test is wrong — investigate before proceeding.
-6. **⏸ CHECKPOINT: feature-spec** — set `Feature phase: feature-spec-paused`, lead with 1–2 plain-language lines stating **what the E2E proves** ("this test proves that …"), then present the E2E test + failing output, and wait. This is where the human confirms the E2E actually proves the feature (the definition of done). **request changes** → revise, re-run, re-present.
+6. **Notice, not a stop — report the E2E and continue.** Post 1–2 plain-language lines stating **what the E2E proves** ("this test proves that …"), plus the E2E test and its failing output, then go straight into the implement phase **without waiting for approval** — the `## Feature acceptance` text was approved during brainstorm, so there is nothing new here for the human to sign off. The notice is the window to object *before* implementation starts: a human who sees the E2E asserting the wrong thing says so, and you revise, re-run, and re-notice. Keep `Feature phase: e2e-written`.
 
 ## Resume
 
 Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not `✅` routes the next requirement — `⬜`, `🔄`, and blank all mean not-done), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs:
-- `e2e-written` → write the E2E if not yet present, then present the **feature-spec** checkpoint.
-- `feature-spec-paused` → re-present the feature-spec checkpoint and wait.
+- `e2e-written` → write the E2E if not yet present, post the notice, and continue into the implement phase (no stop).
+- `feature-spec-paused` (legacy — a progress file from before the notice replaced the stop) → post the notice and continue into the implement phase.
 - `implementing (k/N)` → continue the next not-yet-✅ requirement.
 - `reviewing` → continue/finish the feature review, then assemble the **ship** checkpoint.
 - `ship-paused` → re-present the ship checkpoint and wait.
@@ -76,7 +76,7 @@ Update the matching requirement row directly (not via pattern matching that coul
 
 **Execution summary rows are written in the same step as marking a requirement ✅** — never retrofitted at the end. "How it was built" = one or two plain sentences: what it does now + the approach actually taken; file names sparingly; **no test names, no code** (the human reads this at the ship checkpoint — big picture only). If the implementation departs from the design, fill the Deviated? column **at deviation time** (when the departure happens), with a one-line why — it is a log, not a stop. A departure that **reverses or alters a design decision** gets a **deviation decision-record**: a short paragraph (what changed, why, what was rejected) written into the progress file while the knowledge is fresh — mechanical deviations keep the one-liner. `pwk-finalizing`'s learning sweep harvests these records for ADRs before the docs are disposed.
 
-## Implement phase (after feature-spec is approved)
+## Implement phase (after the E2E notice)
 
 Set `Feature phase: implementing (0/N)` and work the requirements in listed order. For each:
 
