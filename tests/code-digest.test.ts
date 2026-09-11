@@ -19,13 +19,14 @@ const MIRROR_DOCS = ["README.md", "docs/workflow-phases.md", "docs/developer-usa
 // their anchoring comments must not change — the exclusion is wording-only.
 // Literals transcribed from the pre-feature file (verify with the per-slice test).
 const FINALIZE_DISPOSAL_LINES = [
-  "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md",
+  "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md docs/plans/????-??-??-<topic>-notes.md",
   "# The folder path is taken verbatim from the discovered docs/plans/**/overview.md",
   "rm -rf docs/plans/<date>-<umbrella>/",
   "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
+  "mv docs/plans/????-??-??-<topic>-notes.md            docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/<date>-<umbrella>/ docs/plans/completed/",
   "ls docs/plans/completed/<date>-<umbrella>/ >/dev/null",
 ] as const;
