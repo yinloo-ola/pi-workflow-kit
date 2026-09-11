@@ -894,6 +894,60 @@ if (existsSync(wtPath)) {
 }
 
 // --- Summary ---
+// --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---
+// The four inventory docs must name every skill directory under skills/, the unlock-prose
+// sites must list exactly the guard's UNLOCK_SKILLS, and the stated skill-count claims must
+// match the counts computed from the skills/ tree (pipeline vs utility). The skills/ tree
+// is the source of truth — a new skill dir without doc updates fails, and a doc claim
+// disagreeing with the computed count fails with both values shown.
+const INVENTORY_DOCS = ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md", "docs/workflow-phases.md"];
+const UNLOCK_PROSE_SITES = ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md"];
+const PIPELINE_SKILLS = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-code-review", "pwk-finalizing"];
+const UTILITY_SKILLS = ["pwk-status", "pwk-diagnose", "pwk-walkthrough"];
+// The tree's complete roster — EXPECTED_SKILL_COUNT is these two lists merged; adding a
+// skill dir without extending the right list fails loudly (see roster check below).
+const EXPECTED_SKILL_COUNT = PIPELINE_SKILLS.length + UTILITY_SKILLS.length;
+console.log("inventory parity:");
+{
+  const skillDirs = readdirSync(skillsDir).filter((d) => statSync(join(skillsDir, d)).isDirectory());
+  const roster = [...PIPELINE_SKILLS, ...UTILITY_SKILLS].sort();
+  const treeNames = skillDirs.filter((d) => d.startsWith("pwk-")).sort();
+  if (treeNames.length !== EXPECTED_SKILL_COUNT)
+    fail(`skills/ tree has ${treeNames.length} pwk-* dirs, EXPECTED_SKILL_COUNT is ${EXPECTED_SKILL_COUNT} (extend PIPELINE_SKILLS/UTILITY_SKILLS)`);
+  else if (JSON.stringify(treeNames) !== JSON.stringify(roster))
+    fail(`skills/ roster drift: tree [${treeNames.join(", ")}] vs lists [${roster.join(", ")}]`);
+  else ok(`skills/ roster {${roster.join(", ")}} matches EXPECTED_SKILL_COUNT (${EXPECTED_SKILL_COUNT})`);
+  const invDocs = INVENTORY_DOCS.map((rel) => [rel, readFileSync(join(root, rel), "utf8")]);
+  for (const skill of roster) {
+    for (const [rel, content] of invDocs) {
+      if (!content.includes(skill)) fail(`inventory parity: ${rel} does not name ${skill}`);
+    }
+  }
+  if (failures === 0) ok(`inventory parity: every skill named in all ${INVENTORY_DOCS.length} inventory docs`);
+  for (const [rel, content] of UNLOCK_PROSE_SITES.map((r) => [r, readFileSync(join(root, r), "utf8")])) {
+    for (const skill of unlockSet) {
+      if (!content.includes(skill)) fail(`inventory parity: ${rel} unlock prose missing ${skill}`);
+    }
+  }
+  if (failures === 0) ok(`inventory parity: unlock prose lists UNLOCK_SKILLS at all ${UNLOCK_PROSE_SITES.length} sites`);
+  const pipelineClaims = invDocs.flatMap(([rel, content]) =>
+    [...content.matchAll(/(\d+) pipeline skills?/gi)].map((m) => ({ rel, n: Number(m[1]) })),
+  );
+  const utilityClaims = invDocs.flatMap(([rel, content]) =>
+    [...content.matchAll(/(\d+) utility skills?/gi)].map((m) => ({ rel, n: Number(m[1]) })),
+  );
+  for (const { rel, n } of pipelineClaims) {
+    if (n !== PIPELINE_SKILLS.length) fail(`inventory parity: ${rel} claims ${n} pipeline skills, tree has ${PIPELINE_SKILLS.length}`);
+  }
+  for (const { rel, n } of utilityClaims) {
+    if (n !== UTILITY_SKILLS.length) fail(`inventory parity: ${rel} claims ${n} utility skills, tree has ${UTILITY_SKILLS.length}`);
+  }
+  if (pipelineClaims.length + utilityClaims.length === 0)
+    fail("inventory parity: no pipeline/utility count claims found in any inventory doc");
+  else if (failures === 0)
+    ok(`inventory parity: count claims match the tree (${PIPELINE_SKILLS.length} pipeline + ${UTILITY_SKILLS.length} utility)`);
+}
+
 console.log("");
 if (failures === 0) {
   console.log("skill-lint: all checks passed");

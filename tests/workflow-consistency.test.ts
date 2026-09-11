@@ -189,4 +189,14 @@ describe("workflow-consistency per-slice", () => {
       expect(diagnoseIdx, "diagnose prose precedes the walkthrough block").toBeLessThan(walkthroughIdx);
     });
   });
+
+  describe("R7 — doc-inventory parity lint", () => {
+    it("skill-lint asserts inventory parity against the real skill tree", () => {
+      const lint = read("tests/skill-lint.mjs");
+      expect(lint).toContain(M.parityLint);
+      expect(lint).toContain("INVENTORY_DOCS");
+      expect(lint).toContain("EXPECTED_SKILL_COUNT");
+      expect(lint).toContain("UNLOCK_PROSE_SITES");
+    });
+  });
 });
