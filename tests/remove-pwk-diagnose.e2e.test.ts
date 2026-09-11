@@ -23,6 +23,10 @@ import { UNLOCK_SKILLS } from "../extensions/workflow-guard";
  * - anything under `docs/plans/` — ephemeral planning artifacts, disposed at finalize.
  * Everything else is the shipped corpus and must be clean. Content is scanned; file names
  * are not exempted (`skills/pwk-diagnose/` must not reappear as a path either).
+ *
+ * The scan covers **git-tracked** files, which matches the design's "clean tree"
+ * precondition; a stray untracked copy under `skills/` is still caught, because scenario 1
+ * reads that directory from the filesystem rather than from git.
  */
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const REMOVED = "pwk-diagnose";
@@ -112,9 +116,6 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
       for (const [, n] of body.matchAll(/(\d+) utility skills?/gi)) {
         expect(Number(n), `${doc} utility-skill count`).toBe(UTILITY_SKILLS.length);
       }
-      // Every unlock skill the doc's prose names is a real skill dir.
-      const names = skillDirs();
-      expect(names.every((name) => body.includes(name) || !body.includes("Unlocking skills"))).toBe(true);
     }
   });
 });

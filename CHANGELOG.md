@@ -10,9 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`pwk-diagnose` is gone (breaking)** — the skill directory and its guard unlock entry are deleted, so `/skill:pwk-diagnose` no longer resolves and no longer exits the gated phase. The kit never used it; any open-source debugging skill covers the need. `UNLOCK_SKILLS` is now `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-walkthrough`.
 
+### Fixed
+
+- **Inventory docs no longer advertise the removed skill** — the roster tables, skill trees, unlock prose, ASCII diagram, and count claims in `README.md`, `docs/workflow-phases.md`, `docs/developer-usage-guide.md`, and `docs/oversight-model.md` were swept to the real roster (4 pipeline + 2 utility skills).
+
 ### Changed
 
-- **`pwk-code-review` checklists aligned with the four role contracts** — steps 2–5 now carry the `Your checklist` sections from `agents/pwk-{tracing,spec,smell,hazard}-reviewer.md` verbatim (the smell list keeps its unlocked apply-fixes behavior). Process and reporting sections are unchanged.
+- **`pwk-code-review` checklists aligned with the four role contracts** — steps 2–5 now carry the `Your checklist` sections from `agents/pwk-{tracing,spec,smell,hazard}-reviewer.md` (the smell list keeps its unlocked apply-fixes behavior). Three deliberate divergences, all forced by the skill's unlocked/design-doc context: the coverage table is keyed on the design doc's `### R<n>:` headings rather than packet headings, the reporting-contract lines (`file:line` evidence, the `No findings` requirement) are not ported, and the tracing line reads "the acceptance criteria and the feature E2E" because "integration tests" is stale terminology this repo bans in that file. Process and reporting sections are unchanged.
 - **Prose-only simplification pass across the six surviving skills** — the cross-skill root-check/discovery boilerplate is now verbatim-identical and lint-pinned, the code-digest explanation in `pwk-executing-tasks` collapses to one canonical layer with pointers, and `## Tags reference` is a table.
 
 ## [2.3.0] - 2026-09-11
