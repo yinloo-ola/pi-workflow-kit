@@ -25,7 +25,7 @@ They explain *what* to do and *when* to do it. Phase control is manual — you i
 
 The `workflow-guard` extension registers the Pi-only `/pwk-setup` command and enforces one workflow rule:
 
-> During brainstorm and plan phases, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
+> During the design phase, `write` and `edit` are **hard-blocked** outside `docs/plans/`.
 
 The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 

@@ -199,4 +199,14 @@ describe("workflow-consistency per-slice", () => {
       expect(lint).toContain("UNLOCK_PROSE_SITES");
     });
   });
+
+  describe("R8 — packet base defined from the Commit column", () => {
+    it("step 6 mandates recording the commit and the recipe names the Commit column for both spans", () => {
+      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      expect(executing).toContain(M.commitColumnFill);
+      expect(executing).toContain(M.featureBaseRule);
+      expect(executing).toContain(M.perReqSpanRule);
+      expect(executing).not.toMatch(/<merge-base>/);
+    });
+  });
 });

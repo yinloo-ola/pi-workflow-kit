@@ -13,6 +13,7 @@ const LEGACY_CRITERIA_CMD = "sed -n '/^## Requirement 1/,/^## Feature acceptance
 const FA_CMD = "sed -n '/^## Feature acceptance/,/^### Feature review/p'";
 const NOTES_CMD = "sed -nE '/^### Production-risk notes/,/^(## |### R[0-9])/p'";
 const NOTES_STRIP = "sed -E '/^(## |### R[0-9])/d'";
+const FEATURE_BASE_DEF = 'FEATURE_BASE="$(git rev-parse $(grep -m1 -o';
 
 /** A design doc shaped like the template pwk-brainstorming emits (pwk 2.0). */
 const DESIGN_FIXTURE = [
@@ -82,7 +83,9 @@ describe("review packet recipe", () => {
     expect(executing).toContain(LEGACY_CRITERIA_CMD);
     expect(executing).toContain(FA_CMD);
     expect(executing).toContain(NOTES_CMD);
-    expect(executing).toContain("git diff <merge-base>...HEAD");
+    expect(executing).toContain(FEATURE_BASE_DEF);
+    expect(executing).toContain("git diff $FEATURE_BASE...HEAD");
+    expect(executing).not.toMatch(/<merge-base>/);
     expect(executing).toMatch(/never appears in spawn arguments/i);
     expect(executing).toContain("verbatim from the design doc");
   });

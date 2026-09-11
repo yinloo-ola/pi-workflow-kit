@@ -4,7 +4,7 @@ Design: docs/plans/2026-09-11-workflow-consistency-design.md
 Branch: workflow-consistency
 Started: 2026-09-11T07:16:58Z
 Last updated: 2026-09-11T07:16:58Z
-Feature phase: implementing (7/9)
+Feature phase: implementing (8/9)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -16,7 +16,7 @@ Feature phase: implementing (7/9)
 | 5 | ✅ | Feature-acceptance template renders its review tag | — | 
 | 6 | ✅ | Inventory doc parity sweep | — | 
 | 7 | ✅ | Doc-inventory parity lint | — | 
-| 8 | ⬜ | Packet base defined from the Commit column | — | — |
+| 8 | ✅ | Packet base defined from the Commit column | — | 
 | 9 | ⬜ | Diagnose ↔ execution recording hook | — | — |
 
 ## Execution summary
@@ -29,7 +29,7 @@ Feature phase: implementing (7/9)
 | 5 | Feature-acceptance template renders its review tag | FA fenced block gains its ### Feature review line; skill-lint pins the tag inside the fence so the gap stays closed; packet fixtures cover tag-present docs. | |
 | 6 | Inventory doc parity sweep | pwk-walkthrough in all four inventory docs + three unlock sites; stale 1.x counts/terminology/split ordering repaired; code-review half-migration finished; README guard table corrected; -notes.md disposal glob learned. | |
 | 7 | Doc-inventory parity lint | skill-lint gains an inventory-parity section: skill roster vs tree, UNLOCK_SKILLS vs prose sites, stated counts vs computed counts — drift fails CI both ways. | |
-| 8 | Packet base defined from the Commit column | | |
+| 8 | Packet base defined from the Commit column | Step 6 records the commit hash; feature packet bases on parent-of-first-Commit-entry, per-req spans chain previous-last → this-last; code-review scope mirrors; bare <merge-base> gone from executing. | |
 | 9 | Diagnose ↔ execution recording hook | | |
 
 ## Code digest

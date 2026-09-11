@@ -9,7 +9,7 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 ## Process
 
-1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff <merge-base>...HEAD`); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
+1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff $FEATURE_BASE...HEAD` — the parent of the first Commit-column entry; see the executing skill's packet recipe); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
 
 2. **🔍 Code tracing** — trace the new/changed code paths end-to-end against the acceptance criteria and the feature E2E. For each path: does data flow correctly from entry to the asserted outcome? Note any branch the tests don't exercise, any dead branch, any path where the trace breaks.
 

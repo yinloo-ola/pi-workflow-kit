@@ -70,7 +70,7 @@ describe("review cost optimization feature (E2E)", () => {
     // and spawns reviewers with one-liner pointers; per-requirement reviews mirror it.
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
     expect((executing.match(/review-packet\.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
-    expect(executing).toMatch(/git diff <merge-base>\.\.\.HEAD/);
+    expect(executing).toMatch(/git diff \$FEATURE_BASE\.\.\.HEAD/);
     expect(executing).toMatch(/review-packet\.md[\s\S]{0,600}(your role|role framing|role tail)/i);
     expect(executing).toMatch(
       /per-requirement[\s\S]{0,600}review-packet\.md|review-packet\.md[\s\S]{0,600}per-requirement/i,

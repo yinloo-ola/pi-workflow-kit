@@ -109,7 +109,7 @@ Set `Feature phase: implementing (0/N)` and work the requirements in listed orde
 3. **⏸ per-requirement checkpoint** *(fires only when the tag says so — opt-in)* — if `### Checkpoints: full`, stop and present after the tests and again after the slice is complete. With the default `none`, show the red→green inline and proceed.
 4. **Regression check after each commit** — run the **full existing suite**. This is what catches cross-requirement regressions (a later requirement breaking an earlier one's test). The **feature E2E stays red until the last requirement lands**; you may run it to watch the failure point advance, but it is gated only at the ship checkpoint — never expect it green per-commit.
 5. **Learn.** Caught a repeat mistake? Append a **generic** rule to `docs/lessons.md` (strip domain specifics).
-6. **Commit** the requirement with a clear message; mark its row ✅ and write its execution-summary row in the same step; advance `Feature phase: implementing (k/N)`.
+6. **Commit** the requirement with a clear message; mark its row ✅ and write its execution-summary row in the same step; record the requirement's commit hash in the Commit column; advance `Feature phase: implementing (k/N)`.
 
 ### Per-requirement review (opt-in)
 
@@ -153,18 +153,19 @@ The old "integration gate" is gone — the feature E2E at the ship checkpoint *i
 
 This is step 3 of the [ship checkpoint](#ship-checkpoint-feature-complete--review-merged): it runs **before** the final human approval, so the pause is fully informed. Run **one** review over the **whole feature diff**, driven by the design doc's `### Feature review` tag — exactly one per part, never once per requirement. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
-**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
+**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). The Commit column is the packet's source of truth for both spans: the feature packet base is `git rev-parse <first Commit-column entry>^` (the parent of the first recorded commit); a per-requirement packet spans from the previous requirement's last commit (exclusive) to this requirement's last commit (inclusive), with R1's exclusive bound being its own parent. No `merge-base` guessing, no default-branch knowledge. If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
 
 ```bash
 PACKET="<design doc's directory>/<design doc's stem>-review-packet.md"   # beside the design doc — flat topic: docs/plans/<dated-stem>-review-packet.md; umbrella part: inside the docs/plans/<date>-<umbrella>/ folder
+FEATURE_BASE="$(git rev-parse $(grep -m1 -o '^| [0-9]* | [^|]* | [^|]* | [^|]* | [0-9a-f]\{7,\}' <progress file> | grep -o '[0-9a-f]\{7,\}' | head -1)^)"   # parent of the first recorded Commit-column entry
 {
   echo "# Review packet: <topic> — feature review"
   echo
   echo "## Commits"
-  git log --oneline <merge-base>..HEAD
+  git log --oneline $FEATURE_BASE..HEAD
   echo
   echo "## Changed files"
-  git diff --stat <merge-base>...HEAD
+  git diff --stat $FEATURE_BASE...HEAD
   echo
   echo "## Acceptance criteria (verbatim from the design doc)"
   sed -n '/^### R1/,/^## Feature acceptance/p' <design-doc path> | sed '/^## Feature acceptance/,$d'
@@ -177,7 +178,7 @@ PACKET="<design doc's directory>/<design doc's stem>-review-packet.md"   # besid
   sed -nE '/^### Production-risk notes/,/^(## |### R[0-9])/p' <design-doc path> | sed -E '/^(## |### R[0-9])/d'
   echo
   echo "## Diff"
-  git diff <merge-base>...HEAD
+  git diff $FEATURE_BASE...HEAD
 } > "$PACKET"
 ```
 
