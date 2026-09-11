@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`spec` removed from the per-requirement Checkpoints enum** — `### Checkpoints` accepts `none | full` (default `none`). The retired value was a stop on acceptance criteria the human had already approved at design time; the paired "`spec` requires at least `inline` review" rule went with it.
 - **Enriched Code digest `### Flow`** — the ship digest's flow section becomes a navigable map: a `Spine` of `[R<n>]`-tagged hops named by symbol or module (no line numbers, no file paths), a `Branches` list giving every alternative and error path as `condition -> outcome`, `was: …` clauses where behavior changed, worked values inline, and a `Side effects` line when the feature performs I/O. Capped at roughly 15 lines; beyond that the ship checkpoint offers `/skill:pwk-walkthrough` as the deep read instead of growing the digest.
 
+### Added
+
+- **Flow-truth rule** — the digest's `### Flow` is written from reviewed reality: in `parallel` mode every hop must correspond to a path the tracing reviewer's report names, and in `inline` mode it is checked against that pass's spec-coverage result. A discrepancy that cannot be resolved is surfaced to the human at the ship checkpoint rather than smoothed over.
+
 ### Migration
 
 - In-flight design docs tagged with the retired `spec` checkpoint value resolve to `none` — no stop, no error.
