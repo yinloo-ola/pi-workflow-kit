@@ -71,7 +71,7 @@ const FEATURE_REVIEW_VOCAB = ["auto", "parallel", "inline"];
 
 function vocabOf(text, label, exclude) {
   // Collect the option tokens that appear after a vocabulary header/label.
-  // Matches `### Checkpoints: full | spec | none` and prose like `full | spec | none`.
+  // Matches `### Checkpoints: none | full` and prose like `none | full`.
   // `exclude` drops lines that belong to a longer label (plain `Review` must not swallow
   // `### Feature review: auto | parallel | inline`).
   const lines = text.split("\n");
@@ -80,7 +80,7 @@ function vocabOf(text, label, exclude) {
     if (!line.includes(label)) continue;
     if (exclude && line.includes(exclude)) continue;
     // Match `|`-separated tokens, tolerating backticks, spaces, and a leading colon/paren.
-    // e.g. "### Checkpoints: full | spec | none" and "accepted values: `parallel | inline | skip`)".
+    // e.g. "### Checkpoints: none | full" and "accepted values: `parallel | inline | skip`)".
     const pipeMatch = line.match(/[`:]\s*`?([a-z]+(?:\s*\|\s*`?[a-z]+)+)`?/);
     if (pipeMatch) {
       for (const t of pipeMatch[1].split("|")) hits.add(t.replace(/`/g, "").trim());
