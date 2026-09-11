@@ -11,25 +11,33 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff $FEATURE_BASE...HEAD` — the parent of the first Commit-column entry; see the executing skill's packet recipe); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
 
-2. **🔍 Code tracing** — trace the new/changed code paths end-to-end against the acceptance criteria and the feature E2E. For each path: does data flow correctly from entry to the asserted outcome? Note any branch the tests don't exercise, any dead branch, any path where the trace breaks.
+2. **🔍 Code tracing** — trace the new or changed code paths end-to-end against the acceptance criteria and the feature E2E. For each path, determine whether data flows correctly from entry to the asserted outcome. Note any branch the tests do not exercise, any dead branch, or any path where the trace breaks.
 
 3. **📐 Spec alignment** — for each acceptance criterion, point to the code and the test that satisfy it. A criterion with no covering code or no test is a **gap**. Code that does more than the criteria specify is **scope creep** — flag it.
 
-4. **🧹 Code smells — fix these directly:**
-   - Shallow modules (interface nearly as complex as the implementation)
+   **Open the report with a coverage table** — one row per requirement in scope, keyed by the design doc's `### R<n>:` headings (R# = n; the whole design doc at the feature-level review, just the tagged requirement when invoked per-requirement):
+
+   | R# | Verdict | Evidence |
+   |----|---------|----------|
+   | 1 | <verdict> | file:line (code), file:line (test) |
+
+   Verdict per requirement: `covered | gap | scope-creep` — `covered` = every criterion has covering code and a test; `gap` = a criterion lacks code or a test; `scope-creep` = the code does more than the criteria specify. Findings elaborate on every non-`covered` row; an all-`covered` table needs no elaboration.
+
+4. **🧹 Code smells — fix these directly:** review the changed code and affected files against the requirement and feature scope, then fix what you find.
+   - Shallow modules (interface nearly as complex as implementation)
    - Duplication
-   - Missing seams / premature abstraction
+   - Missing seams or premature abstraction
    - Poor naming, magic values, dead code
-   Apply the fix, re-run the full suite (must stay green), and commit. If a smell needs a refactor large enough to risk the requirement, **flag** it instead of applying.
+   Apply the fix, re-run the full suite (must stay green), and commit. Only a smell that requires a refactor large enough to risk the requirement is **flagged** instead of applied.
 
 5. **⚠️ Production hazard check** — audit the changed code against the high-risk hazards. For each, write `[SAFE]` (1-line justification) or `[TRIGGERED]` (concrete mitigation):
-   1. **Unbounded operations** — multi-key deletions/scans (`KEYS`, raw `SCAN` loops), or full-table loads filtered in memory.
-   2. **Missing indexes** — hot queries on unindexed columns (table scans under load).
-   3. **Unbounded concurrency** — unthrottled fan-out (`Promise.all` without batch limits).
-   4. **Long-running transactions** — holding DB connections/locks across slow external calls.
-   5. **Query/command interpolation** — raw variables merged into SQL or shell (injection).
-   6. **Unrestricted uploads / temp flooding** — uploads to local temp without limits or `finally` cleanup.
-   7. **Silent swallowing loops** — background workers catching and suppressing exceptions without logging/back-off.
+   1. **Unbounded operations** — multi-key deletions/scans (`KEYS`, raw `SCAN` loops), full-table loads filtered in memory
+   2. **Missing indexes** — hot queries on unindexed columns (table scans under load)
+   3. **Unbounded concurrency** — unthrottled fan-out (`Promise.all` without batch limits)
+   4. **Long-running transactions** — holding DB connections/locks across slow external calls
+   5. **Query/command interpolation** — raw variables merged into SQL or shell (injection)
+   6. **Unrestricted uploads / temp flooding** — uploads to local temp without limits or `finally` cleanup
+   7. **Silent swallowing loops** — background workers catching/suppressing exceptions without logging/back-off
    Also check the design's `## Production-risk areas`, if any.
 
 6. **Report** — summarize: tracing findings, spec gaps, smells fixed (with commits), hazards `[TRIGGERED]`. Non-trivial findings become follow-up items — the user decides whether to address now or defer.
