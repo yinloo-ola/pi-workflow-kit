@@ -84,8 +84,6 @@ const DISCOVERY_SKILLS = [
   "skills/pwk-finalizing/SKILL.md",
 ];
 
-const TOPIC = "remove-pwk-diagnose";
-
 describe("remove-pwk-diagnose (feature E2E)", () => {
   it("scenario 1 — the skill dir is gone and no unlock path remains in the guard", () => {
     expect(skillDirs()).not.toContain(REMOVED);
@@ -138,26 +136,41 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
     }
   });
 
-  it("scenario 4 — one folder per topic: this topic is a folder, and one shape serves one leaf or many", () => {
-    // This topic is the new layout's first live exercise, not a fixture.
-    const folders = readdirSync(join(repoRoot, "docs/plans"), { withFileTypes: true })
-      .filter((entry) => entry.isDirectory() && entry.name.endsWith(`-${TOPIC}`))
+  it("scenario 4 — one folder per topic: every in-flight topic folder conforms, and no flat topic docs exist", () => {
+    const plansDir = join(repoRoot, "docs/plans");
+    const topicFolders = readdirSync(plansDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name !== "completed")
       .map((entry) => entry.name);
-    expect(folders, `topic folder docs/plans/<date>-${TOPIC}/`).toHaveLength(1);
-    const folder = folders[0];
-    const leaves = readdirSync(join(repoRoot, "docs/plans", folder));
-    expect(leaves, "the design doc is a leaf of the folder").toContain(`${TOPIC}-design.md`);
-    expect(leaves, "the progress file is a leaf of the folder").toContain(`${TOPIC}-progress.md`);
 
-    // The folder *is* the topic — no flat sibling survives the migration.
+    // Every in-flight topic folder is the one shape: leaf docs inside it, and each leaf's
+    // progress file pointing back at its own design doc in that same folder. Stated
+    // universally on purpose — a finalized topic leaves no folder, so the rule simply has
+    // nothing to check, and the next topic is covered the moment it is created with no
+    // fixture to keep in sync. (This topic was the first live exercise of the layout; it is
+    // disposed at finalize, which is why the assertion is over any folder rather than the
+    // one this feature happened to create.)
+    for (const folder of topicFolders) {
+      const leaves = readdirSync(join(plansDir, folder));
+      const designs = leaves.filter((name) => name.endsWith("-design.md"));
+      expect(designs.length, `${folder} must hold at least one leaf design doc`).toBeGreaterThan(0);
+      for (const design of designs) {
+        const leaf = design.replace(/-design\.md$/, "");
+        const progressName = `${leaf}-progress.md`;
+        if (!leaves.includes(progressName)) continue; // design-only topic: not executed yet
+        const progress = readFileSync(join(plansDir, folder, progressName), "utf8");
+        expect(progress, `${folder}/${progressName} Design: ref`).toMatch(
+          new RegExp(`^Design: docs/plans/${folder}/${design}$`, "m"),
+        );
+      }
+    }
+
+    // R6's rule: new work is always a folder. A flat dated topic doc at the docs/plans top
+    // level is the retired shape reappearing — legacy flat topics stay readable and
+    // resumable, but are never newly written.
     const flat = trackedFiles().filter((rel) =>
-      new RegExp(`^docs/plans/\\d{4}-\\d{2}-\\d{2}-${TOPIC}-(design|progress|review-packet.*|notes)\\.md$`).test(rel),
+      /^docs\/plans\/\d{4}-\d{2}-\d{2}-[^/]+-(design|progress|review-packet.*|notes)\.md$/.test(rel),
     );
-    expect(flat, `flat topic files survived:\n${flat.join("\n")}`).toEqual([]);
-
-    // The progress file's `Design:` ref names the folder path — the key every other skill derives from.
-    const progress = readRepo(`docs/plans/${folder}/${TOPIC}-progress.md`);
-    expect(progress).toMatch(new RegExp(`^Design: docs/plans/${folder}/${TOPIC}-design\\.md$`, "m"));
+    expect(flat, `flat topic docs at the docs/plans top level:\n${flat.join("\n")}`).toEqual([]);
 
     // Every discovery skill speaks the one folder form, so a single-part topic and an umbrella
     // are the same shape to all four of them.
