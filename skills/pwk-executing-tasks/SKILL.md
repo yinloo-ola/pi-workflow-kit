@@ -216,10 +216,10 @@ Verify the criticism against the code, evaluate the suggestion, then implement (
 
 ## After the feature review
 
-The feature is implemented, reviewed, and approved at the ship checkpoint. Determine the next step from the artifacts (the human drives every transition — this is a suggestion, not a gate; both overview checks below run excluding docs/plans/completed/ — an archived umbrella never routes):
+The feature is implemented, reviewed, and approved at the ship checkpoint. Determine the next step from the artifacts (the human drives every transition — this is a suggestion, not a gate; both overview checks below read the overview in the current design doc's own folder — flat: no overview beside the design doc in `docs/plans/`; part: the `overview.md` next to the part doc inside its `docs/plans/<date>-<umbrella>/` folder — never a repo-wide `docs/plans/**/overview.md`, and always excluding docs/plans/completed/, so an archived or sibling umbrella never routes):
 
-- **Standalone design doc** (no `docs/plans/**/overview.md` exists) → suggest `/skill:pwk-finalizing`.
-- **Umbrella part** (a `docs/plans/**/overview.md` exists) → read the overview roster and find this part's `<topic>`. If it is the **last** in build order, the umbrella is complete → suggest `/skill:pwk-finalizing` (one PR for the whole umbrella). If **more parts remain**, suggest `/skill:pwk-brainstorming` for the **next part** (the next `<topic>` in the roster).
+- **Standalone design doc** (no `overview.md` in its own folder) → suggest `/skill:pwk-finalizing`.
+- **Umbrella part** (an `overview.md` sits beside the part doc) → read the overview roster and find this part's `<topic>`. If it is the **last** in build order, the umbrella is complete → suggest `/skill:pwk-finalizing` (one PR for the whole umbrella). If **more parts remain**, suggest `/skill:pwk-brainstorming` for the **next part** (the next `<topic>` in the roster).
 
 Present:
 

@@ -17,7 +17,7 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
    - `e2e-written` → `execute 0/N` (the E2E is written and the run continues into implementation — never shown as a paused state)
    - `feature-spec-paused` (legacy — a progress file from before the notice replaced the stop) → `execute 0/N`
    - `reviewing`, legacy `feature-complete-paused` → `review`
-   - `ship-paused` → `ship-paused`
+   - `ship-paused` → `ship-paused` — next: `/skill:pwk-executing-tasks` (approve the ship checkpoint). Never hint finalizing: only `done` routes there.
    - no progress file, only `*-design.md` → `design` — next: `/skill:pwk-executing-tasks`
    - roster-only (named in the overview, no artifacts) → `not started`
    - no parseable `Feature phase` line → `execute` (with tally if parseable).
@@ -32,7 +32,7 @@ Report on in-flight pipelines in this working tree (a worktree has its own `docs
      payments-ui        execute   1/2
      payments-review    review    —
      payments-webhooks  not started
-   auth                ship-paused   — ready for /skill:pwk-finalizing
+   auth                ship-paused   — ready for /skill:pwk-executing-tasks
    ```
 
    If nothing, suggest `/skill:pwk-brainstorming`.

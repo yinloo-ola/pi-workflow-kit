@@ -33,7 +33,7 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
    Also check the design's `## Production-risk areas`, if any.
 
 6. **Report** — summarize: tracing findings, spec gaps, smells fixed (with commits), hazards `[TRIGGERED]`. Non-trivial findings become follow-up items — the user decides whether to address now or defer.
-7. **Mark done** — set the requirement's Done cell `✅` (it was left `🔄` while under review; findings leave it `🔄`). Done means reviewed, not just committed.
+7. **Mark done** — set the requirement's Done cell `✅` for the requirement under review (it was left `🔄` while under review; findings leave it `🔄`). Already-terminal rows of other requirements never regress. Done means reviewed, not just committed.
 
 ## Principles
 
@@ -43,4 +43,4 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 ## After the review
 
-Return to `/skill:pwk-executing-tasks` for the next requirement, or `/skill:pwk-finalizing` if all requirements are done. (The human tagged this requirement at design approval when its `### Review` tag was set — keep the review focused on the tag's scope.)
+Return to `/skill:pwk-executing-tasks` — the next requirement, or the ship checkpoint when every requirement is done. Finalizing is proposed from the ship checkpoint, never from here. (The human tagged this requirement at design approval when its `### Review` tag was set — keep the review focused on the tag's scope.)
