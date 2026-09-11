@@ -21,7 +21,7 @@ Ship the completed work.
 
 1. **Derive the topic set** —
    - **Multi-leaf topic** (an `overview.md` sits beside the design doc, inside the same `docs/plans/<date>-<topic>/` folder — never a repo-wide `docs/plans/**/overview.md`, and always excluding docs/plans/completed/, so an archived or sibling topic never routes): read its roster; the set is the topic folder itself, disposed as one unit.
-   - **Single-leaf topic**: progress file → `Design:` ref → that design doc's own folder → `<topic>` — the directory name, **the folder slug**, which is also the branch and worktree slug (never a leaf filename). One folder. (Legacy flat progress file: `Plan:` ref → the implementation doc's `Design:` ref → design doc.)
+   - **Single-leaf topic**: progress file → `Design:` ref → that design doc's own folder → `<topic>`, which **is the folder slug** — the topic directory's name, and the same value `pwk-executing-tasks` uses for the branch and worktree (never a leaf filename). One folder. (Legacy flat progress file: `Plan:` ref → the implementation doc's `Design:` ref → design doc.)
 
    Ambiguous with several designs in flight? Ask.
 2. **Run the learning sweep — before any disposal command.** The planning docs are about to be destroyed; extract the durable knowledge first, while its container still exists. Read the design doc's At-a-glance key-decision bullets **and its `Approaches considered` section** (the full forks with their reasoning), the progress file's `Deviated?` entries (including any deviation decision-records), and the Code digest's `[ALERT]` entries. Then:

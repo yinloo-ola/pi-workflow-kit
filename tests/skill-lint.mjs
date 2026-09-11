@@ -930,6 +930,104 @@ for (const name of BOILERPLATE_SKILLS) {
   }
 }
 
+// --- Check 13c: reviewer-role ↔ code-review-skill checklist alignment (R4) ---
+// R4 ports the four role checklists into steps 2-5 of pwk-code-review, so the inline path
+// and the delegated roles review the same things. That alignment was previously kept by
+// hand with nothing watching it: edit a hazard item or a smell bullet in agents/ and the
+// skill drifts silently. Three divergences are sanctioned by the design and asserted
+// below as such — the tracing object phrase ('integration tests' is banned terminology in
+// that file), the spec table's keying (the design doc's ### R<n>: headings, since the
+// inline path has no packet), and the smell direction (the unlocked skill applies fixes
+// where the read-only role flags them). Everything else must read identically in both.
+console.log("reviewer-role checklist alignment:");
+const CODE_REVIEW_SKILL = "skills/pwk-code-review/SKILL.md";
+const codeReview = readFileSync(join(root, CODE_REVIEW_SKILL), "utf8");
+// Sentences that must appear verbatim in BOTH the role contract and the skill.
+const ALIGNED_WITH_ROLES = [
+  [
+    "pwk-tracing-reviewer",
+    "agents/pwk-tracing-reviewer.md",
+    "For each path, determine whether data flows correctly from entry to the asserted outcome. Note any branch the tests do not exercise, any dead branch, or any path where the trace breaks.",
+  ],
+  [
+    "pwk-spec-reviewer",
+    "agents/pwk-spec-reviewer.md",
+    "A criterion with no covering code or no test is a **gap**. Code that does more than the criteria specify is **scope creep** — flag it.",
+  ],
+  [
+    "pwk-smell-reviewer",
+    "agents/pwk-smell-reviewer.md",
+    "Shallow modules (interface nearly as complex as implementation)",
+  ],
+  ["pwk-smell-reviewer", "agents/pwk-smell-reviewer.md", "Missing seams or premature abstraction"],
+  ["pwk-smell-reviewer", "agents/pwk-smell-reviewer.md", "Poor naming, magic values, dead code"],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Unbounded operations** — multi-key deletions/scans (`KEYS`, raw `SCAN` loops), full-table loads filtered in memory",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Missing indexes** — hot queries on unindexed columns (table scans under load)",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Unbounded concurrency** — unthrottled fan-out (`Promise.all` without batch limits)",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Long-running transactions** — holding DB connections/locks across slow external calls",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Query/command interpolation** — raw variables merged into SQL or shell (injection)",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Unrestricted uploads / temp flooding** — uploads to local temp without limits or `finally` cleanup",
+  ],
+  [
+    "pwk-hazard-reviewer",
+    "agents/pwk-hazard-reviewer.md",
+    "**Silent swallowing loops** — background workers catching/suppressing exceptions without logging/back-off",
+  ],
+];
+for (const [role, rolePath, sentence] of ALIGNED_WITH_ROLES) {
+  // Normalize a missing trailing newline (a role file may legitimately end mid-line) so the
+  // line-complete check below does not depend on file-ending hygiene.
+  const norm = (text) => (text.endsWith("\n") ? text : `${text}\n`);
+  const roleBody = norm(readFileSync(join(root, rolePath), "utf8"));
+  const short = sentence.length > 48 ? `${sentence.slice(0, 48)}…` : sentence;
+  // Line-complete match, not a bare substring: each pinned sentence is its own line in both
+  // files, so appending a new clause to the role's item (the plausible drift) fails here
+  // instead of sliding past a plain `includes`.
+  const line = `${sentence}\n`;
+  if (!roleBody.includes(line)) fail(`${role}: checklist item missing from the role contract (${short})`);
+  else if (!norm(codeReview).includes(line))
+    fail(`${role}: checklist item drifted out of ${CODE_REVIEW_SKILL} (${short})`);
+  else ok(`${role}: checklist item aligned in ${CODE_REVIEW_SKILL}`);
+}
+// The three sanctioned divergences must still read as the design describes them.
+const SANCTIONED_DIVERGENCES = [
+  [
+    "the tracing object phrase is adapted, not the banned 'integration tests'",
+    /against the acceptance criteria and the feature E2E/,
+  ],
+  ["the spec table is keyed to the design doc's headings", /keyed by the design doc's `### R<n>:` headings/],
+  ["the smell direction is inverted for the unlocked skill", /Code smells — fix these directly/],
+];
+for (const [label, pattern] of SANCTIONED_DIVERGENCES) {
+  if (pattern.test(codeReview)) ok(`pwk-code-review: ${label}`);
+  else fail(`pwk-code-review: divergence not stated — ${label}`);
+}
+if (/integration tests/.test(codeReview)) fail(`pwk-code-review: banned 'integration tests' phrasing returned`);
+else ok("pwk-code-review: no banned 'integration tests' phrasing");
+
 // --- Summary ---
 // --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---
 // The four inventory docs must name every skill directory under skills/, the unlock-prose

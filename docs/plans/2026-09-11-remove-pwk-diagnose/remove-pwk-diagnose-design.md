@@ -100,7 +100,9 @@ In `skills/pwk-code-review/SKILL.md`, replace the prose of steps 2–5 with the 
 
 Steps 1 (scope), 6 (report), 7 (mark done) and the `Unlocked` framing stay as-is. No reporting-contract port (no mandatory `file:line` evidence rule, no `No findings` requirement), no packet-discipline port.
 
-Given the four role checklists, When reading the rewritten skill, Then each checklist reads identically to its role counterpart (modulo the smell-fix inversion), and the skill's process/reporting sections are unchanged from today. Edge: future role-checklist edits must be mirrored here — note it in the R4 commit message; the S1 lint assertion in R5 covers shared-sentence drift, not checklist drift.
+Given the four role checklists, When reading the rewritten skill, Then each checklist reads identically to its role counterpart (modulo the three divergences the skill's own context forces), and the skill's process/reporting sections are unchanged from today. The three sanctioned divergences, named here so the criterion is honest about them rather than promising a verbatim port it cannot deliver: (1) the tracing object phrase reads "the acceptance criteria and the feature E2E" because "integration tests" is banned terminology in that file (asserted by the stale-terminology guards); (2) the spec coverage table is keyed to the design doc's `### R<n>:` headings, since the inline path has no packet; (3) the smell direction is inverted — the unlocked skill applies fixes where the read-only role flags them.
+
+Edge: future role-checklist edits must be mirrored here — now mechanically enforced rather than left to a commit-message note. Check 13c in `tests/skill-lint.mjs` pins each role's checklist items **line-complete** in both the role contract and the skill, so an item edited, deleted, or appended-to in either file fails `npm run check`; it also pins the three divergences above and re-asserts the banned-phrase ban in the skill. Verified by mutation in both directions before landing.
 
 ### Checkpoints
 
