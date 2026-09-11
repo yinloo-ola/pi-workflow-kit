@@ -21,13 +21,17 @@ import { createExtensionHarness } from "./helpers";
 
 describe("guard phase transitions", () => {
   it("unlocks on write-needing skills only", () => {
-    expect([...UNLOCK_SKILLS]).toEqual([
-      "pwk-executing-tasks",
-      "pwk-finalizing",
-      "pwk-code-review",
-      "pwk-diagnose",
-      "pwk-walkthrough",
-    ]);
+    expect([...UNLOCK_SKILLS]).toEqual(["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-walkthrough"]);
+  });
+
+  it("a removed skill cannot unlock a gated phase", () => {
+    const harness = createExtensionHarness();
+    harness.handlers.get("session_start")?.({}, {});
+    harness.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});
+    expect(getCurrentPhase()).toBe("brainstorm");
+    // pwk-diagnose was removed from the kit: invoking it leaves the gate in place.
+    harness.handlers.get("input")?.({ text: "/skill:pwk-diagnose" }, {});
+    expect(getCurrentPhase()).toBe("brainstorm");
   });
 
   it("gates only brainstorming; a removed skill no longer enters a phase", () => {
