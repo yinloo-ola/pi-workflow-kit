@@ -30,8 +30,8 @@ tests/        # vitest — workflow-guard.test.ts + delegation contract tests
 skills/       # SKILL.md dirs, pwk-* namespaced, harness-neutral
 agents/       # canonical role contracts (recon scout + 4 reviewers)
 docs/         # developer-usage-guide, workflow-phases, oversight-model, provider-delegation-contract, lessons
-docs/plans/   # ephemeral active plans (deleted after finalize)
-docs/plans/completed/   # archived plans
+docs/plans/   # ephemeral active plans, one folder per topic (deleted after finalize)
+docs/plans/completed/   # archived topic folders
 docs/adr/     # permanent ADRs (never archived)
 ```
 
@@ -48,7 +48,7 @@ docs/adr/     # permanent ADRs (never archived)
 - **One umbrella = one PR.** A design doc is one PR by default; a requirement too big for one design doc is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once. Each requirement is one testable slice; the human stops at the feature level (feature-spec + ship checkpoint).
 - **Phase transitions only via `/skill:pwk-*`** — no message-keyword auto-detection (deliberately removed).
 - **`docs/lessons.md`** persists agent-learned imperative rules across sessions; read at design/execute, curated at finalize. Survives `/new`.
-- **`docs/plans/` is ephemeral** — archive to `docs/plans/completed/`; each umbrella lives in its own `docs/plans/<date>-<umbrella>/` folder, disposed as one unit. ADRs in `docs/adr/` are permanent.
+- **`docs/plans/` is ephemeral and holds one folder per topic** — `docs/plans/<date>-<topic>/` (leaf docs inside: `<leaf>-design.md`, `<leaf>-progress.md`, `-review-packet*.md`; plus `overview.md` when the topic has more than one leaf). Archive the folder to `docs/plans/completed/`; a single-leaf topic and an umbrella dispose the same way, as one folder. ADRs in `docs/adr/` are permanent.
 - **Reviewer agents** use YAML frontmatter (`name`/`description`/`tools`/`systemPromptMode: replace`) and are read-only (`tools: read, grep, find, ls, bash`).
 
 ## Editing workflow-guard.ts

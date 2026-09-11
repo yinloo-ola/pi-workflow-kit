@@ -1,6 +1,6 @@
 # Progress: remove-pwk-diagnose
 
-Design: docs/plans/2026-09-11-remove-pwk-diagnose-design.md
+Design: docs/plans/2026-09-11-remove-pwk-diagnose/remove-pwk-diagnose-design.md
 Branch: remove-pwk-diagnose
 Started: 2026-09-11T09:49:37Z
 Last updated: 2026-09-11T10:47:11Z

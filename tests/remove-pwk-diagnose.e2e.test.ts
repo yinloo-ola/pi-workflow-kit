@@ -176,7 +176,9 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
     expect(finalizing, "finalizing must not re-derive the umbrella from a repo-wide search").not.toMatch(
       /docs\/plans\/\*\*\/overview\.md` exists/,
     );
-    expect(finalizing, "the umbrella is read beside the design doc").toMatch(/`overview\.md` beside the design doc/);
+    expect(finalizing, "the umbrella is read beside the design doc").toMatch(
+      /`overview\.md`[^\n]*beside the design doc/,
+    );
     expect(executing, "executing-tasks keeps the local rule").toMatch(
       /never a repo-wide `docs\/plans\/\*\*\/overview\.md`/,
     );
@@ -205,6 +207,8 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
 
     // 6. Disposal precedence is stated, not implied: for a folder topic the flat globs must not
     //    run, or a leaf slug that collides with an unrelated flat topic deletes a foreign doc.
-    expect(finalizing, "folder move takes precedence over the flat globs").toMatch(/the folder move is the disposal/);
+    expect(finalizing, "folder command takes precedence over the flat globs").toMatch(
+      /the folder command is the disposal/,
+    );
   });
 });

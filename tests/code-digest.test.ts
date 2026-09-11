@@ -17,18 +17,21 @@ const MIRROR_DOCS = ["README.md", "docs/workflow-phases.md", "docs/developer-usa
 
 // Byte-identical regression guard (R5): the finalize disposal commands and
 // their anchoring comments must not change — the exclusion is wording-only.
-// Literals transcribed from the pre-feature file (verify with the per-slice test).
+// Re-anchored by the R6/R7 amendment: the topic folder replaced the flat
+// per-file globs as the disposal unit (single-leaf topic and umbrella alike),
+// and the precedence rule now says so explicitly.
 const FINALIZE_DISPOSAL_LINES = [
+  "rm -rf docs/plans/<date>-<topic>/",
+  "# The folder path is taken verbatim from discovery — never typed or",
   "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md docs/plans/????-??-??-<topic>-notes.md",
-  "# The folder path is taken verbatim from the discovered docs/plans/**/overview.md",
-  "rm -rf docs/plans/<date>-<umbrella>/",
+  "mv docs/plans/<date>-<topic>/ docs/plans/completed/",
+  "ls docs/plans/completed/<date>-<topic>/ >/dev/null",
   "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
   "mv docs/plans/????-??-??-<topic>-notes.md            docs/plans/completed/ 2>/dev/null || true",
-  "mv docs/plans/<date>-<umbrella>/ docs/plans/completed/",
-  "ls docs/plans/completed/<date>-<umbrella>/ >/dev/null",
+  "**Disposal precedence:** for a folder topic the folder command is the disposal",
 ] as const;
 
 function readRepo(rel: string): string {
@@ -123,7 +126,7 @@ describe("code-digest per-slice", () => {
       ["skills/pwk-brainstorming/SKILL.md", "**Discovery**"],
       ["skills/pwk-executing-tasks/SKILL.md", "**Find the doc**"],
       ["skills/pwk-finalizing/SKILL.md", "Read **every** relevant progress file"],
-      ["skills/pwk-finalizing/SKILL.md", "**Umbrella** (a `docs/plans/**/overview.md` exists"],
+      ["skills/pwk-finalizing/SKILL.md", "**Multi-leaf topic**"],
     ];
     for (const [file, anchor] of sites) {
       const content = readRepo(file);

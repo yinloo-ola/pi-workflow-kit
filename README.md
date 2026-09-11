@@ -69,7 +69,7 @@ brainstorm → executing-tasks → finalizing
                              status (anytime)
 ```
 
-A **design doc is one PR**; a **requirement is one testable slice within it**. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once.
+A **design doc is one PR**; a **requirement is one testable slice within it**. **One folder per topic** — `docs/plans/<date>-<topic>/` holds the topic's design doc, progress file, and review packet, and is the unit disposed at finalize. A requirement too big for one design doc but shipping as one PR is an **umbrella** — more than one leaf in that same folder, under one status-free overview, on one branch, finalized once.
 
 | Phase | Trigger | What Happens |
 |-------|---------|--------------|

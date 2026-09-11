@@ -202,8 +202,8 @@ if (!bs) fail("pwk-brainstorming skill missing");
 else if (faHeader.test(bs.content)) ok("pwk-brainstorming: emits `## Feature acceptance` in the design doc");
 else fail("pwk-brainstorming: missing `## Feature acceptance` section header");
 if (et && /Feature acceptance/.test(et.content))
-  ok("pwk-executing-tasks: runs the feature-acceptance test at the integration gate");
-else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the integration gate");
+  ok("pwk-executing-tasks: runs the feature-acceptance test at the ship checkpoint");
+else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the ship checkpoint");
 
 // --- Check 6: phase-unlock list consistency (guard ↔ skills ↔ docs) ---
 // The guard hard-codes which /skill: commands exit a gated phase. The skills and docs must
@@ -263,6 +263,15 @@ if (bs && /^## Umbrella\b/m.test(bs.content))
 else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, one PR)");
 if (bs && /status-free/i.test(bs.content)) ok("pwk-brainstorming: defines the overview as a status-free roster");
 else fail("pwk-brainstorming: overview must be documented as status-free");
+// R7 — the roster shape two consumers read (pwk-finalizing's "read its parts roster",
+// pwk-status's roll-up) is pinned here, so a drifted heading fails loudly instead of
+// both readers silently seeing an empty roster and disposing nothing.
+if (bs?.content.includes("## Parts (build order)"))
+  ok("pwk-brainstorming: pins the roster heading `## Parts (build order)`");
+else fail("pwk-brainstorming: missing the `## Parts (build order)` roster heading");
+if (bs && /^\s*\d+\.\s*<leaf>\s*—\s*<one-line scope>\s*$/m.test(bs.content))
+  ok("pwk-brainstorming: pins the roster item shape (`N. <leaf> — <one-line scope>)`");
+else fail("pwk-brainstorming: missing the roster item shape `N. <leaf> — <one-line scope>`");
 if (et && /reuse/i.test(et.content) && /umbrella/i.test(et.content))
   ok("pwk-executing-tasks: documents branch reuse for umbrella later parts");
 else fail("pwk-executing-tasks: missing umbrella branch-reuse note");
@@ -564,9 +573,9 @@ if (et) {
     fail("pwk-executing-tasks: phase enum must use ship-paused, not feature-complete-paused");
   }
 }
-// R5 — umbrella docs live in their own docs/plans/<date>-<umbrella>/ folder; every
-// discovery site pins the find recipe (recursive by construction); finalize disposes
-// the folder as one unit.
+// R5/R6 — topic docs live in their own docs/plans/<date>-<topic>/ folder (one folder
+// per topic, single-leaf and umbrella alike); every discovery site pins the find recipe
+// (recursive by construction); finalize disposes the folder as one unit.
 const GLOB_SITES = [bs, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
   fgMark(s.name, s.content, STATUS_STATE_MARKERS.findRecipe, "pinned find discovery recipe");
@@ -576,7 +585,7 @@ if (et) {
     "pwk-executing-tasks",
     et.content,
     "docs/plans/**/overview.md",
-    "post-review umbrella routing uses the recursive overview glob",
+    "post-review routing names the forbidden repo-wide overview glob",
   );
   fgMark(
     "pwk-executing-tasks",
@@ -595,11 +604,11 @@ if (fin) {
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.legacyPaused, "legacy in-flight state named and gated");
 }
-// Post-review hazard fixes — the umbrella rm -rf path is anchored to the discovery
-// glob (never agent-typed) and the folder archive is verified before committing.
+// Post-review hazard fixes — the topic-folder rm -rf path is anchored to discovery
+// (never agent-typed) and the folder archive is verified before committing.
 if (fin) {
-  fgMark("pwk-finalizing", fin.content, "verbatim from the discovered", "folder delete path anchored to discovery");
-  fgMark("pwk-finalizing", fin.content, "ls docs/plans/completed/<date>-<umbrella>/", "archive verified before commit");
+  fgMark("pwk-finalizing", fin.content, "verbatim from discovery", "folder delete path anchored to discovery");
+  fgMark("pwk-finalizing", fin.content, "ls docs/plans/completed/<date>-<topic>/", "archive verified before commit");
 }
 
 // --- Check 12: code-digest feature (grown per-requirement) ---
@@ -705,7 +714,7 @@ const EXCLUSION_SITES = [
   [bs, "**Discovery**"],
   [et, "**Find the doc**"],
   [fin, "Read **every** relevant progress file"],
-  [fin, "**Umbrella** (a `docs/plans/**/overview.md` exists"],
+  [fin, "**Multi-leaf topic**"],
 ];
 for (const pair of EXCLUSION_SITES) {
   const s = pair[0];
@@ -737,15 +746,15 @@ if (et) {
 }
 if (fin) {
   const DISPOSAL_ANCHORS = [
+    "rm -rf docs/plans/<date>-<topic>/",
     "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md",
-    "rm -rf docs/plans/<date>-<umbrella>/",
     "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
     "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
     "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
     "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
-    "mv docs/plans/<date>-<umbrella>/ docs/plans/completed/",
-    "ls docs/plans/completed/<date>-<umbrella>/ >/dev/null",
-    "verbatim from the discovered",
+    "mv docs/plans/<date>-<topic>/ docs/plans/completed/",
+    "ls docs/plans/completed/<date>-<topic>/ >/dev/null",
+    "verbatim from discovery",
   ];
   for (const anchor of DISPOSAL_ANCHORS) {
     fgMark("pwk-finalizing", fin.content, anchor, "disposal command unchanged");
@@ -902,7 +911,7 @@ const SHARED_SENTENCES = [
   ["discovery frame", "`docs/plans` recursively, excluding docs/plans/completed/, for "],
   [
     "umbrella parenthetical",
-    "(umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived work is not in flight)",
+    "(topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight)",
   ],
   [
     "discovery recipe tail",

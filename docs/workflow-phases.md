@@ -9,7 +9,7 @@ brainstorm → executing-tasks → finalizing
                 (feature-gate: write feature E2E → report it → implement requirements → feature review → ⏸ ship)
 ```
 
-A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella**: multiple design docs under one status-free overview, on one branch, finalized once (`(brainstorm → execute) × N → finalize`).
+**One folder per topic.** Every topic — a single-part design doc or an umbrella — lives in its own folder `docs/plans/<date>-<topic>/`, and that folder is the unit of creation, discovery, and disposal. Its docs are leaves inside it: `<leaf>-design.md`, `<leaf>-progress.md`, `<leaf>-review-packet*.md`, where `<leaf>` is the part slug (`<topic>` for a single-part topic). A folder holding more than one leaf also carries an `overview.md`. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella**: multiple design docs (leaves) under one status-free overview, on one branch, finalized once (`(brainstorm → execute) × N → finalize`).
 
 ## brainstorm
 
@@ -18,8 +18,8 @@ A design doc is one PR; a requirement is one testable slice within it. A require
 ```
 
 - Explore requirements and shape the design. Interviews in **frontier rounds**: questions form a dependency tree seeded by a six-dimension checklist; each round asks the full frontier as numbered questions, each with a recommended answer; facts are looked up, only decisions asked; the interview ends when the frontier is empty — nothing left silently assumed — and an assumption gate sweeps the draft before the design is presented.
-- Produce `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, the **single buildable artifact**: a `## At a glance` digest for the human (2–4 sentence plain-language summary → **Key decisions**, one line each: decision + why, a `(rejected: …)` clause only when the fork was real → a `| R# | Requirement in one line | Risk |` table, one row per requirement) immediately before the `## Requirements` blocks — one `### R<n>:` block per requirement carrying its one-line behavior, **acceptance criteria** (Given/When/Then incl. edge/error cases) and Checkpoints/Review tags (no test-name lists, no separate plan doc) — ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
-- May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/<date>-<umbrella>/overview.md` (each umbrella in its own folder; roster of parts + build order) and the **first** part's `-design.md` beside it. Later parts are brainstormed one by one against the overview + implemented predecessors.
+- Produce `docs/plans/<date>-<topic>/<leaf>-design.md` — descriptive, the **single buildable artifact**: a `## At a glance` digest for the human (2–4 sentence plain-language summary → **Key decisions**, one line each: decision + why, a `(rejected: …)` clause only when the fork was real → a `| R# | Requirement in one line | Risk |` table, one row per requirement) immediately before the `## Requirements` blocks — one `### R<n>:` block per requirement carrying its one-line behavior, **acceptance criteria** (Given/When/Then incl. edge/error cases) and Checkpoints/Review tags (no test-name lists, no separate plan doc) — ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the PRD's behavior — the feature's definition-of-done).
+- May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/<date>-<topic>/overview.md` (the same topic folder, now with more than one leaf; a `## Parts (build order)` roster of leaves + build order) and the **first** leaf's `<leaf>-design.md` beside it. Later leaves are brainstormed one by one against the overview + implemented predecessors.
 - ADRs go to `docs/adr/` (permanent, never archived).
 
 Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
@@ -34,7 +34,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 - After the review passes, the executor writes a **code digest** into the progress file — plain-language summary, execution flow, gotchas, key files — derived from the review packet; it rides the existing disposal globs.
 - Per-requirement checkpoints/reviews are **opt-in** — they fire only for requirements the design doc tags (default off); see [Proportionality](#proportionality).
 - **Regression check after each commit** — run the full existing suite to catch cross-requirement regressions immediately. The feature E2E stays red until the last requirement and is gated only at the ship checkpoint (the old integration gate folds into it).
-- Progress tracked in `docs/plans/*-progress.md` (feature phase + requirement checklist).
+- Progress tracked in `docs/plans/<date>-<topic>/<leaf>-progress.md` (feature phase + requirement checklist).
 
 No write restrictions. All tools available.
 
@@ -67,7 +67,7 @@ No write restrictions.
 ```
 
 - **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Dispose of consumed plan docs (per-`<topic>`) — the human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording). ADRs stay at `docs/adr/`. For an umbrella (a `docs/plans/**/overview.md` exists), disposes the whole `docs/plans/<date>-<umbrella>/` folder — overview **and every part's** docs — in one pass and ships **one PR**.
+- Dispose of consumed plan docs — the unit is the **topic folder** `docs/plans/<date>-<topic>/`, so a single-leaf topic and an umbrella dispose identically as one folder; a legacy flat topic keeps its per-file paths (the flat globs never run for a folder topic). The human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording). ADRs stay at `docs/adr/`. Ships **one PR** per topic.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.

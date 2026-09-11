@@ -18,7 +18,7 @@ export const DIGEST_MARKERS = {
   diffOnRequest: "diff on request",
   coverageTable: "| R# | Verdict | Evidence |",
   coverageVerdicts: "covered | gap | scope-creep",
-  umbrellaFolder: "docs/plans/<date>-<umbrella>/",
+  umbrellaFolder: "docs/plans/<date>-<topic>/",
   mustBeDone: "must be `done`",
   legacyPaused: "legacy `feature-complete-paused`",
 };

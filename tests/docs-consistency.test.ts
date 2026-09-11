@@ -62,13 +62,14 @@ describe("docs consistency: review packet and resource hints", () => {
       expect(doc, rel).not.toMatch(/review the whole diff/i);
       expect(doc, rel).not.toMatch(/read the (?:full|whole) plan/i);
     }
-    expect(read("AGENTS.md")).toMatch(/docs\/plans\/<date>-<umbrella>\//);
+    expect(read("AGENTS.md")).toMatch(/docs\/plans\/<date>-<topic>\//);
   });
 
-  it("keeps the umbrella folder layout consistent in workflow-phases", () => {
+  it("keeps the one-folder-per-topic layout consistent in workflow-phases", () => {
     const doc = read("docs/workflow-phases.md");
-    expect(doc).toContain("docs/plans/<date>-<umbrella>/");
-    expect(doc).not.toMatch(/YYYY-MM-DD-<umbrella>-overview\.md/);
+    expect(doc).toContain("docs/plans/<date>-<topic>/");
+    expect(doc).not.toMatch(/YYYY-MM-DD-<topic>-design\.md/);
+    expect(doc).not.toMatch(/<date>-<umbrella>\//);
     expect(doc).not.toMatch(/\*-overview\.md/);
   });
 

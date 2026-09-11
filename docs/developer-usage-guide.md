@@ -34,7 +34,7 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 
 ## The workflow
 
-You control each phase by invoking the skill. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once:
+You control each phase by invoking the skill. One folder per topic: `docs/plans/<date>-<topic>/` holds the topic's design doc, progress file, and review packet, and is the unit disposed at finalize. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — more than one leaf in that same folder, under one status-free overview, on one branch, finalized once:
 
 ```
 /skill:pwk-brainstorming  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
@@ -56,7 +56,7 @@ The command creates `.agents/agents/` and installs the five PWK roles. It preser
 
 Explore the idea through collaborative dialogue. The agent reads code, asks questions, proposes approaches, and presents the design for your review. Questioning runs in **frontier rounds**: numbered questions each carrying a recommended answer, facts looked up rather than asked, an assumption gate before the design is presented, and a frontier-empty stop rule (nothing left silently assumed). On non-trivial topics with prior art, the skill requests the logical `codebase-recon` capability using the `pwk-recon-scout` role. A compatible host may dispatch that role in a fresh, bounded, read-only worker; otherwise the skill reports `Scout: unavailable` and performs the same five-section recon inline.
 
-Outcome: `docs/plans/YYYY-MM-DD-<topic>-design.md` — descriptive, opening with a `## At a glance` digest for the human (plain-language summary → **Key decisions** — `(rejected: …)` clauses only for real forks — → `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` blocks. For a too-big requirement, may start an **umbrella** (writes a status-free overview + the first part's design doc). ADRs go to `docs/adr/` (permanent).
+Outcome: `docs/plans/<date>-<topic>/<leaf>-design.md` — descriptive, opening with a `## At a glance` digest for the human (plain-language summary → **Key decisions** — `(rejected: …)` clauses only for real forks — → `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` blocks. For a too-big requirement, may start an **umbrella** (writes a status-free `overview.md` + the first leaf's design doc in the same folder). ADRs go to `docs/adr/` (permanent).
 
 ### 2. Execute
 
@@ -112,7 +112,7 @@ No configuration needed. It activates automatically after install.
 
 ## Test-first discipline
 
-Plans specify *what* (acceptance criteria + integration tests); the executor writes the tests first (red), then implements to green. This keeps the spec stable — implementation details can change without invalidating the plan.
+Design docs specify *what* (acceptance criteria + end-to-end scenarios); the executor writes the feature-acceptance E2E first (red), then implements to green. This keeps the spec stable — implementation details can change without invalidating the design.
 
 ## Tips
 
