@@ -886,6 +886,41 @@ if (existsSync(wtPath)) {
   fail("pwk-walkthrough: skill missing");
 }
 
+// --- Check 13b: cross-skill boilerplate canonicalization (skill-slimming R5 S1) ---
+// Four skills open with the same pre-flight prose: the repo-root check and the docs/plans
+// discovery recipe. They were near-identical variants — the same drift shape that produced
+// the doc-inventory defects (F7–F11) — so the shared sentences are pinned verbatim here.
+// Each skill stays self-contained by design: this asserts wording, it does not share text.
+// The suffix lists legitimately differ per skill and are deliberately not pinned.
+console.log("cross-skill boilerplate:");
+const BOILERPLATE_SKILLS = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-finalizing", "pwk-status"];
+const SHARED_SENTENCES = [
+  [
+    "root check",
+    "run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts).",
+  ],
+  ["discovery frame", "`docs/plans` recursively, excluding docs/plans/completed/, for "],
+  [
+    "umbrella parenthetical",
+    "(umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived work is not in flight)",
+  ],
+  [
+    "discovery recipe tail",
+    "Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`",
+  ],
+];
+for (const name of BOILERPLATE_SKILLS) {
+  const skill = loadSkills().find((s) => s.name === name);
+  if (!skill) {
+    fail(`cross-skill boilerplate: ${name} skill missing`);
+    continue;
+  }
+  for (const [label, sentence] of SHARED_SENTENCES) {
+    if (skill.content.includes(sentence)) ok(`${name}: ${label} matches the canonical wording`);
+    else fail(`${name}: ${label} drifted from the canonical wording — see pwk-executing-tasks`);
+  }
+}
+
 // --- Summary ---
 // --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---
 // The four inventory docs must name every skill directory under skills/, the unlock-prose

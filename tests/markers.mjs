@@ -98,6 +98,9 @@ export const LEAN_GATES_MARKERS = {
   statusExecuteZero: "execute 0/N",
   // R4 — the `spec` checkpoint value is gone.
   checkpointsEnum: "### Checkpoints: none | full",
+  // The executing skill's tags reference is a table (skill-slimming S3), so its enum shows as
+  // tag + values cells instead of a single header line. Same behavior, different shape.
+  checkpointsEnumRow: "`### Checkpoints` | `none | full`",
   // R5 — the enriched Flow shape.
   flowSpine: "Spine",
   flowBranches: "Branches",

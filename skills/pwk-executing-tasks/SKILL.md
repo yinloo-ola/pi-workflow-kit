@@ -14,7 +14,7 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 ## Before you start
 
 1. **Git state** — `git status` + `git log --oneline -5`; note uncommitted changes.
-2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` and `*-implementation.md` (umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived work is not pending). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. A stem-matched legacy `*-implementation.md` wins for that topic (an in-flight 1.x feature — old flow). If no doc at all, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (E2E written, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)). An umbrella part whose prior parts are not all at `done`: surface their `Feature phase:` lines (matched header-only from each `<part>-progress.md`) as advisory context in the pre-flight report — no refusal, no reorder; build order stays advisory.
+2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` and `*-implementation.md` (umbrella docs live in `docs/plans/<date>-<umbrella>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. A stem-matched legacy `*-implementation.md` wins for that topic (an in-flight 1.x feature — old flow). If no doc at all, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (E2E written, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)). An umbrella part whose prior parts are not all at `done`: surface their `Feature phase:` lines (matched header-only from each `<part>-progress.md`) as advisory context in the pre-flight report — no refusal, no reorder; build order stays advisory.
 3. **Workspace — create the feature branch** — if you're already on a feature branch (not `main`), **reuse** it: a later umbrella part continues on the same umbrella branch. If on `main`, `git checkout -b <topic>` — the umbrella's `<topic>` if this design doc is one of an overview's parts, else the design doc's `<topic>`. For larger work, first check `git worktree list`: if a worktree already checks out this branch (the same `../<repo>-<topic>` convention), adopt it — resume the session there instead of offering a new `git worktree add`. One worktree per branch, created once: git refuses two checkouts of one branch, so a later umbrella part reuses part 1's worktree and a standalone resume reuses its own. Otherwise offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. Wait for the user's choice.
 
 ## First run
@@ -46,20 +46,20 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
    <!-- Written once, after the feature review passes; never back-filled per requirement. -->
 
-   ### Summary — 2–3 sentences: what the code now does differently, and why.
+   ### Summary
    ### Flow
    Spine
-     <entry point> -> [R1] <step, named by symbol or module> -> [R2] <step> -> <outcome>
+     <entry point> -> [R1] <step> -> [R2] <step> -> <outcome>
    Branches
-     <condition> -> <outcome>   [R2]        <!-- every alternative and error path -->
+     <condition> -> <outcome>   [R2]
      <changed behavior>   was: <previous behavior>
    Side effects
-     reads: <what>   writes: <what>          <!-- only when the feature does I/O -->
-   ### Gotchas — edge cases, implicit assumptions; [ALERT]-prefixed real risks.
-   ### Key files — 3–5 pivotal files, one line each: what shifted inside them.
+     reads: <what>   writes: <what>
+   ### Gotchas
+   ### Key files
    ```
 
-   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Flow` uses `A -> B -> C` arrow chains. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
+   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Summary` is 2–3 sentences: what the code now does differently, and why. `### Flow` uses `A -> B -> C` arrow chains. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
 
    **Flow shape** — this is the ship stop's navigable map, so it is the one digest section that carries structure, not just prose:
 
@@ -133,7 +133,7 @@ When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, 
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
 2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. (A `❌`/`⏭` requirement's assertions were reconciled when its row went terminal, so a still-red E2E still means a requirement is missing or wrong.) If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the design declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
 3. **Run the feature review** (below) per the design's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
-4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Written once — never rewritten per requirement, never a gate: it explains the change, it does not block shipping.
+4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Never a gate: it explains the change, it does not block shipping.
 
    **Reconcile the Flow against reviewed reality before writing it.** The Flow is written from what was reviewed, not from recollection: in `parallel` mode every hop must correspond to a path the tracing reviewer's report names — no hop invented, no reported path dropped. In `inline` mode there is no tracing report, so check the Flow against that pass's spec-coverage result instead. A discrepancy you cannot resolve is **surfaced** to the human in the ship checkpoint's findings status, never smoothed over by writing a Flow that omits the path.
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
@@ -197,9 +197,13 @@ On success, continue assembling the ship checkpoint; once the human approves it 
 
 The design doc tags each requirement and the feature level:
 
-- **`### Checkpoints: none | full`** — per-requirement human stops. `none` (default) = no per-requirement stop; `full` = tests + complete.
-- **`### Review: skip | parallel | inline`** — per-requirement review. `skip` (default) = none; `parallel` = four reviewers; `inline` = one `pwk-code-review` pass. Nothing is tagged silently: **only the human tags** a slice, and the feature review below covers everything else.
-- **`### Feature review: auto | parallel | inline`** — the one whole-feature review (always present). Default `auto`: `parallel` when the design carries production-risk content, `inline` when it does not. An explicit `parallel` or `inline` is used as written and always wins over `auto`. Never once per requirement — the review covers the whole feature diff.
+| Tag | Values | Default | Fires |
+|-----|--------|---------|-------|
+| `### Checkpoints` | `none | full` | `none` | per-requirement human stops — `full` = tests + complete stops |
+| `### Review` | `skip | parallel | inline` | `skip` | per-requirement review — `parallel` = four delegated reviewers; `inline` = one `pwk-code-review` pass |
+| `### Feature review` | `auto | parallel | inline` | `auto` | the one whole-feature review — always present, never per requirement |
+
+Nothing is tagged silently: **only the human tags** a slice, and the feature review covers everything else. How each tag resolves lives where its decision executes — the [per-requirement review](#per-requirement-review-opt-in) and the [feature review](#feature-review).
 
 ## User override commands
 

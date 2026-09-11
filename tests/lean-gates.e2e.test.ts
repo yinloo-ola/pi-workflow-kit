@@ -75,7 +75,7 @@ describe("leaner execution gates (feature E2E)", () => {
     // R4 — the checkpoint enum is none | full across every consumer site, and the
     // retired `spec` value is gone from the enumerations and the paired rule.
     expect(brainstorming).toContain(LEAN_GATES_MARKERS.checkpointsEnum);
-    expect(executing).toContain(LEAN_GATES_MARKERS.checkpointsEnum);
+    expect(executing).toContain(LEAN_GATES_MARKERS.checkpointsEnumRow);
     for (const rel of [
       "skills/pwk-brainstorming/SKILL.md",
       "skills/pwk-executing-tasks/SKILL.md",

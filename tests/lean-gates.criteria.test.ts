@@ -51,7 +51,7 @@ describe("lean gates R2: feature-review resolution edges", () => {
 
   it("should run exactly once per part — not once per requirement", () => {
     expect(executing).toContain("exactly one per part, never once per requirement");
-    expect(executing).toContain("Never once per requirement");
+    expect(executing).toContain("always present, never per requirement");
   });
 });
 
