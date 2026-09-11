@@ -11,13 +11,13 @@ Feature phase: implementing (9/9)
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | One row-state and ceremony vocabulary | — | 3f27184 |
 | 2 | ✅ | Terminal-state ship gate and reachable failure branches | 🔎 parallel | 9380ad3 |
-| 3 | ✅ | Setup checkpoint made implementable | — | 
-| 4 | ✅ | Derived At-a-glance Risk column | — | 
-| 5 | ✅ | Feature-acceptance template renders its review tag | — | 
-| 6 | ✅ | Inventory doc parity sweep | — | 
-| 7 | ✅ | Doc-inventory parity lint | — | 
-| 8 | ✅ | Packet base defined from the Commit column | — | 
-| 9 | ✅ | Diagnose ↔ execution recording hook | — | 
+| 3 | ✅ | Setup checkpoint made implementable | — | d488253 |
+| 4 | ✅ | Derived At-a-glance Risk column | — | 86f6803 |
+| 5 | ✅ | Feature-acceptance template renders its review tag | — | f6df5f9 |
+| 6 | ✅ | Inventory doc parity sweep | — | 360822d |
+| 7 | ✅ | Doc-inventory parity lint | — | 0405342 |
+| 8 | ✅ | Packet base defined from the Commit column | — | 9552525 |
+| 9 | ✅ | Diagnose ↔ execution recording hook | — | 14be433 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
