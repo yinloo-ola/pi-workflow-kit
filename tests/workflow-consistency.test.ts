@@ -193,6 +193,11 @@ describe("workflow-consistency per-slice", () => {
       const walkthroughIdx = guide.indexOf("### Walkthrough");
       expect(diagnoseIdx, "diagnose prose precedes the walkthrough block").toBeLessThan(walkthroughIdx);
     });
+
+    it("the -notes.md seed files dispose with their topic (spec-reviewer R6 gap)", () => {
+      const finalizing = read("skills/pwk-finalizing/SKILL.md");
+      expect(finalizing).toContain(M.notesDisposal);
+    });
   });
 
   describe("R7 — doc-inventory parity lint", () => {
