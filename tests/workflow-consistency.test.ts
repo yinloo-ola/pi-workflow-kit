@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -59,6 +59,22 @@ describe("workflow-consistency per-slice", () => {
       expect(finalizing).toContain("`❌ failed`");
       expect(finalizing).toContain("`⏭ skipped`");
       expect(finalizing).toContain("--force-failed");
+    });
+
+    it("pins the resume route, umbrella, legacy, reason-suffix, and coverage-reconciliation contracts (tracing findings 1–3, 5)", () => {
+      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      expect(executing).toContain(M.resumeTerminalRoute);
+      expect(executing).toContain(M.umbrellaBlockRule);
+      expect(executing).toContain(M.legacyFailureNote);
+      expect(executing).toContain(M.reasonInShipGate);
+      expect(executing).toContain(M.reasonSuffix);
+      expect(executing).toContain(M.coverageReconciled);
+    });
+
+    it("scopes status verdict counts to Requirements-table rows; ADR 0007 exists (tracing findings 4, 6)", () => {
+      const status = read("skills/pwk-status/SKILL.md");
+      expect(status).toContain(M.statusVerdictGrep);
+      expect(existsSync(join(repoRoot, "docs/adr/0007-resolved-requirements-ship-gate.md"))).toBe(true);
     });
   });
 });

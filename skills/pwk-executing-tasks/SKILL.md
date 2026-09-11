@@ -91,7 +91,7 @@ Update the matching requirement row directly (not via pattern matching that coul
 
 **Row vocabulary (canonical — this file owns it):**
 
-- **Done cell:** `⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped. A row is **terminal** when its Done cell is `✅`, `❌`, or `⏭` — resolved, not necessarily passed. A `❌`/`⏭` row carries its reason as a suffix in the Requirement cell (finalizing's verdict greps read it). This skill sets all five values; the inline review path (`pwk-code-review`) only ever flips `🔄`→`✅` — findings leave the row `🔄`.
+- **Done cell:** `⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped. A row is **terminal** when its Done cell is `✅`, `❌`, or `⏭` — resolved, not necessarily passed. A `❌`/`⏭` row carries its reason as a suffix in the Requirement cell (finalizing's verdict greps read it), and its test coverage is reconciled in the same step — assertions removed or skipped with the reason; the suite must stay green. This skill sets all five values; the inline review path (`pwk-code-review`) only ever flips `🔄`→`✅` — findings leave the row `🔄`.
 - **Per-req ceremony cell** echoes the design doc's tag, not progress: `—` (default `none`/`skip`) · `⏸ tests` · `⏸ full` (fires two stops — after the slice's tests and after it is complete) · `🔎 inline` · `🔎 parallel`.
 
 **Execution summary rows are written in the same step as marking a requirement ✅** — never retrofitted at the end. "How it was built" = one or two plain sentences: what it does now + the approach actually taken; file names sparingly; **no test names, no code** (the human reads this at the ship checkpoint — big picture only). If the implementation departs from the design, fill the Deviated? column **at deviation time** (when the departure happens), with a one-line why — it is a log, not a stop. A departure that **reverses or alters a design decision** gets a **deviation decision-record**: a short paragraph (what changed, why, what was rejected) written into the progress file while the knowledge is fresh — mechanical deviations keep the one-liner. `pwk-finalizing`'s learning sweep harvests these records for ADRs before the docs are disposed.
@@ -125,7 +125,7 @@ When a per-requirement checkpoint fires it is a **hard stop**:
 When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, reason in row), or `⏭` (skipped, reason in row):
 
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
-2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the design declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
+2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. (A `❌`/`⏭` requirement's assertions were reconciled when its row went terminal, so a still-red E2E still means a requirement is missing or wrong.) If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the design declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
 3. **Run the feature review** (below) per the design's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
 4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Written once — never rewritten per requirement, never a gate: it explains the change, it does not block shipping.
 
@@ -198,7 +198,7 @@ The design doc tags each requirement and the feature level:
 
 | User says | Agent does |
 |-----------|-----------|
-| `skip` | Set its Done cell `⏭` (with the reason), move to next |
+| `skip` | Set its Done cell `⏭` (with the reason), reconcile its test coverage, move to next |
 | `status` | Show the progress file (feature phase + requirement table) |
 | `stop` | Restore current requirement to its pre-in-progress state, suggest `/new` |
 | `retry` | Re-read the requirement, start over |
@@ -234,4 +234,4 @@ Feature phase: done
 1. Re-read the requirement's acceptance criteria — you may have drifted.
 2. Check `git log` for context. Ask the user — clarify beats guessing.
 3. Still stuck → discard uncommitted changes (`git restore .`); if already committed, also `git revert` the requirement's commit(s). **Never leave a failed requirement's partial work on the shipped branch.**
-4. Set its Done cell `❌` (with the reason as a suffix in the Requirement cell) and move on. Check `docs/lessons.md` — a prior lesson may apply. (A legacy `*-implementation.md` feature has no Feature-phase gate; its failure handling is unchanged.)
+4. Set its Done cell `❌` (with the reason as a suffix in the Requirement cell), reconcile its test coverage, and move on. Check `docs/lessons.md` — a prior lesson may apply. (A legacy `*-implementation.md` feature has no Feature-phase gate; its failure handling is unchanged.)
