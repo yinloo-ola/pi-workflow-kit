@@ -27,6 +27,10 @@ import { UNLOCK_SKILLS } from "../extensions/workflow-guard";
  * The scan covers **git-tracked** files, which matches the design's "clean tree"
  * precondition; a stray untracked copy under `skills/` is still caught, because scenario 1
  * reads that directory from the filesystem rather than from git.
+ *
+ * Scenarios 4–5 cover the R6/R7 amendment: one folder per topic (so a single-part topic and
+ * an umbrella share one shape on disk), and one identity model for the two flows (so the
+ * four discovery skills cannot disagree about which topic is being finalized).
  */
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const REMOVED = "pwk-diagnose";
@@ -66,6 +70,21 @@ const INVENTORY_DOCS = [
 ];
 const PIPELINE_SKILLS = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-code-review", "pwk-finalizing"];
 const UTILITY_SKILLS = ["pwk-status", "pwk-walkthrough"];
+
+/** Read a repo-relative file as UTF-8. */
+function readRepo(rel: string): string {
+  return readFileSync(join(repoRoot, rel), "utf8");
+}
+
+/** The four skills that discover in-flight planning artifacts. */
+const DISCOVERY_SKILLS = [
+  "skills/pwk-brainstorming/SKILL.md",
+  "skills/pwk-executing-tasks/SKILL.md",
+  "skills/pwk-status/SKILL.md",
+  "skills/pwk-finalizing/SKILL.md",
+];
+
+const TOPIC = "remove-pwk-diagnose";
 
 describe("remove-pwk-diagnose (feature E2E)", () => {
   it("scenario 1 — the skill dir is gone and no unlock path remains in the guard", () => {
@@ -117,5 +136,75 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
         expect(Number(n), `${doc} utility-skill count`).toBe(UTILITY_SKILLS.length);
       }
     }
+  });
+
+  it("scenario 4 — one folder per topic: this topic is a folder, and one shape serves one leaf or many", () => {
+    // This topic is the new layout's first live exercise, not a fixture.
+    const folders = readdirSync(join(repoRoot, "docs/plans"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name.endsWith(`-${TOPIC}`))
+      .map((entry) => entry.name);
+    expect(folders, `topic folder docs/plans/<date>-${TOPIC}/`).toHaveLength(1);
+    const folder = folders[0];
+    const leaves = readdirSync(join(repoRoot, "docs/plans", folder));
+    expect(leaves, "the design doc is a leaf of the folder").toContain(`${TOPIC}-design.md`);
+    expect(leaves, "the progress file is a leaf of the folder").toContain(`${TOPIC}-progress.md`);
+
+    // The folder *is* the topic — no flat sibling survives the migration.
+    const flat = trackedFiles().filter((rel) =>
+      new RegExp(`^docs/plans/\\d{4}-\\d{2}-\\d{2}-${TOPIC}-(design|progress|review-packet.*|notes)\\.md$`).test(rel),
+    );
+    expect(flat, `flat topic files survived:\n${flat.join("\n")}`).toEqual([]);
+
+    // The progress file's `Design:` ref names the folder path — the key every other skill derives from.
+    const progress = readRepo(`docs/plans/${folder}/${TOPIC}-progress.md`);
+    expect(progress).toMatch(new RegExp(`^Design: docs/plans/${folder}/${TOPIC}-design\\.md$`, "m"));
+
+    // Every discovery skill speaks the one folder form, so a single-part topic and an umbrella
+    // are the same shape to all four of them.
+    for (const skill of DISCOVERY_SKILLS) {
+      expect(readRepo(skill), `${skill}: folder-form write/discovery path`).toMatch(/docs\/plans\/<date>-<topic>\//);
+    }
+  });
+
+  it("scenario 5 — one identity model: the two flows cannot disagree about the topic", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const finalizing = readRepo("skills/pwk-finalizing/SKILL.md");
+    const lint = readRepo("tests/skill-lint.mjs");
+
+    // 1. Umbrella detection is local — the rule executing-tasks already states, now shared.
+    //    A repo-wide overview search would let a sibling umbrella take over this topic's finalize.
+    expect(finalizing, "finalizing must not re-derive the umbrella from a repo-wide search").not.toMatch(
+      /docs\/plans\/\*\*\/overview\.md` exists/,
+    );
+    expect(finalizing, "the umbrella is read beside the design doc").toMatch(/`overview\.md` beside the design doc/);
+    expect(executing, "executing-tasks keeps the local rule").toMatch(
+      /never a repo-wide `docs\/plans\/\*\*\/overview\.md`/,
+    );
+
+    // 2. `<topic>` has one meaning (the folder slug) in both skills, so the worktree probe
+    //    and the branch name agree for a standalone topic and an umbrella part alike.
+    expect(executing, "<topic> is defined as the folder slug").toMatch(/is the folder slug/);
+    expect(finalizing, "finalizing uses the same slug meaning").toMatch(/is the folder slug/);
+
+    // 3. The next part is the first roster part with no `done` progress file — build order is
+    //    advisory, so the roster successor would skip a part built out of order.
+    expect(executing, "next-part predicate ignores the roster successor").toMatch(
+      /first roster part with no `done` progress file/,
+    );
+
+    // 4. The roster shape two consumers read is pinned by lint, so drift fails loudly
+    //    instead of silently disposing nothing.
+    expect(lint, "roster heading pinned").toContain("## Parts (build order)");
+
+    // 5. Retired prose is gone: plans merged into design docs in 2.0, and "integration tests"
+    //    is the stale term R4 had to route around.
+    expect(readRepo("docs/developer-usage-guide.md"), "retired plan/integration-test prose").not.toMatch(
+      /integration tests/,
+    );
+    expect(lint, "retired integration-gate wording").not.toMatch(/integration gate/);
+
+    // 6. Disposal precedence is stated, not implied: for a folder topic the flat globs must not
+    //    run, or a leaf slug that collides with an unrelated flat topic deletes a foreign doc.
+    expect(finalizing, "folder move takes precedence over the flat globs").toMatch(/the folder move is the disposal/);
   });
 });
