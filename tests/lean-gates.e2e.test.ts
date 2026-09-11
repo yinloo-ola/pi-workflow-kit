@@ -34,6 +34,32 @@ describe("leaner execution gates (feature E2E)", () => {
     expect(executing).toContain(LEAN_GATES_MARKERS.autoKeyedOnRisk);
     expect(executing).toContain(LEAN_GATES_MARKERS.explicitTagWins);
 
+    // R2 sweep — every consumer site describes the conditional, not an unconditional
+    // four-role review (a glob-scope change must enumerate all its consumers).
+    for (const rel of [
+      "docs/workflow-phases.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "README.md",
+    ]) {
+      const doc = read(rel);
+      expect(doc, rel).toMatch(/production-risk content/);
+      expect(doc, rel).toMatch(/risk-scaled|or one inline pass|otherwise one inline|one inline pass when it does not/);
+    }
+
+    // R3 sweep — the retired `feature-spec` display state appears in no example line.
+    for (const rel of ["skills/pwk-executing-tasks/SKILL.md", "skills/pwk-status/SKILL.md"]) {
+      const bare = read(rel)
+        .split("\n")
+        .filter((line) => /feature-spec(?!-paused)/.test(line));
+      expect(bare, `${rel} still uses the retired feature-spec vocabulary`).toEqual([]);
+    }
+
+    // R3 — the reserved failure stops survive the notice (they are the reason the
+    // notice is safe): ungreenable E2E and an immediately-passing wrong E2E both halt.
+    expect(executing).toMatch(/stop and present/i);
+    expect(executing).toMatch(/genuinely blocked/i);
+
     // R3 — the feature-spec stop is a notice; the ship stop remains the one stop.
     expect(executing).toContain(LEAN_GATES_MARKERS.specNotice);
     expect(executing).not.toMatch(/CHECKPOINT: feature-spec/);
