@@ -5,7 +5,7 @@ Branch: workflow-hint-gaps
 Setup: n/a
 Started: 2026-09-11T09:17:18Z
 Last updated: 2026-09-11T09:17:18Z
-Feature phase: ship-paused
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
