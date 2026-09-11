@@ -69,12 +69,15 @@ describe("human review digests feature (E2E)", () => {
     expect(enumLine).not.toContain("feature-complete-paused");
 
     // R4 — the spec-reviewer report opens with a per-requirement coverage table,
-    // keyed by the packet's requirement headings, while the four reviewers keep a
+    // keyed by the design doc's ### R<n> headings as carried in the packet's
+    // ## Acceptance criteria section, while the four reviewers keep a
     // byte-identical shared conduct block (same strict check as role-contracts).
     const specReviewer = readRole("pwk-spec-reviewer").body;
     expect(specReviewer).toContain(DIGEST_MARKERS.coverageTable);
     expect(specReviewer).toContain(DIGEST_MARKERS.coverageVerdicts);
-    expect(specReviewer).toMatch(/## Requirement N/);
+    expect(specReviewer).toMatch(/keyed by the design doc's `### R<n>:` headings/);
+    expect(specReviewer).toMatch(/## Acceptance criteria/);
+    expect(specReviewer).not.toMatch(/## Requirement N/);
     expect(specReviewer).toMatch(/No findings/);
     const HEADING = "## Your checklist";
     const blocks = REVIEW_ROLES.map((name) => {
@@ -102,7 +105,7 @@ describe("human review digests feature (E2E)", () => {
     const finalize = readRepo("skills/pwk-finalizing/SKILL.md");
     expect(finalize).toMatch(/Feature phase/);
     expect(finalize).toContain(DIGEST_MARKERS.mustBeDone);
-    expect(finalize).toMatch(/feature-complete-paused/);
+    expect(finalize).not.toContain("feature-complete-paused");
     expect(finalize).toContain(DIGEST_MARKERS.umbrellaFolder);
 
     // The user-facing docs describe the new flow and none of them defaults the

@@ -26,4 +26,4 @@ The task provides a review packet: the diff under review plus the acceptance cri
 
 ### Code tracing
 
-Trace the new or changed code paths end-to-end against the integration tests. For each path, determine whether data flows correctly from entry to the asserted outcome. Note any branch the tests do not exercise, any dead branch, or any path where the trace breaks.
+Trace the new or changed code paths end-to-end against the acceptance criteria and the feature-acceptance E2E scenarios in the packet. For each path, determine whether data flows correctly from entry to the asserted outcome. Note any branch the tests do not exercise, any dead branch, or any path where the trace breaks.

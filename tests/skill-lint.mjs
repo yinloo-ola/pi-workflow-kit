@@ -146,7 +146,6 @@ if (bs && et) {
 // --- Check 4: the `spec` checkpoint value is gone (leaner-execution-gates R4) ---
 // It was a stop on acceptance criteria the human already approved during brainstorm, so
 // the enum is `none | full` and the paired "spec requires inline review" rule went with it.
-// A legacy in-flight `spec` resolves to `none` rather than erroring.
 console.log("spec checkpoint removed:");
 const specSites = [
   ["docs/workflow-phases.md", readFileSync(join(root, "docs/workflow-phases.md"), "utf8")],
@@ -167,13 +166,6 @@ for (const [name, content] of specSites) {
   }
 }
 if (specFree) ok("`spec` checkpoint value removed from every site (enum + paired rule)");
-// The legacy value migrates instead of erroring.
-const legacySpecLine = (et?.content ?? "").split("\n").find((l) => /legacy/i.test(l) && /`spec`/.test(l)) ?? "";
-if (legacySpecLine && /`none`/.test(legacySpecLine)) {
-  ok("pwk-executing-tasks: legacy `spec` resolves to `none` (migration documented)");
-} else {
-  fail("pwk-executing-tasks: must document the legacy `spec` → `none` migration on one line");
-}
 
 // F6 (workflow-consistency R5): the brainstorming template's fenced design block
 // must itself contain the `### Feature review` tag line — the packet FA_CMD sed
@@ -597,12 +589,11 @@ if (et) {
 if (fin) {
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.umbrellaFolder, "umbrella folder disposal as one unit");
 }
-// R6 — finalizing ships only Feature phase `done`; every other state (including the
-// legacy feature-complete-paused) bounces back to executing-tasks.
+// R6 — finalizing ships only Feature phase `done`; every other state bounces back
+// to executing-tasks.
 if (fin) {
   fgMark("pwk-finalizing", fin.content, "Feature phase", "finalizing reads Feature phase");
   fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
-  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.legacyPaused, "legacy in-flight state named and gated");
 }
 // Post-review hazard fixes — the topic-folder rm -rf path is anchored to discovery
 // (never agent-typed) and the folder archive is verified before committing.
@@ -747,11 +738,6 @@ if (et) {
 if (fin) {
   const DISPOSAL_ANCHORS = [
     "rm -rf docs/plans/<date>-<topic>/",
-    "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md",
-    "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
-    "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
-    "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
-    "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
     "mv docs/plans/<date>-<topic>/ docs/plans/completed/",
     "ls docs/plans/completed/<date>-<topic>/ >/dev/null",
     "verbatim from discovery",
@@ -773,7 +759,7 @@ if (bs) {
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.recommendedAnswer, "recommended answer per question");
   if (/number each question/i.test(step3)) ok("pwk-brainstorming: questions numbered per round");
   else fail("pwk-brainstorming: questions must be numbered");
-  for (const approval of ["approach selection", "umbrella split", "design approval", "ADR unlock"]) {
+  for (const approval of ["approach selection", "umbrella split", "design approval", "ADR offer"]) {
     fgMark("pwk-brainstorming", step3, approval, `single-decision carve-out — ${approval}`);
   }
   for (const dimension of [
@@ -935,10 +921,12 @@ for (const name of BOILERPLATE_SKILLS) {
 // and the delegated roles review the same things. That alignment was previously kept by
 // hand with nothing watching it: edit a hazard item or a smell bullet in agents/ and the
 // skill drifts silently. Three divergences are sanctioned by the design and asserted
-// below as such — the tracing object phrase ('integration tests' is banned terminology in
-// that file), the spec table's keying (the design doc's ### R<n>: headings, since the
-// inline path has no packet), and the smell direction (the unlocked skill applies fixes
-// where the read-only role flags them). Everything else must read identically in both.
+// below as such — the tracing object phrase (the skill traces the diff it holds in
+// context, the role traces the packet it was handed), the spec table's keying (the
+// skill keys to the design doc's ### R<n>: headings directly, since the inline path has
+// no packet; the role keys to the same headings as carried verbatim in the packet's
+// `## Acceptance criteria` section), and the smell direction (the unlocked skill applies
+// fixes where the read-only role flags them). Everything else must read identically in both.
 console.log("reviewer-role checklist alignment:");
 const CODE_REVIEW_SKILL = "skills/pwk-code-review/SKILL.md";
 const codeReview = readFileSync(join(root, CODE_REVIEW_SKILL), "utf8");
@@ -1027,6 +1015,25 @@ for (const [label, pattern] of SANCTIONED_DIVERGENCES) {
 }
 if (/integration tests/.test(codeReview)) fail(`pwk-code-review: banned 'integration tests' phrasing returned`);
 else ok("pwk-code-review: no banned 'integration tests' phrasing");
+// The ban is kit-wide, not skill-local: the delegated roles review the same feature
+// under the same vocabulary, so a role contract carrying the stale term would put the
+// delegated and inline paths back out of alignment.
+for (const rolePath of [
+  "agents/pwk-recon-scout.md",
+  "agents/pwk-spec-reviewer.md",
+  "agents/pwk-tracing-reviewer.md",
+  "agents/pwk-smell-reviewer.md",
+  "agents/pwk-hazard-reviewer.md",
+]) {
+  const role = readFileSync(join(root, rolePath), "utf8");
+  if (/integration tests/.test(role)) fail(`${rolePath}: banned 'integration tests' phrasing returned`);
+  else ok(`${rolePath}: no banned 'integration tests' phrasing`);
+}
+// The spec role keys its coverage table to headings the packet actually carries — the
+// retired `## Requirement N` shape must not reappear in the contract.
+const specRole = readFileSync(join(root, "agents/pwk-spec-reviewer.md"), "utf8");
+if (/## Requirement N/.test(specRole)) fail("agents/pwk-spec-reviewer.md: retired '## Requirement N' keying returned");
+else ok("agents/pwk-spec-reviewer.md: coverage table keyed to the packet's ### R<n> headings");
 
 // --- Summary ---
 // --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---

@@ -5,11 +5,11 @@ description: "Review a completed requirement's code — trace the logic, check s
 
 # Code Review
 
-Review the code just implemented for a requirement. **Unlocked** — you may edit code to apply smell fixes; flag everything else as a follow-up.
+Review the code just implemented — one tagged requirement, or the whole feature at the feature-level review. **Unlocked** — you may edit code to apply smell fixes; flag everything else as a follow-up.
 
 ## Process
 
-1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff $FEATURE_BASE...HEAD` — the parent of the first Commit-column entry; see the executing skill's packet recipe); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
+1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff $FEATURE_BASE...HEAD` — the parent of the first Commit-column entry; see the executing skill's packet recipe); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline` on a tagged requirement — or inline-completing a missing delegated role when the tag is `parallel`), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
 
 2. **🔍 Code tracing** — trace the new or changed code paths end-to-end against the acceptance criteria and the feature E2E. For each path, determine whether data flows correctly from entry to the asserted outcome. Note any branch the tests do not exercise, any dead branch, or any path where the trace breaks.
 
@@ -41,13 +41,13 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
    Also check the design's `## Production-risk areas`, if any.
 
 6. **Report** — summarize: tracing findings, spec gaps, smells fixed (with commits), hazards `[TRIGGERED]`. Non-trivial findings become follow-up items — the user decides whether to address now or defer.
-7. **Mark done** — set the requirement's Done cell `✅` for the requirement under review (it was left `🔄` while under review; findings leave it `🔄`). Already-terminal rows of other requirements never regress. Done means reviewed, not just committed.
+7. **Mark done** — the review never edits the progress file. A clean pass hands back so the executing loop can set the requirement's Done cell `✅` (the row was left `🔄` while under review) and write its execution-summary row; findings leave the row `🔄` for another pass. (In the feature-gate flow every row is already terminal — verify none regressed and move on.) Already-terminal rows of other requirements never regress. Done means reviewed, not just committed.
 
 ## Principles
 
 - **Tracing and spec alignment are the core** — they catch what tests miss: untested branches, missing criteria, scope creep.
 - **Fix smells in place; flag everything else.** Keep the review scoped — the goal is polish on the requirement that just landed, not a redesign pass.
-- **Be proportional** — a one-function change doesn't need the depth of a batch pipeline. When this skill runs as the inline path because the plan tagged the requirement `Review: inline`, that was a deliberate call at plan time — keep the review focused and don't second-guess the tag.
+- **Be proportional** — a one-function change doesn't need the depth of a batch pipeline. When this skill runs as the inline path because the design doc tagged the requirement `Review: inline`, that was a deliberate call at design approval — keep the review focused and don't second-guess the tag.
 
 ## After the review
 

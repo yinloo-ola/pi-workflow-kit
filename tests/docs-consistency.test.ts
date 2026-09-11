@@ -73,12 +73,13 @@ describe("docs consistency: review packet and resource hints", () => {
     expect(doc).not.toMatch(/\*-overview\.md/);
   });
 
-  it("disposes review packets in both finalize disposal paths", () => {
+  it("disposes review packets with the topic folder in both finalize disposal paths", () => {
     const finalize = read("skills/pwk-finalizing/SKILL.md");
-    const occurrences = finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? [];
-    expect(occurrences.length).toBeGreaterThanOrEqual(2);
-    // loosened glob: matches the feature packet AND requirement-suffixed packets (-r1, -r2, ...)
-    expect(finalize).toMatch(/rm -f[\s\S]*review-packet\*.md/);
-    expect(finalize).toMatch(/mv [\s\S]*review-packet\*.md[\s\S]*completed/);
+    // the packet rides the folder disposal (delete + archive), never a separate glob
+    expect(finalize).toContain("-review-packet*.md");
+    expect(finalize).toMatch(/rm -rf docs\/plans\/<date>-<topic>\//);
+    expect(finalize).toMatch(/mv docs\/plans\/<date>-<topic>\/ docs\/plans\/completed\//);
+    // the retired flat per-file globs must not reappear
+    expect(finalize).not.toMatch(/rm -f |mv docs\/plans\/\?\?\?\?-\?\?-\?\?-/);
   });
 });

@@ -139,10 +139,10 @@ describe("leaner execution gates (feature E2E)", () => {
     const status = read("skills/pwk-status/SKILL.md");
 
     // R3 — `e2e-written` is a real state that routes into implementation; the
-    // legacy `feature-spec-paused` file renders the same way.
+    // retired `feature-spec-paused` value is gone from the mapping entirely.
     expect(status).toContain("`e2e-written`");
     expect(status).toContain(LEAN_GATES_MARKERS.statusExecuteZero);
-    expect(status).toContain("`feature-spec-paused`");
+    expect(status).not.toContain("`feature-spec-paused`");
     expect(status).not.toMatch(/feature-spec\b(?!-paused)/);
   });
 });

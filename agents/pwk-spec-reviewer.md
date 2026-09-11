@@ -28,7 +28,7 @@ The task provides a review packet: the diff under review plus the acceptance cri
 
 For each acceptance criterion, point to the code and the test that satisfy it. A criterion with no covering code or no test is a **gap**. Code that does more than the criteria specify is **scope creep** — flag it.
 
-**Open the report with a coverage table** — one row per requirement, keyed by the packet's `## Requirement N` headings (R# = N):
+**Open the report with a coverage table** — one row per requirement, keyed by the design doc's `### R<n>:` headings as carried verbatim in the packet's `## Acceptance criteria` section (R# = n):
 
 | R# | Verdict | Evidence |
 |----|---------|----------|

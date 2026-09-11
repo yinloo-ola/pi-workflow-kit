@@ -17,21 +17,14 @@ const MIRROR_DOCS = ["README.md", "docs/workflow-phases.md", "docs/developer-usa
 
 // Byte-identical regression guard (R5): the finalize disposal commands and
 // their anchoring comments must not change — the exclusion is wording-only.
-// Re-anchored by the R6/R7 amendment: the topic folder replaced the flat
-// per-file globs as the disposal unit (single-leaf topic and umbrella alike),
-// and the precedence rule now says so explicitly.
+// Re-anchored by the R6/R7 amendment: the topic folder is the only disposal
+// unit (single-leaf topic and umbrella alike); the retired flat per-file
+// globs must not reappear.
 const FINALIZE_DISPOSAL_LINES = [
   "rm -rf docs/plans/<date>-<topic>/",
   "# The folder path is taken verbatim from discovery — never typed or",
-  "rm -f docs/plans/????-??-??-<topic>-design.md docs/plans/????-??-??-<topic>-implementation.md docs/plans/????-??-??-<topic>-progress.md docs/plans/????-??-??-<topic>-review-packet*.md docs/plans/????-??-??-<topic>-notes.md",
   "mv docs/plans/<date>-<topic>/ docs/plans/completed/",
   "ls docs/plans/completed/<date>-<topic>/ >/dev/null",
-  "mv docs/plans/????-??-??-<topic>-design.md          docs/plans/completed/ 2>/dev/null || true",
-  "mv docs/plans/????-??-??-<topic>-implementation.md  docs/plans/completed/ 2>/dev/null || true",
-  "mv docs/plans/????-??-??-<topic>-progress.md        docs/plans/completed/ 2>/dev/null || true",
-  "mv docs/plans/????-??-??-<topic>-review-packet*.md   docs/plans/completed/ 2>/dev/null || true",
-  "mv docs/plans/????-??-??-<topic>-notes.md            docs/plans/completed/ 2>/dev/null || true",
-  "**Disposal precedence:** for a folder topic the folder command is the disposal",
 ] as const;
 
 function readRepo(rel: string): string {
@@ -160,7 +153,7 @@ describe("code-digest per-slice", () => {
     expect(step3).toContain(CODE_DIGEST_MARKERS.recommendedAnswer);
     expect(step3).toMatch(/number each question/i);
     // single-decision carve-out names all four approvals
-    for (const approval of ["approach selection", "umbrella split", "design approval", "ADR unlock"]) {
+    for (const approval of ["approach selection", "umbrella split", "design approval", "ADR offer"]) {
       expect(step3).toContain(approval);
     }
     const principles = brainstorming.match(/## Principles\n\n(?:- [^\n]*\n?){1,2}/)?.[0];

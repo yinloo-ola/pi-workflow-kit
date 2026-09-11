@@ -35,8 +35,8 @@ describe("portable skill delegation contract", () => {
   });
 
   it("preserves the feature gate and phase transition contracts", () => {
-    expect(executing).toContain("feature-spec");
-    expect(executing).toContain("feature-complete");
+    expect(executing).toContain("`e2e-written`");
+    expect(executing).toContain("`ship-paused`");
     expect(executing).toContain("primary enforced spec");
     expect(executing).toMatch(/per-requirement checkpoints(?: and reviews|\/reviews)? are \*\*opt-in\*\*/i);
   });

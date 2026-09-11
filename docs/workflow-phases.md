@@ -66,8 +66,8 @@ No write restrictions.
 /skill:pwk-finalizing
 ```
 
-- **Pre-check: run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
-- Dispose of consumed plan docs — the unit is the **topic folder** `docs/plans/<date>-<topic>/`, so a single-leaf topic and an umbrella dispose identically as one folder; a legacy flat topic keeps its per-file paths (the flat globs never run for a folder topic). The human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording). ADRs stay at `docs/adr/`. Ships **one PR** per topic.
+- **Pre-check: verify the repo root, then run the full test suite** — don't ship a red suite (resume spans sessions; don't trust the last execute session).
+- Dispose of consumed plan docs — the unit is the **topic folder** `docs/plans/<date>-<topic>/`, so a single-leaf topic and an umbrella dispose identically as one folder. The human picks **delete** (default — code + tests are the source of truth) or **archive** to `docs/plans/completed/` (keep planning history; every discovery glob runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording). ADRs stay at `docs/adr/`. Ships **one PR** per topic.
 - Curate `docs/lessons.md`, update README/CHANGELOG, create PR or merge.
 
 No write restrictions.

@@ -80,11 +80,10 @@ describe("workflow-consistency per-slice", () => {
       expect(finalizing).toContain("--force-failed");
     });
 
-    it("pins the resume route, umbrella, legacy, reason-suffix, and coverage-reconciliation contracts (tracing findings 1–3, 5)", () => {
+    it("pins the resume route, umbrella, reason-suffix, and coverage-reconciliation contracts (tracing findings 1–3, 5)", () => {
       const executing = read("skills/pwk-executing-tasks/SKILL.md");
       expect(executing).toContain(M.resumeTerminalRoute);
       expect(executing).toContain(M.umbrellaBlockRule);
-      expect(executing).toContain(M.legacyFailureNote);
       expect(executing).toContain(M.reasonInShipGate);
       expect(executing).toContain(M.reasonSuffix);
       expect(executing).toContain(M.coverageReconciled);
@@ -195,9 +194,10 @@ describe("workflow-consistency per-slice", () => {
       expect(walkthroughIdx, "the walkthrough block is present").toBeGreaterThan(-1);
     });
 
-    it("the -notes.md seed files dispose with their topic (spec-reviewer R6 gap)", () => {
+    it("the retired flat-disposal vocabulary is gone from finalizing (spec-reviewer R6 follow-up)", () => {
       const finalizing = read("skills/pwk-finalizing/SKILL.md");
-      expect(finalizing).toContain(M.notesDisposal);
+      expect(finalizing).not.toContain("notes.md");
+      expect(finalizing).not.toContain("-implementation.md");
     });
   });
 

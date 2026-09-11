@@ -13,7 +13,7 @@ Five sections, always: Summary / How it works / Key flows / Gotchas & invariants
 
 ## Contract
 
-- **On demand only.** Someone asks (or finalize suggests it as an optional follow-up); it never runs unprompted.
+- **On demand only.** Someone asks — or the ship checkpoint offers it when the code digest's Flow outgrows its cap (see `pwk-executing-tasks`); it never runs unprompted.
 - **Generated from code, not memory**: the branch diff (`<merge-base>...HEAD` — an unshipped branch is allowed, stamped at HEAD) plus the code as it exists now. Surviving artifacts (ADRs in `docs/adr/`, `docs/lessons.md`, an archived plan under `docs/plans/completed/`) are optional inputs — planning docs are usually gone by the time anyone asks, by design.
 - **Output**: `docs/walkthroughs/<topic>.md`, **stamped with the commit range** it describes.
 - **Regeneration overwrites wholesale.** The file is a generated cache of an explanation, never hand-edited; a re-run replaces it end to end. It is **never disposed** — finalize's globs do not touch `docs/walkthroughs/`.

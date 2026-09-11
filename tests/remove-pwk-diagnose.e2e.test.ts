@@ -164,9 +164,8 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
       }
     }
 
-    // R6's rule: new work is always a folder. A flat dated topic doc at the docs/plans top
-    // level is the retired shape reappearing — legacy flat topics stay readable and
-    // resumable, but are never newly written.
+    // R6's rule: every topic is a folder. A flat dated topic doc at the docs/plans top
+    // level is a retired shape reappearing — never newly written, never discovered.
     const flat = trackedFiles().filter((rel) =>
       /^docs\/plans\/\d{4}-\d{2}-\d{2}-[^/]+-(design|progress|review-packet.*|notes)\.md$/.test(rel),
     );
@@ -218,10 +217,10 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
     );
     expect(lint, "retired integration-gate wording").not.toMatch(/integration gate/);
 
-    // 6. Disposal precedence is stated, not implied: for a folder topic the flat globs must not
-    //    run, or a leaf slug that collides with an unrelated flat topic deletes a foreign doc.
-    expect(finalizing, "folder command takes precedence over the flat globs").toMatch(
-      /the folder command is the disposal/,
+    // 6. Disposal is folder-only: the retired flat per-file globs must not reappear, or a
+    //    leaf slug that collides with an unrelated topic's files deletes a foreign doc.
+    expect(finalizing, "flat per-file disposal globs are retired").not.toMatch(
+      /\?\?\?\?-\?\?-\?\?-<topic>-(design|progress|review-packet|notes|implementation)/,
     );
   });
 });

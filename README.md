@@ -115,7 +115,6 @@ A persistent rules file (`docs/lessons.md`) helps the agent learn from repeat mi
 
 ```
 brainstorm → reads lessons (design context)
-plan        → reads lessons (acceptance criteria / tests)
 execute     → reads lessons per requirement, writes new ones on repeat mistakes
 finalize    → reviews, generalizes, and retires stale rules
 ```

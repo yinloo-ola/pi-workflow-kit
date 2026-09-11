@@ -20,7 +20,6 @@ export const DIGEST_MARKERS = {
   coverageVerdicts: "covered | gap | scope-creep",
   umbrellaFolder: "docs/plans/<date>-<topic>/",
   mustBeDone: "must be `done`",
-  legacyPaused: "legacy `feature-complete-paused`",
 };
 
 /**
@@ -40,9 +39,7 @@ export const SINGLE_DOC_MARKERS = {
   neverManufactured: "never manufactured",
   designFlow: "design → execute → finalize",
   preFlightBranch: "create the feature branch",
-  parseRBlocks: "### R<n> blocks",
-  legacyStem: "stem-matched",
-  bothSuffixes: "both suffixes",
+  parseRBlocks: "read every `### R<n>:` heading",
   packetDesignSpan: "### R1",
   learningSweep: "learning sweep",
   beforeDisposal: "before any disposal",
@@ -138,7 +135,6 @@ export const WORKFLOW_CONSISTENCY_MARKERS = {
   resumeSkipsTerminal: "`✅`/`❌`/`⏭` are resolved",
   resumeTerminalRoute: "continue the next not-yet-terminal requirement",
   umbrellaBlockRule: "reads every part's file",
-  legacyFailureNote: "failure handling is unchanged",
   reasonInShipGate: "`❌` (failed, reason in row)",
   reasonSuffix: "as a suffix in the Requirement cell",
   coverageReconciled: "assertions removed or skipped with the reason",
@@ -156,8 +152,6 @@ export const WORKFLOW_CONSISTENCY_MARKERS = {
   // R4 — the At-a-glance Risk column is derived, display-only.
   riskDerived: "`⚠ production-risk` if and only if",
   riskDisplayOnly: "display-only",
-  // R6 — inventory parity + notes disposal.
-  notesDisposal: "????-??-??-<topic>-notes.md",
   // R7 — the doc-inventory parity lint.
   parityLint: "inventory parity",
   // R8 — packet base from the Commit column.

@@ -104,8 +104,11 @@ describe("review cost optimization feature (E2E)", () => {
     expect(commonPrefix(installedBodies)).toBe(shared);
     expect(notifications.join("\n")).toContain("installed");
 
-    // R8 — finalize disposes the packet with the plan docs (delete and archive paths).
+    // R8 — finalize disposes the packet with the plan docs (the topic folder is the
+    // disposal unit in both the delete and archive paths).
     const finalize = readRepo("skills/pwk-finalizing/SKILL.md");
-    expect((finalize.match(/\?\?\?\?-\?\?-\?\?-<topic>-review-packet\*.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(finalize).toContain("-review-packet*.md");
+    expect(finalize).toMatch(/rm -rf docs\/plans\/<date>-<topic>\//);
+    expect(finalize).toMatch(/mv docs\/plans\/<date>-<topic>\/ docs\/plans\/completed\//);
   });
 });

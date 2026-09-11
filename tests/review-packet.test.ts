@@ -9,7 +9,6 @@ const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** The recipe commands exactly as they must appear in the executing skill. */
 const CRITERIA_CMD = "sed -n '/^### R1/,/^## Feature acceptance/p'";
-const LEGACY_CRITERIA_CMD = "sed -n '/^## Requirement 1/,/^## Feature acceptance/p'";
 const FA_CMD = "sed -n '/^## Feature acceptance/,/^### Feature review/p'";
 const NOTES_CMD = "sed -nE '/^### Production-risk notes/,/^(## |### R[0-9])/p'";
 const NOTES_STRIP = "sed -E '/^(## |### R[0-9])/d'";
@@ -80,7 +79,6 @@ describe("review packet recipe", () => {
     expect((executing.match(/review-packet\.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(executing).toContain("no packet byte passes through model output");
     expect(executing).toContain(CRITERIA_CMD);
-    expect(executing).toContain(LEGACY_CRITERIA_CMD);
     expect(executing).toContain(FA_CMD);
     expect(executing).toContain(NOTES_CMD);
     expect(executing).toContain(FEATURE_BASE_DEF);
@@ -125,49 +123,6 @@ describe("review packet recipe", () => {
     expect(featureAcceptance).toContain("## Feature acceptance");
     expect(featureAcceptance).toContain("`should demo` — Given x, When y, Then z.");
     expect(featureAcceptance).not.toContain("Feature review: parallel");
-  });
-
-  it("should extract criteria verbatim from a legacy plan fixture (in-flight 1.x flow)", () => {
-    const dir = mkdtempSync(join(tmpdir(), "pwk-packet-legacy-"));
-    const legacyFixture = [
-      "# Implementation Plan: demo",
-      "",
-      "## Overview",
-      "Design: docs/plans/demo-design.md",
-      "",
-      "## Requirement 1: alpha",
-      "",
-      "### Acceptance criteria",
-      "- Given a, When b, Then c.",
-      "",
-      "### Production-risk notes",
-      "- touches redis: hot path",
-      "",
-      "## Requirement 2: beta",
-      "",
-      "### Acceptance criteria",
-      "- Given d, When e, Then f.",
-      "",
-      "## Feature acceptance",
-      "",
-      "- `should demo` — Given x, When y, Then z.",
-      "",
-      "### Feature review: parallel",
-      "",
-    ].join("\n");
-    writeFileSync(join(dir, "plan.md"), legacyFixture);
-
-    const criteria = execSync(`${LEGACY_CRITERIA_CMD} plan.md | sed '/^## Feature acceptance/,$d'`, {
-      cwd: dir,
-    }).toString();
-    expect(criteria).toContain("## Requirement 1: alpha");
-    expect(criteria).toContain("- Given a, When b, Then c.");
-    expect(criteria).toContain("## Requirement 2: beta");
-    expect(criteria).not.toContain("## Feature acceptance");
-
-    const notes = execSync(`${NOTES_CMD} plan.md | ${NOTES_STRIP}`, { cwd: dir }).toString();
-    expect(notes).toContain("touches redis: hot path");
-    expect(notes).not.toContain("## Requirement 2: beta");
   });
 
   it("should derive the packet base from the Commit column (spec-reviewer R8 gap)", () => {

@@ -54,6 +54,6 @@ Retire rules that no longer apply during finalizing.
 
 ## Context Economy
 
-- **Name scratch artifacts so the disposal pattern matches them, or delete them explicitly.** An ephemeral verification script parked beside plan docs (`docs/plans/`) survives finalizing when its suffix matches no disposal glob — the globs cover `-design`/`-implementation`/`-progress`/`-review-packet*` only. Either fit the naming pattern or remove the file by hand before disposing; verify with `ls` afterwards. Since the one-folder-per-topic layout, the safe place for scratch work is **inside the topic folder** `docs/plans/<date>-<topic>/`, which disposes wholesale whatever it holds — the risk now is a file dropped at the `docs/plans/` top level, outside every folder.
+- **Name scratch artifacts so the disposal pattern matches them, or delete them explicitly.** Finalizing disposes the topic folder `docs/plans/<date>-<topic>/` wholesale — a scratch file parked at the `docs/plans/` top level, outside every folder, matches no disposal unit and survives finalizing as stray clutter. Keep scratch work **inside the topic folder** so it rides the disposal, or remove it by hand before disposing; verify with `ls` afterwards.
 
 - **Gate and resume reads extract, never ingest.** A check that only needs a header line, a table, or a count must not read the file body — name the fields that can change the decision (header, table region, a count command) in the skill, so orientation costs scale with topic count instead of history size.

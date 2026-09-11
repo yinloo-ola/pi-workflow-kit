@@ -51,7 +51,9 @@ describe("spec-reviewer coverage table", () => {
     const checklist = body.slice(body.indexOf("## Your checklist"));
     expect(checklist).toMatch(/\| R# \| Verdict \| Evidence \|/);
     expect(checklist).toMatch(/covered \| gap \| scope-creep/);
-    expect(checklist).toMatch(/## Requirement N/);
+    expect(checklist).toMatch(/keyed by the design doc's `### R<n>:` headings/);
+    expect(checklist).toMatch(/## Acceptance criteria/);
+    expect(checklist).not.toMatch(/## Requirement N/);
     expect(checklist).toMatch(/No findings/);
     // The coverage mandate is role-specific: the other three checklists stay untouched.
     for (const name of ["pwk-tracing-reviewer", "pwk-smell-reviewer", "pwk-hazard-reviewer"]) {

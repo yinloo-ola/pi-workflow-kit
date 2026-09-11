@@ -8,11 +8,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- **Legacy 1.x support is dropped (breaking)** — the kit no longer routes or disposes pre-2.0 artifacts, and no migration is provided. Discovery covers `*-design.md` only (no `*-implementation.md` stem-matching), the `feature-spec-paused` / `feature-complete-paused` phase values are gone from the executing resume map, status mappings, and the finalizing gate, and the flat per-file disposal globs (`-design/-implementation/-progress/-review-packet/-notes`) are retired — the topic folder `docs/plans/<date>-<topic>/` is the only disposal unit. A legacy `spec` checkpoint value no longer resolves silently; the tag enum is `none | full`.
+- The dead `⏸ tests` per-req ceremony cell is gone — no `### Checkpoints` tag produces it (`full` fires the two stops).
 - **`pwk-diagnose` is gone (breaking)** — the skill directory and its guard unlock entry are deleted, so `/skill:pwk-diagnose` no longer resolves and no longer exits the gated phase. The kit never used it; any open-source debugging skill covers the need. `UNLOCK_SKILLS` is now `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-walkthrough`.
 
 ### Fixed
 
-- **Inventory docs no longer advertise the removed skill** — the roster tables, skill trees, unlock prose, ASCII diagram, and count claims in `README.md`, `docs/workflow-phases.md`, `docs/developer-usage-guide.md`, and `docs/oversight-model.md` were swept to the real roster (4 pipeline + 2 utility skills).
+- **Skill coherence sweep** across all six skills:
+  - The trivial fast-path design doc now explicitly omits `## Feature acceptance` (the full existing suite is its ship gate), and `pwk-executing-tasks` handles its absence at every point — first run (skip E2E + notice), resume (no E2E write), and the ship gate — instead of the audit unconditionally demanding the section.
+  - The requirement row's `✅` has one owner: `pwk-code-review` reports findings and never edits the progress file; the executing loop flips `🔄`→`✅` (and writes the execution-summary row in the same step) only after a per-requirement review returns clean. Previously the executing loop marked `✅` at commit while the review contract expected the row to still be `🔄`.
+  - The per-requirement review is sequenced into the implement loop (commit → review → mark ✅) instead of running after the row was already marked `✅`.
+  - `pwk-walkthrough`'s contract no longer claims finalize suggests it — the offer lives at the ship checkpoint when the digest's Flow outgrows its cap, as `pwk-executing-tasks` already stated.
+  - The ADR path names its real mechanism: the human writes the approved ADR or briefly runs `/pwk-guard off`; the design phase never unlocks `docs/adr/`. The single-decision approval is an "ADR offer", not an "unlock".
+  - Brainstorming now uses the `<date>-<topic>` placeholder and the `<leaf>-review-packet*.md` glob consistently (was `<date>-<umbrella>` and `*-review-packet.md`), and the ship-checkpoint heading drops the retired `feature-complete` name.
+  - `pwk-finalizing` verifies the repo root before running the suite, and its stale `-notes.md` disposal glob (no skill ever created one) is gone.
+  - The spec-reviewer role contract keys its coverage table to the design doc's `### R<n>:` headings as carried verbatim in the packet's `## Acceptance criteria` section (was `## Requirement N` — a heading shape the packet has never carried), and the tracing role traces against the acceptance criteria and the feature-acceptance E2E scenarios (was "the integration tests", the stale term the inline path already routed around). Both test pins re-anchored; skill-lint now bans the retired terms in the role contracts too.
+  - A trivial design doc's feature review is explicit: its missing `### Feature review` tag defaults to `auto` and runs at the ship checkpoint (typically one inline pass) — "always present, never per requirement" previously left the trivial path ambiguous.
+  - The umbrella next-leaf suggestion distinguishes unstarted (no progress file → `/skill:pwk-brainstorming`) from mid-flight (progress file not `done` → resume `/skill:pwk-executing-tasks`) leaves instead of always proposing a brainstorm.
+  - `pwk-code-review`'s per-requirement scope names the real invocation paths — `Review: inline`, or inline-completing a missing delegated role when the tag is `parallel` (four roles, not this skill, run that review).
+  - `pwk-finalizing`'s pre-check item 4 (roster cross-check) is a list item again — it was glued to the end of item 3.
+  - The inventory docs name walkthrough wherever the unrestricted-phase list appears (oversight-model, developer-usage-guide), and oversight-model's recon-fallback wording matches the skill (the same five-section recon inline, not "the role inline").
+  - README's lessons-read diagram no longer lists the removed `plan` phase; `docs/lessons.md`'s scratch-artifact lesson describes the current topic-folder disposal instead of the retired flat globs.
+  - Inventory docs no longer advertise the removed skill — the roster tables, skill trees, unlock prose, ASCII diagram, and count claims in `README.md`, `docs/workflow-phases.md`, `docs/developer-usage-guide.md`, and `docs/oversight-model.md` were swept to the real roster (4 pipeline + 2 utility skills).
 
 ### Changed
 

@@ -36,18 +36,16 @@ describe("pwk 2.0 single-doc feature (E2E)", () => {
     expect(tableIdx).toBeGreaterThan(decisionsIdx);
 
     // R3 — the guard maps only brainstorming to a phase; executing parses the
-    // blocks, creates the branch, routes legacy docs, and the packet seds the
-    // design doc; the flow is design → execute → finalize.
+    // blocks, creates the branch, and the packet seds the design doc; the flow
+    // is design → execute → finalize. The 1.x legacy routing is retired.
     const guard = read("extensions/workflow-guard.ts");
     expect(guard).not.toMatch(/pwk-writing-plans/);
     expect(guard).toMatch(/"brainstorm" \| null/);
     const executing = read("skills/pwk-executing-tasks/SKILL.md");
     expect(executing).toContain(SINGLE_DOC_MARKERS.preFlightBranch);
     expect(executing).toContain(SINGLE_DOC_MARKERS.parseRBlocks);
-    expect(executing).toContain(SINGLE_DOC_MARKERS.legacyStem);
-    expect(executing).toContain(SINGLE_DOC_MARKERS.bothSuffixes);
     expect(executing).toContain(SINGLE_DOC_MARKERS.packetDesignSpan);
-    expect(read("skills/pwk-status/SKILL.md")).toContain(SINGLE_DOC_MARKERS.bothSuffixes);
+    expect(executing).not.toContain("*-implementation.md");
     expect(existsSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"))).toBe(true);
     const adr = readFileSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"), "utf8");
     expect(adr).toContain("plan phase merged into brainstorm");
