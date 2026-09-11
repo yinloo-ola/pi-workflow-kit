@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.3.0] - 2026-09-11
+
+### Fixed
+
+- **Workflow-consistency audit batch (F1–F15)** — closes all 15 defects found at the end of `leaner-execution-gates`:
+  - **Terminal-state ship gate (F1, F13)** — `Feature phase: done` now means every requirement row is resolved (`✅`/`❌`/`⏭`), not all-`✅`. pwk-finalizing's `❌`-block / `⏭`-warn / `--force-failed` branches become reachable as written; the ship digest lists every failed/skipped row with its reason; resume skips past terminal rows; `pwk-status` renders `done` with verdict counts. Marking a row terminal reconciles its test coverage in the same step. Recorded in ADR 0007.
+  - **One row-state and ceremony vocabulary (F4)** — `pwk-executing-tasks` canonically defines the Done glyphs and ceremony echo values; `pwk-code-review` only ever flips `🔄`→`✅` (the phantom `🔎 review` value is gone).
+  - **Setup checkpoint made implementable (F2, F3)** — the progress file is created before the checkpoint with a `Setup:` header slot (`pending | done | n/a`); approval flips it to `done`; a crash-resume re-verifies on `pending`. `pwk-status` renders `awaiting setup`. Checkpoint-count claims reworded conditionally.
+  - **Derived At-a-glance Risk column (F5)** — `⚠ production-risk` iff the block carries non-empty `### Production-risk notes`, else `—`; display-only, never normative; `auto` still reads notes only.
+  - **Feature-acceptance template renders its review tag (F6)** — the brainstorming template's FA block carries its `### Feature review` line, pinned by skill-lint.
+  - **Inventory doc parity sweep (F7–F11)** — `pwk-walkthrough` in all four inventory docs and all three unlock-prose sites; guard table corrected; plan-phase vocabulary to design/execute/finalize; `pwk-code-review` plan remnants repaired. Finalizing's disposal globs learn `-notes.md`.
+  - **Doc-inventory parity lint (F14)** — new skill-lint section asserts the skill roster, unlock prose, and count claims against the real `skills/` tree; drift fails CI in both directions.
+  - **Packet base from the Commit column (F12)** — step 6 records the commit hash; the feature packet bases on the parent of the first recorded commit; per-requirement spans chain previous-last to this-last. The bare `<merge-base>` placeholder leaves the recipe.
+  - **Diagnose ↔ execution recording hook (F15)** — mid-execution fixes are mandatory execution-summary content; `pwk-diagnose` records the fix in the progress file.
+
 ## [2.2.0] - 2026-09-11
 
 ### Changed
