@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CODE_DIGEST_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, LEAN_GATES_MARKERS } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -93,6 +93,28 @@ describe("code-digest per-slice", () => {
     expect(rules).toContain(CODE_DIGEST_MARKERS.alertReviewerConfirmedOnly);
     expect(rules).toContain(CODE_DIGEST_MARKERS.honestEmptyGotchas);
     expect(rules).toContain(CODE_DIGEST_MARKERS.keyFilesCap);
+  });
+
+  // leaner-execution-gates R5 — the Flow becomes a navigable map: spine + branches +
+  // was: clauses + inline values + side effects, symbol-labelled, no line numbers.
+  it("should enrich the Flow into a spine/branches map with no line numbers", () => {
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const flowAt = executing.indexOf("**Flow shape**");
+    expect(flowAt).toBeGreaterThan(-1);
+    const flow = executing.slice(flowAt, flowAt + 1400);
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowSpine); // Spine
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowBranches); // Branches
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowWasClause); // was:
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowSideEffects); // Side effects
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowNoLineNumbers);
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowCap); // 15 lines
+    expect(flow).toContain(LEAN_GATES_MARKERS.flowWalkthroughOffer);
+    expect(flow).toMatch(/symbol|module/); // greppable labels, not paths
+    // honest-empty: the was: clause and the side-effects line are both optional
+    expect(flow).toMatch(/additive|no was:/i);
+    expect(flow).toMatch(/omit/i);
+    // the [R#] hop tag ties the Flow to the coverage table
+    expect(flow).toContain("[R<n>]");
   });
   it("should exclude completed/ from every recursive discovery glob", () => {
     const sites: Array<[string, string]> = [

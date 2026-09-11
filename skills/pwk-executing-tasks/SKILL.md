@@ -47,12 +47,27 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
    <!-- Written once, after the feature review passes; never back-filled per requirement. -->
 
    ### Summary — 2–3 sentences: what the code now does differently, and why.
-   ### Flow — execution/data movement through the changed code, as arrow chains.
+   ### Flow
+   Spine
+     <entry point> -> [R1] <step, named by symbol or module> -> [R2] <step> -> <outcome>
+   Branches
+     <condition> -> <outcome>   [R2]        <!-- every alternative and error path -->
+     <changed behavior>   was: <previous behavior>
+   Side effects
+     reads: <what>   writes: <what>          <!-- only when the feature does I/O -->
    ### Gotchas — edge cases, implicit assumptions; [ALERT]-prefixed real risks.
    ### Key files — 3–5 pivotal files, one line each: what shifted inside them.
    ```
 
    The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Flow` uses `A -> B -> C` arrow chains. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
+
+   **Flow shape** — this is the ship stop's navigable map, so it is the one digest section that carries structure, not just prose:
+
+   - **Spine** — the happy path as `A -> B -> C` hops, each hop named by symbol or module, with no line numbers anywhere and no file paths: symbol names survive edits and stay greppable, so a stale anchor can never mislead. Tag each hop `[R<n>]` with the requirement it comes from — that is what lets the coverage table's verdict rows be traced into the code without opening the diff.
+   - **Branches** — every alternative and error path as `condition -> outcome` (a linear spine with no branches reads as "there are no edge cases", which is rarely true). Put ⚠️ on the genuinely surprising ones. Add a `was: <previous behavior>` clause for each requirement whose behavior changed; skip it for purely additive requirements — honest-empty, never invented.
+   - **Inline worked values** — where a mapping is non-obvious, show it concretely (`` `implementing (2/5)` -> `execute 2/5` ``), so a reader can falsify it without running anything.
+   - **Side effects** — a line naming what is read and written, only when the feature performs I/O, network, or migrations; omit it entirely otherwise rather than filling a placeholder.
+   - **Cap: roughly 15 lines.** If the change genuinely needs more, the ship checkpoint **offers `/skill:pwk-walkthrough`** as the deep read (it regenerates a `file:line`-anchored walkthrough on demand) instead of growing the digest — the digest is what the human reads at the one remaining stop, and an unbounded Flow recreates the digging it exists to prevent.
 
    `Feature phase` is one of: `e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`. (A legacy progress file's `Plan:` ref points at its implementation doc — follow that chain instead.)
 
