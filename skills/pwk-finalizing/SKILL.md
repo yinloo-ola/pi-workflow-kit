@@ -11,10 +11,10 @@ Ship the completed work.
 
 1. **Verify the repo root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts).
 2. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
-3. Read **every** relevant progress file — for a multi-leaf topic that's each leaf's progress file — discovered by listing `docs/plans` recursively, excluding docs/plans/completed/, for `*-progress.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. Match the `Feature phase:` line (e.g. `grep -m1 '^Feature phase:' <file>`) and read only the matching ❌/⏭ verdict rows in the Requirements table (e.g. `grep '^| [0-9].*❌' <file>` / `grep '^| [0-9].*⏭' <file>` — Requirements-table rows only, with reasons); the sections after the tables carry nothing the gate needs. For a single-leaf topic, apply these to its one progress file:
-   - **Any `❌ failed`** (in any leaf) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
+3. Read **every** relevant progress file — for a multi-leaf topic that's each leaf's progress file — discovered by listing `docs/plans` recursively, excluding docs/plans/completed/, for `*-progress.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. More than one topic in flight? Ask which one this finalize ships — finalizing touches only its own topic, and another topic still being designed or executed never blocks this run. Then match, in the chosen topic's file(s), the `Feature phase:` line (e.g. `grep -m1 '^Feature phase:' <file>`) and read only the matching ❌/⏭ verdict rows in the Requirements table (e.g. `grep '^| [0-9].*❌' <file>` / `grep '^| [0-9].*⏭' <file>` — Requirements-table rows only, with reasons); the sections after the tables carry nothing the gate needs. Apply the gates below to the chosen topic's file(s) and no others:
+   - **Any `❌ failed`** (in any leaf of the topic) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
    - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
-   - **`Feature phase` must be `done`** in every progress file — any other value (`e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`) means the feature is still in flight: the ship checkpoint has not been approved. Send the user back to `/skill:pwk-executing-tasks` instead of finalizing.
+   - **`Feature phase` must be `done`** in every progress file of the topic — any other value (`e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`) means that topic is still in flight: its ship checkpoint has not been approved. Send the user back to `/skill:pwk-executing-tasks` instead of finalizing.
 4. **Cross-check the roster — fail closed on unstarted work.** Find the topic folder locally: the progress file's `Design:` ref names the design doc, and that directory is the topic folder. An `overview.md` **beside the design doc** (same folder — never a repo-wide `docs/plans/**/overview.md`, or a sibling topic's overview would route this finalize) means a multi-leaf topic. Read that overview's `## Parts (build order)` roster and require one `<leaf>-progress.md` per leaf. A roster leaf with no progress file is **unstarted** — **block**, naming the leaf, and send the user back to `/skill:pwk-executing-tasks` to build it; never dispose an unstarted design unread. (A leaf with a progress file that is not `done` is already stopped by the gate above.)
 
 ## Process
@@ -24,7 +24,7 @@ Ship the completed work.
    - **Single-leaf topic**: progress file → `Design:` ref → that design doc's own folder → `<topic>`, which **is the folder slug** — the topic directory's name, and the same value `pwk-executing-tasks` uses for the branch and worktree (never a leaf filename). One folder.
 
    Ambiguous with several designs in flight? Ask.
-2. **Run the learning sweep — before any disposal command.** The planning docs are about to be destroyed; extract the durable knowledge first, while its container still exists. Read the design doc's At-a-glance key-decision bullets **and its `Approaches considered` section** (the full forks with their reasoning), the progress file's `Deviated?` entries (including any deviation decision-records), and the Code digest's `[ALERT]` entries. (A trivial doc has no `## At a glance` and no `Approaches considered` — a trivial slice's sweep is expected to come up honest-empty.) Then:
+2. **Run the learning sweep — before any disposal command.** The planning docs are about to be destroyed; extract the durable knowledge first, while its container still exists. Read each design doc's At-a-glance key-decision bullets **and its `Approaches considered` section** (the full forks with their reasoning — every leaf's, for an umbrella), each progress file's `Deviated?` entries (including any deviation decision-records), and each Code digest's `[ALERT]` entries. (A trivial doc has no `## At a glance` and no `Approaches considered` — a trivial slice's sweep is expected to come up honest-empty.) Then:
    - **Offer an ADR** (in `docs/adr/`) for each item that passes the three gates — **hard to reverse**, **surprising without context**, **a real trade-off** — informed by how the decision actually played out during execution, not just how it looked at design time.
    - **Append generic rules** to `docs/lessons.md` (strip domain specifics).
    - Both outputs are **honest-empty**: most features qualify for nothing — say so and move on; never manufacture. When an item passes the gates but the recorded material is too thin to draft a credible ADR, **ask the human rather than fabricating** context — the human was there.
@@ -38,7 +38,9 @@ Ship the completed work.
      # The folder path is taken verbatim from discovery — never typed or
      # reconstructed (rm -rf has no glob guard):
      rm -rf docs/plans/<date>-<topic>/
-     git add -A docs/plans/ && git commit -m "chore: delete planning docs for <topic>"
+     git add -A docs/plans/<date>-<topic>/ && git commit -m "chore: delete planning docs for <topic>"
+     # the add is scoped to the topic pathspec, so another in-flight topic's
+     # uncommitted drafts never ride the disposal commit.
      ```
 
    - **Archive** — keep the planning history for future readers (e.g. a complex design worth preserving) by moving the artifacts into `docs/plans/completed/`:
@@ -51,7 +53,9 @@ Ship the completed work.
      # the history the human chose to keep:
      mv docs/plans/<date>-<topic>/ docs/plans/completed/
      ls docs/plans/completed/<date>-<topic>/ >/dev/null
-     git add docs/plans/ && git commit -m "chore: archive planning docs for <topic>"
+     # both sides of the move, and nothing else — another in-flight topic's
+     # uncommitted drafts never ride the archive commit:
+     git add -A docs/plans/<date>-<topic>/ docs/plans/completed/ && git commit -m "chore: archive planning docs for <topic>"
      ```
 
    Verify with `ls docs/plans/` before and after. Both paths commit the disposal so the shipped branch is clean. Neither path touches `docs/adr/`, `docs/lessons.md`, `CHANGELOG.md`, or `README.md` — those are permanent.

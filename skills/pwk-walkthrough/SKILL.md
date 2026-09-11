@@ -28,7 +28,7 @@ Five sections, always: Summary / How it works / Key flows / Gotchas & invariants
    ```markdown
    # Walkthrough: <topic>
 
-   Generated from <merge-base>..<HEAD> — file references are valid at that range.
+   Generated from <merge-base>...<HEAD> — file references are valid at that range.
 
    ## Summary
    2–4 sentences: what this feature does and what changed.
