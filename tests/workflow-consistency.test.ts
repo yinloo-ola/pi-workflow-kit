@@ -105,4 +105,14 @@ describe("workflow-consistency per-slice", () => {
       }
     });
   });
+
+  describe("R4 — derived At-a-glance Risk column", () => {
+    it("states the derivation rule and the display-only declaration exactly once", () => {
+      const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+      expect(brainstorming).toContain(M.riskDerived);
+      expect(brainstorming).toContain(M.riskDisplayOnly);
+      const occurrences = brainstorming.split(M.riskDisplayOnly).length - 1;
+      expect(occurrences, "display-only declaration must be singular").toBe(1);
+    });
+  });
 });
