@@ -170,6 +170,50 @@ describe("review packet recipe", () => {
     expect(notes).not.toContain("## Requirement 2: beta");
   });
 
+  it("should derive the packet base from the Commit column (spec-reviewer R8 gap)", () => {
+    // Build a real repo: three commits, a progress file recording them, then run
+    // the skill's own FEATURE_BASE extraction verbatim and assert the span rule.
+    const dir = mkdtempSync(join(tmpdir(), "pwk-packet-base-"));
+    const git = (cmd) => execSync(cmd, { cwd: dir }).toString().trim();
+    git("git init -q -b main && git config user.email t@t && git config user.name t");
+    const sha = [];
+    git("git commit -qm seed --allow-empty");
+    for (const [name, body] of [
+      ["a", "alpha"],
+      ["b", "beta"],
+      ["c", "gamma"],
+    ]) {
+      writeFileSync(join(dir, `${name}.txt`), body);
+      git(`git add ${name}.txt && git commit -qm ${name}`);
+      sha.push(git("git rev-parse HEAD"));
+    }
+    const progress = [
+      "# Progress: demo",
+      "",
+      "## Requirements",
+      "| # | Done | Requirement | Per-req ceremony | Commit |",
+      "|---|---|-------------|-----------------|--------|",
+      `| 1 | ✅ | alpha | — | ${sha[0]} |`,
+      `| 2 | ✅ | beta | — | ${sha[1]} |`,
+      `| 3 | ✅ | gamma | — | ${sha[2]} |`,
+      "",
+    ].join("\n");
+    writeFileSync(join(dir, "progress.md"), progress);
+    // The FEATURE_BASE one-liner exactly as the skill recipe defines it.
+    const first = git(
+      `grep -m1 -o '^| [0-9]* | [^|]* | [^|]* | [^|]* | [0-9a-f]\\{7,\\}' progress.md | grep -o '[0-9a-f]\\{7,\\}' | head -1`,
+    );
+    expect(first).toBe(sha[0]);
+    const base = git(`git rev-parse ${first}^`);
+    expect(base).toBe(git(`git rev-parse HEAD~3`));
+    // R3's packet spans the previous requirement's last commit (exclusive) to
+    // this one's last commit (inclusive).
+    const r3span = git(`git log --format=%s ${sha[1]}..${sha[2]}`);
+    expect(r3span).toBe("c");
+    const r2span = git(`git log --format=%s ${sha[0]}..${sha[1]}`);
+    expect(r2span).toBe("b");
+  });
+
   it("should scope per-requirement reviews to the requirement", () => {
     const executing = readExecuting();
     expect(executing).toMatch(
