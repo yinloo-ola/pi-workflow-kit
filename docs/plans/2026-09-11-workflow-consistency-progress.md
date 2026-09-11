@@ -4,7 +4,31 @@ Design: docs/plans/2026-09-11-workflow-consistency-design.md
 Branch: workflow-consistency
 Started: 2026-09-11T07:16:58Z
 Last updated: 2026-09-11T07:16:58Z
-Feature phase: implementing (9/9)
+Feature phase: reviewing
+
+## Review reports
+
+### Spec alignment — coverage table (feature review)
+
+| R# | Verdict | Evidence |
+|----|---------|----------|
+| 1 | covered | executing:96-99, code-review:36; per-slice R1 |
+| 2 | covered | executing:131,142,87, status:14-15; per-slice R2 (5 its) + E2E sc3 |
+| 3 | covered | executing:20-76 + resume rule, status:14; per-slice R3 + E2E sc4 |
+| 4 | covered | brainstorming:94; per-slice R4 |
+| 5 | covered | brainstorming:106-110 fence, skill-lint FA_TAG, packet fixtures; per-slice R5 + E2E sc2 |
+| 6 | gap -> fixed | finalizing:37,53 lacked the -notes.md glob; code-digest pins froze the omission; landed + per-slice R6 notes-disposal pin |
+| 7 | covered | skill-lint parity section; per-slice R7 + E2E sc1 |
+| 8 | gap -> fixed | prose pins only, no executable span fixture; real-repo c1^/c2..c3 fixture added |
+| 9 | covered | executing implement-phase mandate, diagnose:57; per-slice R9 |
+
+### Code tracing — no broken traces on any asserted path
+
+Untested branches noted: (1) lint negative paths described-not-executed -> verified live post-review (8th pwk-* dir fails real lint, exit 1); (2) statusVerdictGrep single-suite coverage (accepted); (3) legacy routing text-pinned not behavior-executed (accepted, kit idiom).
+
+### Code smells — no findings (split node:fs import merged)
+
+### Production hazards — all 7 SAFE, no findings
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
