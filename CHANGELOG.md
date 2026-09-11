@@ -52,6 +52,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Umbrella later-parts reporting covers a prior leaf with no progress file (`not started`) instead of leaving the header-only grep to fail silently.
   - `pwk-walkthrough`'s generated stamp uses the same `<merge-base>...<HEAD>` range operator as its contract (was `..` in one and `...` in the other).
   - Doc wording: workflow-phases' feature-acceptance description composes requirements into "the feature" (was "the PRD's behavior" — the kit has no PRD); oversight-model's code-review bullet starts "Successful" mid-bullet.
+- **Fourth coherence pass** (re-review after the third):
+  - `pwk-executing-tasks`' tags-reference table escapes its in-cell pipes (`none \| full`, `skip \| parallel \| inline`, `auto \| parallel \| inline`) — GFM splits table cells on unescaped `|` even inside code spans, so all three rows rendered as six broken columns. `tests/markers.mjs`' `checkpointsEnumRow` re-anchored to the escaped form, and skill-lint's vocabulary parser tolerates `\|`.
+  - The ship presentation's coverage-table bullet names its source per mode — the spec-reviewer report in `parallel`, the inline pass's spec alignment in `inline` (was unconditionally "from the spec-reviewer report", which has no referent when the feature review runs as one `pwk-code-review` pass).
+  - The ship checkpoint's trivial path is now stated at its remaining mentions: the green-gates line presents the suite line alone (a trivial doc has no E2E), and the feature review's re-green gate is the full suite only.
+  - The post-review presentation block routes the next part per the routing paragraph's own rule — brainstorm for an unstarted leaf, executing-tasks for a designed or mid-flight one (was a hardcoded `(<next topic>)` brainstorm suggestion, which contradicted the routing and implied a new topic folder inside an existing umbrella).
+  - `pwk-finalizing`'s merge and cleanup steps are followable from the worktree-resident session `pwk-executing-tasks` can hand off: parent-side commands (merge onto parent, push parent, branch deletion) run from the main working tree via `git -C` — the topic worktree holds the feature-branch checkout, so the parent cannot be checked out there; the worktree removal precedes the branch deletion (a branch checked out in a worktree cannot be deleted); and `git worktree remove` is driven from the main side because git refuses to remove the tree the session stands in.
+  - `pwk-brainstorming` pins the literal `## Approaches considered` heading — finalizing's learning sweep reads that section by name, but brainstorming only listed "approaches considered" in lowercase prose, so a template-conformant doc could silently starve the sweep.
 
 ### Changed
 

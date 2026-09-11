@@ -79,11 +79,12 @@ function vocabOf(text, label, exclude) {
   for (const line of lines) {
     if (!line.includes(label)) continue;
     if (exclude && line.includes(exclude)) continue;
-    // Match `|`-separated tokens, tolerating backticks, spaces, and a leading colon/paren.
+    // Match `|`-separated tokens, tolerating backticks, spaces, a leading colon/paren, and
+    // GFM-escaped pipes in table cells (`none \| full`).
     // e.g. "### Checkpoints: none | full" and "accepted values: `parallel | inline | skip`)".
-    const pipeMatch = line.match(/[`:]\s*`?([a-z]+(?:\s*\|\s*`?[a-z]+)+)`?/);
+    const pipeMatch = line.match(/[`:]\s*`?([a-z]+(?:\s*\\?\|\s*`?[a-z]+)+)`?/);
     if (pipeMatch) {
-      for (const t of pipeMatch[1].split("|")) hits.add(t.replace(/`/g, "").trim());
+      for (const t of pipeMatch[1].split("|")) hits.add(t.replace(/[`\\]/g, "").trim());
     }
   }
   return hits;

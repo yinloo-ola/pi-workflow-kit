@@ -96,8 +96,9 @@ export const LEAN_GATES_MARKERS = {
   // R4 — the `spec` checkpoint value is gone.
   checkpointsEnum: "### Checkpoints: none | full",
   // The executing skill's tags reference is a table (skill-slimming S3), so its enum shows as
-  // tag + values cells instead of a single header line. Same behavior, different shape.
-  checkpointsEnumRow: "`### Checkpoints` | `none | full`",
+  // tag + values cells instead of a single header line. Same behavior, different shape. Cell
+  // pipes are GFM-escaped (`\|`) so the row renders as columns instead of splitting.
+  checkpointsEnumRow: "`### Checkpoints` | `none \\| full`",
   // R5 — the enriched Flow shape.
   flowSpine: "Spine",
   flowBranches: "Branches",

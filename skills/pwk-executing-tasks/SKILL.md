@@ -136,16 +136,16 @@ When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, 
 
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
 2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. (A `❌`/`⏭` requirement's assertions were reconciled when its row went terminal, so a still-red E2E still means a requirement is missing or wrong.) If it is still red, a requirement is missing or wrong — fix it before proceeding. (A trivial design doc has no `## Feature acceptance` — the full suite staying green is its gate instead.)
-3. **Run the feature review** (below) per the design's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. (A trivial design doc carries no `### Feature review` tag — the missing tag defaults to `auto`, which resolves on its risk content; a trivial diff is typically `inline`, one pass.) The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
+3. **Run the feature review** (below) per the design's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. (A trivial design doc carries no `### Feature review` tag — the missing tag defaults to `auto`, which resolves on its risk content; a trivial diff is typically `inline`, one pass, and there is no E2E to re-green — the full suite is the gate.) The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
 4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Never a gate: it explains the change, it does not block shipping.
 
    **Reconcile the Flow against reviewed reality before writing it.** The Flow is written from what was reviewed, not from recollection: in `parallel` mode every hop must correspond to a path the tracing reviewer's report names — no hop invented, no reported path dropped. In `inline` mode there is no separate tracing report — the inline pass itself performs code tracing — so check the Flow against that pass's tracing findings and spec-coverage result instead. A discrepancy you cannot resolve is **surfaced** to the human in the ship checkpoint's findings status, never smoothed over by writing a Flow that omits the path.
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
-   - a green-gates line: full suite green, feature E2E green;
+   - a green-gates line: full suite green, feature E2E green (trivial doc: the suite line alone — there is no E2E);
    - the **execution summary** — what each requirement became, deviations included;
    - the **verdict rows** — list every `❌`/`⏭` row with its reason, so the approval is given knowing what failed;
    - the **code digest** — the plain-language change explanation from the progress file (summary, flow, gotchas, key files);
-   - the **coverage table** from the spec-reviewer report (one verdict row per R#);
+   - the **coverage table** (one verdict row per R#) — from the spec-reviewer report in `parallel` mode, from the inline pass's spec alignment in `inline` mode;
    - findings status: fixed / open for the human;
    - "full diff on request" — the raw diff is one command away; show a hunk only where a verdict or finding makes the human ask.
 
@@ -202,9 +202,9 @@ The design doc tags each requirement and the feature level:
 
 | Tag | Values | Default | Fires |
 |-----|--------|---------|-------|
-| `### Checkpoints` | `none | full` | `none` | per-requirement human stops — `full` = tests + complete stops |
-| `### Review` | `skip | parallel | inline` | `skip` | per-requirement review — `parallel` = four delegated reviewers; `inline` = one `pwk-code-review` pass |
-| `### Feature review` | `auto | parallel | inline` | `auto` | the one whole-feature review — always present, never per requirement |
+| `### Checkpoints` | `none \| full` | `none` | per-requirement human stops — `full` = tests + complete stops |
+| `### Review` | `skip \| parallel \| inline` | `skip` | per-requirement review — `parallel` = four delegated reviewers; `inline` = one `pwk-code-review` pass |
+| `### Feature review` | `auto \| parallel \| inline` | `auto` | the one whole-feature review — always present, never per requirement |
 
 Nothing is tagged silently: **only the human tags** a slice, and the feature review covers everything else. How each tag resolves lives where its decision executes — the [per-requirement review](#per-requirement-review-opt-in) and the [feature review](#feature-review).
 
@@ -239,7 +239,7 @@ Feature phase: done
 | 1 | ✅ | <name> |
 | … | … | … |
 
-   - Next part: /skill:pwk-brainstorming (<next topic>)   ← umbrella, more parts remain
+   - Next part: /skill:pwk-brainstorming (unstarted leaf) or /skill:pwk-executing-tasks (designed or mid-flight) — per the routing above   ← umbrella, more parts remain
    - Ship: /skill:pwk-finalizing                          ← standalone, or last umbrella part
 ```
 
