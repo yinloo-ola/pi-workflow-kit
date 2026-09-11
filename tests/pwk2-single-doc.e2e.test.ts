@@ -20,7 +20,9 @@ describe("pwk 2.0 single-doc feature (E2E)", () => {
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.criteriaInBlock);
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.noTestNameLists);
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.auditExactlyOnce);
-    expect(brainstorming).toContain(SINGLE_DOC_MARKERS.autoTagTruth);
+    // leaner-execution-gates R1: the auto-tag rule and its single-source claim are removed.
+    expect(brainstorming).toContain("only the human tags");
+    expect(brainstorming).not.toContain(SINGLE_DOC_MARKERS.autoTagTruth);
     expect(brainstorming).not.toContain("Crosswalk");
     expect(existsSync(join(repoRoot, "skills/pwk-writing-plans"))).toBe(false);
 

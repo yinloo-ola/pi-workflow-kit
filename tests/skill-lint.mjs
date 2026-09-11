@@ -375,59 +375,45 @@ if (bs) {
     fail("pwk-brainstorming: must skip scout on trivial changes (proportionality shortcut)");
   }
 }
-// R2: auto-tag rule — since pwk 2.0 the tags live in the design doc's requirement
-// blocks, so pwk-brainstorming owns the rule (non-empty Production-risk notes ⇒
-// Review: parallel). The marker must be unique to this rule.
+// R2 (leaner-execution-gates R1): the per-requirement review auto-tag is DELETED.
+// The human owns `### Review` — nothing is tagged silently. The old rule (non-empty
+// Production-risk notes ⇒ Review: parallel) must not survive anywhere, and no skill may
+// re-introduce a silent tag. Markers are absence-shaped so a stale skill fails.
 if (bs) {
-  if (/Production-risk notes/.test(bs.content) && /Review:\s*parallel/.test(bs.content)) {
-    ok("pwk-brainstorming: documents Production-risk notes → Review: parallel auto-tag");
+  if (/only the human tags/i.test(bs.content)) {
+    ok("pwk-brainstorming: only the human tags a slice for review");
   } else {
-    fail("pwk-brainstorming: must document the auto-tag rule (Production-risk notes ⇒ Review: parallel)");
+    fail("pwk-brainstorming: must state that only the human tags a slice");
   }
-  // The default must still be `skip` for requirements WITHOUT risk notes (no over-broaden).
-  if (/Review:\s*skip/.test(bs.content)) {
-    ok("pwk-brainstorming: still documents `Review: skip` as the default (no over-broaden)");
+  if (/Production-risk notes/.test(bs.content) && !/Review:\s*parallel/.test(bs.content)) {
+    ok("pwk-brainstorming: risk notes no longer imply `Review: parallel` (auto-tag removed)");
   } else {
-    fail("pwk-brainstorming: must keep `Review: skip` as the default for non-risky requirements");
+    fail("pwk-brainstorming: must not map Production-risk notes to `Review: parallel`");
   }
-  // The auto-tag must be presented as editable (the human can downgrade it).
-  if (/edit/i.test(bs.content) && /downgrade|change|override/i.test(bs.content)) {
-    ok("pwk-brainstorming: auto-tag is editable (human can downgrade before approval)");
+  // The default must still be `skip` for requirements the human does not tag.
+  if (/### Review: skip \| parallel \| inline/.test(bs.content)) {
+    ok("pwk-brainstorming: still documents `### Review: skip | parallel | inline`");
   } else {
-    fail("pwk-brainstorming: must document that the auto-tag is editable");
-  }
-  // Negative case: the auto-tag must require a NON-EMPTY Production-risk notes section.
-  if (/non-empty[^\n]*Production-risk notes|Production-risk notes[^\n]*non-empty/i.test(bs.content)) {
-    ok("pwk-brainstorming: auto-tag requires non-empty Production-risk notes (negative case)");
-  } else {
-    fail("pwk-brainstorming: must qualify the auto-tag with `non-empty` (empty notes must not trigger)");
-  }
-  // The rule must be single-sourced: pwk-brainstorming owns the auto-tag concept pair
-  // (`auto-tag` + `Production-risk notes`). Any other skill that mentions both must do so
-  // in a line that also names `pwk-brainstorming` (link by name, do not restate).
-  const restated = loadSkills().filter((s) => s.name !== "pwk-brainstorming");
-  let restateViolations = 0;
-  for (const s of restated) {
-    const lines = s.content.split("\n");
-    for (const line of lines) {
-      const hasConcept = /auto-tag/i.test(line) && /Production-risk notes/.test(line);
-      if (!hasConcept) continue;
-      if (!/pwk-brainstorming/.test(line)) {
-        restateViolations++;
-        fail(`${s.name}: restates the auto-tag rule without linking to pwk-brainstorming: "${line.trim()}"`);
-      }
-    }
-  }
-  if (restateViolations === 0) {
-    ok("pwk-brainstorming: auto-tag rule is single-source (other skills do not restate it)");
+    fail("pwk-brainstorming: must keep the Review tag vocabulary with `skip`");
   }
 }
-// R3: pwk-executing-tasks must reference pwk-brainstorming for the auto-tag rule (not restate).
+// No skill may re-introduce silent tagging: the concept must be absent repo-wide.
+let autoTagSurvivors = 0;
+for (const s of loadSkills()) {
+  for (const line of s.content.split("\n")) {
+    if (/auto-tag/i.test(line)) {
+      autoTagSurvivors++;
+      fail(`${s.name}: still mentions auto-tagging: "${line.trim()}"`);
+    }
+  }
+}
+if (autoTagSurvivors === 0) ok("no skill auto-tags requirements (silent tagging removed)");
+// The cross-skill link survives independently of the removed rule.
 if (et) {
   if (/pwk-brainstorming/.test(et.content)) {
-    ok("pwk-executing-tasks: references pwk-brainstorming (single source of truth)");
+    ok("pwk-executing-tasks: references pwk-brainstorming (tag semantics)");
   } else {
-    fail("pwk-executing-tasks: must reference pwk-brainstorming (do not restate the auto-tag rule)");
+    fail("pwk-executing-tasks: must reference pwk-brainstorming");
   }
 }
 
@@ -454,7 +440,12 @@ if (bs) {
   fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.criteriaInBlock, "criteria inside the block");
   fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.noTestNameLists, "no test-name lists");
   fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.auditExactlyOnce, "audit: criteria + tags exactly once");
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.autoTagTruth, "auto-tag rule single source of truth");
+  // leaner-execution-gates R1 — the auto-tag rule and its single-source claim are gone.
+  if (!bs.content.includes(SINGLE_DOC_MARKERS.autoTagTruth)) {
+    ok("pwk-brainstorming: removed auto-tag rule leaves no single-source claim");
+  } else {
+    fail("pwk-brainstorming: the removed auto-tag rule must not leave its single-source claim behind");
+  }
   if (!/crosswalk/i.test(bs.content)) ok("pwk-brainstorming: no mapping-table instruction");
   else fail("pwk-brainstorming: must not instruct a crosswalk mapping table");
   if (!/pwk-writing-plans/.test(bs.content)) ok("pwk-brainstorming: no plan-phase hand-off");

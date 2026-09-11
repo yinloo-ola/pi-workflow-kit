@@ -15,10 +15,9 @@ describe("single-doc: merged design doc (R1)", () => {
     expect(bs).toContain(SINGLE_DOC_MARKERS.criteriaInBlock);
     expect(bs).toContain("### Checkpoints");
     expect(bs).toContain("### Review");
-    expect(bs).toContain(SINGLE_DOC_MARKERS.autoTagTruth);
-    // auto-tag rule: non-empty risk notes trigger parallel; editable by the human
-    expect(bs).toMatch(/non-empty[^\n]*Production-risk notes|Production-risk notes[^\n]*non-empty/i);
-    expect(bs).toMatch(/override or downgrade/i);
+    // leaner-execution-gates R1: nothing is tagged silently — the human owns the tag.
+    expect(bs).toMatch(/only the human tags/i);
+    expect(bs).not.toMatch(/auto-tag/i);
     // spec+skip incompatibility travels with the tags
     expect(bs).toMatch(/`spec` requires at least `inline`/);
   });

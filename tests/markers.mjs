@@ -78,6 +78,40 @@ export const STATUS_STATE_MARKERS = {
 };
 
 /**
+ * Markers for the leaner-execution-gates feature: the deleted per-requirement
+ * review auto-tag, the risk-scaled single feature review (`auto`), the
+ * feature-spec notice replacing the mandatory stop, the dropped `spec`
+ * checkpoint value, the enriched `### Flow` digest, and flow-truth checking.
+ * Same contract as DIGEST_MARKERS — one canonical string per behavior, shared
+ * by skill-lint and the vitest suites. Each marker is chosen to distinguish the
+ * new shape from the old (e.g. `### Checkpoints: none | full` vs `...| spec`).
+ */
+export const LEAN_GATES_MARKERS = {
+  // R1 — no silent per-requirement tagging; the human owns the tag.
+  onlyHumanTags: "only the human tags",
+  // R2 — one risk-scaled feature review.
+  featureReviewTag: "### Feature review: auto | parallel | inline",
+  autoKeyedOnRisk: "production-risk content",
+  explicitTagWins: "explicit tag wins",
+  // R3 — the feature-spec stop becomes a notice; status renders execute 0/N.
+  specNotice: "without waiting for approval",
+  statusExecuteZero: "execute 0/N",
+  // R4 — the `spec` checkpoint value is gone.
+  checkpointsEnum: "### Checkpoints: none | full",
+  // R5 — the enriched Flow shape.
+  flowSpine: "Spine",
+  flowBranches: "Branches",
+  flowWasClause: "was:",
+  flowSideEffects: "Side effects",
+  flowCap: "15 lines",
+  flowNoLineNumbers: "no line numbers",
+  flowWalkthroughOffer: "/skill:pwk-walkthrough",
+  // R6 — the Flow is checked against reviewed reality.
+  flowTruth: "tracing report",
+  flowSurfaced: "surfaced",
+};
+
+/**
  * Markers for the code-digest feature: the ship-time code digest, the
  * completed/ exclusion on recursive discovery globs, and frontier-round
  * brainstorm questioning. Same contract as DIGEST_MARKERS — one canonical
