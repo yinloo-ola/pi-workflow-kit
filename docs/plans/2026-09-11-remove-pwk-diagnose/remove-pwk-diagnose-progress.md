@@ -4,7 +4,7 @@ Design: docs/plans/2026-09-11-remove-pwk-diagnose/remove-pwk-diagnose-design.md
 Branch: remove-pwk-diagnose
 Started: 2026-09-11T09:49:37Z
 Last updated: 2026-09-11T11:40:00Z
-Feature phase: ship-paused
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
