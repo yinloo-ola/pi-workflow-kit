@@ -214,4 +214,13 @@ describe("workflow-consistency per-slice", () => {
       expect(executing).not.toMatch(/<merge-base>/);
     });
   });
+
+  describe("R9 — diagnose ↔ execution recording hook", () => {
+    it("executing mandates fix recording; diagnose closes the loop from its side", () => {
+      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const diagnose = read("skills/pwk-diagnose/SKILL.md");
+      expect(executing).toContain(M.midFixMandated);
+      expect(diagnose).toContain(M.diagnoseReminder);
+    });
+  });
 });
