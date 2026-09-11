@@ -15,6 +15,7 @@ Ship the completed work.
    - **Any `❌ failed`** (in any part) → **block**. Present counts and reasons; continue only when the user sends the task back to executing-tasks, or explicitly types `--force-failed` to acknowledge shipping with incomplete requirements.
    - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
    - **`Feature phase` must be `done`** in every progress file — any other value (`e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, or a legacy `feature-complete-paused` from before the ship gate) means the feature is still in flight: the ship checkpoint has not been approved. Send the user back to `/skill:pwk-executing-tasks` instead of finalizing.
+4. **Cross-check the umbrella roster — fail closed on unstarted work.** For an umbrella (a `docs/plans/**/overview.md` exists, excluding docs/plans/completed/), read its parts roster and require one `*-progress.md` per part. A roster part with no progress file is **unstarted** — **block**, naming the part, and send the user back to `/skill:pwk-executing-tasks` to build it; never dispose an unstarted design unread. (A part with a progress file that is not `done` is already stopped by the gate above.)
 
 ## Process
 

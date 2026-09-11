@@ -49,8 +49,9 @@ check "execute pre-flight advisory prior phases" grep -q "advisory" "$EX"
 echo "== R4: gates and vocabulary match reality =="
 # FA3: finalize blocks on unstarted roster part, naming it, routing to executing-tasks
 check "finalize blocks unstarted part" bash -c "grep -q 'unstarted' '$FN' && grep -q 'pwk-executing-tasks' '$FN'"
-# live phase enumeration contains only phases the flow writes (no legacy feature-spec-paused)
-check "phase enumeration is live-only" bash -c "! grep 'Feature phase. is one of' '$EX' | grep -q 'feature-spec-paused'"
+# live phase enumeration contains only phases the flow writes (no legacy feature-spec-paused;
+# the legacy note lives in the parenthetical after the first period — cut to the enum span)
+check "phase enumeration is live-only" bash -c "grep 'Feature phase. is one of' '$EX' | cut -d. -f1 | grep -qv 'feature-spec-paused'"
 
 echo "== R5: one worktree per branch =="
 # FA6: later-part pre-flight adopts existing worktree via `git worktree list`
