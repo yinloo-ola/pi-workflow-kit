@@ -2,7 +2,7 @@
 
 The kit enforces a design → execute → finalize workflow. Each phase below names the skill that drives it:
 
-`pi-workflow-kit` has 4 pipeline skills plus 3 utility skills. You invoke each one explicitly with `/skill:`.
+`pi-workflow-kit` has 4 pipeline skills plus 2 utility skills. You invoke each one explicitly with `/skill:`.
 
 ```
 brainstorm → executing-tasks → finalizing
@@ -79,16 +79,6 @@ No write restrictions.
 ```
 
 Read-only overview of all active pipeline topics (phase + progress) when several designs are in flight; an umbrella rolls up under its overview (shipped / in-flight / not-started). Not a pipeline phase — and it **does not exit the gated phase** (`pwk-status` is read-only; it runs fine under the design-phase write block, so the boundary stays up).
-
-## diagnose
-
-```
-/skill:pwk-diagnose
-```
-
-Not a pipeline phase. A utility skill invoked on demand when debugging is needed. Invoking it **exits the gated phase** — diagnosis needs to write failing tests and `[DEBUG-…]` instrumentation. To stay read-only mid-brainstorm, use `/skill:pwk-status` instead, or re-lock with `/pwk-guard on`.
-
-No write restrictions.
 
 ## walkthrough
 

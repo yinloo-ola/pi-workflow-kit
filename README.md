@@ -51,14 +51,14 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 | Phase | `write` / `edit` | `bash` |
 |-------|:-:|:-:|
 | **Design** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
-| **Execute** / **Code-review** / **Finalize** / **Diagnose** / **Walkthrough** | ✅ Full access | ✅ Full access |
+| **Execute** / **Code-review** / **Finalize** / **Walkthrough** | ✅ Full access | ✅ Full access |
 | **Status** | ✅ Full access (read-only orientation) | ✅ Full access (read-only orientation) |
 
 The agent can read code and discuss design with you during the design phase, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
-Phases transition only when you invoke a skill (`/skill:pwk-brainstorming` → read-only; `/skill:pwk-executing-tasks` → unrestricted) — no message keyword unlocks the guard. Unlocking skills: `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose`, `pwk-walkthrough` (all write beyond `docs/plans/`, so all exit the gate); `pwk-status` stays read-only and runs inside the gate. The canonical list is the exported `UNLOCK_SKILLS` in `extensions/workflow-guard.ts`, lint-asserted against the skills by `npm run check`. Need to override it? `/pwk-guard on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. The subcommands autocomplete after the command.
+Phases transition only when you invoke a skill (`/skill:pwk-brainstorming` → read-only; `/skill:pwk-executing-tasks` → unrestricted) — no message keyword unlocks the guard. Unlocking skills: `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-walkthrough` (all write beyond `docs/plans/`, so all exit the gate); `pwk-status` stays read-only and runs inside the gate. The canonical list is the exported `UNLOCK_SKILLS` in `extensions/workflow-guard.ts`, lint-asserted against the skills by `npm run check`. Need to override it? `/pwk-guard on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. The subcommands autocomplete after the command.
 
-### 🧠 7 Workflow Skills
+### 🧠 6 Workflow Skills
 
 Guide the agent through a disciplined development process:
 
@@ -66,7 +66,7 @@ Guide the agent through a disciplined development process:
 brainstorm → executing-tasks → finalizing
                              (feature-gate: write feature E2E → report it → implement → review → ⏸ ship checkpoint)
                                 ↕
-                   diagnose (anytime)   ·   status (anytime)
+                             status (anytime)
 ```
 
 A **design doc is one PR**; a **requirement is one testable slice within it**. A requirement too big for one design doc but shipping as one PR is an **umbrella** — multiple design docs under one status-free overview, on one branch, finalized once.
@@ -77,7 +77,6 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. A
 | **Execute** | `/skill:pwk-executing-tasks` | Create the feature branch, then: write the feature E2E (red) → **report it, no stop** → implement the design doc's `### R<n>` requirement blocks → feature review (risk-scaled: four roles or one inline pass) → **ship checkpoint** (execution summary + code digest + coverage table; full diff on request) |
 | **Code review** | `/skill:pwk-code-review` | Feature-level (default) or per-requirement: code tracing, spec alignment, code smells (applies fixes), production hazard check. Delegated review uses four tiered logical roles (smell/hazard on a fast model via `/pwk-setup --fast-model`) over a script-assembled review packet when a safe provider is available; otherwise it runs inline. |
 | **Finalize** | `/skill:pwk-finalizing` | Delete consumed plan docs or archive them under `docs/plans/completed/` (discovery always runs excluding docs/plans/completed/, so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording), update README/CHANGELOG, create PR |
-| **Diagnose** | `/skill:pwk-diagnose` | Debugging loop: reproduce → hypothesise → instrument → fix → cleanup. **Exits the gated phase** (debugging writes tests/instrumentation) |
 | **Walkthrough** | `/skill:pwk-walkthrough` | On demand: generate a detailed, file:line-anchored walkthrough of a shipped feature into `docs/walkthroughs/<topic>.md` (Summary / How it works / Key flows / Gotchas & invariants / Change map); stamped with the commit range, regenerated wholesale, never disposed. **Exits the gated phase** |
 | **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase; **does not exit the gated phase**. |
 
@@ -186,7 +185,6 @@ pi-workflow-kit/
 │   ├── pwk-code-review/SKILL.md
 │   ├── pwk-finalizing/SKILL.md
 │   ├── pwk-status/SKILL.md
-│   ├── pwk-diagnose/SKILL.md
 │   └── pwk-walkthrough/SKILL.md      # on-demand explainer; docs/walkthroughs/ output
 ├── agents/                   # canonical role contracts; /pwk-setup copies them to .agents/agents/
 ├── docs/

@@ -7,7 +7,7 @@ The kit enforces a design → execute → finalize workflow: one buildable desig
 ## What you get
 
 - **4 pipeline skills** — brainstorm → executing-tasks → finalizing, with code-review running at the feature level during execution.
-- **3 utility skills** — diagnose (debugging), status (multi-topic overview), and walkthrough (on-demand explainer), all invoked on demand.
+- **2 utility skills** — status (multi-topic overview) and walkthrough (on-demand explainer), both invoked on demand.
 - **1 extension** — hard-blocks source writes during the design phase, and blocks destructive bash via a simple common-blacklist.
 
 ## Installation
@@ -82,12 +82,6 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 
 **Pre-check: run the full test suite** — never ship a red suite (resume spans sessions). Then archive or delete consumed plan docs (the human's choice; archived docs land in `docs/plans/completed/`, and every discovery glob runs excluding docs/plans/completed/ so archived work never resurfaces as in flight — single source: the `pwk-executing-tasks` glob wording), curate lessons, update CHANGELOG/README, create PR or merge.
 
-### Diagnose (on demand)
-
-```
-/skill:pwk-diagnose
-```
-
 ### Walkthrough (on demand)
 
 ```
@@ -95,8 +89,6 @@ In Pi, `/pwk-setup` installs the canonical role definitions into `.agents/agents
 ```
 
 Generate a detailed, file:line-anchored walkthrough of a shipped feature or branch into `docs/walkthroughs/<topic>.md` — Summary / How it works / Key flows / Gotchas & invariants / Change map — stamped with the commit range, regenerated wholesale on re-run, never disposed. Exits the gated design phase.
-
-A debugging loop you invoke when something is broken. Not a pipeline phase. **Invoking it exits the gated design phase** — diagnosis needs to write failing tests and debug instrumentation. If you only want read-only investigation mid-design, use `pwk-status` or re-lock with `/pwk-guard on`.
 
 ### Status (on demand)
 
@@ -111,8 +103,8 @@ A read-only overview of all active design topics — which phase each is in and 
 The `workflow-guard` extension registers `/pwk-setup` and watches `write`/`edit` and `bash` tool calls:
 
 - **During the design phase**: blocks writes outside `docs/plans/`, and blocks destructive bash via a simple common-blacklist (a command is allowed unless it matches a destructive pattern). A short phase reminder is shown once when the gated phase begins so the model self-restricts.
-- **During executing-tasks, code-review, finalizing, diagnose**: no restrictions.
-- **Phases are skill-driven**: the guard follows the skill you invoke — it never unlocks on message keywords. The exact unlock set is `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose`, `pwk-walkthrough` (walkthrough writes explainer output under `docs/walkthroughs/`); `pwk-status` stays read-only and runs inside the gate. To override, run `/pwk-guard on` (force read-only), `off` (disable), or `auto` (default; skill-driven). Subcommands autocomplete.
+- **During executing-tasks, code-review, finalizing**: no restrictions.
+- **Phases are skill-driven**: the guard follows the skill you invoke — it never unlocks on message keywords. The exact unlock set is `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-walkthrough` (walkthrough writes explainer output under `docs/walkthroughs/`); `pwk-status` stays read-only and runs inside the gate. To override, run `/pwk-guard on` (force read-only), `off` (disable), or `auto` (default; skill-driven). Subcommands autocomplete.
 
 The destructive blacklist covers common file-mutating vectors (redirects, `tee`, `cp`/`mv`/`touch`/`rm`, `git commit`/`apply`, `npm install`, in-place editors like `sed -i`/`perl -i`, `patch`, `find -delete`). Exotic vectors (interpreter escapes like `node -e`, `python -c`, `| bash`) rely on the phase reminder — the guard is advisory, not a security boundary.
 

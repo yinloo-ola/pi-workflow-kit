@@ -6,17 +6,16 @@ The kit enforces a design → execute → finalize workflow: one buildable desig
 
 ## Skills
 
-Skills teach the agent the workflow. There are 4 pipeline skills plus 3 utility skills:
+Skills teach the agent the workflow. There are 4 pipeline skills plus 2 utility skills:
 
 - **pwk-brainstorming** — explore ideas, produce the single buildable design doc (each `### R<n>:` block carries its acceptance criteria + review tags) that opens with a `## At a glance` digest for the human (plain-language summary → **Key decisions** with rejected-alternative clauses only for real forks → `| R# | Requirement in one line | Risk |` table) immediately before the `## Requirements` blocks. For a requirement too big for one design doc, may start an **umbrella** (multiple design docs under one status-free overview, shipping as one PR). On non-trivial topics, requests the logical `codebase-recon` capability and falls back to the `pwk-recon-scout` role inline when unavailable or unsafe.
 - **pwk-executing-tasks** — feature-gate flow: write the feature E2E first, report it (no stop), implement the design doc's `### R<n>` requirement blocks, then one risk-scaled feature-level review before the **ship checkpoint** (execution summary + code digest + coverage table presented for approval; full diff on request); two hard stops when the design carries `## Setup` (setup + ship), otherwise one (ship), per-requirement ceremony opt-in
 - **pwk-code-review** — the inline reviewer (code tracing, spec alignment, code smells, production hazards). During `pwk-executing-tasks`, the feature-level review resolves the design's `### Feature review` tag (`auto` by default): four logical fresh-context, read-only roles when the design carries production-risk content, otherwise one inline pass. successful reports are retained and missing roles are retried or completed inline. It falls back to inline review when no safe compatible provider exists. The canonical provider contract is documented in `docs/provider-delegation-contract.md`.
 - **pwk-finalizing** — dispose consumed plan docs (archive or delete; for an umbrella, the overview + every part), curate lessons, update docs, create PR or merge
 
-Plus 3 on-demand utility skills:
+Plus 2 on-demand utility skills:
 
 - **pwk-status** — read-only overview of all active design topics (phase + progress), for resuming or juggling parallel designs
-- **pwk-diagnose** — 6-phase debugging loop, invoked anytime something is broken
 - **pwk-walkthrough** — on-demand explainer; renders a file:line-anchored walkthrough of a shipped feature into `docs/walkthroughs/<topic>.md`, regenerated wholesale, never disposed
 
 They explain *what* to do and *when* to do it. Phase control is manual — you invoke each skill with `/skill:`; the agent never advances on its own.
@@ -29,11 +28,11 @@ The `workflow-guard` extension registers the Pi-only `/pwk-setup` command and en
 
 The agent can still use `read` and `bash` for investigation. During those gated phases, `bash` is governed by a simple destructive-command blacklist (`rm`, `>`, `git commit`, `npm install`, in-place editors, etc.) — a command is allowed unless it matches a destructive pattern. A short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
-During executing-tasks, code-review, finalizing, **and diagnose**, nothing is restricted (diagnosis needs to write failing tests and debug instrumentation, so it exits the gate). `pwk-status` stays inside the gate.
+During executing-tasks, code-review, and finalizing, nothing is restricted. `pwk-status` stays inside the gate.
 
 Canonical role contracts live in `agents/pwk-*.md` (single source of truth) and can be installed into `.agents/agents/` with `/pwk-setup`. `pwk-executing-tasks` requests logical review roles through the host’s delegation capabilities and passes each role a one-liner pointer to a script-assembled review packet — the packet defines the scope per review level (feature review: the whole feature diff; per-requirement: just that slice).
 
-Phases follow the skill you invoke — there is no message-keyword unlock. Invoking `/skill:pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-diagnose`, or `pwk-walkthrough` exits the gated phase (those skills write — walkthrough writes its explainer output under `docs/walkthroughs/`); `pwk-status` deliberately does **not** (read-only orientation). `/pwk-guard on|off|auto` manually overrides the guard.
+Phases follow the skill you invoke — there is no message-keyword unlock. Invoking `/skill:pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, or `pwk-walkthrough` exits the gated phase (those skills write — walkthrough writes its explainer output under `docs/walkthroughs/`); `pwk-status` deliberately does **not** (read-only orientation). `/pwk-guard on|off|auto` manually overrides the guard.
 
 ## Enforcement style
 

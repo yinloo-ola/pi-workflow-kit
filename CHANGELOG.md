@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Removed
+
+- **`pwk-diagnose` is gone (breaking)** — the skill directory and its guard unlock entry are deleted, so `/skill:pwk-diagnose` no longer resolves and no longer exits the gated phase. The kit never used it; any open-source debugging skill covers the need. `UNLOCK_SKILLS` is now `pwk-executing-tasks`, `pwk-finalizing`, `pwk-code-review`, `pwk-walkthrough`.
+
+### Changed
+
+- **`pwk-code-review` checklists aligned with the four role contracts** — steps 2–5 now carry the `Your checklist` sections from `agents/pwk-{tracing,spec,smell,hazard}-reviewer.md` verbatim (the smell list keeps its unlocked apply-fixes behavior). Process and reporting sections are unchanged.
+- **Prose-only simplification pass across the six surviving skills** — the cross-skill root-check/discovery boilerplate is now verbatim-identical and lint-pinned, the code-digest explanation in `pwk-executing-tasks` collapses to one canonical layer with pointers, and `## Tags reference` is a table.
+
 ## [2.3.0] - 2026-09-11
 
 ### Fixed

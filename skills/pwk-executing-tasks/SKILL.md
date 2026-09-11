@@ -102,7 +102,7 @@ Update the matching requirement row directly (not via pattern matching that coul
 
 ## Implement phase (after the E2E notice)
 
-Bugs found mid-execution (e.g. fixed via `pwk-diagnose`) are mandatory execution-summary content: record the fix in the requirement's `How it was built` cell and fill its Deviated? column at fix time — the summary must show what the feature actually cost to land.
+Bugs found mid-execution are mandatory execution-summary content: record the fix in the requirement's `How it was built` cell and fill its Deviated? column at fix time — the summary must show what the feature actually cost to land.
 
 Set `Feature phase: implementing (0/N)` and work the requirements in listed order. For each:
 
