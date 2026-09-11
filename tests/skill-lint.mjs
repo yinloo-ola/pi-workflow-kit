@@ -66,15 +66,19 @@ for (const skill of loadSkills()) {
 // The canonical vocabularies, defined in pwk-brainstorming and consumed by pwk-executing-tasks.
 const CHECKPOINT_VOCAB = ["full", "spec", "none"];
 const REVIEW_VOCAB = ["parallel", "inline", "skip"];
+// leaner-execution-gates R2: the feature-level review gained a risk-scaled `auto`.
+const FEATURE_REVIEW_VOCAB = ["auto", "parallel", "inline"];
 
-function vocabOf(text, kind) {
-  // Collect the option tokens that appear after a "Checkpoints" or "Review" header/label.
+function vocabOf(text, label, exclude) {
+  // Collect the option tokens that appear after a vocabulary header/label.
   // Matches `### Checkpoints: full | spec | none` and prose like `full | spec | none`.
+  // `exclude` drops lines that belong to a longer label (plain `Review` must not swallow
+  // `### Feature review: auto | parallel | inline`).
   const lines = text.split("\n");
   const hits = new Set();
-  const want = kind === "checkpoint" ? "Checkpoints" : "Review";
   for (const line of lines) {
-    if (!line.includes(want)) continue;
+    if (!line.includes(label)) continue;
+    if (exclude && line.includes(exclude)) continue;
     // Match `|`-separated tokens, tolerating backticks, spaces, and a leading colon/paren.
     // e.g. "### Checkpoints: full | spec | none" and "accepted values: `parallel | inline | skip`)".
     const pipeMatch = line.match(/[`:]\s*`?([a-z]+(?:\s*\|\s*`?[a-z]+)+)`?/);
@@ -91,21 +95,38 @@ const et = loadSkills().find((s) => s.name === "pwk-executing-tasks");
 if (!bs) fail("pwk-brainstorming skill missing");
 if (!et) fail("pwk-executing-tasks skill missing");
 if (bs && et) {
-  for (const [kind, vocab] of [
-    ["checkpoint", CHECKPOINT_VOCAB],
-    ["review", REVIEW_VOCAB],
+  for (const [label, vocab] of [
+    ["Checkpoints", CHECKPOINT_VOCAB],
+    ["Review", REVIEW_VOCAB],
+    ["Feature review", FEATURE_REVIEW_VOCAB],
   ]) {
-    const bsV = vocabOf(bs.content, kind);
-    const etV = vocabOf(et.content, kind);
-    const label = kind === "checkpoint" ? "checkpoint" : "review";
+    const exclude = label === "Review" ? "Feature review" : undefined;
+    const bsV = vocabOf(bs.content, label, exclude);
+    const etV = vocabOf(et.content, label, exclude);
+    const kind = label.toLowerCase();
+    const isPerReq = label === "Checkpoints" || label === "Review";
     for (const v of vocab) {
       if (!bsV.has(v)) fail(`pwk-brainstorming: ${label} vocab missing "${v}"`);
       if (!etV.has(v)) fail(`pwk-executing-tasks: ${label} vocab missing "${v}"`);
     }
     // No stray tokens
-    for (const t of bsV) if (!vocab.includes(t)) fail(`pwk-brainstorming: unknown ${label} token "${t}"`);
-    for (const t of etV) if (!vocab.includes(t)) fail(`pwk-executing-tasks: unknown ${label} token "${t}"`);
+    for (const t of bsV) if (!vocab.includes(t)) fail(`pwk-brainstorming: unknown ${kind} token "${t}"`);
+    for (const t of etV) if (!vocab.includes(t)) fail(`pwk-executing-tasks: unknown ${kind} token "${t}"`);
     if (failures === 0) ok(`${label} vocab {${vocab.join(", ")}} consistent across brainstorming + executing-tasks`);
+    // leaner-execution-gates R2 — the feature review is risk-scaled: `auto` resolves on the
+    // design's own production-risk content, and an explicit human tag wins both ways.
+    if (!isPerReq) {
+      if (/production-risk content/i.test(bs.content) && /production-risk content/i.test(et.content)) {
+        ok("feature review: `auto` is keyed on the design's production-risk content (both skills)");
+      } else {
+        fail("feature review: both skills must state what `auto` keys on (production-risk content)");
+      }
+      if (/explicit tag wins/i.test(et.content)) {
+        ok("pwk-executing-tasks: an explicit feature-review tag wins over `auto`");
+      } else {
+        fail("pwk-executing-tasks: must state that an explicit feature-review tag wins over `auto`");
+      }
+    }
   }
 }
 

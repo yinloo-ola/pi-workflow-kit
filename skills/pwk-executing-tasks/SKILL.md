@@ -124,7 +124,7 @@ The old "integration gate" is gone — the feature E2E at the ship checkpoint *i
 
 ## Feature review
 
-This is step 3 of the [ship checkpoint](#ship-checkpoint-feature-complete--review-merged): it runs **before** the final human approval, so the pause is fully informed. Run **one** review over the **whole feature diff**, driven by the design doc's `### Feature review` tag. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
+This is step 3 of the [ship checkpoint](#ship-checkpoint-feature-complete--review-merged): it runs **before** the final human approval, so the pause is fully informed. Run **one** review over the **whole feature diff**, driven by the design doc's `### Feature review` tag — exactly one per part, never once per requirement. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
 **Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
 
@@ -154,7 +154,9 @@ PACKET="<design doc's directory>/<design doc's stem>-review-packet.md"   # besid
 } > "$PACKET"
 ```
 
-- **`parallel`** (default) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Spawn each role with a **one-liner** — a pointer to the packet file with the role framing appended last: the checklist name of the role (`spec alignment`, `code tracing`, `code smells`, or `production hazards`). For example: `Read docs/plans/<dated-stem>-review-packet.md. Your role: spec alignment.` The packet never appears in spawn arguments. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
+- **Resolve the tag first.** `auto` (the default, and what a missing tag means) resolves on the design's own production-risk content: if the design carries a non-empty `## Production-risk areas` section, or any requirement carries a non-empty `### Production-risk notes`, resolve to `parallel`; otherwise resolve to `inline`. An explicit `parallel` or `inline` is used as written and always wins over `auto` — explicit tag wins in both directions, so a human who wants one pass on a risky design gets one pass.
+
+- **`parallel`** (the `auto` resolution when risk content is present) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Spawn each role with a **one-liner** — a pointer to the packet file with the role framing appended last: the checklist name of the role (`spec alignment`, `code tracing`, `code smells`, or `production hazards`). For example: `Read docs/plans/<dated-stem>-review-packet.md. Your role: spec alignment.` The packet never appears in spawn arguments. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
 
 - **`inline`** — perform `/skill:pwk-code-review` over the whole diff as a single pass.
 - **Fallback** — if the host has no compatible parallel-review capability, cannot prove the requested read-only/fresh-context/bounded constraints, or delegation fails, perform the missing review work inline. Retain successful delegated reports and do not mark the feature fully reviewed while a required role is missing.
@@ -167,7 +169,7 @@ The design doc tags each requirement and the feature level:
 
 - **`### Checkpoints: none | full | spec`** — per-requirement human stops. `none` (default) = no per-requirement stop; `full` = tests + complete; `spec` = tests only.
 - **`### Review: skip | parallel | inline`** — per-requirement review. `skip` (default) = none; `parallel` = four reviewers; `inline` = one `pwk-code-review` pass. Nothing is tagged silently: **only the human tags** a slice, and the feature review below covers everything else.
-- **`### Feature review: parallel | inline`** — the one whole-feature review (always present). Default `parallel`; `inline` for small features.
+- **`### Feature review: auto | parallel | inline`** — the one whole-feature review (always present). Default `auto`: `parallel` when the design carries production-risk content, `inline` when it does not. An explicit `parallel` or `inline` is used as written and always wins over `auto`. Never once per requirement — the review covers the whole feature diff.
 
 ## User override commands
 
