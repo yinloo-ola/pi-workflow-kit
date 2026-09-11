@@ -154,7 +154,12 @@ describe("workflow-consistency per-slice", () => {
     it("all seven skills appear in every inventory doc", () => {
       const names = skillNamesForR6();
       expect(names.length).toBe(7);
-      for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/oversight-model.md", "docs/workflow-phases.md"]) {
+      for (const rel of [
+        "README.md",
+        "docs/developer-usage-guide.md",
+        "docs/oversight-model.md",
+        "docs/workflow-phases.md",
+      ]) {
         const doc = read(rel);
         for (const name of names) {
           expect(doc, `${rel} names ${name}`).toContain(name);

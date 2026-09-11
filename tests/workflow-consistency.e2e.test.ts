@@ -54,7 +54,13 @@ describe("workflow-consistency (feature E2E)", () => {
 
     // F9 — the public flow vocabulary is design → execute → finalize everywhere it is stated.
     expect(read("README.md")).toContain(SINGLE_DOC_MARKERS.designFlow);
-    for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/oversight-model.md", "docs/workflow-phases.md", "docs/provider-delegation-contract.md"]) {
+    for (const rel of [
+      "README.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "docs/workflow-phases.md",
+      "docs/provider-delegation-contract.md",
+    ]) {
       expect(read(rel), rel).not.toMatch(/plan phase/i);
     }
 
@@ -62,7 +68,12 @@ describe("workflow-consistency (feature E2E)", () => {
     // site lists the full UNLOCK_SKILLS set (source of truth: the guard export).
     const names = skillNames();
     expect(names.length).toBeGreaterThanOrEqual(7);
-    for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/oversight-model.md", "docs/workflow-phases.md"]) {
+    for (const rel of [
+      "README.md",
+      "docs/developer-usage-guide.md",
+      "docs/oversight-model.md",
+      "docs/workflow-phases.md",
+    ]) {
       const doc = read(rel);
       for (const name of names) {
         expect(doc, `${rel} names ${name}`).toContain(name);
@@ -132,7 +143,11 @@ describe("workflow-consistency (feature E2E)", () => {
     // Status renders the pre-approval state, and the inventory docs state the
     // checkpoint count conditionally (two stops with ## Setup, one without).
     expect(status).toContain(WCM.statusAwaitingSetup);
-    const claimedSomewhere = [read("README.md"), read("docs/developer-usage-guide.md"), read("docs/oversight-model.md")];
+    const claimedSomewhere = [
+      read("README.md"),
+      read("docs/developer-usage-guide.md"),
+      read("docs/oversight-model.md"),
+    ];
     expect(claimedSomewhere.some((doc) => doc.includes(WCM.conditionalStops))).toBe(true);
   });
 });

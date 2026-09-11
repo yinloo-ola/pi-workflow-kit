@@ -900,7 +900,12 @@ if (existsSync(wtPath)) {
 // match the counts computed from the skills/ tree (pipeline vs utility). The skills/ tree
 // is the source of truth — a new skill dir without doc updates fails, and a doc claim
 // disagreeing with the computed count fails with both values shown.
-const INVENTORY_DOCS = ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md", "docs/workflow-phases.md"];
+const INVENTORY_DOCS = [
+  "README.md",
+  "docs/oversight-model.md",
+  "docs/developer-usage-guide.md",
+  "docs/workflow-phases.md",
+];
 const UNLOCK_PROSE_SITES = ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md"];
 const PIPELINE_SKILLS = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-code-review", "pwk-finalizing"];
 const UTILITY_SKILLS = ["pwk-status", "pwk-diagnose", "pwk-walkthrough"];
@@ -913,7 +918,9 @@ console.log("inventory parity:");
   const roster = [...PIPELINE_SKILLS, ...UTILITY_SKILLS].sort();
   const treeNames = skillDirs.filter((d) => d.startsWith("pwk-")).sort();
   if (treeNames.length !== EXPECTED_SKILL_COUNT)
-    fail(`skills/ tree has ${treeNames.length} pwk-* dirs, EXPECTED_SKILL_COUNT is ${EXPECTED_SKILL_COUNT} (extend PIPELINE_SKILLS/UTILITY_SKILLS)`);
+    fail(
+      `skills/ tree has ${treeNames.length} pwk-* dirs, EXPECTED_SKILL_COUNT is ${EXPECTED_SKILL_COUNT} (extend PIPELINE_SKILLS/UTILITY_SKILLS)`,
+    );
   else if (JSON.stringify(treeNames) !== JSON.stringify(roster))
     fail(`skills/ roster drift: tree [${treeNames.join(", ")}] vs lists [${roster.join(", ")}]`);
   else ok(`skills/ roster {${roster.join(", ")}} matches EXPECTED_SKILL_COUNT (${EXPECTED_SKILL_COUNT})`);
@@ -929,7 +936,8 @@ console.log("inventory parity:");
       if (!content.includes(skill)) fail(`inventory parity: ${rel} unlock prose missing ${skill}`);
     }
   }
-  if (failures === 0) ok(`inventory parity: unlock prose lists UNLOCK_SKILLS at all ${UNLOCK_PROSE_SITES.length} sites`);
+  if (failures === 0)
+    ok(`inventory parity: unlock prose lists UNLOCK_SKILLS at all ${UNLOCK_PROSE_SITES.length} sites`);
   const pipelineClaims = invDocs.flatMap(([rel, content]) =>
     [...content.matchAll(/(\d+) pipeline skills?/gi)].map((m) => ({ rel, n: Number(m[1]) })),
   );
@@ -937,15 +945,19 @@ console.log("inventory parity:");
     [...content.matchAll(/(\d+) utility skills?/gi)].map((m) => ({ rel, n: Number(m[1]) })),
   );
   for (const { rel, n } of pipelineClaims) {
-    if (n !== PIPELINE_SKILLS.length) fail(`inventory parity: ${rel} claims ${n} pipeline skills, tree has ${PIPELINE_SKILLS.length}`);
+    if (n !== PIPELINE_SKILLS.length)
+      fail(`inventory parity: ${rel} claims ${n} pipeline skills, tree has ${PIPELINE_SKILLS.length}`);
   }
   for (const { rel, n } of utilityClaims) {
-    if (n !== UTILITY_SKILLS.length) fail(`inventory parity: ${rel} claims ${n} utility skills, tree has ${UTILITY_SKILLS.length}`);
+    if (n !== UTILITY_SKILLS.length)
+      fail(`inventory parity: ${rel} claims ${n} utility skills, tree has ${UTILITY_SKILLS.length}`);
   }
   if (pipelineClaims.length + utilityClaims.length === 0)
     fail("inventory parity: no pipeline/utility count claims found in any inventory doc");
   else if (failures === 0)
-    ok(`inventory parity: count claims match the tree (${PIPELINE_SKILLS.length} pipeline + ${UTILITY_SKILLS.length} utility)`);
+    ok(
+      `inventory parity: count claims match the tree (${PIPELINE_SKILLS.length} pipeline + ${UTILITY_SKILLS.length} utility)`,
+    );
 }
 
 console.log("");
