@@ -175,6 +175,22 @@ if (legacySpecLine && /`none`/.test(legacySpecLine)) {
   fail("pwk-executing-tasks: must document the legacy `spec` → `none` migration on one line");
 }
 
+// F6 (workflow-consistency R5): the brainstorming template's fenced design block
+// must itself contain the `### Feature review` tag line — the packet FA_CMD sed
+// terminates on it, so a template-conformant doc with a tagless FA section silently
+// widened the FA span to EOF. Asserts the fence, not prose mentions.
+const FA_TEMPLATE_TAG = "### Feature review";
+console.log("feature-acceptance template tag (F6):");
+if (!bs) fail("pwk-brainstorming skill missing");
+else {
+  const mdFences = [...bs.content.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const faFences = mdFences.filter((body) => /^ {0,3}## Feature acceptance\b/m.test(body));
+  if (faFences.length === 0) fail("pwk-brainstorming: no fenced template block contains `## Feature acceptance`");
+  else if (!faFences.every((body) => new RegExp(`^ {0,3}${FA_TEMPLATE_TAG}`, "m").test(body)))
+    fail("pwk-brainstorming template FA block missing `### Feature review` tag line");
+  else ok("pwk-brainstorming template FA block carries the `### Feature review` tag line");
+}
+
 // --- Check 5: Feature acceptance contract across the pipeline ---
 // brainstorm emits `## Feature acceptance` in the design doc; executing-tasks writes it
 // as the E2E and gates on it. Both must use the same section name so the contract is followable.

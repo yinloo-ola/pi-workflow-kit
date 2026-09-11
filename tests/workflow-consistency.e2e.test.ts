@@ -83,7 +83,7 @@ describe("workflow-consistency (feature E2E)", () => {
     // F6 — a design doc rendered verbatim from the brainstorming template carries
     // its own ### Feature review tag, so the packet's FA sed terminates on it.
     const template = brainstormTemplate();
-    expect(template).toMatch(/^### Feature review/m);
+    expect(template).toMatch(/^\s*### Feature review/m);
 
     // F12 — the recipe names the Commit column as the source of truth for both spans.
     const executing = read("skills/pwk-executing-tasks/SKILL.md");

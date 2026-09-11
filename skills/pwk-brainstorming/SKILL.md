@@ -106,6 +106,8 @@ The whole umbrella is one branch and one PR: `pwk-executing-tasks` creates the b
    ## Feature acceptance
 
    - Given <starting state>, When <trigger>, Then <end-to-end outcome the feature promises>.
+
+   ### Feature review: auto | parallel | inline — the one whole-feature review; leave `auto` unless the human says otherwise.
    ```
 
    Example (rate limiting): "Given a new API consumer with no prior usage, When they exceed 100 requests/minute for 3 consecutive minutes, Then they're throttled, a `rate_limited` event is emitted, and further requests return 429."

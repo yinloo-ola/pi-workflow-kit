@@ -10,6 +10,15 @@ function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+/** The design-doc template's fenced block containing the Feature acceptance section (shared by R5 per-slice and the E2E). */
+function brainstormTemplateForR5(): string {
+  const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+  const fences = [...brainstorming.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const withFa = fences.filter((body) => body.includes("## Feature acceptance"));
+  expect(withFa.length, "brainstorming template with ## Feature acceptance").toBeGreaterThan(0);
+  return withFa[0];
+}
+
 /**
  * Per-slice tests for workflow-consistency (the F1–F15 audit batch). One describe
  * per requirement; the feature E2E in workflow-consistency.e2e.test.ts covers the
@@ -113,6 +122,21 @@ describe("workflow-consistency per-slice", () => {
       expect(brainstorming).toContain(M.riskDisplayOnly);
       const occurrences = brainstorming.split(M.riskDisplayOnly).length - 1;
       expect(occurrences, "display-only declaration must be singular").toBe(1);
+    });
+  });
+
+  describe("R5 — feature-acceptance template renders its review tag", () => {
+    it("the brainstorming template's fenced FA block carries the Feature review tag line", () => {
+      const template = brainstormTemplateForR5();
+      expect(template).toMatch(/^\s*### Feature review/m);
+    });
+
+    it("skill-lint pins the tag in the template and the packet fixtures carry it", () => {
+      const lint = read("tests/skill-lint.mjs");
+      expect(lint).toContain("FA_TEMPLATE_TAG");
+      const reviewPacket = read("tests/review-packet.test.ts");
+      // the fixtures must exercise tag-present docs — the old tag-absent case is what let this defect survive.
+      expect(reviewPacket).toContain("### Feature review: parallel");
     });
   });
 });
