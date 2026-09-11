@@ -130,10 +130,11 @@ No configuration needed — the agent creates `docs/lessons.md` on first use and
 
 ### One Feature-Level Checkpoint
 
-The feature-gate flow has **one hard human-review gate** (not optional):
+The feature-gate flow's hard human-review gates (not optional) — **two hard stops when the design carries `## Setup`** (setup + ship), otherwise one (ship):
 
 | Checkpoint | What's done | What you review |
 |---|---|---|
+| **setup** *(only when the design has a `## Setup` section)* | Dependencies installed, migrations applied, existing suite run | Setup results — approve before implementation starts |
 | **ship** | All requirements implemented; full suite + E2E green; feature review collected | Execution summary + code digest + per-requirement coverage table — built as promised? (full diff on request) |
 
 The agent stops and waits there — approve, request changes, or send it back. The feature-acceptance E2E is still written first and still gated at the ship checkpoint; it is reported before implementation without pausing, because its text was approved as `## Feature acceptance` during brainstorm.
@@ -158,7 +159,7 @@ pi install npm:@tianhai/pi-workflow-kit
 
 > /skill:pwk-executing-tasks
 
-# (feature-gate: creates the branch, writes feature E2E → checkpoint → implements the blocks → checkpoint → feature review)
+# (feature-gate: creates the branch → setup stop when the design carries `## Setup` → writes feature E2E → notice → implements the blocks → feature review → ship checkpoint)
 
 > /skill:pwk-finalizing
 

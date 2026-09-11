@@ -20,14 +20,14 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 ## First run
 
 1. **Parse the design doc** — read every `### R<n>:` heading and its `### Checkpoints` / `### Review` tags (defaults `none` / `skip`), plus the feature-level `### Feature review` tag in the `## Feature acceptance` section. Requirements run in **listed order** (build order); do not reorder. Read the `## Feature acceptance` section — it is the E2E you gate on first. (Legacy plan doc: read `## Requirement N:` headings the same way.)
-2. **Setup pre-flight** *(only if the design doc has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval. Record `setup: done` in the progress-file header so a resume can confirm it rather than assume it.
-3. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the design doc, so `pwk-finalizing`'s glob matches; an umbrella part creates `<part>-progress.md` inside its `docs/plans/<date>-<umbrella>/` folder):
+2. **Create the progress file** `docs/plans/YYYY-MM-DD-<topic>-progress.md` (same dated stem as the design doc, so `pwk-finalizing`'s glob matches; an umbrella part creates `<part>-progress.md` inside its `docs/plans/<date>-<umbrella>/` folder):
 
    ```markdown
    # Progress: <topic>
 
    Design: docs/plans/YYYY-MM-DD-<topic>-design.md
    Branch: <branch>
+   Setup: n/a
    Started: <ISO timestamp>
    Last updated: <ISO timestamp>
    Feature phase: e2e-written
@@ -71,13 +71,17 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
    `Feature phase` is one of: `e2e-written`, `feature-spec-paused`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`. (A legacy progress file's `Plan:` ref points at its implementation doc — follow that chain instead.)
 
+   The `Setup:` header slot takes one of `Setup: pending | done | n/a` — the header starts `Setup: pending` when the design doc has a `## Setup` section, else `Setup: n/a`; the setup checkpoint below flips it to `done` on approval.
+
+3. **Setup pre-flight** *(only if the design doc has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval, then set `Setup: done` in the progress-file header so a resume can confirm it rather than assume it.
+
 4. **Commit the design docs** — `git add docs/plans/ && git commit -m "docs: add design doc"`.
 5. **Write the feature-acceptance E2E test (red).** Read the design doc's `## Feature acceptance` section and encode it as a real test file; run it; confirm it **fails** (it must — little or none of the feature exists yet). If it passes immediately, probe why before proceeding: the behavior may already exist, or the test may be asserting too little. If it still passes and the expected behavior looks wrong, **stop and present** rather than implementing against a wrong spec. Iterate it to green as you implement — fixing the implementation is the default, and you **stop and present only when you are genuinely blocked** (nothing you can do makes it pass, or the E2E itself is wrong). That stop is the reserved failure case; it is not the flow's default pause.
 6. **Notice, not a stop — report the E2E and continue.** Post 1–2 plain-language lines stating **what the E2E proves** ("this test proves that …"), plus the E2E test and its failing output, then go straight into the implement phase **without waiting for approval** — the `## Feature acceptance` text was approved during brainstorm, so there is nothing new here for the human to sign off. The notice is the window to object *before* implementation starts: a human who sees the E2E asserting the wrong thing says so, and you revise, re-run, and re-notice. Keep `Feature phase: e2e-written`.
 
 ## Resume
 
-Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not terminal routes the next requirement — `⬜`, `🔄`, and blank all mean not-done; `✅`/`❌`/`⏭` are resolved and are skipped past), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs:
+Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not terminal routes the next requirement — `⬜`, `🔄`, and blank all mean not-done; `✅`/`❌`/`⏭` are resolved and are skipped past), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs. Before routing: if the header reads `Setup: pending` and the design doc has a `## Setup` section, the setup checkpoint was never approved — re-run the setup verification and wait at it:
 - `e2e-written` → write the E2E if not yet present, post the notice, and continue into the implement phase (no stop).
 - `feature-spec-paused` (legacy — a progress file from before the notice replaced the stop) → post the notice and continue into the implement phase.
 - `implementing (k/N)` → continue the next not-yet-terminal requirement.

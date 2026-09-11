@@ -77,4 +77,32 @@ describe("workflow-consistency per-slice", () => {
       expect(existsSync(join(repoRoot, "docs/adr/0007-resolved-requirements-ship-gate.md"))).toBe(true);
     });
   });
+
+  describe("R3 — setup checkpoint made implementable", () => {
+    it("creates the progress file before the checkpoint and gives the header a Setup slot", () => {
+      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      expect(executing).toContain(M.setupEnum);
+      expect(executing).toContain(M.setupPendingInit);
+      expect(executing).toContain(M.setupApprovalFlip);
+      const createIdx = executing.indexOf("**Create the progress file**");
+      const setupIdx = executing.indexOf("**Setup pre-flight**");
+      expect(createIdx, "create-step must precede the setup checkpoint").toBeGreaterThan(-1);
+      expect(createIdx).toBeLessThan(setupIdx);
+    });
+
+    it("resume re-checks a pending setup and status renders the awaiting state", () => {
+      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const status = read("skills/pwk-status/SKILL.md");
+      expect(executing).toContain(M.setupResumeRecheck);
+      expect(status).toContain(M.statusAwaitingSetup);
+    });
+
+    it("checkpoint-count claims are conditional across every doc site", () => {
+      for (const rel of ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md"]) {
+        const doc = read(rel);
+        expect(doc, rel).toContain(M.conditionalStops);
+        expect(doc, rel).not.toMatch(/one mandatory checkpoint|one hard human-review gate/);
+      }
+    });
+  });
 });
