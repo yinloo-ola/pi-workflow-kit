@@ -112,6 +112,54 @@ export const LEAN_GATES_MARKERS = {
 };
 
 /**
+ * Markers for the workflow-consistency feature (F1–F15 audit batch): the canonical
+ * row-state + ceremony vocabulary, the terminal-state ship gate (done = resolved,
+ * finalizing stays the failure authority), the implementable setup checkpoint, the
+ * derived display-only Risk column, the FA template's own tag, inventory doc parity
+ * + parity lint, the Commit-column packet base, and the diagnose recording hook.
+ * Same contract as DIGEST_MARKERS — one canonical string per behavior, shared by
+ * skill-lint and the vitest suites. Each marker distinguishes the new shape from the
+ * old (e.g. `terminal` vs the all-✅ gate, `Commit column` vs bare `<merge-base>`).
+ */
+export const WORKFLOW_CONSISTENCY_MARKERS = {
+  // R1 — one canonical row-state + ceremony vocabulary, scoped writers.
+  rowStates: "`⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped",
+  ceremonyEcho: "echoes the design doc's tag",
+  fullTwoStops: "fires two stops",
+  codeReviewScoped: "only ever flips `🔄`→`✅`",
+  // R2 — terminal-state ship gate; finalizing stays the failure authority.
+  shipGateTerminal: "every requirement's Done cell is terminal",
+  digestListsVerdicts: "list every `❌`/`⏭` row with its reason",
+  failedGlyphNamed: "set its Done cell `❌`",
+  skippedGlyphNamed: "set its Done cell `⏭`",
+  resumeSkipsTerminal: "`✅`/`❌`/`⏭` are resolved",
+  knowingWhatFailed: "knowing what failed",
+  statusDoneCounts: "done (1 ❌ · 1 ⏭)",
+  statusForceFailedHint: "will require `--force-failed`",
+  // R3 — the setup checkpoint becomes implementable.
+  setupEnum: "Setup: pending | done | n/a",
+  setupPendingInit: "header starts `Setup: pending`",
+  setupApprovalFlip: "set `Setup: done`",
+  setupResumeRecheck: "re-run the setup verification",
+  statusAwaitingSetup: "awaiting setup",
+  conditionalStops: "two hard stops when the design carries `## Setup`",
+  // R4 — the At-a-glance Risk column is derived, display-only.
+  riskDerived: "`⚠ production-risk` if and only if",
+  riskDisplayOnly: "display-only",
+  // R6 — inventory parity + notes disposal.
+  notesDisposal: "????-??-??-<topic>-notes.md",
+  // R7 — the doc-inventory parity lint.
+  parityLint: "inventory parity",
+  // R8 — packet base from the Commit column.
+  commitColumnFill: "commit hash in the Commit column",
+  featureBaseRule: "parent of the first recorded commit",
+  perReqSpanRule: "previous requirement's last commit",
+  // R9 — the diagnose ↔ execution recording hook.
+  midFixMandated: "mandatory execution-summary content",
+  diagnoseReminder: "record the fix in the progress file",
+};
+
+/**
  * Markers for the code-digest feature: the ship-time code digest, the
  * completed/ exclusion on recursive discovery globs, and frontier-round
  * brainstorm questioning. Same contract as DIGEST_MARKERS — one canonical

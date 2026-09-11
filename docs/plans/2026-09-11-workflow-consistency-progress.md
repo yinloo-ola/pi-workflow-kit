@@ -4,12 +4,12 @@ Design: docs/plans/2026-09-11-workflow-consistency-design.md
 Branch: workflow-consistency
 Started: 2026-09-11T07:16:58Z
 Last updated: 2026-09-11T07:16:58Z
-Feature phase: e2e-written
+Feature phase: implementing (0/9)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ⬜ | One row-state and ceremony vocabulary | — | — |
+| 1 | 🔄 | One row-state and ceremony vocabulary | — | — |
 | 2 | ⬜ | Terminal-state ship gate and reachable failure branches | 🔎 parallel | — |
 | 3 | ⬜ | Setup checkpoint made implementable | — | — |
 | 4 | ⬜ | Derived At-a-glance Risk column | — | — |
