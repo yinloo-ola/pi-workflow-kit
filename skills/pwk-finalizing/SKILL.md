@@ -73,7 +73,7 @@ Ship the completed work.
    4. **Merge commit** — `--no-ff` merge, push parent, delete branch.
 
    For 2–4, confirm the detected parent branch before proceeding.
-7. **Clean up** — remove the worktree if one was used: `git worktree remove ../<repo>-<topic>`.
+7. **Clean up** — if a worktree was used, verify presence first (`git worktree list`): when the topic's worktree exists, remove it (`git worktree remove ../<repo>-<topic>`); when absent, cleanup is a silent no-op — never a failure.
 
 ## Principles
 
