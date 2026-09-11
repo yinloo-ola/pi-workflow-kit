@@ -1,5 +1,7 @@
 # Workflow Phases
 
+The kit enforces a design → execute → finalize workflow. Each phase below names the skill that drives it:
+
 `pi-workflow-kit` has 4 pipeline skills plus 3 utility skills. You invoke each one explicitly with `/skill:`.
 
 ```
@@ -88,10 +90,18 @@ Not a pipeline phase. A utility skill invoked on demand when debugging is needed
 
 No write restrictions.
 
+## walkthrough
+
+```
+/skill:pwk-walkthrough
+```
+
+Not a pipeline phase. An on-demand utility skill that generates a detailed, file:line-anchored walkthrough of a shipped feature into `docs/walkthroughs/<topic>.md` — Summary / How it works / Key flows / Gotchas & invariants / Change map — stamped with the commit range, regenerated wholesale on re-run, never disposed. Invoking it **exits the gated phase** (it writes its explainer output under `docs/walkthroughs/`).
+
 ## Manual override
 
 `/pwk-guard on|off|auto` overrides the guard regardless of phase: `on` forces a read-only lock, `off` disables the guard entirely, `auto` (default) returns to skill-driven phases. Subcommands autocomplete. Use it as an escape hatch when the guard blocks something you genuinely need; phase transitions otherwise happen only via `/skill:` commands.
 
 ## Continuity across sessions
 
-A new session resumes by invoking the skill for the phase to continue. The skill globs `docs/plans/` for its artifact (progress file / plan doc), resumes the single match, or asks if several. Each resumption skill reports what it found on entry — no registry file needed; the `<topic>` slug in the filenames is the identity.
+A new session resumes by invoking the skill for the phase to continue. The skill globs `docs/plans/` for its artifact (progress file / design doc), resumes the single match, or asks if several. Each resumption skill reports what it found on entry — no registry file needed; the `<topic>` slug in the filenames is the identity.

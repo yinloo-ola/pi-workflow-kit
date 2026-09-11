@@ -9,9 +9,9 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 ## Process
 
-1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff <merge-base>...HEAD`); all acceptance criteria in the plan and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria and integration tests from the plan doc, run `git log --oneline -5` and `git diff` to see what changed for it.
+1. **Identify the scope** — in the feature-gate flow (the default), you review the **whole feature diff** at the feature-level review (`git diff <merge-base>...HEAD`); all acceptance criteria in the design doc and the `## Feature acceptance` E2E are in scope. When invoked per-requirement (`Review: inline`/`parallel` on a tagged requirement), scope is just that requirement — read its acceptance criteria from the design doc, run `git log --oneline -5` and `git diff` to see what changed for it.
 
-2. **🔍 Code tracing** — trace the new/changed code paths end-to-end against the integration tests. For each path: does data flow correctly from entry to the asserted outcome? Note any branch the tests don't exercise, any dead branch, any path where the trace breaks.
+2. **🔍 Code tracing** — trace the new/changed code paths end-to-end against the acceptance criteria and the feature E2E. For each path: does data flow correctly from entry to the asserted outcome? Note any branch the tests don't exercise, any dead branch, any path where the trace breaks.
 
 3. **📐 Spec alignment** — for each acceptance criterion, point to the code and the test that satisfy it. A criterion with no covering code or no test is a **gap**. Code that does more than the criteria specify is **scope creep** — flag it.
 
@@ -20,7 +20,7 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
    - Duplication
    - Missing seams / premature abstraction
    - Poor naming, magic values, dead code
-   Apply the fix, re-run the integration tests (must stay green), and commit. If a smell needs a refactor large enough to risk the requirement, **flag** it instead of applying.
+   Apply the fix, re-run the full suite (must stay green), and commit. If a smell needs a refactor large enough to risk the requirement, **flag** it instead of applying.
 
 5. **⚠️ Production hazard check** — audit the changed code against the high-risk hazards. For each, write `[SAFE]` (1-line justification) or `[TRIGGERED]` (concrete mitigation):
    1. **Unbounded operations** — multi-key deletions/scans (`KEYS`, raw `SCAN` loops), or full-table loads filtered in memory.
@@ -43,4 +43,4 @@ Review the code just implemented for a requirement. **Unlocked** — you may edi
 
 ## After the review
 
-Return to `/skill:pwk-executing-tasks` for the next requirement, or `/skill:pwk-finalizing` if all requirements are done.
+Return to `/skill:pwk-executing-tasks` for the next requirement, or `/skill:pwk-finalizing` if all requirements are done. (The human tagged this requirement at design approval when its `### Review` tag was set — keep the review focused on the tag's scope.)

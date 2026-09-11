@@ -1,13 +1,23 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { UNLOCK_SKILLS } from "../extensions/workflow-guard";
 import { WORKFLOW_CONSISTENCY_MARKERS as M } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
+}
+
+/** Every skill directory under skills/ — the inventory docs must name them all (R6 per-slice). */
+function skillNamesForR6(): string[] {
+  return readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => name.startsWith("pwk-"))
+    .sort();
 }
 
 /** The design-doc template's fenced block containing the Feature acceptance section (shared by R5 per-slice and the E2E). */
@@ -43,7 +53,7 @@ describe("workflow-consistency per-slice", () => {
       expect(codeReview).not.toMatch(/🔎 review/);
       expect(codeReview).toContain("set the requirement's Done cell `✅`");
     });
-  });
+  }); // R1
 
   describe("R2 — terminal-state ship gate and reachable failure branches", () => {
     it("the ship gate, failure/skip paths, and resume all speak the terminal vocabulary", () => {
@@ -137,6 +147,46 @@ describe("workflow-consistency per-slice", () => {
       const reviewPacket = read("tests/review-packet.test.ts");
       // the fixtures must exercise tag-present docs — the old tag-absent case is what let this defect survive.
       expect(reviewPacket).toContain("### Feature review: parallel");
+    });
+  });
+
+  describe("R6 — inventory doc parity sweep", () => {
+    it("all seven skills appear in every inventory doc", () => {
+      const names = skillNamesForR6();
+      expect(names.length).toBe(7);
+      for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/oversight-model.md", "docs/workflow-phases.md"]) {
+        const doc = read(rel);
+        for (const name of names) {
+          expect(doc, `${rel} names ${name}`).toContain(name);
+        }
+        expect(doc, rel).not.toMatch(/5 pipeline skills|2 utility skills/);
+      }
+    });
+
+    it("each unlock-prose site lists exactly the UNLOCK_SKILLS members", () => {
+      for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/oversight-model.md"]) {
+        const doc = read(rel);
+        for (const skill of UNLOCK_SKILLS) {
+          expect(doc, `${rel} unlock prose includes ${skill}`).toContain(skill);
+        }
+        expect(doc, rel).not.toMatch(/stays gated \(read-only orientation\)/);
+        expect(doc, rel).not.toMatch(/instruments the repo root/);
+      }
+    });
+
+    it("stale terminology is gone: plan-phase, plan remnants, guard-table Status row", () => {
+      const codeReview = read("skills/pwk-code-review/SKILL.md");
+      expect(codeReview).not.toMatch(/integration tests/);
+      expect(codeReview).toContain("acceptance criteria");
+      expect(codeReview).not.toMatch(/in the plan(?!ning)/);
+      expect(codeReview).not.toMatch(/the human tagged this requirement/);
+      for (const rel of ["README.md", "docs/developer-usage-guide.md", "docs/workflow-phases.md"]) {
+        expect(read(rel), rel).toMatch(/design → execute → finalize/);
+      }
+      const guide = read("docs/developer-usage-guide.md");
+      const diagnoseIdx = guide.indexOf("### Diagnose");
+      const walkthroughIdx = guide.indexOf("### Walkthrough");
+      expect(diagnoseIdx, "diagnose prose precedes the walkthrough block").toBeLessThan(walkthroughIdx);
     });
   });
 });
