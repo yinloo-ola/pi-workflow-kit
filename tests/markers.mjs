@@ -130,8 +130,8 @@ export const WORKFLOW_CONSISTENCY_MARKERS = {
   // R2 — terminal-state ship gate; finalizing stays the failure authority.
   shipGateTerminal: "every requirement's Done cell is terminal",
   digestListsVerdicts: "list every `❌`/`⏭` row with its reason",
-  failedGlyphNamed: "set its Done cell `❌`",
-  skippedGlyphNamed: "set its Done cell `⏭`",
+  failedGlyphNamed: "Set its Done cell `❌`",
+  skippedGlyphNamed: "Set its Done cell `⏭`",
   resumeSkipsTerminal: "`✅`/`❌`/`⏭` are resolved",
   knowingWhatFailed: "knowing what failed",
   statusDoneCounts: "done (1 ❌ · 1 ⏭)",

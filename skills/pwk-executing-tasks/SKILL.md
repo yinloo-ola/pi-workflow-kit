@@ -77,10 +77,10 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
 ## Resume
 
-Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not `✅` routes the next requirement — `⬜`, `🔄`, and blank all mean not-done), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs:
+Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not terminal routes the next requirement — `⬜`, `🔄`, and blank all mean not-done; `✅`/`❌`/`⏭` are resolved and are skipped past), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation-records, review reports, code digest) carry nothing the resume needs:
 - `e2e-written` → write the E2E if not yet present, post the notice, and continue into the implement phase (no stop).
 - `feature-spec-paused` (legacy — a progress file from before the notice replaced the stop) → post the notice and continue into the implement phase.
-- `implementing (k/N)` → continue the next not-yet-✅ requirement.
+- `implementing (k/N)` → continue the next not-yet-terminal requirement.
 - `reviewing` → continue/finish the feature review, then assemble the **ship** checkpoint.
 - `ship-paused` → re-present the ship checkpoint and wait.
 - legacy `feature-complete-paused` (a progress file from before the ship gate) → treat as `reviewing`: finish the feature review, then present the ship checkpoint.
@@ -122,7 +122,7 @@ When a per-requirement checkpoint fires it is a **hard stop**:
 
 ## Ship checkpoint (feature-complete + review, merged)
 
-When every requirement's Done column is ✅:
+When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, reason in row), or `⏭` (skipped, reason in row):
 
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
 2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. If it is still red, a requirement is missing or wrong — fix it before proceeding. (If the design declared no feature E2E — a pure refactor — gate on the full suite staying green instead.)
@@ -133,6 +133,7 @@ When every requirement's Done column is ✅:
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
    - a green-gates line: full suite green, feature E2E green;
    - the **execution summary** — what each requirement became, deviations included;
+   - the **verdict rows** — list every `❌`/`⏭` row with its reason, so the approval is given knowing what failed;
    - the **code digest** — the plain-language change explanation from the progress file (summary, flow, gotchas, key files);
    - the **coverage table** from the spec-reviewer report (one verdict row per R#);
    - findings status: fixed / open for the human;
@@ -183,7 +184,7 @@ PACKET="<design doc's directory>/<design doc's stem>-review-packet.md"   # besid
 - **`inline`** — perform `/skill:pwk-code-review` over the whole diff as a single pass.
 - **Fallback** — if the host has no compatible parallel-review capability, cannot prove the requested read-only/fresh-context/bounded constraints, or delegation fails, perform the missing review work inline. Retain successful delegated reports and do not mark the feature fully reviewed while a required role is missing.
 
-On success, continue assembling the ship checkpoint; once the human approves it, set `Feature phase: done`.
+On success, continue assembling the ship checkpoint; once the human approves it — knowing what failed — set `Feature phase: done`. (An umbrella part's gate is its own progress file; `pwk-finalizing` reads every part's file, and a `❌` in any part blocks the umbrella until the human sends the work back or explicitly types `--force-failed`.)
 
 ## Tags reference
 
@@ -197,7 +198,7 @@ The design doc tags each requirement and the feature level:
 
 | User says | Agent does |
 |-----------|-----------|
-| `skip` | Mark current requirement skipped, move to next |
+| `skip` | Set its Done cell `⏭` (with the reason), move to next |
 | `status` | Show the progress file (feature phase + requirement table) |
 | `stop` | Restore current requirement to its pre-in-progress state, suggest `/new` |
 | `retry` | Re-read the requirement, start over |
@@ -233,4 +234,4 @@ Feature phase: done
 1. Re-read the requirement's acceptance criteria — you may have drifted.
 2. Check `git log` for context. Ask the user — clarify beats guessing.
 3. Still stuck → discard uncommitted changes (`git restore .`); if already committed, also `git revert` the requirement's commit(s). **Never leave a failed requirement's partial work on the shipped branch.**
-4. Mark the requirement failed with the reason and move on. Check `docs/lessons.md` — a prior lesson may apply.
+4. Set its Done cell `❌` (with the reason as a suffix in the Requirement cell) and move on. Check `docs/lessons.md` — a prior lesson may apply. (A legacy `*-implementation.md` feature has no Feature-phase gate; its failure handling is unchanged.)
