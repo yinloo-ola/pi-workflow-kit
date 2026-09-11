@@ -151,9 +151,11 @@ describe("workflow-consistency per-slice", () => {
   });
 
   describe("R6 — inventory doc parity sweep", () => {
-    it("all seven skills appear in every inventory doc", () => {
+    it("all six skills appear in every inventory doc", () => {
       const names = skillNamesForR6();
-      expect(names.length).toBe(7);
+      // 4 pipeline + 2 utility. skill-lint's inventory parity pins the exact roster;
+      // this pins that every doc names all of it.
+      expect(names.length).toBe(6);
       for (const rel of [
         "README.md",
         "docs/developer-usage-guide.md",
@@ -164,7 +166,7 @@ describe("workflow-consistency per-slice", () => {
         for (const name of names) {
           expect(doc, `${rel} names ${name}`).toContain(name);
         }
-        expect(doc, rel).not.toMatch(/5 pipeline skills|2 utility skills/);
+        expect(doc, rel).not.toMatch(/5 pipeline skills|3 utility skills/);
       }
     });
 
@@ -189,9 +191,8 @@ describe("workflow-consistency per-slice", () => {
         expect(read(rel), rel).toMatch(/design → execute → finalize/);
       }
       const guide = read("docs/developer-usage-guide.md");
-      const diagnoseIdx = guide.indexOf("### Diagnose");
       const walkthroughIdx = guide.indexOf("### Walkthrough");
-      expect(diagnoseIdx, "diagnose prose precedes the walkthrough block").toBeLessThan(walkthroughIdx);
+      expect(walkthroughIdx, "the walkthrough block is present").toBeGreaterThan(-1);
     });
 
     it("the -notes.md seed files dispose with their topic (spec-reviewer R6 gap)", () => {
@@ -220,12 +221,13 @@ describe("workflow-consistency per-slice", () => {
     });
   });
 
-  describe("R9 — diagnose ↔ execution recording hook", () => {
-    it("executing mandates fix recording; diagnose closes the loop from its side", () => {
+  describe("R9 — mid-execution fix recording hook", () => {
+    it("executing still mandates recording mid-execution fixes", () => {
+      // The diagnose half of this hook went with the skill: no diagnosis skill closes
+      // the loop from its side, so the obligation is asserted where it now lives —
+      // the requirement's execution-summary row.
       const executing = read("skills/pwk-executing-tasks/SKILL.md");
-      const diagnose = read("skills/pwk-diagnose/SKILL.md");
       expect(executing).toContain(M.midFixMandated);
-      expect(diagnose).toContain(M.diagnoseReminder);
     });
   });
 });

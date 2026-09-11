@@ -223,7 +223,7 @@ if (!exportMatch) {
 if (!/UNLOCK_SKILLS\.some\(/.test(guardSrc)) {
   fail("workflow-guard.ts: input handler does not dereference UNLOCK_SKILLS");
 }
-const EXPECTED_UNLOCK = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-diagnose", "pwk-walkthrough"];
+const EXPECTED_UNLOCK = ["pwk-executing-tasks", "pwk-finalizing", "pwk-code-review", "pwk-walkthrough"];
 let unlockOk = true;
 for (const s of EXPECTED_UNLOCK) {
   if (!unlockSet.has(s)) {
@@ -244,13 +244,6 @@ if (status && /does not unlock/i.test(status.content)) {
   ok("pwk-status: documents it does not unlock the guard");
 } else if (status) {
   fail("pwk-status: must state it does not unlock the guard");
-}
-// pwk-diagnose must claim it exits the gated phase.
-const diag = loadSkills().find((s) => s.name === "pwk-diagnose");
-if (diag && /exits the gated/i.test(diag.content)) {
-  ok("pwk-diagnose: documents it exits the gated phase");
-} else if (diag) {
-  fail("pwk-diagnose: must state invoking it exits the gated phase");
 }
 // pwk-code-review must claim it is unlocked.
 const crSkill = loadSkills().find((s) => s.name === "pwk-code-review");
@@ -908,7 +901,7 @@ const INVENTORY_DOCS = [
 ];
 const UNLOCK_PROSE_SITES = ["README.md", "docs/oversight-model.md", "docs/developer-usage-guide.md"];
 const PIPELINE_SKILLS = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-code-review", "pwk-finalizing"];
-const UTILITY_SKILLS = ["pwk-status", "pwk-diagnose", "pwk-walkthrough"];
+const UTILITY_SKILLS = ["pwk-status", "pwk-walkthrough"];
 // The tree's complete roster — EXPECTED_SKILL_COUNT is these two lists merged; adding a
 // skill dir without extending the right list fails loudly (see roster check below).
 const EXPECTED_SKILL_COUNT = PIPELINE_SKILLS.length + UTILITY_SKILLS.length;

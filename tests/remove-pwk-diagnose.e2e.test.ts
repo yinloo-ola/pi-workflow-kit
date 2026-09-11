@@ -16,17 +16,20 @@ import { UNLOCK_SKILLS } from "../extensions/workflow-guard";
  * (this file runs inside it); the scenarios below assert the other two, plus the count
  * claims the gate's lint would otherwise fail on.
  *
- * Planning artifacts under `docs/plans/` are ephemeral (disposed at finalize) and
- * `CHANGELOG.md` is an immutable history record — those are the only files allowed to
- * still name the removed skill. This test file is its own allowlist entry: it asserts the
- * removal, so it must name the token. Content is scanned; file names are not, since the
- * test's own path is named after the topic.
+ * Files allowed to name the removed token in their content:
+ * - this test and `tests/workflow-guard.test.ts` — they assert the removal, so they must
+ *   name what they assert is gone (the guard test proves invoking it leaves the gate closed);
+ * - `CHANGELOG.md` — immutable history record;
+ * - anything under `docs/plans/` — ephemeral planning artifacts, disposed at finalize.
+ * Everything else is the shipped corpus and must be clean. Content is scanned; file names
+ * are not exempted (`skills/pwk-diagnose/` must not reappear as a path either).
  */
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const REMOVED = "pwk-diagnose";
 const SELF = "tests/remove-pwk-diagnose.e2e.test.ts";
+const GUARD_TEST = "tests/workflow-guard.test.ts";
 const PLANNING_PREFIX = "docs/plans/";
-const MENTION_ALLOWLIST = new Set([SELF, "CHANGELOG.md"]);
+const MENTION_ALLOWLIST = new Set([SELF, GUARD_TEST, "CHANGELOG.md"]);
 
 /** The shipped corpus as git sees it — ignored installs (`node_modules`, `.agents/`) are out. */
 function trackedFiles(): string[] {

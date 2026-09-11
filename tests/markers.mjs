@@ -116,7 +116,7 @@ export const LEAN_GATES_MARKERS = {
  * row-state + ceremony vocabulary, the terminal-state ship gate (done = resolved,
  * finalizing stays the failure authority), the implementable setup checkpoint, the
  * derived display-only Risk column, the FA template's own tag, inventory doc parity
- * + parity lint, the Commit-column packet base, and the diagnose recording hook.
+ * + parity lint, the Commit-column packet base, and the mid-execution fix-recording hook.
  * Same contract as DIGEST_MARKERS — one canonical string per behavior, shared by
  * skill-lint and the vitest suites. Each marker distinguishes the new shape from the
  * old (e.g. `terminal` vs the all-✅ gate, `Commit column` vs bare `<merge-base>`).
@@ -161,9 +161,8 @@ export const WORKFLOW_CONSISTENCY_MARKERS = {
   commitColumnFill: "commit hash in the Commit column",
   featureBaseRule: "parent of the first recorded commit",
   perReqSpanRule: "previous requirement's last commit",
-  // R9 — the diagnose ↔ execution recording hook.
+  // R9 — the mid-execution fix-recording hook (the diagnose half was removed with the skill).
   midFixMandated: "mandatory execution-summary content",
-  diagnoseReminder: "record the fix in the progress file",
 };
 
 /**

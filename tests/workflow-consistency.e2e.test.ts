@@ -66,7 +66,9 @@ describe("workflow-consistency (feature E2E)", () => {
     // F7/F8 — every skill is present in every inventory doc, and each unlock-prose
     // site lists the full UNLOCK_SKILLS set (source of truth: the guard export).
     const names = skillNames();
-    expect(names.length).toBeGreaterThanOrEqual(7);
+    // Six shipped skills: 4 pipeline + 2 utility. The lower bound is a floor, not the
+    // count itself — skill-lint's inventory parity pins the exact roster.
+    expect(names.length).toBeGreaterThanOrEqual(6);
     for (const rel of [
       "README.md",
       "docs/developer-usage-guide.md",

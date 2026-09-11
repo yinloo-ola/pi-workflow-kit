@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -32,6 +32,11 @@ function readRepo(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+/** Every shipped skill, derived from the tree so a removal or addition cannot go stale here. */
+const SKILL_SITES = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && entry.name.startsWith("pwk-"))
+  .map((entry) => `skills/${entry.name}/SKILL.md`);
+
 describe("human review digests feature (E2E)", () => {
   it("should thread R# digests from design to coverage table", () => {
     // R1 — design docs open with an at-a-glance digest: plain summary + one row per
@@ -46,14 +51,7 @@ describe("human review digests feature (E2E)", () => {
     // R2 — the crosswalk and its plan phase are gone entirely (pwk 2.0): the
     // design doc's ### R<n> blocks are the map; no skill restates one.
     expect(existsSync(join(repoRoot, "skills/pwk-writing-plans"))).toBe(false);
-    for (const site of [
-      "skills/pwk-brainstorming/SKILL.md",
-      "skills/pwk-executing-tasks/SKILL.md",
-      "skills/pwk-status/SKILL.md",
-      "skills/pwk-finalizing/SKILL.md",
-      "skills/pwk-code-review/SKILL.md",
-      "skills/pwk-diagnose/SKILL.md",
-    ]) {
+    for (const site of SKILL_SITES) {
       expect(readRepo(site), site).not.toMatch(/crosswalk/i);
     }
 
