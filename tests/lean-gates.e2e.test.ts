@@ -46,7 +46,8 @@ describe("leaner execution gates (feature E2E)", () => {
     expect(status).not.toMatch(/feature-spec-paused`\s*→\s*`feature-spec/);
     expect(status).not.toMatch(/→\s*`feature-spec`/);
 
-    // R4 — the checkpoint enum is none | full across every consumer site.
+    // R4 — the checkpoint enum is none | full across every consumer site, and the
+    // retired `spec` value is gone from the enumerations and the paired rule.
     expect(brainstorming).toContain(LEAN_GATES_MARKERS.checkpointsEnum);
     expect(executing).toContain(LEAN_GATES_MARKERS.checkpointsEnum);
     for (const rel of [
@@ -54,9 +55,13 @@ describe("leaner execution gates (feature E2E)", () => {
       "skills/pwk-executing-tasks/SKILL.md",
       "docs/workflow-phases.md",
       "docs/developer-usage-guide.md",
+      "README.md",
     ]) {
-      expect(read(rel)).not.toMatch(/Checkpoints:.*\bspec\b/);
-      expect(read(rel)).not.toMatch(/requires at least `inline`/);
+      const specLines = read(rel)
+        .split("\n")
+        .filter((line) => /Checkpoints/.test(line) && /\bspec\b/.test(line));
+      expect(specLines, `${rel} still enumerates \`spec\``).toEqual([]);
+      expect(read(rel), rel).not.toMatch(/requires at least `inline`/);
     }
 
     // R5 — the digest's Flow is a navigable map: spine + branches + was: clause +

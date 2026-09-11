@@ -18,8 +18,9 @@ describe("single-doc: merged design doc (R1)", () => {
     // leaner-execution-gates R1: nothing is tagged silently — the human owns the tag.
     expect(bs).toMatch(/only the human tags/i);
     expect(bs).not.toMatch(/auto-tag/i);
-    // spec+skip incompatibility travels with the tags
-    expect(bs).toMatch(/`spec` requires at least `inline`/);
+    // leaner-execution-gates R4: the `spec` checkpoint value and its paired rule are gone.
+    expect(bs).toMatch(/### Checkpoints: none \| full/);
+    expect(bs).not.toMatch(/requires at least `inline`/);
   });
 
   it("should never emit a crosswalk or per-requirement test-name list", () => {

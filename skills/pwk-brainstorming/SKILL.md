@@ -77,7 +77,7 @@ The whole umbrella is one branch and one PR: `pwk-executing-tasks` creates the b
    - Given … When … Then …
    - Given … When … Then … (edge case)
 
-   ### Checkpoints: none | full | spec
+   ### Checkpoints: none | full
    ### Review: skip | parallel | inline
 
    ### Production-risk notes
@@ -90,9 +90,9 @@ The whole umbrella is one branch and one PR: `pwk-executing-tasks` creates the b
    Block rules:
 
    - **No test-name lists.** The criteria are the test spec — the executor writes and names the actual tests red-green from them, so the doc contains no test-name lists and no R#-to-section mapping tables: the block structure is the map.
-   - **Tag every requirement** — `### Checkpoints` (how many human stops: `none` = no per-requirement stop, the default — the feature gate covers it; `full` = tests + complete stops; `spec` = tests stop only) and `### Review` (per-requirement review: `skip` = none, the default; `parallel` = four delegated reviewers; `inline` = one `pwk-code-review` pass). Missing tags default to `none` / `skip`. Flag `full` or `spec` only where complex logic or the main part of the feature makes a human look at the slice worth the stop.
+   - **Tag every requirement** — `### Checkpoints` (how many human stops: `none` = no per-requirement stop, the default — the feature gate covers it; `full` = tests + complete stops) and `### Review` (per-requirement review: `skip` = none, the default; `parallel` = four delegated reviewers; `inline` = one `pwk-code-review` pass). Missing tags default to `none` / `skip`. Flag `full` only where complex logic or the main part of the feature makes a human look at the slice worth the stop.
    - **Nothing is tagged silently here; only the human tags a slice for review.** A requirement that touches a production-risk area is flagged in the At-a-glance risk column and carries its `### Production-risk notes`, but its written `### Review` value stays `skip` unless the human sets it — propose the tag in prose, leave the field at `skip`. An explicit human tag always wins, in both directions.
-   - **`spec` requires at least `inline` review** — dropping the complete stop is only safe when review covers implementation quality; never combine `spec` with `Review: skip` (use `Checkpoints: none` instead).
+   - **No per-requirement spec stop, by design** — the acceptance criteria are approved right here, at design time; re-checking them mid-execution asks a question the human already answered. A legacy `spec` tag in an in-flight design doc resolves to `none`.
    - **Production-risk notes** — a requirement touching a production-risk area carries its notes inside the block. Risks involving schema migrations, new dependencies, external APIs, or seed data also get a `## Setup` section (dependencies, migrations, seed data, and how to verify setup worked) between `## Requirements` and `## Feature acceptance`.
    - **Ordering** — dependencies come earlier in the list; the executor runs blocks in listed order with no dependency graph. Aim for vertical slices that merge cleanly on their own.
 

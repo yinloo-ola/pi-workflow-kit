@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.2.0] - 2026-09-11
+
+### Changed
+
+- **Per-requirement review auto-tag removed** — `pwk-brainstorming` no longer tags a requirement `### Review: parallel` merely because it carries `### Production-risk notes`. `### Review` defaults to `skip` everywhere and **only the human tags** a slice; the feature review already covers the whole diff, including risk requirements. The removed rule was the source of reviewer-role multiplication: a part with four risk-tagged requirements paid four roles per requirement *plus* four at the ship checkpoint.
+- **One risk-scaled feature review** — the feature-level tag becomes `### Feature review: auto | parallel | inline` (default `auto`). `auto` resolves on the design's own production-risk content: `parallel` (four fresh-context roles) when the design has a non-empty `## Production-risk areas` section or any requirement has non-empty `### Production-risk notes`, `inline` (one `pwk-code-review` pass) otherwise. An explicit `parallel`/`inline` is used as written and always wins over `auto`.
+- **Feature-spec checkpoint becomes a notice** — the feature-acceptance E2E is still written first (red) and is still the primary enforced gate at the ship checkpoint, but it is now *reported* with its failing output instead of pausing execution: its text was already approved as `## Feature acceptance` during brainstorm. Mandatory human stops per feature drop to one (ship). `pwk-status` renders `e2e-written` as `execute 0/N` and the `feature-spec` display state is retired.
+- **`spec` removed from the per-requirement Checkpoints enum** — `### Checkpoints` accepts `none | full` (default `none`). The retired value was a stop on acceptance criteria the human had already approved at design time; the paired "`spec` requires at least `inline` review" rule went with it.
+
+### Migration
+
+- In-flight design docs tagged with the retired `spec` checkpoint value resolve to `none` — no stop, no error.
+- Legacy progress files at `Feature phase: feature-spec-paused` resume into the implement phase and render as `execute 0/N` in `pwk-status`.
+- A missing `### Feature review` tag now means `auto` (risk-scaled), not unconditional `parallel`; a design that wants the previous always-four-roles behavior writes `### Feature review: parallel`.
+
 ## [2.1.2] - 2026-09-10
 
 ### Changed

@@ -64,7 +64,7 @@ for (const skill of loadSkills()) {
 
 // --- Check 2: tag vocabulary consistency across the pipeline ---
 // The canonical vocabularies, defined in pwk-brainstorming and consumed by pwk-executing-tasks.
-const CHECKPOINT_VOCAB = ["full", "spec", "none"];
+const CHECKPOINT_VOCAB = ["none", "full"];
 const REVIEW_VOCAB = ["parallel", "inline", "skip"];
 // leaner-execution-gates R2: the feature-level review gained a risk-scaled `auto`.
 const FEATURE_REVIEW_VOCAB = ["auto", "parallel", "inline"];
@@ -143,33 +143,36 @@ if (bs && et) {
   }
 }
 
-// --- Check 4: spec+skip incompatibility documented wherever tags are enumerated ---
-console.log("spec+skip guard:");
-const docsToCheck = [join(root, "docs/workflow-phases.md"), join(root, "docs/developer-usage-guide.md")];
-for (const f of docsToCheck) {
-  let content;
-  try {
-    content = readFileSync(f, "utf8");
-  } catch {
-    fail(`${f}: not found`);
-    continue;
+// --- Check 4: the `spec` checkpoint value is gone (leaner-execution-gates R4) ---
+// It was a stop on acceptance criteria the human already approved during brainstorm, so
+// the enum is `none | full` and the paired "spec requires inline review" rule went with it.
+// A legacy in-flight `spec` resolves to `none` rather than erroring.
+console.log("spec checkpoint removed:");
+const specSites = [
+  ["docs/workflow-phases.md", readFileSync(join(root, "docs/workflow-phases.md"), "utf8")],
+  ["docs/developer-usage-guide.md", readFileSync(join(root, "docs/developer-usage-guide.md"), "utf8")],
+  ["pwk-brainstorming", bs?.content ?? ""],
+  ["pwk-executing-tasks", et?.content ?? ""],
+];
+let specFree = true;
+for (const [name, content] of specSites) {
+  const specLines = content.split("\n").filter((line) => /Checkpoints/.test(line) && /\bspec\b/.test(line));
+  if (specLines.length > 0) {
+    fail(`${name}: Checkpoints enum still lists \`spec\`: "${specLines[0].trim()}"`);
+    specFree = false;
   }
-  // Must mention spec and the inline-requirement constraint somewhere.
-  const hasSpec = /\bspec\b/.test(content);
-  const hasGuard = /spec.*inline|inline.*spec/i.test(content) || /requires at least `inline`/.test(content);
-  if (hasSpec && hasGuard) ok(`${f.split("/").pop()}: documents spec requires inline review`);
-  else fail(`${f.split("/").pop()}: missing spec+inline guard note`);
+  if (/requires at least `inline`/.test(content)) {
+    fail(`${name}: the retired \`spec\` ⇒ inline rule must be gone`);
+    specFree = false;
+  }
 }
-// And in the skills themselves
-if (bs && /\bspec\b/.test(bs.content) && /requires at least `inline`/.test(bs.content)) {
-  ok("pwk-brainstorming: documents spec requires inline review");
-} else if (bs) {
-  fail("pwk-brainstorming: missing spec+inline guard note");
-}
-if (et && /\bspec\b/.test(et.content) && /at least `inline`/.test(et.content)) {
-  ok("pwk-executing-tasks: documents spec requires inline review");
-} else if (et) {
-  fail("pwk-executing-tasks: missing spec+inline guard note");
+if (specFree) ok("`spec` checkpoint value removed from every site (enum + paired rule)");
+// The legacy value migrates instead of erroring.
+const legacySpecLine = (et?.content ?? "").split("\n").find((l) => /legacy/i.test(l) && /`spec`/.test(l)) ?? "";
+if (legacySpecLine && /`none`/.test(legacySpecLine)) {
+  ok("pwk-executing-tasks: legacy `spec` resolves to `none` (migration documented)");
+} else {
+  fail("pwk-executing-tasks: must document the legacy `spec` → `none` migration on one line");
 }
 
 // --- Check 5: Feature acceptance contract across the pipeline ---
