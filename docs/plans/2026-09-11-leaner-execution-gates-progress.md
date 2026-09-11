@@ -9,7 +9,7 @@ Feature phase: implementing (1/6)
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ✅ | Per-requirement review auto-tag removed | — | c2bbf0b |
+| 1 | ✅ | Per-requirement review auto-tag removed | — | 54f6a68 |
 | 2 | ⬜ | Feature review is one risk-scaled pass | — | — |
 | 3 | ⬜ | Feature-spec checkpoint becomes a notice | — | — |
 | 4 | ⬜ | `spec` removed from the Checkpoints enum | 🔎 inline | — |
