@@ -1163,6 +1163,78 @@ if (fin) {
   }
 }
 
+// --- Pass-5 flow coherence (coherence sweep 5) ---
+console.log("flow coherence (pass 5):");
+if (status) {
+  // R12 — the ❌/⏭ glyph counts run over the same scoped range as the N/N tally:
+  // the Execution summary rows share the `| <n> |` row shape, so an unscoped grep
+  // contradicts the skill's own "do not inflate the count" claim.
+  const SCOPED_VERDICT = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep -c '^| [0-9].*❌'";
+  if (status.content.includes(SCOPED_VERDICT) && status.content.includes("| grep -c '^| [0-9].*⏭'")) {
+    ok("pwk-status: verdict glyph counts run over the scoped Requirements-table range");
+  } else {
+    fail("pwk-status: the ❌/⏭ counts must run over the same scoped range as the N/N tally");
+  }
+  // R13 — the awaiting-setup state is decided by the header slot alone; a design-doc
+  // cross-check would contradict "neither do design docs" extraction discipline.
+  if (/Setup: pending` renders the topic as \*\*`awaiting setup`\*\*/.test(status.content)) {
+    ok("pwk-status: awaiting setup is decided from the header slot alone");
+  } else {
+    fail("pwk-status: the awaiting-setup rule must key on the header slot, not a design-doc read");
+  }
+}
+if (fin) {
+  // R14 — finalizing's verdict greps are sed-scoped like status's, making the
+  // "Requirements-table rows" claim true in the command, not just the prose.
+  const FIN_SCOPED = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep '^| [0-9].*❌'";
+  if (fin.content.includes(FIN_SCOPED) && fin.content.includes("| grep '^| [0-9].*⏭'")) {
+    ok("pwk-finalizing: verdict greps are sed-scoped to the Requirements table");
+  } else {
+    fail("pwk-finalizing: the ❌/⏭ verdict greps must be sed-scoped to the Requirements table");
+  }
+}
+if (et) {
+  // R15 — the ship-paused resume re-presents a checkpoint that includes the code
+  // digest, so the blanket "nothing the resume needs" read rule needs this carve-out.
+  if (/ship-paused` route re-presents the ship checkpoint, so it also reads the `## Code digest`/.test(et.content)) {
+    ok("pwk-executing-tasks: the ship-paused resume exception reads the Code digest");
+  } else {
+    fail("pwk-executing-tasks: the resume read rule must carve out the ship-paused route's Code digest read");
+  }
+  // R16 — uncommitted planning docs do not cross `git worktree add`; the hand-off
+  // must say how they reach the worktree (commit on the branch, or copy + verify).
+  if (/do not cross a worktree boundary/.test(et.content)) {
+    ok("pwk-executing-tasks: the worktree hand-off carries the uncommitted topic folder across");
+  } else {
+    fail("pwk-executing-tasks: the worktree hand-off must state how uncommitted planning docs cross");
+  }
+}
+if (crSkill) {
+  // R17 — the terminal-row parenthetical is scoped to the feature-level review: a
+  // per-requirement review also runs in the feature-gate flow, and its row is 🔄.
+  if (
+    /At the feature-level review every row is already terminal/.test(crSkill.content) &&
+    !/In the feature-gate flow every row/.test(crSkill.content)
+  ) {
+    ok("pwk-code-review: the terminal-row note is scoped to the feature-level review");
+  } else {
+    fail("pwk-code-review: the terminal-row note must name the feature-level review, not the whole flow");
+  }
+}
+{
+  // R18 — README's guard table must not grant status full access: status never exits
+  // the gate, so its row says the active phase's enforcement is unchanged.
+  const readme = readFileSync(join(root, "README.md"), "utf8");
+  const statusRow = readme.split("\n").find((l) => l.startsWith("| **Status**"));
+  if (statusRow && /never exits the gate/.test(statusRow) && !/Full access/.test(statusRow)) {
+    ok("README: the Status guard-table row keeps the gate up (no full-access claim)");
+  } else {
+    fail(
+      `README: the Status guard-table row must not grant full access — status runs inside the gate: "${statusRow ?? "missing"}"`,
+    );
+  }
+}
+
 // --- Summary ---
 // --- Inventory parity (workflow-consistency R7; kills doc drift in both directions) ---
 // The four inventory docs must name every skill directory under skills/, the unlock-prose

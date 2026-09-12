@@ -52,7 +52,7 @@ Enforces phase-appropriate tool access — not just guidelines, but hard blocks:
 |-------|:-:|:-:|
 | **Design** | 🔒 Blocked outside `docs/plans/` | 🔒 Destructive commands blocked (simple blacklist) |
 | **Execute** / **Code-review** / **Finalize** / **Walkthrough** | ✅ Full access | ✅ Full access |
-| **Status** | ✅ Full access (read-only orientation) | ✅ Full access (read-only orientation) |
+| **Status** | Unchanged — status never exits the gate (read-only orientation) | Unchanged — the active phase's bash rules still apply |
 
 The agent can read code and discuss design with you during the design phase, but it physically cannot modify source files. Bash during gated phases is governed by a simple common-blacklist (a command is allowed unless it matches a destructive pattern), and a short phase reminder is shown once when the gated phase begins so the model self-restricts.
 
@@ -127,7 +127,7 @@ Rules are simple imperative bullets:
 
 No configuration needed — the agent creates `docs/lessons.md` on first use and it grows as the agent learns.
 
-### One Feature-Level Checkpoint
+### Feature-Level Checkpoints
 
 The feature-gate flow's hard human-review gates (not optional) — **two hard stops when the design carries `## Setup`** (setup + ship), otherwise one (ship):
 

@@ -9,7 +9,7 @@ Instructions for AI coding agents working in this repository. If you also mainta
 Three components:
 - `extensions/workflow-guard.ts` — the single code file: the enforcement engine plus the Pi-only `/pwk-setup` command that installs role definitions into `.agents/agents/`.
 - `skills/pwk-*/SKILL.md` — workflow-phase guidance, invoked as `/skill:pwk-*`. Harness-neutral: delegation is expressed as logical roles and capabilities, not a concrete agent tool.
-- `agents/pwk-*.md` — canonical, provider-neutral role contracts (recon scout + four reviewers). `/pwk-setup` copies them into the project's `.agents/agents/` so compatible delegation extensions (e.g. `@tintinweb/pi-subagents`) can discover them; the legacy `pi-subagents` package manifest is retained as optional compatibility only.
+- `agents/pwk-*.md` — canonical, provider-neutral role contracts (recon scout + four reviewers). `/pwk-setup` copies them into the project's `.agents/agents/` so compatible delegation extensions (e.g. `@tintinweb/pi-subagents`) can discover them; the kit installs no delegation provider itself.
 
 ## Commands
 
