@@ -77,6 +77,20 @@ describe("code-digest per-slice", () => {
     expect(keyFilesAt).toBeGreaterThan(-1);
     expect(digestAt).toBeGreaterThan(templateAt); // after the execution summary
     expect(keyFilesAt).toBeGreaterThan(digestAt);
+    // The ship checkpoint presents the digest between the execution summary and
+    // diff-on-request, which stays last (re-anchored from the pre-split SKILL.md pin).
+    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const listAt = executing.indexOf("present, in this order:");
+    expect(listAt).toBeGreaterThan(-1);
+    const list = executing.slice(listAt, executing.indexOf("Wait for approval", listAt));
+    const summaryAt = list.indexOf("the **execution summary**");
+    const shipDigestAt = list.indexOf("the **code digest**");
+    const diffAt = list.indexOf("full diff on request");
+    expect(summaryAt).toBeGreaterThan(-1);
+    expect(shipDigestAt).toBeGreaterThan(-1);
+    expect(diffAt).toBeGreaterThan(-1);
+    expect(shipDigestAt).toBeGreaterThan(summaryAt); // after the execution summary
+    expect(shipDigestAt).toBeLessThan(diffAt); // before diff-on-request, which stays last
   });
   it("should state the digest fill rules", () => {
     const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");

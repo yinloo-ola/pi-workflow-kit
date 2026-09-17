@@ -59,7 +59,8 @@ def git(project, *args):
         env={**os.environ, 'GIT_OPTIONAL_LOCKS': '0', 'GIT_TERMINAL_PROMPT': '0'},
     )
     if result.returncode:
-        raise PacketError(f'git {args[0]} failed: {result.stderr.decode("utf-8", errors="replace").strip()}')
+        invocation = ' '.join(['git', *args])
+        raise PacketError(f'{invocation} failed: {result.stderr.decode("utf-8", errors="replace").strip()}')
     return result.stdout.decode('utf-8', errors='replace')
 
 

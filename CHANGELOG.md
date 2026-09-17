@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Phase skills are slimmed into skill-local contracts and deterministic helpers.** `pwk-brainstorming` and `pwk-executing-tasks` now keep their detailed contracts in `references/` (`design-format.md`, `umbrella.md`; `progress-format.md`, `resume.md`, `review.md`) loaded at their decision points, with compact contract indexes left in the entrypoints. Structural design validation and review-packet assembly moved from prose recipes to read-only, stdlib-only Python 3.9+ helpers (`scripts/validate-design.py`, `scripts/build-review-packet.py`) — **Python 3 is now a declared prerequisite for those two steps** (reported as a blocker when absent; no auto-install, no fallback). Packet bounds stay explicit and immutable (Commit-column parents; no merge-base guessing), packet writes are atomic, and no packet byte passes through model output. Behavioral fidelity and complete-run token savings were established by the recorded baseline/candidate evaluation (`tests/evals/simplify-workflow-skills/`, env-gated via `PWK_EVAL_REPORT` — no paid runs inside `npm test`).
+
 ### Removed
 
 - **Legacy 1.x support is dropped (breaking)** — the kit no longer routes or disposes pre-2.0 artifacts, and no migration is provided. Discovery covers `*-design.md` only (no `*-implementation.md` stem-matching), the `feature-spec-paused` / `feature-complete-paused` phase values are gone from the executing resume map, status mappings, and the finalizing gate, and the flat per-file disposal globs (`-design/-implementation/-progress/-review-packet/-notes`) are retired — the topic folder `docs/plans/<date>-<topic>/` is the only disposal unit. A legacy `spec` checkpoint value no longer resolves silently; the tag enum is `none | full`.

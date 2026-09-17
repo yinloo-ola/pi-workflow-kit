@@ -3,3 +3,6 @@ node_modules/
 # KotaDB local storage
 .kotadb/
 .agents/
+
+# Delta tool worktrees (local agent scratch)
+.delta/

@@ -36,6 +36,6 @@
     }
   ],
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/docs", "!**/*.md", "!**/*.json"]
+    "includes": ["**", "!**/node_modules", "!**/docs", "!**/*.md", "!**/*.json", "!**/.delta"]
   }
 }

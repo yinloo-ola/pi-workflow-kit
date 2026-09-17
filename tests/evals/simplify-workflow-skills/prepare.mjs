@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "../../..");
