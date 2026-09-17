@@ -11,9 +11,9 @@ Baseline: dd79402aeebaeea55a84334af00110ad37273ba2
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ✅ | Focused brainstorming and structural design validation | — | pending code commit |
-| 2 | ✅ | Focused execution and deterministic review packets | — | pending code commit |
-| 3 | ✅ | Compatible adjacent skills and packaged resources | — | pending code commit |
+| 1 | ✅ | Focused brainstorming and structural design validation | — | 40c4b1a |
+| 2 | ✅ | Focused execution and deterministic review packets | — | 40c4b1a |
+| 3 | ✅ | Compatible adjacent skills and packaged resources | — | 40c4b1a |
 | 4 | 🔄 | Behavioral fidelity and complete-run token evidence | — | — |
 
 ## Execution summary
