@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "reason": "No provider-authorized model runs have been performed.",
+  "limitation": "Evaluation requires a human to authorize a provider and supply workspace-local configuration.",
+  "evidence": []
+}

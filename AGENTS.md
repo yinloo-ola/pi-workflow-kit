@@ -7,7 +7,8 @@ Instructions for AI coding agents working in this repository. If you also mainta
 `pi-workflow-kit` (npm `@tianhai/pi-workflow-kit`) is an extension + skill kit for the [pi](https://github.com/badlogic/pi-mono) AI-coding-agent runtime. It enforces a **design → execute → finalize** workflow with test-first discipline: one buildable design doc per feature (requirements carry their own acceptance criteria + review tags — no separate plan phase). During the design phase the guard physically blocks writes to source files — only `docs/plans/` is writable, and a destructive-bash blacklist is enforced.
 
 Three components:
-- `extensions/workflow-guard.ts` — the single code file: the enforcement engine plus the Pi-only `/pwk-setup` command that installs role definitions into `.agents/agents/`.
+- `extensions/workflow-guard.ts` — the enforcement engine plus the Pi-only `/pwk-setup` command that installs role definitions into `.agents/agents/`.
+- `skills/pwk-*/references/` and `skills/pwk-*/scripts/` — skill-local detailed contracts and deterministic helpers; helpers that require Python 3 declare that prerequisite in their owning skill.
 - `skills/pwk-*/SKILL.md` — workflow-phase guidance, invoked as `/skill:pwk-*`. Harness-neutral: delegation is expressed as logical roles and capabilities, not a concrete agent tool.
 - `agents/pwk-*.md` — canonical, provider-neutral role contracts (recon scout + four reviewers). `/pwk-setup` copies them into the project's `.agents/agents/` so compatible delegation extensions (e.g. `@tintinweb/pi-subagents`) can discover them; the kit installs no delegation provider itself.
 

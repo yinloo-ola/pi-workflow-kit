@@ -59,10 +59,11 @@ describe("lean gates R2: feature-review resolution edges", () => {
 
 describe("lean gates R3: notice edges", () => {
   const executing = read("skills/pwk-executing-tasks/SKILL.md");
+  const resume = read("skills/pwk-executing-tasks/references/resume.md");
 
   it("should route a resumed e2e-written phase into implementation, not into a pause", () => {
-    expect(executing).toMatch(/`e2e-written` → write the E2E if not yet present, post the notice, and continue/);
-    expect(executing).toContain("continue into the implement phase (no stop)");
+    expect(resume).toMatch(/`e2e-written` → write the E2E if not yet present, post the notice, and continue/);
+    expect(resume).toContain("continue into the implement phase (no stop)");
   });
 
   it("should keep both reserved failure stops — ungreenable and wrong-but-passing", () => {

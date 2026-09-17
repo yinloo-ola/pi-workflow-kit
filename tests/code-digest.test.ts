@@ -33,12 +33,12 @@ function readRepo(rel: string): string {
 
 describe("code-digest per-slice", () => {
   it("should add the code-digest section to the progress template", () => {
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
     // The progress-file template is the ```markdown fence containing "# Progress:".
-    const start = executing.indexOf("# Progress:");
+    const start = progressFormat.indexOf("# Progress:");
     if (start === -1) throw new Error("executing skill: progress template not found");
-    const end = executing.indexOf("```", start);
-    const template = executing.slice(start, end);
+    const end = progressFormat.indexOf("```", start);
+    const template = progressFormat.slice(start, end);
     const execSummaryAt = template.indexOf("## Execution summary");
     const digestAt = template.indexOf(CODE_DIGEST_MARKERS.codeDigest);
     expect(digestAt).toBeGreaterThan(execSummaryAt); // directly below the execution summary
@@ -47,6 +47,8 @@ describe("code-digest per-slice", () => {
   });
   it("should write the digest after review success, derived from the packet", () => {
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const review = readRepo("skills/pwk-executing-tasks/references/review.md");
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
     const stepAt = executing.indexOf("**Write the code digest**");
     expect(stepAt).toBeGreaterThan(-1);
     // placed between the feature review (step 3) and the ship pause (step 5)
@@ -61,28 +63,26 @@ describe("code-digest per-slice", () => {
     expect(stepLine).toContain("`## Changed files`");
     expect(stepLine).toContain("`## Diff`");
     const stepBlock = executing.slice(stepAt, stepAt + 900);
-    expect(stepBlock).toMatch(/re-run the recipe/); // stale/missing packet
+    expect(review).toMatch(/Re-run the helper/); // stale/missing packet
     expect(stepBlock).toMatch(/`Feature phase: reviewing`/); // resume path fires the same write point
+    expect(progressFormat).toContain("## Code digest");
   });
   it("should present the digest after the execution summary", () => {
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    const listAt = executing.indexOf("present, in this order:");
-    expect(listAt).toBeGreaterThan(-1);
-    const list = executing.slice(listAt, listAt + 800);
-    const summaryAt = list.indexOf("the **execution summary**");
-    const digestAt = list.indexOf("the **code digest**");
-    const diffAt = list.indexOf("full diff on request");
-    expect(summaryAt).toBeGreaterThan(-1);
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
+    const templateAt = progressFormat.indexOf("## Execution summary");
+    const digestAt = progressFormat.indexOf("## Code digest");
+    const keyFilesAt = progressFormat.indexOf("### Key files");
+    expect(templateAt).toBeGreaterThan(-1);
     expect(digestAt).toBeGreaterThan(-1);
-    expect(diffAt).toBeGreaterThan(-1);
-    expect(digestAt).toBeGreaterThan(summaryAt); // after the execution summary
-    expect(digestAt).toBeLessThan(diffAt); // before diff-on-request, which stays last
+    expect(keyFilesAt).toBeGreaterThan(-1);
+    expect(digestAt).toBeGreaterThan(templateAt); // after the execution summary
+    expect(keyFilesAt).toBeGreaterThan(digestAt);
   });
   it("should state the digest fill rules", () => {
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    const rulesAt = executing.indexOf("## Code digest` is filled once");
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
+    const rulesAt = progressFormat.indexOf("The `## Code digest` is filled once");
     expect(rulesAt).toBeGreaterThan(-1);
-    const rules = executing.slice(rulesAt, rulesAt + 700); // scoped: several phrases exist elsewhere
+    const rules = progressFormat.slice(rulesAt, rulesAt + 900);
     expect(rules).toMatch(/plain language/i);
     expect(rules).toContain("R# anchors");
     expect(rules).toContain("no test names");
@@ -95,10 +95,10 @@ describe("code-digest per-slice", () => {
   // leaner-execution-gates R5 — the Flow becomes a navigable map: spine + branches +
   // was: clauses + inline values + side effects, symbol-labelled, no line numbers.
   it("should enrich the Flow into a spine/branches map with no line numbers", () => {
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    const flowAt = executing.indexOf("**Flow shape**");
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
+    const flowAt = progressFormat.indexOf("**Flow shape**");
     expect(flowAt).toBeGreaterThan(-1);
-    const flow = executing.slice(flowAt, flowAt + 1400);
+    const flow = progressFormat.slice(flowAt, flowAt + 1800);
     expect(flow).toContain(LEAN_GATES_MARKERS.flowSpine); // Spine
     expect(flow).toContain(LEAN_GATES_MARKERS.flowBranches); // Branches
     expect(flow).toContain(LEAN_GATES_MARKERS.flowWasClause); // was:
@@ -249,18 +249,19 @@ describe("code-digest feature (E2E)", () => {
     // R1–R4 — the executing skill wires a code digest from the packet into the
     // progress file and presents it at the ship checkpoint.
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    const execSummaryAt = executing.indexOf("## Execution summary");
-    const digestAt = executing.indexOf(CODE_DIGEST_MARKERS.codeDigest);
+    const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
+    const execSummaryAt = progressFormat.indexOf("## Execution summary");
+    const digestAt = progressFormat.indexOf(CODE_DIGEST_MARKERS.codeDigest);
     expect(digestAt).toBeGreaterThan(-1);
     expect(execSummaryAt).toBeGreaterThan(-1);
     expect(digestAt).toBeGreaterThan(execSummaryAt); // directly below the execution summary
     for (const sub of ["### Summary", "### Flow", "### Gotchas", "### Key files"]) {
-      expect(executing.indexOf(sub)).toBeGreaterThan(digestAt);
+      expect(progressFormat.indexOf(sub)).toBeGreaterThan(digestAt);
     }
-    expect(executing).toContain(CODE_DIGEST_MARKERS.digestOnceOnly);
-    expect(executing).toContain(CODE_DIGEST_MARKERS.alertReviewerConfirmedOnly);
-    expect(executing).toContain(CODE_DIGEST_MARKERS.honestEmptyGotchas);
-    expect(executing).toContain(CODE_DIGEST_MARKERS.keyFilesCap);
+    expect(progressFormat).toContain(CODE_DIGEST_MARKERS.digestOnceOnly);
+    expect(progressFormat).toContain(CODE_DIGEST_MARKERS.alertReviewerConfirmedOnly);
+    expect(progressFormat).toContain(CODE_DIGEST_MARKERS.honestEmptyGotchas);
+    expect(progressFormat).toContain(CODE_DIGEST_MARKERS.keyFilesCap);
     expect(executing).toMatch(/full diff on request/i); // digest supplements, never replaces
 
     // R5 — every recursive discovery glob excludes completed/, and the finalize

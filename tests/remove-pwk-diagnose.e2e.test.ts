@@ -180,6 +180,7 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
 
   it("scenario 5 — one identity model: the two flows cannot disagree about the topic", () => {
     const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const resume = readRepo("skills/pwk-executing-tasks/references/resume.md");
     const finalizing = readRepo("skills/pwk-finalizing/SKILL.md");
     const lint = readRepo("tests/skill-lint.mjs");
 
@@ -197,7 +198,7 @@ describe("remove-pwk-diagnose (feature E2E)", () => {
 
     // 2. `<topic>` has one meaning (the folder slug) in both skills, so the worktree probe
     //    and the branch name agree for a standalone topic and an umbrella part alike.
-    expect(executing, "<topic> is defined as the folder slug").toMatch(/is the folder slug/);
+    expect(resume, "<topic> is defined as the folder slug").toMatch(/is the folder slug/);
     expect(finalizing, "finalizing uses the same slug meaning").toMatch(/is the folder slug/);
 
     // 3. The next part is the first roster part with no `done` progress file — build order is

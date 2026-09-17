@@ -32,6 +32,10 @@ function readRepo(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+function readReference(skill: string, reference: string): string {
+  return readRepo(`skills/${skill}/references/${reference}`);
+}
+
 /** Every shipped skill, derived from the tree so a removal or addition cannot go stale here. */
 const SKILL_SITES = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && entry.name.startsWith("pwk-"))
@@ -41,7 +45,7 @@ describe("human review digests feature (E2E)", () => {
   it("should thread R# digests from design to coverage table", () => {
     // R1 — design docs open with an at-a-glance digest: plain summary + one row per
     // requirement; the trivial fast-path gets a single In-short line instead.
-    const brainstorming = readRepo("skills/pwk-brainstorming/SKILL.md");
+    const brainstorming = readReference("pwk-brainstorming", "design-format.md");
     expect(brainstorming).toMatch(new RegExp(DIGEST_MARKERS.atAGlance));
     expect(brainstorming).toMatch(/immediately before [`]## Requirements[`]/);
     expect(brainstorming).toContain(DIGEST_MARKERS.atAGlanceTable);
@@ -57,7 +61,10 @@ describe("human review digests feature (E2E)", () => {
 
     // R3 — the progress file carries an execution summary filled as requirements
     // land, and the ship checkpoint presents digest + coverage, diff on request.
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
+    const executing = [
+      readRepo("skills/pwk-executing-tasks/SKILL.md"),
+      readReference("pwk-executing-tasks", "progress-format.md"),
+    ].join("\n");
     expect(executing).toContain(DIGEST_MARKERS.execSummary);
     expect(executing).toContain(DIGEST_MARKERS.execSummaryTable);
     expect(executing).toContain(DIGEST_MARKERS.fillAsYouLand);

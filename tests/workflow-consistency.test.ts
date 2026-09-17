@@ -11,6 +11,19 @@ function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+function readReference(skill: string, reference: string): string {
+  return read(`skills/${skill}/references/${reference}`);
+}
+
+function readExecutingContracts(): string {
+  return [
+    read("skills/pwk-executing-tasks/SKILL.md"),
+    readReference("pwk-executing-tasks", "progress-format.md"),
+    readReference("pwk-executing-tasks", "resume.md"),
+    readReference("pwk-executing-tasks", "review.md"),
+  ].join("\n");
+}
+
 /** Every skill directory under skills/ — the inventory docs must name them all (R6 per-slice). */
 function skillNamesForR6(): string[] {
   return readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
@@ -22,7 +35,7 @@ function skillNamesForR6(): string[] {
 
 /** The design-doc template's fenced block containing the Feature acceptance section (shared by R5 per-slice and the E2E). */
 function brainstormTemplateForR5(): string {
-  const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+  const brainstorming = readReference("pwk-brainstorming", "design-format.md");
   const fences = [...brainstorming.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
   const withFa = fences.filter((body) => body.includes("## Feature acceptance"));
   expect(withFa.length, "brainstorming template with ## Feature acceptance").toBeGreaterThan(0);
@@ -38,7 +51,7 @@ function brainstormTemplateForR5(): string {
 describe("workflow-consistency per-slice", () => {
   describe("R1 — one row-state and ceremony vocabulary", () => {
     it("defines the five Done glyphs and the ceremony echo values in one canonical block", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       expect(executing).toContain(M.rowStates);
       expect(executing).toContain(M.ceremonyEcho);
       expect(executing).toContain(M.fullTwoStops);
@@ -47,7 +60,7 @@ describe("workflow-consistency per-slice", () => {
     });
 
     it("scopes the writers: code-review only ever flips 🔄 to ✅", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       const codeReview = read("skills/pwk-code-review/SKILL.md");
       expect(executing).toContain(M.codeReviewScoped);
       expect(codeReview).not.toMatch(/🔎 review/);
@@ -57,7 +70,7 @@ describe("workflow-consistency per-slice", () => {
 
   describe("R2 — terminal-state ship gate and reachable failure branches", () => {
     it("the ship gate, failure/skip paths, and resume all speak the terminal vocabulary", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       expect(executing).toContain(M.shipGateTerminal);
       expect(executing).toContain(M.failedGlyphNamed);
       expect(executing).toContain(M.skippedGlyphNamed);
@@ -81,7 +94,7 @@ describe("workflow-consistency per-slice", () => {
     });
 
     it("pins the resume route, umbrella, reason-suffix, and coverage-reconciliation contracts (tracing findings 1–3, 5)", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       expect(executing).toContain(M.resumeTerminalRoute);
       expect(executing).toContain(M.umbrellaBlockRule);
       expect(executing).toContain(M.reasonInShipGate);
@@ -98,7 +111,7 @@ describe("workflow-consistency per-slice", () => {
 
   describe("R3 — setup checkpoint made implementable", () => {
     it("creates the progress file before the checkpoint and gives the header a Setup slot", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       expect(executing).toContain(M.setupEnum);
       expect(executing).toContain(M.setupPendingInit);
       expect(executing).toContain(M.setupApprovalFlip);
@@ -109,7 +122,7 @@ describe("workflow-consistency per-slice", () => {
     });
 
     it("resume re-checks a pending setup and status renders the awaiting state", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       const status = read("skills/pwk-status/SKILL.md");
       expect(executing).toContain(M.setupResumeRecheck);
       expect(status).toContain(M.statusAwaitingSetup);
@@ -126,7 +139,7 @@ describe("workflow-consistency per-slice", () => {
 
   describe("R4 — derived At-a-glance Risk column", () => {
     it("states the derivation rule and the display-only declaration exactly once", () => {
-      const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+      const brainstorming = readReference("pwk-brainstorming", "design-format.md");
       expect(brainstorming).toContain(M.riskDerived);
       expect(brainstorming).toContain(M.riskDisplayOnly);
       const occurrences = brainstorming.split(M.riskDisplayOnly).length - 1;
@@ -213,7 +226,7 @@ describe("workflow-consistency per-slice", () => {
 
   describe("R8 — packet base defined from the Commit column", () => {
     it("step 6 mandates recording the commit and the recipe names the Commit column for both spans", () => {
-      const executing = read("skills/pwk-executing-tasks/SKILL.md");
+      const executing = readExecutingContracts();
       expect(executing).toContain(M.commitColumnFill);
       expect(executing).toContain(M.featureBaseRule);
       expect(executing).toContain(M.perReqSpanRule);

@@ -11,71 +11,16 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 
 ## Before you start
 
+Resolve local references and scripts from this installed skill directory. If a required resource is missing, report the blocker and stop before the affected action; do not silently skip its instructions.
+
 1. **Git state** — `git status` + `git log --oneline -5`; note uncommitted changes.
-2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. If no doc at all, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (E2E written, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume](#resume)). An umbrella part whose prior leaves are not all at `done`: surface their `Feature phase:` lines (matched header-only from each `<leaf>-progress.md`) as advisory context in the pre-flight report — no refusal, no reorder; build order stays advisory.
-3. **Workspace — create the feature branch** — if you're already on **this topic's** feature branch, **reuse** it: a later umbrella part continues on the same umbrella branch as part 1. If on `main` — or on a different topic's feature branch, which stays that topic's own and never hosts this topic's commits — create or switch to this topic's branch: `git checkout <topic>` when it exists, else `git checkout -b <topic>` — the topic's folder slug (the `docs/plans/<date>-<topic>/` directory name, shared by every leaf of an umbrella), never a leaf slug. **`<topic>` is the folder slug** everywhere it appears in this skill, including the `../<repo>-<topic>` worktree convention below, so a standalone topic and an umbrella part name the same branch and the same worktree. For larger work, first check `git worktree list`: if a worktree already checks out this branch (the same `../<repo>-<topic>` convention), adopt it — resume the session there instead of offering a new `git worktree add`. One worktree per branch, created once: git refuses two checkouts of one branch, so a later umbrella part reuses part 1's worktree and a standalone resume reuses its own. Otherwise offer a worktree (`git worktree add ../<repo>-<topic> <topic>`) and hand off to a new session there so `pwd` is the worktree. **Uncommitted planning docs do not cross a worktree boundary**, and the design doc is still uncommitted (brainstorm never commits): when the user takes the worktree, commit the topic folder on this branch first — the same scoped add as the First-run commit below — then switch this tree back to the branch it came from (e.g. `git checkout main` when it started there; git refuses `worktree add` of a branch that is still checked out here) and only then `git worktree add ../<repo>-<topic> <topic>` and hand off (the new session's First-run commit then has only its progress file to record). The adopt path above is safe only when the docs are already committed on the branch; if this tree holds uncommitted topic docs while another worktree holds the branch checkout, git refuses to commit to the branch from here — copy the topic folder into that worktree's `docs/plans/`, verify with `ls`, and remove the source copy before handing off. Wait for the user's choice.
+2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. If no doc at all, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (E2E written, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume and progress](#resume-and-progress)). An umbrella part whose prior leaves are not all at `done`: surface their `Feature phase:` lines (matched header-only from each `<leaf>-progress.md`) as advisory context in the pre-flight report — no refusal, no reorder; build order stays advisory.
+3. **Workspace — choose this topic’s branch/worktree.** Before creating, switching, or adopting one, read [Workspace and resume details](references/resume.md#workspace). Reuse this topic’s branch (one umbrella = one branch); a different topic’s branch never hosts these commits. Uncommitted planning docs do not cross a worktree boundary: commit this topic folder on its branch before a new worktree handoff; when adopting an existing checkout with uncommitted docs here, copy the topic folder there, verify it, then remove the source copy. Read the reference's command order before acting. Offer/adopt only after checking existing worktrees; wait for the user's choice.
 
 ## First run
 
 1. **Parse the design doc** — read every `### R<n>:` heading and its `### Checkpoints` / `### Review` tags (defaults `none` / `skip`), plus the feature-level `### Feature review` tag in the `## Feature acceptance` section. Requirements run in **listed order** (build order); do not reorder. Read the `## Feature acceptance` section — it is the E2E you gate on first. A trivial design doc (no `## Feature acceptance`) skips steps 5–6 below and goes straight into the implement phase.
-2. **Create the progress file** `docs/plans/<date>-<topic>/<leaf>-progress.md`, beside the design doc it belongs to (`<leaf>` is `<topic>` for a single-part topic; an umbrella part uses its roster slug), so `pwk-finalizing` finds it inside the topic folder:
-
-   ```markdown
-   # Progress: <topic>
-
-   Design: docs/plans/<date>-<topic>/<leaf>-design.md
-   Branch: <branch>
-   Setup: n/a
-   Started: <ISO timestamp>
-   Last updated: <ISO timestamp>
-   Feature phase: e2e-written
-
-   <!-- a trivial design doc (no `## Feature acceptance`) starts at `implementing (0/N)` instead — there is no E2E to write -->
-
-   ## Requirements
-   | # | Done | Requirement | Per-req ceremony | Commit |
-   |---|------|-------------|-----------------|--------|
-   | 1 | ⬜ | <requirement name> | — | — |
-
-   ## Execution summary
-   | R# | Requirement | How it was built | Deviated? |
-   |----|-------------|------------------|-----------|
-   | 1 | <requirement name> | | |
-
-   ## Deviation records
-
-   <!-- One short paragraph per design-decision reversal (what changed, why, what was rejected), written at deviation time; leave this section empty when every Deviated? entry is mechanical. -->
-
-   ## Code digest
-
-   <!-- Written once, after the feature review passes; never back-filled per requirement. -->
-
-   ### Summary
-   ### Flow
-   Spine
-     <entry point> -> [R1] <step> -> [R2] <step> -> <outcome>
-   Branches
-     <condition> -> <outcome>   [R2]
-     <changed behavior>   was: <previous behavior>
-   Side effects
-     reads: <what>   writes: <what>
-   ### Gotchas
-   ### Key files
-   ```
-
-   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Summary` is 2–3 sentences: what the code now does differently, and why. `### Flow` uses `A -> B -> C` arrow chains. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
-
-   **Flow shape** — this is the ship stop's navigable map, so it is the one digest section that carries structure, not just prose:
-
-   - **Spine** — the happy path as `A -> B -> C` hops, each hop named by symbol or module, with no line numbers anywhere and no file paths: symbol names survive edits and stay greppable, so a stale anchor can never mislead. Tag each hop `[R<n>]` with the requirement it comes from — that is what lets the coverage table's verdict rows be traced into the code without opening the diff.
-   - **Branches** — every alternative and error path as `condition -> outcome` (a linear spine with no branches reads as "there are no edge cases", which is rarely true). Put ⚠️ on the genuinely surprising ones. Add a `was: <previous behavior>` clause for each requirement whose behavior changed; skip it for purely additive requirements — honest-empty, never invented.
-   - **Inline worked values** — where a mapping is non-obvious, show it concretely (`` `implementing (2/5)` -> `execute 2/5` ``), so a reader can falsify it without running anything.
-   - **Side effects** — a line naming what is read and written, only when the feature performs I/O, network, or migrations; omit it entirely otherwise rather than filling a placeholder.
-   - **Cap: roughly 15 lines.** If the change genuinely needs more, the ship checkpoint **offers `/skill:pwk-walkthrough`** as the deep read (it regenerates a `file:line`-anchored walkthrough on demand) instead of growing the digest — the digest is what the human reads at the one remaining stop, and an unbounded Flow recreates the digging it exists to prevent.
-
-   `Feature phase` is one of: `e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`.
-
-   The `Setup:` header slot takes one of `Setup: pending | done | n/a` — the header starts `Setup: pending` when the design doc has a `## Setup` section, else `Setup: n/a`; the setup checkpoint below flips it to `done` on approval. The phase line stays `e2e-written` through the setup stop — the Setup slot, not the phase, is what flags the not-yet-approved window, and the E2E is written after setup.
+2. **Create the progress file** beside the design at `docs/plans/<date>-<topic>/<leaf>-progress.md`. Before creating it, read [Progress format](references/progress-format.md) for the exact template, header slots, and row vocabulary. Start at `Feature phase: e2e-written` (trivial doc: `implementing (0/N)`); `Setup: pending` when the design has `## Setup`, otherwise `Setup: n/a`.
 
 3. **Setup pre-flight** *(only if the design doc has a `## Setup` section)* — install dependencies, apply migrations, seed data, then run the existing test suite. **⏸ CHECKPOINT: setup** — present results and wait for approval, then set `Setup: done` in the progress-file header so a resume can confirm it rather than assume it.
 
@@ -83,24 +28,15 @@ The feature-acceptance E2E test is the primary enforced gate and the primary enf
 5. **Write the feature-acceptance E2E test (red).** Read the design doc's `## Feature acceptance` section and encode it as a real test file; run it; confirm it **fails** (it must — little or none of the feature exists yet). If it passes immediately, probe why before proceeding: the behavior may already exist, or the test may be asserting too little. If it still passes and the expected behavior looks wrong, **stop and present** rather than implementing against a wrong spec. Iterate it to green as you implement — fixing the implementation is the default, and you **stop and present only when you are genuinely blocked** (nothing you can do makes it pass, or the E2E itself is wrong). That stop is the reserved failure case; it is not the flow's default pause.
 6. **Notice, not a stop — report the E2E and continue.** Post 1–2 plain-language lines stating **what the E2E proves** ("this test proves that …"), plus the E2E test and its failing output, then go straight into the implement phase **without waiting for approval** — the `## Feature acceptance` text was approved during brainstorm, so there is nothing new here for the human to sign off. The notice is the window to object *before* implementation starts: a human who sees the E2E asserting the wrong thing says so, and you revise, re-run, and re-notice. Keep `Feature phase: e2e-written`.
 
-## Resume
+## Resume and progress
 
-Read the progress file's `Feature phase` (match the line — e.g. `grep -m1 '^Feature phase:' <file>`), the Requirements table (the first row whose Done cell is not terminal routes the next requirement — `⬜`, `🔄`, and blank all mean not-done; `✅`/`❌`/`⏭` are resolved and are skipped past), and the Execution summary rows (how prior parts were built); read from the top through the end of `## Execution summary` and stop — the sections after it (deviation records, code digest) carry nothing the resume needs, with one exception: the `ship-paused` route re-presents the ship checkpoint, so it also reads the `## Code digest` written below. Before routing: if the header reads `Setup: pending` and the design doc has a `## Setup` section, the setup checkpoint was never approved — re-run the setup verification and wait at it:
-- `e2e-written` → write the E2E if not yet present, post the notice, and continue into the implement phase (no stop). A trivial design doc has no `## Feature acceptance` — skip both and go straight into the implement phase.
-- `implementing (k/N)` → continue the next not-yet-terminal requirement.
-- `reviewing` → continue/finish the feature review, then assemble the **ship** checkpoint.
-- `ship-paused` → re-present the ship checkpoint and wait — the execution summary, verdict rows, and code digest re-read from the progress file; if the prior session's reviewer reports are gone, re-run the feature review per the tag first (the checkpoint is never presented without coverage).
+`Feature phase` is one of: `e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`.
 
-## Progress file
+**Done cell:** `⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped. A row is **terminal** when its Done cell is `✅`, `❌`, or `⏭` — resolved, not necessarily passed. Only executing changes Done cells; a requirement under review stays `🔄` until a clean pass permits `✅`.
 
-Update the matching requirement row directly (not via pattern matching that could corrupt the table). Update `Last updated` and `Feature phase` on every change.
+When a matching progress file exists, read [Resume](references/resume.md#resume) before routing. Read the header, Requirements table, and Execution summary only; `ship-paused` also needs Code digest. A pending setup checkpoint must be re-verified and approved before proceeding. Resume the first nonterminal row (`⬜`, `🔄`, blank); `✅`/`❌`/`⏭` are terminal, resolved rather than necessarily passed. Match `grep -m1 '^Feature phase:' <file>` for the phase header; `reviewing` resumes review; `ship-paused` re-presents and waits, never approves itself. Missing reviewer reports require review again before showing coverage.
 
-**Row vocabulary (canonical — this file owns it):**
-
-- **Done cell:** `⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped. A row is **terminal** when its Done cell is `✅`, `❌`, or `⏭` — resolved, not necessarily passed. A `❌`/`⏭` row carries its reason as a suffix in the Requirement cell (finalizing's verdict greps read it), and its test coverage is reconciled in the same step — assertions removed or skipped with the reason; the suite must stay green. This skill sets all five values. A requirement under review stays `🔄`: `pwk-code-review` reports findings and never edits the Done cell — the loop only ever flips `🔄`→`✅` when the review returns clean, and findings leave the row `🔄` for another pass.
-- **Per-req ceremony cell** echoes the design doc's tag, not progress: `—` (default `none`/`skip`) · `⏸ full` (fires two stops — after the slice's tests and after it is complete) · `🔎 inline` · `🔎 parallel`.
-
-**Execution summary rows are written in the same step as marking a requirement ✅** — never retrofitted at the end. "How it was built" = one or two plain sentences: what it does now + the approach actually taken; file names sparingly; **no test names, no code** (the human reads this at the ship checkpoint — big picture only). If the implementation departs from the design, fill the Deviated? column **at deviation time** (when the departure happens), with a one-line why — it is a log, not a stop. A departure that **reverses or alters a design decision** gets a **deviation decision-record**: a short paragraph (what changed, why, what was rejected) written into the progress file while the knowledge is fresh — mechanical deviations keep the one-liner. `pwk-finalizing`'s learning sweep harvests these records for ADRs before the docs are disposed.
+Before any progress-row update or code-digest write, read [Progress format](references/progress-format.md). Update the matching row directly, `Last updated`, and `Feature phase`; write execution-summary content at the same time as ✅, and deviations at deviation time. A failed/skipped row carries its reason in the Requirement cell and reconciles its test coverage so the suite stays green.
 
 ## Implement phase
 
@@ -119,7 +55,7 @@ Set `Feature phase: implementing (0/N)` and work the requirements in listed orde
 
 ### Per-requirement review (opt-in)
 
-If the requirement's `### Review` tag is `parallel` or `inline` (default `skip`), review that slice at step 7 — same mechanics as the [feature review](#feature-review), with a requirement-scoped packet: the same recipe limited to the commits and criteria of that requirement, written to `<design doc's directory>/<leaf>-review-packet-r<N>.md` (requirement-suffixed, so per-requirement packets never overwrite the feature packet or each other). The row stays 🔄 through the review: the four delegated roles — or the one `pwk-code-review` pass on `inline` — report findings, you apply the smell fixes yourself and commit them (the roles are read-only reporters), and a clean pass returns to step 8, which marks the row ✅. With `skip`, no per-requirement review — step 8 fires directly, and the feature-level review covers it.
+If the requirement's `### Review` tag is `parallel` or `inline` (default `skip`), review that slice at step 7 — read [Review mechanics](references/review.md) first and use its helper with `--scope requirement --requirement N`, limited to the commits and criteria of that requirement, written to `<design doc's directory>/<leaf>-review-packet-r<N>.md` (requirement-suffixed, so per-requirement packets never overwrite the feature packet or each other). The row stays 🔄 through the review: the four delegated roles — or the one `pwk-code-review` pass on `inline` — report findings, you apply the smell fixes yourself and commit them (the roles are read-only reporters), and a clean pass returns to step 8, which marks the row ✅. With `skip`, no per-requirement review — step 8 fires directly, and the feature-level review covers it.
 
 With the default `none`, no per-requirement stop fires — the per-requirement test still runs red→green, and the feature review covers implementation quality.
 
@@ -137,7 +73,7 @@ When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, 
 1. **Run the FULL test suite** — a failure means one requirement regressed another; fix it now, in execute context.
 2. **Run the feature-acceptance E2E** — the test you wrote at the start. It must be **green** now that all requirements have landed. (A `❌`/`⏭` requirement's assertions were reconciled when its row went terminal, so a still-red E2E still means a requirement is missing or wrong.) If it is still red, a requirement is missing or wrong — fix it before proceeding. (A trivial design doc has no `## Feature acceptance` — the full suite staying green is its gate instead.)
 3. **Run the feature review** (below) per the design's `### Feature review` tag — set `Feature phase: reviewing` first, so a mid-review resume routes into this step instead of the implement loop. (A trivial design doc carries no `### Feature review` tag — the missing tag defaults to `auto`, which resolves on its risk content; a trivial diff is typically `inline`, one pass, and there is no E2E to re-green — the full suite is the gate.) The review runs **before** your final approval, so the pause is fully informed. Apply smell fixes yourself and re-green (full suite + E2E) before pausing.
-4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` (template above) per the fill rules. If the packet is stale or missing, re-run the recipe before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Never a gate: it explains the change, it does not block shipping.
+4. **Write the code digest** into the progress file — the review has succeeded, findings are fixed, and the code is final: read the packet's `## Commits`, `## Changed files`, and `## Diff` sections and fill the progress file's `## Code digest` using [Progress format](references/progress-format.md) and its fill rules. If the packet is stale or missing, read [Review mechanics](references/review.md) and re-run the helper before writing. A resumed `Feature phase: reviewing` that completes lands on this same write point before the checkpoint is assembled. Never a gate: it explains the change, it does not block shipping.
 
    **Reconcile the Flow against reviewed reality before writing it.** The Flow is written from what was reviewed, not from recollection: in `parallel` mode every hop must correspond to a path the tracing reviewer's report names — no hop invented, no reported path dropped. In `inline` mode there is no separate tracing report — the inline pass itself performs code tracing — so check the Flow against that pass's tracing findings and spec-coverage result instead. A discrepancy you cannot resolve is **surfaced** to the human in the ship checkpoint's findings status, never smoothed over by writing a Flow that omits the path.
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
@@ -159,40 +95,14 @@ The old "integration gate" is gone — the feature E2E at the ship checkpoint *i
 
 This is step 3 of the [ship checkpoint](#ship-checkpoint-all-requirements-terminal--review-merged): it runs **before** the final human approval, so the pause is fully informed. Run **one** review over the **whole feature diff**, driven by the design doc's `### Feature review` tag — exactly one per part, never once per requirement. This is the single thorough review — per-requirement reviews, if any, only saw slices in isolation.
 
-**Assemble the review packet first** — once, by script, so that no packet byte passes through model output (spawn arguments are model output; file reads are not). The Commit column is the packet's source of truth for both spans: the feature packet base is `git rev-parse <first Commit-column entry>^` (the parent of the first recorded commit); a per-requirement packet spans from the previous requirement's last commit (exclusive) to this requirement's last commit (inclusive), with R1's exclusive bound being its own parent. No `merge-base` guessing, no default-branch knowledge. If commits land while the review is in flight, re-run the recipe before spawning any replacement role so the packet matches HEAD:
-
-```bash
-PACKET="<design doc's directory>/<leaf>-review-packet.md"   # beside the design doc, inside the topic folder — docs/plans/<date>-<topic>/<leaf>-review-packet.md
-FEATURE_BASE="$(git rev-parse $(grep -m1 -o '^| [0-9]* | [^|]* | [^|]* | [^|]* | [0-9a-f]\{7,\}' <progress file> | grep -o '[0-9a-f]\{7,\}' | head -1)^)"   # parent of the first recorded Commit-column entry
-{
-  echo "# Review packet: <topic> — feature review"
-  echo
-  echo "## Commits"
-  git log --oneline $FEATURE_BASE..HEAD
-  echo
-  echo "## Changed files"
-  git diff --stat $FEATURE_BASE...HEAD
-  echo
-  echo "## Acceptance criteria (verbatim from the design doc)"
-  sed -n '/^### R1/,/^## Feature acceptance/p' <design-doc path> | sed '/^## Feature acceptance/,$d'
-  echo
-  echo "## Feature acceptance (verbatim)"
-  sed -n '/^## Feature acceptance/,/^### Feature review/p' <design-doc path> | sed '/^### Feature review/,$d'
-  echo
-  echo "## Production-risk notes (verbatim, if any)"
-  sed -nE '/^### Production-risk notes/,/^(## |### R[0-9])/p' <design-doc path> | sed -E '/^(## |### R[0-9])/d'
-  echo
-  echo "## Diff"
-  git diff $FEATURE_BASE...HEAD
-} > "$PACKET"
-```
+**Assemble the review packet first** — read [Review mechanics](references/review.md), then invoke the installed skill’s `scripts/build-review-packet.py` with explicit `--project`, `--design`, `--progress`, and `--scope feature`. Check `python3 --version` for Python 3.9+ and helper availability before this step; if Python is missing or unavailable, report the blocker, request a suitable runtime, and stop. Do not auto-install a runtime, use a fallback implementation, or claim packet generation succeeded. No packet byte passes through model output. A failed helper is not usable evidence or approval; correct the inputs, never guess ranges. The helper writes `<leaf>-review-packet.md` beside the design; opt-in packets use `<leaf>-review-packet-r<N>.md`.
 
 - **Resolve the tag first.** `auto` (the default, and what a missing tag means) resolves on the design's own production-risk content: if the design carries a non-empty `## Production-risk areas` section, or any requirement carries a non-empty `### Production-risk notes`, resolve to `parallel`; otherwise resolve to `inline`. An explicit `parallel` or `inline` is used as written and always wins over `auto` — explicit tag wins in both directions, so a human who wants one pass on a risky design gets one pass.
 
-- **`parallel`** (the `auto` resolution when risk content is present) — request the host’s `parallel-review` capability for four fresh-context, read-only logical roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, and `pwk-hazard-reviewer`. Spawn each role with a **one-liner** — a pointer to the packet file with the role framing appended last: the checklist name of the role (`spec alignment`, `code tracing`, `code smells`, or `production hazards`). For example: `Read docs/plans/<date>-<topic>/<leaf>-review-packet.md. Your role: spec alignment.` The packet never appears in spawn arguments. Require independent execution and one collected outcome per role. The reviewer role contracts live in `agents/pwk-*-reviewer.md`; do not duplicate their checklists in the workflow instructions. Reviewers are read-only reporters; you apply smell fixes yourself (full suite + E2E must stay green, commit) and flag trace/spec/hazard findings as follow-ups for the human.
-
+- **`parallel`** — use the host’s `parallel-review` capability for four independent, fresh-context, read-only roles: `pwk-spec-reviewer`, `pwk-tracing-reviewer`, `pwk-smell-reviewer`, `pwk-hazard-reviewer`. Follow [Review mechanics](references/review.md#delegate-or-review-inline): a one-liner packet-file pointer with role framing last; the packet never appears in spawn arguments. Collect one outcome per role. Reviewers only report; you apply smell fixes, commit, and re-green full suite + E2E. Surface trace/spec/hazard findings to the human.
 - **`inline`** — perform `/skill:pwk-code-review` over the whole diff as a single pass.
-- **Fallback** — if the host has no compatible parallel-review capability, cannot prove the requested read-only/fresh-context/bounded constraints, or delegation fails, perform the missing review work inline. Retain successful delegated reports and do not mark the feature fully reviewed while a required role is missing.
+- **Fallback** — if compatible capability is absent, required read-only/fresh-context/bounded constraints cannot be proved, or delegation fails, do the missing work inline. Retain successful reports; required missing roles mean review is incomplete.
+- **Refresh** — if commits land during review, use [Review mechanics](references/review.md) to refresh the packet before any replacement role or digest write. Append requirement-fix IDs before a requirement refresh; keep the initial ID. Packet creation never substitutes for review or approval.
 
 On success, continue assembling the ship checkpoint; once the human approves it — knowing what failed — set `Feature phase: done`. (An umbrella part's gate is its own progress file; `pwk-finalizing` reads every part's file, and a `❌` in any part blocks the umbrella until the human sends the work back or explicitly types `--force-failed`.)
 
@@ -249,3 +159,35 @@ Feature phase: done
 2. Check `git log` for context. Ask the user — clarify beats guessing.
 3. Still stuck → discard uncommitted changes (`git restore .`); if already committed, also `git revert` the requirement's commit(s). **Never leave a failed requirement's partial work on the shipped branch.**
 4. Set its Done cell `❌` (with the reason as a suffix in the Requirement cell), reconcile its test coverage, and move on. Check `docs/lessons.md` — a prior lesson may apply.
+
+## Contract index
+
+Detailed progress, resume, and review contracts live in `references/`. The following
+entrypoint markers remain canonical: `Feature phase` is one of
+`e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`, `done`; Done cells use
+`⬜`, `🔄`, `✅`, `❌`, `⏭`, where `✅`/`❌`/`⏭` are resolved. Only executing changes
+Done cells; a reviewed row flips only `🔄`→`✅`. `Setup: pending | done | n/a` is the
+header slot, and the ceremony cell echoes the design doc's tag. Execution summary rows
+are written in the same step as marking a requirement ✅, with deviations recorded when
+the departure happens. Resume uses `re-run the setup verification`; packet bounds use
+the `Commit column`, the `parent of the first recorded commit`, and the `previous
+requirement's last commit`. Successful delegated reports are retained. The Flow has
+`Spine`, `Branches`, `Side effects`, `was:`, and no line numbers; it is checked against
+the tracing report and unresolved differences are surfaced. The digest is
+`never back-filled per requirement`, with gotchas `none beyond review findings` and
+key files capped `at 5`.
+
+```markdown
+# Progress: <topic>
+Design: docs/plans/<date>-<topic>/<leaf>-design.md
+Feature phase: e2e-written
+## Requirements
+| # | Done | Requirement | Per-req ceremony | Commit |
+## Execution summary
+| R# | Requirement | How it was built | Deviated? |
+## Code digest
+### Summary
+### Flow
+### Gotchas
+### Key files
+```

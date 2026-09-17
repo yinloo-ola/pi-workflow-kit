@@ -7,7 +7,13 @@ import { CODE_DIGEST_MARKERS, STATUS_STATE_MARKERS } from "./markers.mjs";
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 function readRepo(rel: string): string {
-  return readFileSync(join(repoRoot, rel), "utf8");
+  const content = readFileSync(join(repoRoot, rel), "utf8");
+  if (rel === "skills/pwk-executing-tasks/SKILL.md") {
+    return [content, readFileSync(join(repoRoot, "skills/pwk-executing-tasks/references/resume.md"), "utf8")].join(
+      "\n",
+    );
+  }
+  return content;
 }
 
 // The four skills that discover in-flight planning artifacts.

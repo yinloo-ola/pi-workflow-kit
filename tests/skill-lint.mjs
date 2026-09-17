@@ -44,14 +44,22 @@ function loadSkills() {
   return dirs.map((dir) => {
     const path = join(skillsDir, dir, "SKILL.md");
     const content = readFileSync(path, "utf8");
-    return { name: dir, path, content };
+    const resourceDirs = ["references", "scripts"].map((name) => join(skillsDir, dir, name));
+    const resources = resourceDirs
+      .filter((resourceDir) => existsSync(resourceDir))
+      .flatMap((resourceDir) =>
+        readdirSync(resourceDir)
+          .filter((name) => /\.(md|py)$/.test(name))
+          .map((name) => readFileSync(join(resourceDir, name), "utf8")),
+      );
+    return { name: dir, path, content, contractContent: [content, ...resources].join("\n") };
   });
 }
 
 // --- Check 1: every skill has valid frontmatter, name matches directory ---
 console.log("frontmatter:");
 for (const skill of loadSkills()) {
-  const fm = parseFrontmatter(skill.content);
+  const fm = parseFrontmatter(skill.contractContent);
   if (!fm) {
     fail(`${skill.name}: missing YAML frontmatter`);
     continue;
@@ -102,8 +110,8 @@ if (bs && et) {
     ["Feature review", FEATURE_REVIEW_VOCAB],
   ]) {
     const exclude = label === "Review" ? "Feature review" : undefined;
-    const bsV = vocabOf(bs.content, label, exclude);
-    const etV = vocabOf(et.content, label, exclude);
+    const bsV = vocabOf(bs.contractContent, label, exclude);
+    const etV = vocabOf(et.contractContent, label, exclude);
     const kind = label.toLowerCase();
     const isPerReq = label === "Checkpoints" || label === "Review";
     for (const v of vocab) {
@@ -117,12 +125,12 @@ if (bs && et) {
     // leaner-execution-gates R2 — the feature review is risk-scaled: `auto` resolves on the
     // design's own production-risk content, and an explicit human tag wins both ways.
     if (!isPerReq) {
-      if (/production-risk content/i.test(bs.content) && /production-risk content/i.test(et.content)) {
+      if (/production-risk content/i.test(bs.contractContent) && /production-risk content/i.test(et.contractContent)) {
         ok("feature review: `auto` is keyed on the design's production-risk content (both skills)");
       } else {
         fail("feature review: both skills must state what `auto` keys on (production-risk content)");
       }
-      if (/explicit tag wins/i.test(et.content)) {
+      if (/explicit tag wins/i.test(et.contractContent)) {
         ok("pwk-executing-tasks: an explicit feature-review tag wins over `auto`");
       } else {
         fail("pwk-executing-tasks: must state that an explicit feature-review tag wins over `auto`");
@@ -137,10 +145,11 @@ if (bs && et) {
   const templateNeeds = ["### Checkpoints", "### Review", "### R", "## Setup"];
   for (const tok of templateNeeds) {
     // The brainstorming template should emit each; executing-tasks should reference each.
-    const inTemplate = bs.content.includes(tok);
+    const inTemplate = bs.contractContent.includes(tok);
     if (!inTemplate) fail(`pwk-brainstorming template missing "${tok}"`);
-    if (!et.content.includes(tok)) fail(`pwk-executing-tasks doesn't reference "${tok}"`);
-    if (inTemplate && et.content.includes(tok)) ok(`"${tok}" emitted by brainstorming, parsed by executing-tasks`);
+    if (!et.contractContent.includes(tok)) fail(`pwk-executing-tasks doesn't reference "${tok}"`);
+    if (inTemplate && et.contractContent.includes(tok))
+      ok(`"${tok}" emitted by brainstorming, parsed by executing-tasks`);
   }
 }
 
@@ -151,8 +160,8 @@ console.log("spec checkpoint removed:");
 const specSites = [
   ["docs/workflow-phases.md", readFileSync(join(root, "docs/workflow-phases.md"), "utf8")],
   ["docs/developer-usage-guide.md", readFileSync(join(root, "docs/developer-usage-guide.md"), "utf8")],
-  ["pwk-brainstorming", bs?.content ?? ""],
-  ["pwk-executing-tasks", et?.content ?? ""],
+  ["pwk-brainstorming", bs?.contractContent ?? ""],
+  ["pwk-executing-tasks", et?.contractContent ?? ""],
 ];
 let specFree = true;
 for (const [name, content] of specSites) {
@@ -176,7 +185,7 @@ const FA_TEMPLATE_TAG = "### Feature review";
 console.log("feature-acceptance template tag (F6):");
 if (!bs) fail("pwk-brainstorming skill missing");
 else {
-  const mdFences = [...bs.content.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
+  const mdFences = [...bs.contractContent.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
   const faFences = mdFences.filter((body) => /^ {0,3}## Feature acceptance\b/m.test(body));
   if (faFences.length === 0) fail("pwk-brainstorming: no fenced template block contains `## Feature acceptance`");
   else if (!faFences.every((body) => new RegExp(`^ {0,3}${FA_TEMPLATE_TAG}`, "m").test(body)))
@@ -192,9 +201,9 @@ console.log("feature acceptance contract:");
 // NOT wrapped in backticks (prose mentions like `## Feature acceptance` don't count).
 const faHeader = /^[ \t]*## Feature acceptance\b/m;
 if (!bs) fail("pwk-brainstorming skill missing");
-else if (faHeader.test(bs.content)) ok("pwk-brainstorming: emits `## Feature acceptance` in the design doc");
+else if (faHeader.test(bs.contractContent)) ok("pwk-brainstorming: emits `## Feature acceptance` in the design doc");
 else fail("pwk-brainstorming: missing `## Feature acceptance` section header");
-if (et && /Feature acceptance/.test(et.content))
+if (et && /Feature acceptance/.test(et.contractContent))
   ok("pwk-executing-tasks: runs the feature-acceptance test at the ship checkpoint");
 else if (et) fail("pwk-executing-tasks: missing `## Feature acceptance` at the ship checkpoint");
 
@@ -233,14 +242,14 @@ for (const s of unlockSet) {
 if (unlockOk) ok(`guard unlock list {${EXPECTED_UNLOCK.join(", ")}} consistent (export + handler)`);
 // pwk-status must claim it does NOT unlock.
 const status = loadSkills().find((s) => s.name === "pwk-status");
-if (status && /does not unlock/i.test(status.content)) {
+if (status && /does not unlock/i.test(status.contractContent)) {
   ok("pwk-status: documents it does not unlock the guard");
 } else if (status) {
   fail("pwk-status: must state it does not unlock the guard");
 }
 // pwk-code-review must claim it is unlocked.
 const crSkill = loadSkills().find((s) => s.name === "pwk-code-review");
-if (crSkill && /unlocked/i.test(crSkill.content)) {
+if (crSkill && /unlocked/i.test(crSkill.contractContent)) {
   ok("pwk-code-review: documents it is unlocked");
 } else if (crSkill) {
   fail("pwk-code-review: must state it is unlocked (may edit code)");
@@ -251,28 +260,29 @@ if (crSkill && /unlocked/i.test(crSkill.content)) {
 // one PR, via a status-free overview roster + per-part cycle + finalize-once. Each pipeline
 // skill must document its half so the contract is followable. Grown per-requirement.
 console.log("umbrella contract:");
-if (bs && /^## Umbrella\b/m.test(bs.content))
+if (bs && (/^## Umbrella\b/m.test(bs.contractContent) || /^# Umbrella mechanics\b/m.test(bs.contractContent)))
   ok("pwk-brainstorming: documents the umbrella (multi-design-doc, one PR)");
 else fail("pwk-brainstorming: missing `## Umbrella` section (multi-design-doc, one PR)");
-if (bs && /status-free/i.test(bs.content)) ok("pwk-brainstorming: defines the overview as a status-free roster");
+if (bs && /status-free/i.test(bs.contractContent))
+  ok("pwk-brainstorming: defines the overview as a status-free roster");
 else fail("pwk-brainstorming: overview must be documented as status-free");
 // R7 — the roster shape two consumers read (pwk-finalizing's "read its parts roster",
 // pwk-status's roll-up) is pinned here, so a drifted heading fails loudly instead of
 // both readers silently seeing an empty roster and disposing nothing.
-if (bs?.content.includes("## Parts (build order)"))
+if (bs?.contractContent.includes("## Parts (build order)"))
   ok("pwk-brainstorming: pins the roster heading `## Parts (build order)`");
 else fail("pwk-brainstorming: missing the `## Parts (build order)` roster heading");
-if (bs && /^\s*\d+\.\s*<leaf>\s*—\s*<one-line scope>\s*$/m.test(bs.content))
+if (bs && /^\s*\d+\.\s*<leaf>\s*—\s*<one-line scope>\s*$/m.test(bs.contractContent))
   ok("pwk-brainstorming: pins the roster item shape (`N. <leaf> — <one-line scope>)`");
 else fail("pwk-brainstorming: missing the roster item shape `N. <leaf> — <one-line scope>`");
-if (et && /reuse/i.test(et.content) && /umbrella/i.test(et.content))
+if (et && /reuse/i.test(et.contractContent) && /umbrella/i.test(et.contractContent))
   ok("pwk-executing-tasks: documents branch reuse for umbrella later parts");
 else fail("pwk-executing-tasks: missing umbrella branch-reuse note");
-if (et && /umbrella/i.test(et.content) && /next part/i.test(et.content))
+if (et && /umbrella/i.test(et.contractContent) && /next part/i.test(et.contractContent))
   ok("pwk-executing-tasks: suggests finalize or brainstorm-next keyed on the overview roster");
 else fail("pwk-executing-tasks: missing umbrella post-gate suggestion logic");
 const fin = loadSkills().find((s) => s.name === "pwk-finalizing");
-if (fin && /umbrella/i.test(fin.content) && /every topic/i.test(fin.content))
+if (fin && /umbrella/i.test(fin.contractContent) && /every topic/i.test(fin.contractContent))
   ok("pwk-finalizing: disposes the overview + every part for an umbrella (one PR)");
 else fail("pwk-finalizing: missing umbrella dispose-all note");
 const wfPhasesDoc = readFileSync(join(root, "docs/workflow-phases.md"), "utf8");
@@ -311,46 +321,51 @@ const fgMark = (file, content, marker, label) => {
 };
 // Requirement 1 — brainstorming tag defaults + feature-level review
 if (bs) {
-  fgMark("pwk-brainstorming", bs.content, "### Feature review", "feature-level review tag");
-  fgMark("pwk-brainstorming", bs.content, "default to `none` / `skip`", "per-requirement defaults");
-  fgMark("pwk-brainstorming", bs.content, "primary enforced spec", "Feature acceptance as primary spec");
+  fgMark("pwk-brainstorming", bs.contractContent, "### Feature review", "feature-level review tag");
+  fgMark("pwk-brainstorming", bs.contractContent, "default to `none` / `skip`", "per-requirement defaults");
+  fgMark("pwk-brainstorming", bs.contractContent, "primary enforced spec", "Feature acceptance as primary spec");
 }
 // Requirement 2 — pwk-executing-tasks feature-gate flow
 if (et) {
   // leaner-execution-gates R3: the feature-spec checkpoint became a notice — the E2E is still
   // written first and still gates, it just no longer pauses execution.
-  fgMark("pwk-executing-tasks", et.content, "without waiting for approval", "feature-spec notice (no stop)");
-  if (!/CHECKPOINT: feature-spec/.test(et.content)) {
+  fgMark("pwk-executing-tasks", et.contractContent, "without waiting for approval", "feature-spec notice (no stop)");
+  if (!/CHECKPOINT: feature-spec/.test(et.contractContent)) {
     ok("pwk-executing-tasks: the retired feature-spec checkpoint is gone");
   } else {
     fail("pwk-executing-tasks: the feature-spec checkpoint must be a notice, not a stop");
   }
-  fgMark("pwk-executing-tasks", et.content, "ship checkpoint", "ship checkpoint (review before final approval)");
-  fgMark("pwk-executing-tasks", et.content, "ship-paused", "ship-paused phase");
-  fgMark("pwk-executing-tasks", et.content, "opt-in", "per-requirement ceremony is opt-in");
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    "ship checkpoint",
+    "ship checkpoint (review before final approval)",
+  );
+  fgMark("pwk-executing-tasks", et.contractContent, "ship-paused", "ship-paused phase");
+  fgMark("pwk-executing-tasks", et.contractContent, "opt-in", "per-requirement ceremony is opt-in");
 }
 // Requirement 3 — meaningful-test rules mirrored across brainstorming, executing-tasks, lessons
-fgMark("pwk-brainstorming", bs?.content, "Test observable behavior", "meaningful-test rule (brainstorming)");
-fgMark("pwk-executing-tasks", et.content, "Test observable behavior", "meaningful-test rule (executing-tasks)");
+fgMark("pwk-brainstorming", bs?.contractContent, "Test observable behavior", "meaningful-test rule (brainstorming)");
+fgMark("pwk-executing-tasks", et.contractContent, "Test observable behavior", "meaningful-test rule (executing-tasks)");
 const lessonsMd = readFileSync(join(root, "docs/lessons.md"), "utf8");
 fgMark("docs/lessons.md", lessonsMd, "Test observable behavior", "meaningful-test rule (lessons)");
 // Requirement 4 — code-review + brainstorming wording
-fgMark("pwk-code-review", crSkill?.content, "whole feature diff", "whole-feature-diff scope");
-fgMark("pwk-brainstorming", bs?.content, "primary enforced spec", "Feature acceptance as primary spec");
+fgMark("pwk-code-review", crSkill?.contractContent, "whole feature diff", "whole-feature-diff scope");
+fgMark("pwk-brainstorming", bs?.contractContent, "primary enforced spec", "Feature acceptance as primary spec");
 
 // leaner-execution-gates R5/R6 — the digest's `### Flow` is a navigable map, and it is
 // written from reviewed reality: it must agree with the tracing report (or, in `inline`
 // mode, the spec-coverage pass), with unresolved disagreements surfaced, not smoothed over.
 console.log("flow truth:");
 if (et) {
-  fgMark("pwk-executing-tasks", et.content, "**Flow shape**", "enriched Flow shape block");
-  fgMark("pwk-executing-tasks", et.content, "tracing report", "Flow truth-checked against the tracing report");
-  if (/inline[\s\S]{0,260}spec-coverage|spec-coverage[\s\S]{0,260}inline/i.test(et.content)) {
+  fgMark("pwk-executing-tasks", et.contractContent, "**Flow shape**", "enriched Flow shape block");
+  fgMark("pwk-executing-tasks", et.contractContent, "tracing report", "Flow truth-checked against the tracing report");
+  if (/inline[\s\S]{0,260}spec-coverage|spec-coverage[\s\S]{0,260}inline/i.test(et.contractContent)) {
     ok("pwk-executing-tasks: inline mode falls back to the spec-coverage pass");
   } else {
     fail("pwk-executing-tasks: must check the Flow against the spec-coverage pass in inline mode");
   }
-  if (/surfaced/i.test(et.content)) ok("pwk-executing-tasks: unresolved Flow disagreement is surfaced");
+  if (/surfaced/i.test(et.contractContent)) ok("pwk-executing-tasks: unresolved Flow disagreement is surfaced");
   else fail("pwk-executing-tasks: unresolved Flow disagreement must be surfaced to the human");
 }
 
@@ -417,17 +432,21 @@ if (scoutContent) {
 }
 // R1: pwk-brainstorming dispatches the scout and has a graceful fallback.
 if (bs) {
-  if (bs.content.includes("pwk-recon-scout")) {
+  if (bs.contractContent.includes("pwk-recon-scout")) {
     ok("pwk-brainstorming: dispatches pwk-recon-scout by name");
   } else {
     fail("pwk-brainstorming: must dispatch pwk-recon-scout (mention by name)");
   }
-  if (/Scout:\s*unavailable/i.test(bs.content)) {
+  if (/Scout:\s*unavailable/i.test(bs.contractContent)) {
     ok("pwk-brainstorming: documents the `Scout: unavailable` fallback when pi-subagents is absent");
   } else {
     fail("pwk-brainstorming: must document `Scout: unavailable` fallback (graceful degradation)");
   }
-  if (/trivial/i.test(bs.content) && /skip/i.test(bs.content) && /scout|recon/i.test(bs.content)) {
+  if (
+    /trivial/i.test(bs.contractContent) &&
+    /skip/i.test(bs.contractContent) &&
+    /scout|recon/i.test(bs.contractContent)
+  ) {
     ok("pwk-brainstorming: skips scout on trivial changes (proportionality shortcut)");
   } else {
     fail("pwk-brainstorming: must skip scout on trivial changes (proportionality shortcut)");
@@ -438,18 +457,18 @@ if (bs) {
 // Production-risk notes ⇒ Review: parallel) must not survive anywhere, and no skill may
 // re-introduce a silent tag. Markers are absence-shaped so a stale skill fails.
 if (bs) {
-  if (/only the human tags/i.test(bs.content)) {
+  if (/only the human tags/i.test(bs.contractContent)) {
     ok("pwk-brainstorming: only the human tags a slice for review");
   } else {
     fail("pwk-brainstorming: must state that only the human tags a slice");
   }
-  if (/Production-risk notes/.test(bs.content) && !/Review:\s*parallel/.test(bs.content)) {
+  if (/Production-risk notes/.test(bs.contractContent) && !/Review:\s*parallel/.test(bs.contractContent)) {
     ok("pwk-brainstorming: risk notes no longer imply `Review: parallel` (auto-tag removed)");
   } else {
     fail("pwk-brainstorming: must not map Production-risk notes to `Review: parallel`");
   }
   // The default must still be `skip` for requirements the human does not tag.
-  if (/### Review: skip \| parallel \| inline/.test(bs.content)) {
+  if (/### Review: skip \| parallel \| inline/.test(bs.contractContent)) {
     ok("pwk-brainstorming: still documents `### Review: skip | parallel | inline`");
   } else {
     fail("pwk-brainstorming: must keep the Review tag vocabulary with `skip`");
@@ -458,7 +477,7 @@ if (bs) {
 // No skill may re-introduce silent tagging: the concept must be absent repo-wide.
 let autoTagSurvivors = 0;
 for (const s of loadSkills()) {
-  for (const line of s.content.split("\n")) {
+  for (const line of s.contractContent.split("\n")) {
     if (/auto-tag/i.test(line)) {
       autoTagSurvivors++;
       fail(`${s.name}: still mentions auto-tagging: "${line.trim()}"`);
@@ -468,7 +487,7 @@ for (const s of loadSkills()) {
 if (autoTagSurvivors === 0) ok("no skill auto-tags requirements (silent tagging removed)");
 // The cross-skill link survives independently of the removed rule.
 if (et) {
-  if (/pwk-brainstorming/.test(et.content)) {
+  if (/pwk-brainstorming/.test(et.contractContent)) {
     ok("pwk-executing-tasks: references pwk-brainstorming (tag semantics)");
   } else {
     fail("pwk-executing-tasks: must reference pwk-brainstorming");
@@ -480,40 +499,50 @@ if (et) {
 // summary + a one-line-per-requirement R# table; trivial docs get a single In-short line.
 console.log("human-review-digests:");
 if (bs) {
-  fgMark("pwk-brainstorming", bs.content, DIGEST_MARKERS.atAGlance, "at-a-glance digest mandated");
+  fgMark("pwk-brainstorming", bs.contractContent, DIGEST_MARKERS.atAGlance, "at-a-glance digest mandated");
   fgMark(
     "pwk-brainstorming",
-    bs.content,
+    bs.contractContent,
     "immediately before `## Requirements`",
     "at-a-glance sits before Requirements",
   );
-  fgMark("pwk-brainstorming", bs.content, DIGEST_MARKERS.atAGlanceTable, "R# one-line table");
-  fgMark("pwk-brainstorming", bs.content, "R# = the requirement", "R# numbering linkage");
-  fgMark("pwk-brainstorming", bs.content, "In short:", "trivial fast-path In-short line");
-  if (/plain language/i.test(bs.content)) ok("pwk-brainstorming: at-a-glance plain-language rule");
+  fgMark("pwk-brainstorming", bs.contractContent, DIGEST_MARKERS.atAGlanceTable, "R# one-line table");
+  fgMark("pwk-brainstorming", bs.contractContent, "R# = the requirement", "R# numbering linkage");
+  fgMark("pwk-brainstorming", bs.contractContent, "In short:", "trivial fast-path In-short line");
+  if (/plain language/i.test(bs.contractContent)) ok("pwk-brainstorming: at-a-glance plain-language rule");
   else fail("pwk-brainstorming: at-a-glance must mandate plain language");
   // pwk 2.0 R1 — the design doc is the single buildable artifact: one block per
   // requirement carrying criteria + tags; the plan phase's re-derivations are gone.
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.rBlock, "R<n> requirement blocks");
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.criteriaInBlock, "criteria inside the block");
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.noTestNameLists, "no test-name lists");
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.auditExactlyOnce, "audit: criteria + tags exactly once");
+  fgMark("pwk-brainstorming", bs.contractContent, SINGLE_DOC_MARKERS.rBlock, "R<n> requirement blocks");
+  fgMark("pwk-brainstorming", bs.contractContent, SINGLE_DOC_MARKERS.criteriaInBlock, "criteria inside the block");
+  fgMark("pwk-brainstorming", bs.contractContent, SINGLE_DOC_MARKERS.noTestNameLists, "no test-name lists");
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    SINGLE_DOC_MARKERS.auditExactlyOnce,
+    "audit: criteria + tags exactly once",
+  );
   // leaner-execution-gates R1 — the auto-tag rule and its single-source claim are gone.
-  if (!bs.content.includes(SINGLE_DOC_MARKERS.autoTagTruth)) {
+  if (!bs.contractContent.includes(SINGLE_DOC_MARKERS.autoTagTruth)) {
     ok("pwk-brainstorming: removed auto-tag rule leaves no single-source claim");
   } else {
     fail("pwk-brainstorming: the removed auto-tag rule must not leave its single-source claim behind");
   }
-  if (!/crosswalk/i.test(bs.content)) ok("pwk-brainstorming: no mapping-table instruction");
+  if (!/crosswalk/i.test(bs.contractContent)) ok("pwk-brainstorming: no mapping-table instruction");
   else fail("pwk-brainstorming: must not instruct a crosswalk mapping table");
-  if (!/pwk-writing-plans/.test(bs.content)) ok("pwk-brainstorming: no plan-phase hand-off");
+  if (!/pwk-writing-plans/.test(bs.contractContent)) ok("pwk-brainstorming: no plan-phase hand-off");
   else fail("pwk-brainstorming: must hand off to pwk-executing-tasks, not a plan phase");
   // pwk 2.0 R2 — decisions-first At a glance: summary, then Key decisions (honest-empty
   // rejected-alternative clauses — never manufactured), then the R#/risk table.
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.keyDecisions, "decisions-first at-a-glance");
-  fgMark("pwk-brainstorming", bs.content, SINGLE_DOC_MARKERS.neverManufactured, "honest-empty rejected alternatives");
-  const glanceDecisionsIdx = bs.content.indexOf(SINGLE_DOC_MARKERS.keyDecisions);
-  const glanceTableIdx = bs.content.indexOf(DIGEST_MARKERS.atAGlanceTable);
+  fgMark("pwk-brainstorming", bs.contractContent, SINGLE_DOC_MARKERS.keyDecisions, "decisions-first at-a-glance");
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    SINGLE_DOC_MARKERS.neverManufactured,
+    "honest-empty rejected alternatives",
+  );
+  const glanceDecisionsIdx = bs.contractContent.indexOf(SINGLE_DOC_MARKERS.keyDecisions);
+  const glanceTableIdx = bs.contractContent.indexOf(DIGEST_MARKERS.atAGlanceTable);
   if (glanceDecisionsIdx !== -1 && glanceTableIdx > glanceDecisionsIdx) {
     ok("pwk-brainstorming: Key decisions sit before the R# table");
   } else {
@@ -543,7 +572,7 @@ if (existsSync(join(skillsDir, "pwk-writing-plans"))) {
 }
 let crosswalkFree = true;
 for (const s of loadSkills()) {
-  if (/crosswalk/i.test(s.content)) {
+  if (/crosswalk/i.test(s.contractContent)) {
     fail(`${s.name}: still mentions a crosswalk — the plan-phase artifact is gone`);
     crosswalkFree = false;
   }
@@ -553,13 +582,18 @@ if (crosswalkFree) ok("no skill mentions a crosswalk (plan-phase artifact gone)"
 // ship checkpoint merges feature-complete + review: review runs before the one final
 // approval, presenting digest + coverage table, diff on request.
 if (et) {
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.execSummary, "execution summary section");
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.execSummaryTable, "execution summary table shape");
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.fillAsYouLand, "fill-as-you-land rule");
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.deviationAtDeviation, "deviation logged at deviation time");
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.shipPaused, "ship-paused phase");
-  fgMark("pwk-executing-tasks", et.content, DIGEST_MARKERS.diffOnRequest, "ship presentation: diff on request");
-  const enumLine = et.content.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
+  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_MARKERS.execSummary, "execution summary section");
+  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_MARKERS.execSummaryTable, "execution summary table shape");
+  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_MARKERS.fillAsYouLand, "fill-as-you-land rule");
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    DIGEST_MARKERS.deviationAtDeviation,
+    "deviation logged at deviation time",
+  );
+  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_MARKERS.shipPaused, "ship-paused phase");
+  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_MARKERS.diffOnRequest, "ship presentation: diff on request");
+  const enumLine = et.contractContent.match(/`Feature phase` is one of:[^\n]*/)?.[0] ?? "";
   if (enumLine.includes(DIGEST_MARKERS.shipPaused) && !enumLine.includes("feature-complete-paused")) {
     ok("pwk-executing-tasks: phase enum uses ship-paused (legacy feature-complete-paused gone)");
   } else {
@@ -571,36 +605,41 @@ if (et) {
 // (recursive by construction); finalize disposes the folder as one unit.
 const GLOB_SITES = [bs, et, status, fin].filter(Boolean);
 for (const s of GLOB_SITES) {
-  fgMark(s.name, s.content, STATUS_STATE_MARKERS.findRecipe, "pinned find discovery recipe");
+  fgMark(s.name, s.contractContent, STATUS_STATE_MARKERS.findRecipe, "pinned find discovery recipe");
 }
 if (et) {
   fgMark(
     "pwk-executing-tasks",
-    et.content,
+    et.contractContent,
     "docs/plans/**/overview.md",
     "post-review routing names the forbidden repo-wide overview glob",
   );
   fgMark(
     "pwk-executing-tasks",
-    et.content,
+    et.contractContent,
     "set `Feature phase: reviewing` first",
     "review phase is set before the review runs (mid-review resume routes in)",
   );
 }
 if (fin) {
-  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.umbrellaFolder, "umbrella folder disposal as one unit");
+  fgMark("pwk-finalizing", fin.contractContent, DIGEST_MARKERS.umbrellaFolder, "umbrella folder disposal as one unit");
 }
 // R6 — finalizing ships only Feature phase `done`; every other state bounces back
 // to executing-tasks.
 if (fin) {
-  fgMark("pwk-finalizing", fin.content, "Feature phase", "finalizing reads Feature phase");
-  fgMark("pwk-finalizing", fin.content, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
+  fgMark("pwk-finalizing", fin.contractContent, "Feature phase", "finalizing reads Feature phase");
+  fgMark("pwk-finalizing", fin.contractContent, DIGEST_MARKERS.mustBeDone, "done is the only shippable phase");
 }
 // Post-review hazard fixes — the topic-folder rm -rf path is anchored to discovery
 // (never agent-typed) and the folder archive is verified before committing.
 if (fin) {
-  fgMark("pwk-finalizing", fin.content, "verbatim from discovery", "folder delete path anchored to discovery");
-  fgMark("pwk-finalizing", fin.content, "ls docs/plans/completed/<date>-<topic>/", "archive verified before commit");
+  fgMark("pwk-finalizing", fin.contractContent, "verbatim from discovery", "folder delete path anchored to discovery");
+  fgMark(
+    "pwk-finalizing",
+    fin.contractContent,
+    "ls docs/plans/completed/<date>-<topic>/",
+    "archive verified before commit",
+  );
 }
 
 // --- Check 12: code-digest feature (grown per-requirement) ---
@@ -608,17 +647,17 @@ if (fin) {
 // execution summary: four subsections, filled once after the review passes.
 console.log("code-digest:");
 if (et) {
-  fgMark("pwk-executing-tasks", et.content, CODE_DIGEST_MARKERS.codeDigest, "code-digest section in template");
+  fgMark("pwk-executing-tasks", et.contractContent, CODE_DIGEST_MARKERS.codeDigest, "code-digest section in template");
   fgMark(
     "pwk-executing-tasks",
-    et.content,
+    et.contractContent,
     CODE_DIGEST_MARKERS.digestOnceOnly,
     "digest written once, post-review, never back-filled",
   );
-  const tStart = et.content.indexOf("# Progress:");
-  const tEnd = tStart === -1 ? -1 : et.content.indexOf("```", tStart);
+  const tStart = et.contractContent.indexOf("# Progress:");
+  const tEnd = tStart === -1 ? -1 : et.contractContent.indexOf("```", tStart);
   if (tStart !== -1 && tEnd !== -1) {
-    const template = et.content.slice(tStart, tEnd);
+    const template = et.contractContent.slice(tStart, tEnd);
     const shape = /### Summary[\s\S]*### Flow[\s\S]*### Gotchas[\s\S]*### Key files/.test(template);
     if (shape) ok("pwk-executing-tasks: digest subsection shape in template");
     else fail("pwk-executing-tasks: digest must carry Summary/Flow/Gotchas/Key files in order");
@@ -635,19 +674,20 @@ if (et) {
 // R2 — the digest write point: after review success, before the ship pause,
 // derived from the packet sections; stale packet re-runs the recipe; resume-safe.
 if (et) {
-  const stepAt = et.content.indexOf("**Write the code digest**");
-  const reviewAt = et.content.indexOf("**Run the feature review**");
-  const pauseAt = et.content.indexOf("**⏸ CHECKPOINT: ship**");
+  const stepAt = et.contractContent.indexOf("**Write the code digest**");
+  const reviewAt = et.contractContent.indexOf("**Run the feature review**");
+  const pauseAt = et.contractContent.indexOf("**⏸ CHECKPOINT: ship**");
   if (stepAt === -1 || reviewAt === -1 || pauseAt === -1) {
     fail("pwk-executing-tasks: digest write step / review step / ship pause not found");
   } else if (stepAt > reviewAt && stepAt < pauseAt) {
     ok("pwk-executing-tasks: digest written between review success and the pause");
-    const stepLine = et.content.slice(stepAt, et.content.indexOf("\n", stepAt));
+    const stepLine = et.contractContent.slice(stepAt, et.contractContent.indexOf("\n", stepAt));
     for (const section of ["`## Commits`", "`## Changed files`", "`## Diff`"]) {
       fgMark("pwk-executing-tasks", stepLine, section, `digest derives from the packet ${section}`);
     }
-    const stepBlock = et.content.slice(stepAt, stepAt + 900);
-    if (/re-run the recipe/.test(stepBlock)) ok("pwk-executing-tasks: stale packet re-runs the recipe");
+    const stepBlock = et.contractContent.slice(stepAt, stepAt + 900);
+    if (/re-run (?:the )?(?:recipe|helper)/.test(`${stepBlock}\n${et.contractContent}`))
+      ok("pwk-executing-tasks: stale packet re-runs the packet helper");
     else fail("pwk-executing-tasks: digest step must re-run a stale packet first");
     if (/`Feature phase: reviewing`/.test(stepBlock)) ok("pwk-executing-tasks: resume path hits the same write point");
     else fail("pwk-executing-tasks: digest step must name the reviewing resume path");
@@ -659,11 +699,11 @@ if (et) {
 // R3 — the ship-checkpoint presentation includes the code digest, after the
 // execution summary and before diff-on-request (which stays last).
 if (et) {
-  const listAt = et.content.indexOf("present, in this order:");
+  const listAt = et.contractContent.indexOf("present, in this order:");
   if (listAt === -1) {
     fail("pwk-executing-tasks: ship presentation list not found");
   } else {
-    const list = et.content.slice(listAt, listAt + 800);
+    const list = et.contractContent.slice(listAt, listAt + 800);
     const summaryAt = list.indexOf("the **execution summary**");
     const digestAt = list.indexOf("the **code digest**");
     const diffAt = list.indexOf("full diff on request");
@@ -678,11 +718,11 @@ if (et) {
 // R4 — fill rules stated once next to the template, scoped to that paragraph
 // (several phrases legitimately exist elsewhere in the skill).
 if (et) {
-  const rulesAt = et.content.indexOf("## Code digest` is filled once");
+  const rulesAt = et.contractContent.indexOf("## Code digest` is filled once");
   if (rulesAt === -1) {
     fail("pwk-executing-tasks: digest fill-rules paragraph not found");
   } else {
-    const rules = et.content.slice(rulesAt, rulesAt + 700);
+    const rules = et.contractContent.slice(rulesAt, rulesAt + 700);
     const ruleChecks = [
       [/plain language/i, "plain language"],
       [/R# anchors/, "R# anchors"],
@@ -714,23 +754,23 @@ for (const pair of EXCLUSION_SITES) {
     fail(`skill file missing from load: ${pair[1]}`);
     continue;
   }
-  const at = s.content.indexOf(pair[1]);
+  const at = s.contractContent.indexOf(pair[1]);
   if (at === -1) {
     fail(`${s.name}: discovery anchor not found for the completed/ exclusion`);
     continue;
   }
   fgMark(
     s.name,
-    s.content.slice(at, at + 400),
+    s.contractContent.slice(at, at + 400),
     CODE_DIGEST_MARKERS.completedExclusion,
     "discovery excludes completed/",
   );
 }
 if (et) {
-  const routingAt = et.content.indexOf("## After the feature review");
-  const presentAt = et.content.indexOf("Present:", routingAt);
+  const routingAt = et.contractContent.indexOf("## After the feature review");
+  const presentAt = et.contractContent.indexOf("Present:", routingAt);
   if (routingAt !== -1 && presentAt !== -1) {
-    const routing = et.content.slice(routingAt, presentAt);
+    const routing = et.contractContent.slice(routingAt, presentAt);
     fgMark("pwk-executing-tasks", routing, CODE_DIGEST_MARKERS.completedExclusion, "routing excludes completed/");
   } else {
     fail("pwk-executing-tasks: routing block anchors not found");
@@ -744,7 +784,7 @@ if (fin) {
     "verbatim from discovery",
   ];
   for (const anchor of DISPOSAL_ANCHORS) {
-    fgMark("pwk-finalizing", fin.content, anchor, "disposal command unchanged");
+    fgMark("pwk-finalizing", fin.contractContent, anchor, "disposal command unchanged");
   }
 }
 
@@ -752,9 +792,9 @@ if (fin) {
 // recommended answers, dimension checklist walked visibly, approvals single-decision,
 // and the old one-question-at-a-time principle gone from its defining line.
 if (bs) {
-  const step3 = bs.content.slice(
-    bs.content.indexOf("**Understand the idea**"),
-    bs.content.indexOf("**Codebase recon**"),
+  const step3 = bs.contractContent.slice(
+    bs.contractContent.indexOf("**Understand the idea**"),
+    bs.contractContent.indexOf("**Codebase recon**"),
   );
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.frontier, "frontier-round protocol");
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.recommendedAnswer, "recommended answer per question");
@@ -774,7 +814,7 @@ if (bs) {
     fgMark("pwk-brainstorming", step3, dimension, `checklist dimension — ${dimension}`);
   }
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.nothingToAsk, "empty dimensions printed visibly");
-  const principlesLine = bs.content.match(/## Principles\n\n(?:- [^\n]*\n?){1,2}/)?.[0] ?? "";
+  const principlesLine = bs.contractContent.match(/## Principles\n\n(?:- [^\n]*\n?){1,2}/)?.[0] ?? "";
   if (principlesLine && !principlesLine.includes("One question at a time")) {
     ok("pwk-brainstorming: one-question-at-a-time principle replaced");
     if (/frontier/.test(principlesLine) && /No silent assumptions/.test(principlesLine)) {
@@ -790,9 +830,9 @@ if (bs) {
 // R7 — facts are looked up, never asked; pending lookups hold only downstream
 // questions while the rest of the frontier proceeds.
 if (bs) {
-  const step3 = bs.content.slice(
-    bs.content.indexOf("**Understand the idea**"),
-    bs.content.indexOf("**Codebase recon**"),
+  const step3 = bs.contractContent.slice(
+    bs.contractContent.indexOf("**Understand the idea**"),
+    bs.contractContent.indexOf("**Codebase recon**"),
   );
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.factsNeverAsked, "facts never asked of the human");
   if (/only decisions are asked/i.test(step3)) ok("pwk-brainstorming: only decisions are asked");
@@ -807,9 +847,9 @@ if (bs) {
 // R8 — assumption gate before the design presentation: numbered confirm/strike
 // items with recommendations, honest when empty, woven not new-sectioned.
 if (bs) {
-  const gate = bs.content.slice(
-    bs.content.indexOf("**Present the design**"),
-    bs.content.indexOf("Identified a significant architectural decision"),
+  const gate = bs.contractContent.slice(
+    bs.contractContent.indexOf("**Present the design**"),
+    bs.contractContent.indexOf("Identified a significant architectural decision"),
   );
   fgMark("pwk-brainstorming", gate, CODE_DIGEST_MARKERS.assumptionGate, "assumption gate before the summary");
   const gateChecks = [
@@ -829,9 +869,9 @@ if (bs) {
 // R9 — checkable termination and the two backstops: frontier-empty stop rule,
 // scenario-step forcing in step 7, and the planner bounce.
 if (bs) {
-  const step3 = bs.content.slice(
-    bs.content.indexOf("**Understand the idea**"),
-    bs.content.indexOf("**Codebase recon**"),
+  const step3 = bs.contractContent.slice(
+    bs.contractContent.indexOf("**Understand the idea**"),
+    bs.contractContent.indexOf("**Codebase recon**"),
   );
   fgMark("pwk-brainstorming", step3, CODE_DIGEST_MARKERS.nothingSilentlyAssumed, "frontier-empty stop rule");
   const summaryLine = step3.match(/[^\n]*present a short summary[^\n]*/)?.[0] ?? "";
@@ -840,9 +880,9 @@ if (bs) {
   } else {
     fail("pwk-brainstorming: stop rule must not be once-you-can-articulate");
   }
-  const step7 = bs.content.slice(
-    bs.content.indexOf("Write the design doc"),
-    bs.content.indexOf("Splitting large issues"),
+  const step7 = bs.contractContent.slice(
+    bs.contractContent.indexOf("Write the design doc"),
+    bs.contractContent.indexOf("Splitting large issues"),
   );
   if (/inventing behavior/.test(step7) && /back through the assumption gate/.test(step7)) {
     ok("pwk-brainstorming: unwritable scenario steps bounce to the gate");
@@ -876,7 +916,7 @@ if (existsSync(wtPath)) {
   else fail("walkthrough: must state it exits the gated phase");
   if (unlockSet.has("pwk-walkthrough")) ok("guard unlock list includes pwk-walkthrough");
   else fail("guard unlock list missing pwk-walkthrough");
-  if (fin && !/walkthroughs/.test(fin.content)) ok("finalize never disposes walkthroughs");
+  if (fin && !/walkthroughs/.test(fin.contractContent)) ok("finalize never disposes walkthroughs");
   else fail("pwk-finalizing: must not touch docs/walkthroughs/");
 } else {
   fail("pwk-walkthrough: skill missing");
@@ -912,7 +952,7 @@ for (const name of BOILERPLATE_SKILLS) {
     continue;
   }
   for (const [label, sentence] of SHARED_SENTENCES) {
-    if (skill.content.includes(sentence)) ok(`${name}: ${label} matches the canonical wording`);
+    if (skill.contractContent.includes(sentence)) ok(`${name}: ${label} matches the canonical wording`);
     else fail(`${name}: ${label} drifted from the canonical wording — see pwk-executing-tasks`);
   }
 }
@@ -1043,14 +1083,14 @@ console.log("flow coherence:");
 // R1 — the trivial fast-path compresses the design-doc write (step 7), it does not
 // skip it: claiming to skip steps 3–7 contradicts the doc the same bullet mandates.
 if (bs) {
-  if (/Skip steps 3–6/.test(bs.content) && !/3–7/.test(bs.content)) {
+  if (/Skip steps 3–6/.test(bs.contractContent) && !/3–7/.test(bs.contractContent)) {
     ok("pwk-brainstorming: trivial fast-path skips steps 3–6 (step 7 is compressed, not skipped)");
   } else {
     fail("pwk-brainstorming: trivial fast-path must skip steps 3–6 — step 7 writes the doc and cannot be skipped");
   }
   // `auto` resolves from the underlying risk content (the section + the notes), never
   // the display-only Risk column it shares a sentence with.
-  if (/`auto` reads the underlying risk content/.test(bs.content)) {
+  if (/`auto` reads the underlying risk content/.test(bs.contractContent)) {
     ok("pwk-brainstorming: `auto` reads the underlying risk content, not the display column");
   } else {
     fail("pwk-brainstorming: `auto` resolution must read the underlying risk content, not the Risk column");
@@ -1060,7 +1100,7 @@ if (et) {
   // R2 — umbrella routing: pwk-status maps a design-doc-without-progress leaf to
   // `design` → execute; the post-review suggestion must agree instead of bouncing a
   // designed leaf back to brainstorm.
-  const routing = et.content.slice(et.content.indexOf("## After the feature review"));
+  const routing = et.contractContent.slice(et.contractContent.indexOf("## After the feature review"));
   if (
     /no progress file and no `<leaf>-design\.md`/.test(routing) &&
     /`<leaf>-design\.md` but no progress file/.test(routing)
@@ -1076,8 +1116,8 @@ if (et) {
   // R3 — only the spec role owes the coverage table; a blanket "reviewer report" claim
   // contradicts the tracing/smell/hazard roles' contracts.
   if (
-    /spec-reviewer report without a per-requirement coverage table/.test(et.content) &&
-    !/A reviewer report without a per-requirement coverage table/.test(et.content)
+    /spec-reviewer report without a per-requirement coverage table/.test(et.contractContent) &&
+    !/A reviewer report without a per-requirement coverage table/.test(et.contractContent)
   ) {
     ok("pwk-executing-tasks: coverage-table validity attributed to the spec-reviewer report only");
   } else {
@@ -1087,8 +1127,8 @@ if (et) {
   }
   // R4 — the implement loop reads docs/lessons.md per requirement (lessons.md's own
   // header claims it is read there; the skill must actually say so).
-  const loopStepAt = et.content.indexOf("Mark the requirement 🔄");
-  if (loopStepAt !== -1 && /lessons\.md/.test(et.content.slice(loopStepAt, loopStepAt + 400))) {
+  const loopStepAt = et.contractContent.indexOf("Mark the requirement 🔄");
+  if (loopStepAt !== -1 && /lessons\.md/.test(et.contractContent.slice(loopStepAt, loopStepAt + 400))) {
     ok("pwk-executing-tasks: implement loop checks docs/lessons.md per requirement");
   } else {
     fail(
@@ -1097,7 +1137,7 @@ if (et) {
   }
   // R5 — the inline Flow truth-check names the inline pass's own tracing findings;
   // "there is no tracing report" contradicts pwk-code-review, which traces inline.
-  if (/the inline pass itself performs code tracing/.test(et.content)) {
+  if (/the inline pass itself performs code tracing/.test(et.contractContent)) {
     ok("pwk-executing-tasks: inline Flow truth-check names the inline pass's tracing findings");
   } else {
     fail("pwk-executing-tasks: inline mode must acknowledge the inline pass performs code tracing");
@@ -1107,7 +1147,10 @@ if (status) {
   // R6 — the N/N tally is scoped to the Requirements table: the Execution summary rows
   // share the `| <n> |` row shape, so a bare grep double-counts every requirement.
   const SCOPED_TALLY = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep -c '^| [0-9]'";
-  if (/share the same `\| <n> \|` row shape/.test(status.content) && status.content.includes(SCOPED_TALLY)) {
+  if (
+    /share the same `\| <n> \|` row shape/.test(status.contractContent) &&
+    status.contractContent.includes(SCOPED_TALLY)
+  ) {
     ok("pwk-status: Requirements-table tally is scoped past the Execution summary rows");
   } else {
     fail("pwk-status: the tally must be scoped to the Requirements table (Execution summary rows share the row shape)");
@@ -1116,7 +1159,7 @@ if (status) {
 if (fin) {
   // R7 — finalizing's verdict greps read Requirements-table rows only, matching its own
   // "verdict rows in the Requirements table" claim (prose elsewhere must not match).
-  if (fin.content.includes("grep '^| [0-9].*❌'") && fin.content.includes("grep '^| [0-9].*⏭'")) {
+  if (fin.contractContent.includes("grep '^| [0-9].*❌'") && fin.contractContent.includes("grep '^| [0-9].*⏭'")) {
     ok("pwk-finalizing: verdict greps are scoped to Requirements-table rows");
   } else {
     fail("pwk-finalizing: verdict greps must be scoped to Requirements-table rows (`grep '^| [0-9].*❌'`)");
@@ -1125,7 +1168,7 @@ if (fin) {
 if (crSkill) {
   // R8 — the executing skill assembles the packet before any review (parallel or
   // inline); the inline reviewer must say it works from the packet, not re-derive scope.
-  if (/work from the packet/.test(crSkill.content)) {
+  if (/work from the packet/.test(crSkill.contractContent)) {
     ok("pwk-code-review: works from an assembled review packet when provided");
   } else {
     fail("pwk-code-review: must work from the assembled review packet when the invoking skill provides one");
@@ -1145,7 +1188,7 @@ if (et) {
   // R10 (pass 2) — both `Checkpoints: full` stops precede the slice's commit; the
   // checkpoint rule forbids committing before approval, so "slice is complete" alone
   // is ambiguous about where the second stop sits.
-  if (/both before its commit/.test(et.content)) {
+  if (/both before its commit/.test(et.contractContent)) {
     ok("pwk-executing-tasks: `Checkpoints: full` stops are pinned before the slice's commit");
   } else {
     fail("pwk-executing-tasks: the two `full` checkpoint stops must be stated to sit before the slice's commit");
@@ -1154,7 +1197,7 @@ if (et) {
 if (fin) {
   // R11 (pass 2) — the learning sweep names its inputs, so a trivial doc (no
   // `## At a glance`, no `Approaches considered`) is an expected honest-empty, not a miss.
-  if (/trivial doc has no `## At a glance`/.test(fin.content)) {
+  if (/trivial doc has no `## At a glance`/.test(fin.contractContent)) {
     ok("pwk-finalizing: learning sweep accounts for the trivial doc's missing sections");
   } else {
     fail(
@@ -1170,14 +1213,14 @@ if (status) {
   // the Execution summary rows share the `| <n> |` row shape, so an unscoped grep
   // contradicts the skill's own "do not inflate the count" claim.
   const SCOPED_VERDICT = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep -c '^| [0-9].*❌'";
-  if (status.content.includes(SCOPED_VERDICT) && status.content.includes("| grep -c '^| [0-9].*⏭'")) {
+  if (status.contractContent.includes(SCOPED_VERDICT) && status.contractContent.includes("| grep -c '^| [0-9].*⏭'")) {
     ok("pwk-status: verdict glyph counts run over the scoped Requirements-table range");
   } else {
     fail("pwk-status: the ❌/⏭ counts must run over the same scoped range as the N/N tally");
   }
   // R13 — the awaiting-setup state is decided by the header slot alone; a design-doc
   // cross-check would contradict "neither do design docs" extraction discipline.
-  if (/Setup: pending` renders the topic as \*\*`awaiting setup`\*\*/.test(status.content)) {
+  if (/Setup: pending` renders the topic as \*\*`awaiting setup`\*\*/.test(status.contractContent)) {
     ok("pwk-status: awaiting setup is decided from the header slot alone");
   } else {
     fail("pwk-status: the awaiting-setup rule must key on the header slot, not a design-doc read");
@@ -1187,7 +1230,7 @@ if (fin) {
   // R14 — finalizing's verdict greps are sed-scoped like status's, making the
   // "Requirements-table rows" claim true in the command, not just the prose.
   const FIN_SCOPED = "sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep '^| [0-9].*❌'";
-  if (fin.content.includes(FIN_SCOPED) && fin.content.includes("| grep '^| [0-9].*⏭'")) {
+  if (fin.contractContent.includes(FIN_SCOPED) && fin.contractContent.includes("| grep '^| [0-9].*⏭'")) {
     ok("pwk-finalizing: verdict greps are sed-scoped to the Requirements table");
   } else {
     fail("pwk-finalizing: the ❌/⏭ verdict greps must be sed-scoped to the Requirements table");
@@ -1196,14 +1239,16 @@ if (fin) {
 if (et) {
   // R15 — the ship-paused resume re-presents a checkpoint that includes the code
   // digest, so the blanket "nothing the resume needs" read rule needs this carve-out.
-  if (/ship-paused` route re-presents the ship checkpoint, so it also reads the `## Code digest`/.test(et.content)) {
+  if (
+    /ship-paused` route re-presents the ship checkpoint, so it also reads the `## Code digest`/.test(et.contractContent)
+  ) {
     ok("pwk-executing-tasks: the ship-paused resume exception reads the Code digest");
   } else {
     fail("pwk-executing-tasks: the resume read rule must carve out the ship-paused route's Code digest read");
   }
   // R16 — uncommitted planning docs do not cross `git worktree add`; the hand-off
   // must say how they reach the worktree (commit on the branch, or copy + verify).
-  if (/do not cross a worktree boundary/.test(et.content)) {
+  if (/do not cross a worktree boundary/.test(et.contractContent)) {
     ok("pwk-executing-tasks: the worktree hand-off carries the uncommitted topic folder across");
   } else {
     fail("pwk-executing-tasks: the worktree hand-off must state how uncommitted planning docs cross");
@@ -1213,8 +1258,8 @@ if (crSkill) {
   // R17 — the terminal-row parenthetical is scoped to the feature-level review: a
   // per-requirement review also runs in the feature-gate flow, and its row is 🔄.
   if (
-    /At the feature-level review every row is already terminal/.test(crSkill.content) &&
-    !/In the feature-gate flow every row/.test(crSkill.content)
+    /At the feature-level review every row is already terminal/.test(crSkill.contractContent) &&
+    !/In the feature-gate flow every row/.test(crSkill.contractContent)
   ) {
     ok("pwk-code-review: the terminal-row note is scoped to the feature-level review");
   } else {

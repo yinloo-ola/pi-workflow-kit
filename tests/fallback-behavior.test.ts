@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const brainstorming = readFileSync("skills/pwk-brainstorming/SKILL.md", "utf8");
-const executing = readFileSync("skills/pwk-executing-tasks/SKILL.md", "utf8");
+const review = readFileSync("skills/pwk-executing-tasks/references/review.md", "utf8");
 const contract = readFileSync("docs/provider-delegation-contract.md", "utf8");
 
 describe("delegation fallback behavior", () => {
@@ -21,9 +21,9 @@ describe("delegation fallback behavior", () => {
   });
 
   it("retains successful review reports and recovers missing roles", () => {
-    expect(executing).toMatch(/retain successful delegated reports/i);
-    expect(executing).toMatch(/missing review work inline/i);
-    expect(executing).toMatch(/fully reviewed while a required role is missing/i);
+    expect(review).toMatch(/Retain successful delegated reports/i);
+    expect(review).toMatch(/missing review work inline/i);
+    expect(review).toMatch(/required role is missing/i);
     expect(contract).toMatch(/successful delegated reports remain usable/i);
     expect(contract).toMatch(/required role has neither a delegated result nor an inline result/i);
   });

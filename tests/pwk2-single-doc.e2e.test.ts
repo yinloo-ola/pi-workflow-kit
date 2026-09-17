@@ -11,11 +11,24 @@ function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+function readDesignFormat(): string {
+  return read("skills/pwk-brainstorming/references/design-format.md");
+}
+
+function readExecutingContracts(): string {
+  return [
+    read("skills/pwk-executing-tasks/SKILL.md"),
+    read("skills/pwk-executing-tasks/references/progress-format.md"),
+    read("skills/pwk-executing-tasks/references/resume.md"),
+    read("skills/pwk-executing-tasks/references/review.md"),
+  ].join("\n");
+}
+
 describe("pwk 2.0 single-doc feature (E2E)", () => {
   it("should thread pwk 2.0 end-to-end: one buildable design doc → executing → learning sweep → on-demand walkthrough", () => {
     // R1 — the design doc is the single buildable artifact: ### R<n> blocks carry
     // behavior + criteria + tags in one place; the plan phase's second doc is gone.
-    const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+    const brainstorming = readDesignFormat();
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.rBlock);
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.criteriaInBlock);
     expect(brainstorming).toContain(SINGLE_DOC_MARKERS.noTestNameLists);
@@ -41,10 +54,13 @@ describe("pwk 2.0 single-doc feature (E2E)", () => {
     const guard = read("extensions/workflow-guard.ts");
     expect(guard).not.toMatch(/pwk-writing-plans/);
     expect(guard).toMatch(/"brainstorm" \| null/);
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = readExecutingContracts();
     expect(executing).toContain(SINGLE_DOC_MARKERS.preFlightBranch);
     expect(executing).toContain(SINGLE_DOC_MARKERS.parseRBlocks);
-    expect(executing).toContain(SINGLE_DOC_MARKERS.packetDesignSpan);
+    // The old packet `### R1` location pin belonged to the extracted packet
+    // implementation prose. The review reference now owns the observable span
+    // contract instead.
+    expect(executing).toContain("Feature criteria span from the first real requirement");
     expect(executing).not.toContain("*-implementation.md");
     expect(existsSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"))).toBe(true);
     const adr = readFileSync(join(repoRoot, "docs/adr/0004-one-buildable-design-doc.md"), "utf8");

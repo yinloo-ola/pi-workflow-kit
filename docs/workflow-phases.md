@@ -1,5 +1,14 @@
 # Workflow Phases
 
+Phase skills keep detailed contracts local to their skill directories:
+`skills/pwk-brainstorming/references/umbrella.md`,
+`skills/pwk-brainstorming/references/design-format.md`, and
+`skills/pwk-brainstorming/scripts/validate-design.py`; plus
+`skills/pwk-executing-tasks/references/progress-format.md`,
+`skills/pwk-executing-tasks/references/resume.md`,
+`skills/pwk-executing-tasks/references/review.md`, and
+`skills/pwk-executing-tasks/scripts/build-review-packet.py`.
+
 The kit enforces a design → execute → finalize workflow. Each phase below names the skill that drives it:
 
 `pi-workflow-kit` has 4 pipeline skills plus 2 utility skills. You invoke each one explicitly with `/skill:`.

@@ -7,8 +7,12 @@ function read(rel: string): string {
   return readFileSync(rel, "utf8");
 }
 
+function readDesignFormat(): string {
+  return read("skills/pwk-brainstorming/references/design-format.md");
+}
+
 describe("single-doc: merged design doc (R1)", () => {
-  const bs = read("skills/pwk-brainstorming/SKILL.md");
+  const bs = readDesignFormat();
 
   it("should instruct ### R<n> requirement blocks with criteria and tags in one design doc", () => {
     expect(bs).toContain(SINGLE_DOC_MARKERS.rBlock);
@@ -36,21 +40,20 @@ describe("single-doc: merged design doc (R1)", () => {
   });
 
   it("should keep the trivial fast-path shape (In short + single block)", () => {
-    const trivial = bs.match(/[^^]{0,400}In short:[^^]{0,400}/)?.[0] ?? "";
-    expect(trivial).toMatch(/single `### R1:` requirement block/);
-    expect(trivial).toMatch(/criteria and tags/);
-    expect(trivial).toMatch(/pwk-executing-tasks/);
+    expect(bs).toMatch(/In short:[\s\S]*a single `### R1:` block with acceptance criteria and tags/);
+    expect(read("skills/pwk-brainstorming/SKILL.md")).toMatch(/pwk-executing-tasks/);
   });
 
   it("should hand off to executing-tasks (no plan phase in between)", () => {
-    expect(bs).not.toMatch(/pwk-writing-plans/);
-    expect(bs).toMatch(/pwk-executing-tasks/);
+    const skill = read("skills/pwk-brainstorming/SKILL.md");
+    expect(skill).not.toMatch(/pwk-writing-plans/);
+    expect(skill).toMatch(/pwk-executing-tasks/);
   });
 });
 
 describe("single-doc: decisions-first At a glance (R2)", () => {
   it("should open At a glance summary → decisions → table", () => {
-    const bs = read("skills/pwk-brainstorming/SKILL.md");
+    const bs = readDesignFormat();
     expect(bs).toContain(SINGLE_DOC_MARKERS.keyDecisions);
     expect(bs).toContain(SINGLE_DOC_MARKERS.neverManufactured);
     const glanceIdx = bs.indexOf("## At a glance");
@@ -93,7 +96,7 @@ describe("single-doc: finalize learning sweep (R4)", () => {
   });
 
   it("should record architectural deviations at deviation time", () => {
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = read("skills/pwk-executing-tasks/references/progress-format.md");
     expect(executing).toContain(SINGLE_DOC_MARKERS.deviationRecord);
     expect(executing).toMatch(/what changed, why, what was rejected/);
   });

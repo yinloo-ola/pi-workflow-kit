@@ -1,0 +1,14 @@
+{
+  "protocolVersion": 1,
+  "protocolHash": "not-a-real-protocol-hash",
+  "manifestHash": "not-a-real-manifest-hash",
+  "manifest": { "hash": "not-a-real-manifest-hash" },
+  "commits": {
+    "baseline": "0000000",
+    "candidate": "0000000"
+  },
+  "instrumentationGaps": 1,
+  "trials": [],
+  "lifecycle": [],
+  "note": "Template only. No model or behavioral evidence is included."
+}

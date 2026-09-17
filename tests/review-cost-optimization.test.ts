@@ -68,13 +68,13 @@ describe("review cost optimization feature (E2E)", () => {
 
     // R4+R5 — the executing skill builds scope as a packet file (never spawn-carried)
     // and spawns reviewers with one-liner pointers; per-requirement reviews mirror it.
-    const executing = readRepo("skills/pwk-executing-tasks/SKILL.md");
-    expect((executing.match(/review-packet\.md/g) ?? []).length).toBeGreaterThanOrEqual(2);
-    expect(executing).toMatch(/git diff \$FEATURE_BASE\.\.\.HEAD/);
-    expect(executing).toMatch(/review-packet\.md[\s\S]{0,600}(your role|role framing|role tail)/i);
-    expect(executing).toMatch(
-      /per-requirement[\s\S]{0,600}review-packet\.md|review-packet\.md[\s\S]{0,600}per-requirement/i,
-    );
+    const review = readRepo("skills/pwk-executing-tasks/references/review.md");
+    expect(review).toContain("build-review-packet.py");
+    expect(review).toContain("--scope feature");
+    expect(review).toContain("git rev-parse <first Commit-column entry>^");
+    expect(review).toMatch(/review-packet\.md[\s\S]{0,600}(your role|role framing|role tail)/i);
+    expect(review).toContain("For an opt-in requirement review");
+    expect(review).toContain("Requirement-suffixed packets never overwrite");
 
     // R6 — the delegation contract documents the hints as advisory with silent fallback.
     const contract = readRepo("docs/provider-delegation-contract.md");

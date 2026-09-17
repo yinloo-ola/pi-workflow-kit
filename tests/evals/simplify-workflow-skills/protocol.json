@@ -1,0 +1,27 @@
+{
+  "name": "simplify-workflow-skills-r4",
+  "version": 1,
+  "ordinaryTrialsPerCondition": 3,
+  "conditions": [
+    { "revision": "baseline", "size": "large" },
+    { "revision": "baseline", "size": "control" },
+    { "revision": "candidate", "size": "large" },
+    { "revision": "candidate", "size": "control" }
+  ],
+  "assessments": [
+    "vertical-slices",
+    "approval",
+    "current-only-design",
+    "predecessor-grounding",
+    "premature-finalize-blocking"
+  ],
+  "usage": {
+    "format": "jsonl",
+    "requiredFields": ["trialId", "inputTokens", "outputTokens", "totalTokens"],
+    "tokenFields": ["inputTokens", "outputTokens", "totalTokens"]
+  },
+  "evidence": {
+    "requiredFilesPerTrial": ["transcript.jsonl", "usage.jsonl"],
+    "requiredLifecycleFile": "lifecycle.jsonl"
+  }
+}

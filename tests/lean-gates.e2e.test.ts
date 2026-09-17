@@ -10,6 +10,10 @@ function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+function readReference(skill: string, reference: string): string {
+  return read(`skills/${skill}/references/${reference}`);
+}
+
 /**
  * Feature acceptance for leaner-execution-gates.
  *
@@ -19,8 +23,12 @@ function read(rel: string): string {
  */
 describe("leaner execution gates (feature E2E)", () => {
   it("should reach the ship checkpoint as the only mandatory stop, with a navigable digest and no reviewer roles when the design carries no risk", () => {
-    const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const brainstorming = readReference("pwk-brainstorming", "design-format.md");
+    const executing = [
+      read("skills/pwk-executing-tasks/SKILL.md"),
+      readReference("pwk-executing-tasks", "progress-format.md"),
+      readReference("pwk-executing-tasks", "review.md"),
+    ].join("\n");
     const finalizing = read("skills/pwk-finalizing/SKILL.md");
 
     // R1 — the silent per-requirement review tag is gone; the human owns the tag.
@@ -112,8 +120,12 @@ describe("leaner execution gates (feature E2E)", () => {
   });
 
   it("should request exactly four reviewer roles over the whole diff when the design carries risk content, plus only the explicitly tagged slice reviews", () => {
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
-    const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+    const executing = [
+      read("skills/pwk-executing-tasks/SKILL.md"),
+      readReference("pwk-executing-tasks", "progress-format.md"),
+      readReference("pwk-executing-tasks", "review.md"),
+    ].join("\n");
+    const brainstorming = readReference("pwk-brainstorming", "design-format.md");
 
     // R2 — the auto resolution keys on either mirrored risk signal, and the four
     // roles run once over the whole feature diff (never once per requirement).

@@ -12,6 +12,19 @@ function read(rel: string): string {
   return readFileSync(join(repoRoot, rel), "utf8");
 }
 
+function readReference(skill: string, reference: string): string {
+  return read(`skills/${skill}/references/${reference}`);
+}
+
+function readExecutingContracts(): string {
+  return [
+    read("skills/pwk-executing-tasks/SKILL.md"),
+    readReference("pwk-executing-tasks", "progress-format.md"),
+    readReference("pwk-executing-tasks", "resume.md"),
+    readReference("pwk-executing-tasks", "review.md"),
+  ].join("\n");
+}
+
 /** Every skill directory under skills/ — the inventory docs must name them all. */
 function skillNames(): string[] {
   return readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
@@ -23,7 +36,7 @@ function skillNames(): string[] {
 
 /** The design-doc template's fenced block containing the Feature acceptance section. */
 function brainstormTemplate(): string {
-  const brainstorming = read("skills/pwk-brainstorming/SKILL.md");
+  const brainstorming = readReference("pwk-brainstorming", "design-format.md");
   const fences = [...brainstorming.matchAll(/```markdown\n([\s\S]*?)```/g)].map((m) => m[1]);
   const withFa = fences.filter((body) => body.includes("## Feature acceptance"));
   expect(withFa.length, "brainstorming template with ## Feature acceptance").toBeGreaterThan(0);
@@ -41,7 +54,7 @@ function brainstormTemplate(): string {
 describe("workflow-consistency (feature E2E)", () => {
   it("scenario 1 — green gates after repair: phantom vocabulary dies everywhere and the inventory docs match reality", () => {
     const codeReview = read("skills/pwk-code-review/SKILL.md");
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = readExecutingContracts();
 
     // F4/F10 — the phantom row value and plan remnants are gone from code-review.
     expect(codeReview).not.toMatch(/🔎 review/);
@@ -98,14 +111,14 @@ describe("workflow-consistency (feature E2E)", () => {
     expect(template).toMatch(/^\s*### Feature review/m);
 
     // F12 — the recipe names the Commit column as the source of truth for both spans.
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = readExecutingContracts();
     expect(executing).toContain(WCM.commitColumnFill);
     expect(executing).toContain(WCM.featureBaseRule);
     expect(executing).toContain(WCM.perReqSpanRule);
   });
 
   it("scenario 3 — failure branches are reachable: done means resolved and finalizing stays the authority", () => {
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = readExecutingContracts();
     const finalizing = read("skills/pwk-finalizing/SKILL.md");
     const status = read("skills/pwk-status/SKILL.md");
 
@@ -131,7 +144,7 @@ describe("workflow-consistency (feature E2E)", () => {
   });
 
   it("scenario 4 — the setup checkpoint survives a crash: the header is the signal", () => {
-    const executing = read("skills/pwk-executing-tasks/SKILL.md");
+    const executing = readExecutingContracts();
     const status = read("skills/pwk-status/SKILL.md");
 
     // F2/F3 — the progress file exists before the checkpoint, carries a Setup slot,
