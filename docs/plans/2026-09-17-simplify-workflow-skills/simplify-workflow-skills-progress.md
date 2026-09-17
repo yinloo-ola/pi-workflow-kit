@@ -5,7 +5,7 @@ Branch: 2026-09-17-simplify-workflow-skills
 Setup: n/a
 Started: 2026-09-17
 Last updated: 2026-09-17
-Feature phase: implementing (4/4)
+Feature phase: done
 Baseline: dd79402aeebaeea55a84334af00110ad37273ba2
 
 ## Requirements
