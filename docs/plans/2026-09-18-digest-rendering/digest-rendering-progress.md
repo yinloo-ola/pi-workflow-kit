@@ -4,8 +4,8 @@ Design: docs/plans/2026-09-18-digest-rendering/digest-rendering-design.md
 Branch: 2026-09-18-digest-rendering
 Setup: n/a
 Started: 2026-09-18T00:00:00+08:00
-Last updated: 2026-09-18T01:30:00+08:00
-Feature phase: ship-paused
+Last updated: 2026-09-18T01:40:00+08:00
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
