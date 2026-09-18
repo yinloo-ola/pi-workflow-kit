@@ -37,7 +37,7 @@ Five sections, always: Summary / How it works / Key flows / Gotchas & invariants
    One subsection per component: responsibility + mechanism.
 
    ## Key flows
-   Execution/data movement as arrow chains (A -> B -> C), anchored per step.
+   Execution/data movement as arrow chains (A -> B -> C), anchored per step, one flow per bullet line.
 
    ## Gotchas & invariants
    Edge cases, implicit assumptions, ordering constraints.
