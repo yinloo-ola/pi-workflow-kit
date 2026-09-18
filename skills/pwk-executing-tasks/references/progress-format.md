@@ -42,10 +42,12 @@ Read before creating or changing progress rows, or writing/re-presenting the cod
      - `<changed behavior> — was: <previous behavior>`
    - **Side effects** — reads: `<what>` · writes: `<what>`
    ### Gotchas
+   - <one real risk per bullet>
    ### Key files
+   - `<file>` — <what shifted inside it>
    ```
 
-   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Summary` is 2–3 sentences: what the code now does differently, and why. `### Flow` uses `A -> B -> C` arrow chains, one spine or branch per bullet line, so every renderer shows each hop chain on its own line — bare label lines would merge into one run-on paragraph. `### Gotchas` lifts real risks from the review findings — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one line each: what shifted inside them.
+   The `## Code digest` is filled once, at the write point in the ship checkpoint — never per requirement. Fill rules: plain language, R# anchors where natural, no test names (the execution-summary rule). `### Summary` is 2–3 sentences: what the code now does differently, and why. `### Flow` uses `A -> B -> C` arrow chains, one spine or branch per bullet line, so every renderer shows each hop chain on its own line — bare label lines would merge into one run-on paragraph. `### Gotchas` lifts real risks from the review findings, one bullet each — `[ALERT]` only for reviewer-confirmed issues, never invented; with no findings, write `none beyond review findings` and mean it. `### Key files` is capped at 5 pivotal files, one bullet each: what shifted inside them.
 
    **Flow shape** — this is the ship stop's navigable map, so it is the one digest section that carries structure, not just prose:
 
