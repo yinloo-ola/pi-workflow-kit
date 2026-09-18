@@ -184,3 +184,20 @@ export const CODE_DIGEST_MARKERS = {
   nothingSilentlyAssumed: "nothing left silently assumed",
   bounceToBrainstorm: "back to `/skill:pwk-brainstorming`",
 };
+
+/**
+ * Markers for the digest-rendering feature: structured digest sections render as
+ * markdown lists in any CommonMark preview — a bare label line followed by
+ * 2-space-indented text is a lazy continuation, so the section would collapse into
+ * one run-on paragraph. Same contract as DIGEST_MARKERS — one canonical string per
+ * behavior, shared by skill-lint and the vitest suites.
+ */
+export const DIGEST_RENDERING_MARKERS = {
+  flowBulletSpine: "- **Spine**",
+  flowBulletBranches: "- **Branches**",
+  flowBulletSideEffects: "- **Side effects**",
+  flowBulletLineRule: "one spine or branch per bullet line",
+  gotchasBulletItem: "one real risk per bullet",
+  keyFilesBulletEach: "one bullet each",
+  walkthroughFlowBullet: "one flow per bullet line",
+};

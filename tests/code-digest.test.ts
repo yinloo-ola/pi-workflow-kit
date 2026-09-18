@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CODE_DIGEST_MARKERS, LEAN_GATES_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, DIGEST_RENDERING_MARKERS, LEAN_GATES_MARKERS } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -310,5 +310,47 @@ describe("code-digest feature (E2E)", () => {
       expect(content, doc).toContain(CODE_DIGEST_MARKERS.completedExclusion);
       expect(content, doc).toMatch(/frontier/i);
     }
+  });
+});
+
+// digest-rendering — a bare label line followed by 2-space-indented text is a lazy
+// continuation in CommonMark: the section collapses into one run-on paragraph in
+// every renderer. The structured digest sections must therefore be all list items.
+const bareContentLines = (span: string): string[] =>
+  span
+    .split("\n")
+    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("```"))
+    .filter((line) => !/^\s*#{2,6}\s/.test(line))
+    .filter((line) => !/^\s*-\s/.test(line));
+
+describe("digest rendering (bullet-form templates)", () => {
+  const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
+  const templateStart = progressFormat.indexOf("# Progress:");
+  const template = progressFormat.slice(templateStart, progressFormat.indexOf("```", templateStart));
+
+  it("renders the Flow template as labeled bullets with no bare label lines", () => {
+    const flowAt = template.indexOf("### Flow");
+    expect(flowAt, "Flow heading missing from template").toBeGreaterThan(-1);
+    const flow = template.slice(flowAt, template.indexOf("### Gotchas", flowAt));
+    expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletSpine);
+    expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletBranches);
+    expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletSideEffects);
+    // Independent property, not a verbatim pin: every content line in the Flow span
+    // is a list item — a bare line would merge into the previous paragraph.
+    expect(bareContentLines(flow), "non-list content lines in the Flow template").toEqual([]);
+  });
+
+  it("prescribes one bullet per gotcha and per key file", () => {
+    const digestAt = template.indexOf(CODE_DIGEST_MARKERS.codeDigest);
+    expect(digestAt, "Code digest heading missing from template").toBeGreaterThan(-1);
+    const digest = template.slice(digestAt);
+    expect(digest).toContain(`- <${DIGEST_RENDERING_MARKERS.gotchasBulletItem}>`);
+    expect(digest).toContain("- `<file>` — <what shifted inside it>");
+    expect(progressFormat).toContain(DIGEST_RENDERING_MARKERS.keyFilesBulletEach);
+  });
+
+  it("pins the walkthrough Key flows bullet form", () => {
+    const walkthrough = readRepo("skills/pwk-walkthrough/SKILL.md");
+    expect(walkthrough).toContain(DIGEST_RENDERING_MARKERS.walkthroughFlowBullet);
   });
 });
