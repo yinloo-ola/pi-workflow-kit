@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { DIGEST_RENDERING_MARKERS } from "./markers.mjs";
+import { DIGEST_RENDERING_MARKERS, bareContentLines } from "./markers.mjs";
 
 // Feature acceptance (digest-rendering design doc):
 // 1. A digest written per the updated progress-format.md renders as labeled bullet
@@ -11,17 +11,6 @@ import { DIGEST_RENDERING_MARKERS } from "./markers.mjs";
 //    distinct labeled bullets.
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-
-// CommonMark lazy continuation: a content line that is not a list item, heading,
-// or fence merges into the previous paragraph line. A structured digest section
-// made of such lines renders as one run-on blob — the defect this feature fixes.
-// This property is renderer-independent: no markdown parser needed.
-const bareContentLines = (span: string): string[] =>
-  span
-    .split("\n")
-    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("```"))
-    .filter((line) => !/^\s*#{2,6}\s/.test(line))
-    .filter((line) => !/^\s*-\s/.test(line));
 
 describe("feature acceptance: digest rendering", () => {
   it("digest Flow template renders as labeled bullets in any CommonMark preview", () => {

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CODE_DIGEST_MARKERS, DIGEST_RENDERING_MARKERS, LEAN_GATES_MARKERS } from "./markers.mjs";
+import { CODE_DIGEST_MARKERS, DIGEST_RENDERING_MARKERS, LEAN_GATES_MARKERS, bareContentLines } from "./markers.mjs";
 
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -315,13 +315,8 @@ describe("code-digest feature (E2E)", () => {
 
 // digest-rendering — a bare label line followed by 2-space-indented text is a lazy
 // continuation in CommonMark: the section collapses into one run-on paragraph in
-// every renderer. The structured digest sections must therefore be all list items.
-const bareContentLines = (span: string): string[] =>
-  span
-    .split("\n")
-    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("```"))
-    .filter((line) => !/^\s*#{2,6}\s/.test(line))
-    .filter((line) => !/^\s*-\s/.test(line));
+// every renderer. The structured digest sections must therefore be all list items
+// (property helper shared from markers.mjs).
 
 describe("digest rendering (bullet-form templates)", () => {
   const progressFormat = readRepo("skills/pwk-executing-tasks/references/progress-format.md");
@@ -335,6 +330,10 @@ describe("digest rendering (bullet-form templates)", () => {
     expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletSpine);
     expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletBranches);
     expect(flow).toContain(DIGEST_RENDERING_MARKERS.flowBulletSideEffects);
+    // adjacency (design R1 criterion 2): [R#] sits on its hop/branch bullet, `was:` is its
+    // own bullet — no wide-gap alignment, which renders as a single space
+    expect(flow).toContain("- `<condition> -> <outcome>` [R2]");
+    expect(flow).toContain("- `<changed behavior> — was: <previous behavior>`");
     // Independent property, not a verbatim pin: every content line in the Flow span
     // is a list item — a bare line would merge into the previous paragraph.
     expect(bareContentLines(flow), "non-list content lines in the Flow template").toEqual([]);

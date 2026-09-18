@@ -201,3 +201,16 @@ export const DIGEST_RENDERING_MARKERS = {
   keyFilesBulletEach: "one bullet each",
   walkthroughFlowBullet: "one flow per bullet line",
 };
+
+/**
+ * Shared property helper (digest-rendering): a content line that is not a list item,
+ * heading, or fence is a lazy continuation in CommonMark — it merges into the previous
+ * paragraph, so a structured digest section made of such lines renders as one run-on
+ * blob. Renderer-independent: no markdown parser needed.
+ */
+export const bareContentLines = (span) =>
+  span
+    .split("\n")
+    .filter((line) => line.trim() !== "" && !line.trimStart().startsWith("```"))
+    .filter((line) => !/^\s*#{2,6}\s/.test(line))
+    .filter((line) => !/^\s*-\s/.test(line));
