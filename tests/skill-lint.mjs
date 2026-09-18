@@ -751,7 +751,7 @@ if (et) {
   if (rulesAt === -1) {
     fail("pwk-executing-tasks: digest fill-rules paragraph not found");
   } else {
-    const rules = et.contractContent.slice(rulesAt, rulesAt + 700);
+    const rules = et.contractContent.slice(rulesAt, rulesAt + 900);
     const ruleChecks = [
       [/plain language/i, "plain language"],
       [/R# anchors/, "R# anchors"],
