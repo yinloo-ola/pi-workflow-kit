@@ -33,11 +33,12 @@ describe("feature acceptance: digest rendering", () => {
     expect(bareContentLines(flow), "non-list content lines in the Flow template").toEqual([]);
   });
 
-  it("sample progress doc renders the up_adventure flow as distinct bullets", () => {
-    const samplePath = join(repoRoot, "docs/plans/2026-09-18-digest-rendering/sample-progress.md");
-    if (!existsSync(samplePath)) {
-      throw new Error("sample-progress.md not written yet (R5 ship-time artifact)");
-    }
+  // The sample is an ephemeral ship-time artifact (design R5): it is disposed with
+  // the topic folder at finalize, so the shipped state has no file to assert on —
+  // the scenario runs red→green during execute and skips once disposed.
+  const samplePath = join(repoRoot, "docs/plans/2026-09-18-digest-rendering/sample-progress.md");
+  const maybeIt = existsSync(samplePath) ? it : it.skip;
+  maybeIt("sample progress doc renders the up_adventure flow as distinct bullets", () => {
     const sample = readFileSync(samplePath, "utf8");
     const flowAt = sample.indexOf("### Flow");
     expect(flowAt, "sample Flow heading missing").toBeGreaterThan(-1);

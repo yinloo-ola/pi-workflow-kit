@@ -60,3 +60,7 @@ Retire rules that no longer apply during finalizing.
 - **Name scratch artifacts so the disposal pattern matches them, or delete them explicitly.** Finalizing disposes the topic folder `docs/plans/<date>-<topic>/` wholesale — a scratch file parked at the `docs/plans/` top level, outside every folder, matches no disposal unit and survives finalizing as stray clutter. Keep scratch work **inside the topic folder** so it rides the disposal, or remove it by hand before disposing; verify with `ls` afterwards.
 
 - **Gate and resume reads extract, never ingest.** A check that only needs a header line, a table, or a count must not read the file body — name the fields that can change the decision (header, table region, a count command) in the skill, so orientation costs scale with topic count instead of history size.
+
+## Finalize & Disposal
+
+- **Re-run the full suite after disposal, before merging.** Disposal changes the tree the green suite ran against: pre-finalize checks ran with the topic folder present, and an E2E pinned to a ship-time artifact inside it (the sample progress doc) went red on shipped `main` only after the folder was deleted. Any test asserting an artifact the design marks as ephemeral must also handle the disposed state (skip with the reason in the test name), and the finalize sequence's last gate belongs after the `rm -rf`, not before it.
