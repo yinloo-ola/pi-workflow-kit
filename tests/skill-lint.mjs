@@ -380,8 +380,18 @@ if (et) {
 // lines with 2-space indents are lazy continuations and merge into one paragraph).
 console.log("digest rendering:");
 if (et) {
-  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_RENDERING_MARKERS.flowBulletSpine, "Flow Spine label is a bullet");
-  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_RENDERING_MARKERS.flowBulletBranches, "Flow Branches label is a bullet");
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    DIGEST_RENDERING_MARKERS.flowBulletSpine,
+    "Flow Spine label is a bullet",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    DIGEST_RENDERING_MARKERS.flowBulletBranches,
+    "Flow Branches label is a bullet",
+  );
   fgMark(
     "pwk-executing-tasks",
     et.contractContent,
@@ -394,8 +404,18 @@ if (et) {
     DIGEST_RENDERING_MARKERS.flowBulletLineRule,
     "fill rule states the bullet line form",
   );
-  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_RENDERING_MARKERS.gotchasBulletItem, "Gotchas: one real risk per bullet");
-  fgMark("pwk-executing-tasks", et.contractContent, DIGEST_RENDERING_MARKERS.keyFilesBulletEach, "Key files: one bullet each");
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    DIGEST_RENDERING_MARKERS.gotchasBulletItem,
+    "Gotchas: one real risk per bullet",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    DIGEST_RENDERING_MARKERS.keyFilesBulletEach,
+    "Key files: one bullet each",
+  );
 }
 
 // --- Check 10: parallelize-workflow (R1 scout + R2 auto-tag + R3 cross-skill) ---
@@ -934,7 +954,12 @@ if (existsSync(wtPath)) {
   if (wtFm?.name === "pwk-walkthrough") ok("walkthrough: frontmatter name matches");
   else fail("walkthrough: frontmatter name must be `pwk-walkthrough`");
   fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.walkthroughTemplate, "five-section template");
-  fgMark("pwk-walkthrough", wtContent, DIGEST_RENDERING_MARKERS.walkthroughFlowBullet, "Key flows: one flow per bullet line");
+  fgMark(
+    "pwk-walkthrough",
+    wtContent,
+    DIGEST_RENDERING_MARKERS.walkthroughFlowBullet,
+    "Key flows: one flow per bullet line",
+  );
   fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.fileLineAnchors, "file:line anchors mandated");
   fgMark("pwk-walkthrough", wtContent, "follow with the files open", "detailed enough to follow along");
   fgMark("pwk-walkthrough", wtContent, SINGLE_DOC_MARKERS.shaStamp, "commit-range stamp");
