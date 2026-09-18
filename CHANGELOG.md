@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-09-18
+
+### Changed
+
+- **Structured digest sections render as markdown lists.** The code digest's `### Flow` is now a bullet list — bold `Spine`/`Branches`/`Side effects` labels, one bullet per arrow-chain hop line, nested bullets per branch, `· `-separated reads/writes — instead of bare label lines with 2-space indents, which every CommonMark renderer collapses into one run-on paragraph (lazy continuation). `### Gotchas` and `### Key files` prescribe one bullet per item, and `pwk-walkthrough`'s Key flows prescribe one flow per bullet line. All Flow content rules (symbol-labelled hops, `[R#]` tags, `was:` clauses, honest-optional sections, ~15-line cap) are unchanged. The new template claims are pinned test-first, and an independent property check fails on any non-list content line in the Flow template span.
+
 ## [2.5.0] - 2026-09-17
 
 ### Changed
