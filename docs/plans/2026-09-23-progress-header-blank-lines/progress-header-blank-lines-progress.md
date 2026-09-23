@@ -8,9 +8,9 @@ Setup: n/a
 
 Started: 2026-09-23T02:07:12Z
 
-Last updated: 2026-09-23T02:21:43Z
+Last updated: 2026-09-23T02:25:25Z
 
-Feature phase: reviewing
+Feature phase: ship-paused
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -31,10 +31,18 @@ Feature phase: reviewing
 ## Code digest
 
 ### Summary
+Two write sites emit header lines — the progress template/skill skeleton and the packet builder's f-string. Both now separate every field with a blank line so CommonMark previews render one field per paragraph; every line-start extraction anchor is byte-unchanged, so old compact and new blank-line files both parse by construction.
 ### Flow
-- **Spine** — `<entry point> -> [R1] <step> -> [R2] <step> -> <outcome>`
+- **Spine** — `template + skeleton [R1] -> packet emitter [R2] -> consumers read either shape [R3]`
 - **Branches**
-  - `<condition> -> <outcome>` [R2]
-- **Side effects** — reads: `<what>` · writes: `<what>`
+  - `old compact header -> same line-start matches, no migration` [R3]
+  - `new blank-line header -> same line-start matches (blank lines ignored)` [R3]
+- **Side effects** — reads: progress header block, git span for packet · writes: `<leaf>-review-packet*.md`, skill reference docs
 ### Gotchas
+- none beyond review findings
 ### Key files
+- `skills/pwk-executing-tasks/references/progress-format.md`
+- `skills/pwk-executing-tasks/SKILL.md`
+- `skills/pwk-executing-tasks/scripts/build-review-packet.py`
+- `tests/progress-header-blank-lines.e2e.test.ts`
+- `tests/review-packet-cli.test.ts`
