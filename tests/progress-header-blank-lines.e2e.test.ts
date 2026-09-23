@@ -107,7 +107,7 @@ function escapeRegExp(text: string): string {
 
 /** Run the documented `grep -m1 '^<field>'` recipe against one fixture file. */
 function grepFirst(field: string, file: string, cwd: string): string {
-  return execSync(`grep -m1 '^${field}' ${file}`, { cwd }).toString().trim();
+  return execSync(`grep -m1 '^${field}' "${file}"`, { cwd }).toString().trim();
 }
 
 /** Build a feature-scope review packet in a throwaway git repo with the given progress header. */
