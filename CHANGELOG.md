@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-09-23
+
 ### Changed
 
 - **Progress and review-packet headers render one field per line.** The progress-file template, the create-progress skill skeleton, and the packet's `Base:`/`Head:` pair now separate every header field with a blank line — CommonMark was merging the consecutive plain lines into one run-on paragraph in every preview (GitHub, VS Code). Extraction is unchanged: every consumer still matches fields at line start (`grep -m1 '^…'`, `startswith('Design: ')`, `^Design: …$`), so old compact progress files and new blank-line files both parse with no migration; the packet-builder suite now carries fixtures for both shapes.
