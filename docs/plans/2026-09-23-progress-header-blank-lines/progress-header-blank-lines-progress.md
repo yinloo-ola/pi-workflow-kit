@@ -10,14 +10,14 @@ Started: 2026-09-23T02:07:12Z
 
 Last updated: 2026-09-23T02:21:43Z
 
-Feature phase: implementing (3/3)
+Feature phase: reviewing
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Blank-line progress header (template + skeleton + prose) | — | 2b3f40e |
 | 2 | ✅ | Blank-line packet header (Base/Head) | — | 923c900 |
-| 3 | ✅ | Dual-shape extraction contract (old + new headers) | — | — |
+| 3 | ✅ | Dual-shape extraction contract (old + new headers) | — | 74e3dc3 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
