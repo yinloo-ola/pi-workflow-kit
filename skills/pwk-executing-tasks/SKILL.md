@@ -179,8 +179,11 @@ key files capped `at 5`.
 
 ```markdown
 # Progress: <topic>
+
 Design: docs/plans/<date>-<topic>/<leaf>-design.md
+
 Feature phase: e2e-written
+
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 ## Execution summary
