@@ -177,10 +177,10 @@ describe("review packet Python CLI", () => {
     const fix = git(f.project, "rev-parse", "HEAD");
     writeFileSync(f.progress, f.progressText.replace(f.commits[2], `${f.commits[2]} ${fix}`));
     expect(f.run().status).toBe(0);
-    expect(readFileSync(f.packet, "utf8")).toContain(`Base: ${f.seed}\nHead: ${fix}`);
+    expect(readFileSync(f.packet, "utf8")).toContain(`Base: ${f.seed}\n\nHead: ${fix}`);
     expect(f.run(["--scope", "requirement", "--requirement", "3"]).status).toBe(0);
     expect(readFileSync(join(f.topic, "demo-review-packet-r3.md"), "utf8")).toContain(
-      `Base: ${f.commits[1]}\nHead: ${fix}`,
+      `Base: ${f.commits[1]}\n\nHead: ${fix}`,
     );
     // R3 depends only on its own and the immediately previous recorded bound.
     writeFileSync(f.progress, readFileSync(f.progress, "utf8").replace(`${f.rows[0]}\n`, ""));
@@ -195,7 +195,7 @@ describe("review packet Python CLI", () => {
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     const packet = readFileSync(f.packet, "utf8");
-    expect(packet).toContain(`Base: ${f.seed}\nHead: ${f.commits[2]}`);
+    expect(packet).toContain(`Base: ${f.seed}\n\nHead: ${f.commits[2]}`);
     const sections = [
       "## Commits",
       "## Changed files",
@@ -226,6 +226,23 @@ describe("review packet Python CLI", () => {
     expect(readFileSync(f.progress, "utf8")).toBe(f.progressText);
   });
 
+  it("resolves the single Design pointer from both old compact and new blank-line headers", () => {
+    const f = fixture();
+    // New shape: a blank line between each adjacent header field; extraction must not care.
+    const newShape = f.progressText.replace(
+      `Design: ${relative(f.project, f.design)}\nBranch: test\nFeature phase: reviewing`,
+      `Design: ${relative(f.project, f.design)}\n\nBranch: test\n\nFeature phase: reviewing`,
+    );
+    expect(newShape).not.toBe(f.progressText); // the replacement anchor itself is the old shape
+    writeFileSync(f.progress, newShape);
+    const result = f.run();
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    const packet = readFileSync(f.packet, "utf8");
+    expect(packet).toContain(`Base: ${f.seed}\n\nHead: ${f.commits[2]}`);
+    expect((packet.match(/^Design: /gm) ?? []).length).toBeLessThanOrEqual(1); // one pointer, never a blank-line false match
+  });
+
   it("uses distinct requirement bounds and criteria, not HEAD or other requirements", () => {
     const f = fixture();
     expect(f.run().status).toBe(0);
@@ -233,7 +250,7 @@ describe("review packet Python CLI", () => {
     for (const index of [0, 1]) {
       expect(f.run(["--scope", "requirement", "--requirement", String(index + 1)]).status).toBe(0);
       const packet = readFileSync(join(f.topic, `demo-review-packet-r${index + 1}.md`), "utf8");
-      expect(packet).toContain(`Base: ${index === 0 ? f.seed : f.commits[index - 1]}\nHead: ${f.commits[index]}`);
+      expect(packet).toContain(`Base: ${index === 0 ? f.seed : f.commits[index - 1]}\n\nHead: ${f.commits[index]}`);
       expect(packet).toContain(index === 0 ? alpha : beta);
       expect(packet).not.toContain(index === 0 ? beta : alpha);
       expect(packet).not.toContain("+gamma content");

@@ -2,16 +2,21 @@
 
 Read before creating or changing progress rows, or writing/re-presenting the code digest. This reference owns the unchanged progress artifact schema.
 
-2. **Create the progress file** `docs/plans/<date>-<topic>/<leaf>-progress.md`, beside the design doc it belongs to (`<leaf>` is `<topic>` for a single-part topic; an umbrella part uses its roster slug), so `pwk-finalizing` finds it inside the topic folder:
+2. **Create the progress file** `docs/plans/<date>-<topic>/<leaf>-progress.md`, beside the design doc it belongs to (`<leaf>` is `<topic>` for a single-part topic; an umbrella part uses its roster slug), so `pwk-finalizing` finds it inside the topic folder. Keep the blank lines between the header fields: the blank lines are load-bearing, because CommonMark merges consecutive plain lines into one paragraph, so without them every preview renders the whole header as a single run-on line.
 
    ```markdown
    # Progress: <topic>
 
    Design: docs/plans/<date>-<topic>/<leaf>-design.md
+
    Branch: <branch>
+
    Setup: n/a
+
    Started: <ISO timestamp>
+
    Last updated: <ISO timestamp>
+
    Feature phase: e2e-written
 
    <!-- a trivial design doc (no `## Feature acceptance`) starts at `implementing (0/N)` instead — there is no E2E to write -->

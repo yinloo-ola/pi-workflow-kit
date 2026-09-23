@@ -266,7 +266,9 @@ def build(args):
         ('Diff', git(project, 'diff', '--no-ext-diff', '--no-textconv', '--no-color', span, *pathspec)),
     ]
     label = 'feature review' if args.scope == 'feature' else f'requirement R{args.requirement} review'
-    packet = f'# Review packet: {design_path.parent.name} — {label}\n\nBase: {base}\nHead: {head}\n\n'
+    # The blank line between Base and Head is load-bearing: CommonMark merges
+    # consecutive plain lines into one paragraph in every preview.
+    packet = f'# Review packet: {design_path.parent.name} — {label}\n\nBase: {base}\n\nHead: {head}\n\n'
     for title, content in sections:
         packet += f'## {title}\n\n{content}\n'
     # All parsing and Git reads finish before a temporary file exists. A failure in
