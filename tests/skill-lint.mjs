@@ -16,6 +16,7 @@ import {
   DIGEST_RENDERING_MARKERS,
   SINGLE_DOC_MARKERS,
   STATUS_STATE_MARKERS,
+  TOOL_FREEDOM_MARKERS,
 } from "./markers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -1400,6 +1401,28 @@ console.log("inventory parity:");
     ok(
       `inventory parity: count claims match the tree (${PIPELINE_SKILLS.length} pipeline + ${UTILITY_SKILLS.length} utility)`,
     );
+}
+
+// --- Check 14: harness-neutral tool phrasing (tool-freedom clause, byte-identical) ---
+// Every skill opens with the canonical clause right after its intro paragraph; the
+// clause is one sentence pinned byte-identically in markers.mjs, so per-skill rewording
+// cannot drift past the lint. The paragraph extraction additionally pins placement:
+// the clause is its own paragraph, not a mid-paragraph splice.
+console.log("tool freedom:");
+{
+  const clauses = loadSkills().map((skill) => {
+    fgMark(skill.name, skill.content, TOOL_FREEDOM_MARKERS.clause, "tool-freedom clause after the intro paragraph");
+    const paragraph = skill.content.split(/\n{2,}/).find((block) => block.includes(TOOL_FREEDOM_MARKERS.toolFreedom));
+    if (!paragraph) {
+      fail(`${skill.name}: tool-freedom clause paragraph not found`);
+      return null;
+    }
+    return paragraph;
+  });
+  if (clauses.every(Boolean)) {
+    if (new Set(clauses).size === 1) ok("tool-freedom clause is byte-identical across all skills");
+    else fail("tool-freedom clause differs across skills — re-copy the canonical sentence from tests/markers.mjs");
+  }
 }
 
 console.log("");

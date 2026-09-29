@@ -203,6 +203,20 @@ export const DIGEST_RENDERING_MARKERS = {
 };
 
 /**
+ * Markers for the harness-neutral tool-phrasing feature: the byte-identical
+ * tool-freedom clause pinned after the intro paragraph of all six SKILL.md
+ * (toolFreedom is its canonical fragment), the disposal invariant sentence
+ * preceding every fenced example in pwk-finalizing's disposal sections, and the
+ * role contracts' floor-not-prescription line. Same contract as DIGEST_MARKERS —
+ * one canonical string per behavior, shared by skill-lint and the vitest suites.
+ */
+export const TOOL_FREEDOM_MARKERS = {
+  clause:
+    "Any command or tool recipe in this skill is an example, not the requirement — when your host grants a better tool for an operation (a sandboxed batch executor, a structured file API), use the better tool and treat the recipe as a fallback; the only exact exceptions are this kit's `scripts/` helpers and plain `git` invocations, whose deterministic output is the point.",
+  toolFreedom: "use the better tool and treat the recipe as a fallback",
+};
+
+/**
  * Shared property helper (digest-rendering): a content line that is not a list item,
  * heading, or fence is a lazy continuation in CommonMark — it merges into the previous
  * paragraph, so a structured digest section made of such lines renders as one run-on

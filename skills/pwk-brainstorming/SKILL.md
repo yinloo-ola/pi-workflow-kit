@@ -7,6 +7,8 @@ description: "Use this before any creative work — creating features, building 
 
 Read-only exploration of source code; every file you create or edit goes under `docs/plans/`. (An approved ADR goes to `docs/adr/`, which sits outside the writable boundary — the human writes it themselves or briefly runs `/pwk-guard off`; the design phase never unlocks it.) The design doc is the **single buildable artifact** — each requirement carries its own acceptance criteria and review tags, and the executor builds straight from it; nothing is re-derived into a second document later. Source-writing happens in `pwk-executing-tasks`.
 
+Any command or tool recipe in this skill is an example, not the requirement — when your host grants a better tool for an operation (a sandboxed batch executor, a structured file API), use the better tool and treat the recipe as a fallback; the only exact exceptions are this kit's `scripts/` helpers and plain `git` invocations, whose deterministic output is the point.
+
 ## Proportionality: trivial vs non-trivial
 
 Classify the change at the start.
