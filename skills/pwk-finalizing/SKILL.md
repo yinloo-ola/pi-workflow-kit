@@ -35,6 +35,8 @@ Any command or tool recipe in this skill is an example, not the requirement — 
 
    - **Delete (default)** — code + tests are the source of truth; removing the scaffold prevents stale plan docs from misleading future sessions:
 
+     The invariant: the topic folder `docs/plans/<date>-<topic>/` is the disposal unit — delete it entirely, nothing more and nothing less; any single operation achieving exactly this is correct, and the bash below is one canonical example.
+
      ```bash
      # the topic folder goes as one unit (every leaf, plus overview.md if it has one).
      # The folder path is taken verbatim from discovery — never typed or
@@ -46,6 +48,8 @@ Any command or tool recipe in this skill is an example, not the requirement — 
      ```
 
    - **Archive** — keep the planning history for future readers (e.g. a complex design worth preserving) by moving the artifacts into `docs/plans/completed/`:
+
+     The invariant: the topic folder `docs/plans/<date>-<topic>/` moves whole into `docs/plans/completed/` and the destination is verified before committing; any single operation achieving exactly this is correct, and the bash below is one canonical example.
 
      ```bash
      mkdir -p docs/plans/completed

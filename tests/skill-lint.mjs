@@ -1425,6 +1425,29 @@ console.log("tool freedom:");
   }
 }
 
+// R2 — disposal blocks are invariant + canonical example: every fenced bash block in
+// pwk-finalizing (the disposal sections hold the only fences) is immediately preceded
+// by a sentence stating the outcome invariant, so an executor with a better tool can
+// satisfy the disposal with any single operation that achieves it. The commands inside
+// stay pinned byte-unchanged by DISPOSAL_ANCHORS above.
+{
+  const finSkill = loadSkills().find((s) => s.name === "pwk-finalizing");
+  if (!finSkill) {
+    fail("pwk-finalizing skill missing");
+  } else {
+    for (const match of finSkill.content.matchAll(/```bash/g)) {
+      const before = finSkill.content.slice(0, match.index ?? 0);
+      const lastLine = before
+        .split("\n")
+        .filter((line) => line.trim() !== "")
+        .at(-1);
+      if (lastLine && lastLine.includes(TOOL_FREEDOM_MARKERS.disposalInvariant))
+        ok("pwk-finalizing: disposal fence preceded by the invariant sentence");
+      else fail("pwk-finalizing: disposal fence missing the invariant sentence before the bash example");
+    }
+  }
+}
+
 console.log("");
 if (failures === 0) {
   console.log("skill-lint: all checks passed");
