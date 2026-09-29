@@ -135,4 +135,41 @@ describe("harness-neutral tool phrasing (feature E2E)", () => {
       }
     }
   });
+
+  it("fails skill-lint on a kit copy whose skill lost the tool-freedom clause, naming that file", () => {
+    for (const skill of SKILLS) {
+      const kit = mkdtempSync(join(tmpdir(), "pwk-clause-"));
+      try {
+        for (const rel of [
+          "skills",
+          "agents",
+          "extensions/workflow-guard.ts",
+          "README.md",
+          "docs/lessons.md",
+          "docs/oversight-model.md",
+          "docs/developer-usage-guide.md",
+          "docs/workflow-phases.md",
+        ]) {
+          const target = join(kit, rel);
+          mkdirSync(dirname(target), { recursive: true });
+          cpSync(join(repoRoot, rel), target, { recursive: true });
+        }
+        mkdirSync(join(kit, "tests"));
+        for (const file of ["skill-lint.mjs", "markers.mjs", "prescription-sweep.mjs"]) {
+          cpSync(join(repoRoot, "tests", file), join(kit, "tests", file));
+        }
+        // The editor's other regression: the clause paragraph deleted from one skill.
+        const skillFile = join(kit, `skills/${skill}/SKILL.md`);
+        const stripped = readFileSync(skillFile, "utf8").replace(`${TOOL_FREEDOM_MARKERS.clause}\n\n`, "");
+        expect(stripped, skill).not.toContain(TOOL_FREEDOM_MARKERS.clause);
+        writeFileSync(skillFile, stripped);
+        const result = spawnSync("node", [join(kit, "tests", "skill-lint.mjs")], { encoding: "utf8" });
+        expect(result.status, skill).not.toBe(0);
+        expect(`${result.stdout}${result.stderr}`, skill).toContain(skill);
+        expect(`${result.stdout}${result.stderr}`, skill).toContain("tool-freedom clause");
+      } finally {
+        rmSync(kit, { recursive: true, force: true });
+      }
+    }
+  });
 });

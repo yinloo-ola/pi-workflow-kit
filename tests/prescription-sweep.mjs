@@ -10,6 +10,12 @@
  *
  * Pure content checks, no runtime: imported by tests/skill-lint.mjs (the sweep pass)
  * and by the vitest suites (unit + feature E2E).
+ *
+ * Known limitations (deliberate, kept proportional): a command is detected by its
+ * first token appearing in COMMAND_WORDS — an unlisted tool head (e.g. a brand-new
+ * CLI) is not flagged until the word is added; and fence ranges assume no nested
+ * fences (an outer fenced block containing another fence line mis-spans — the
+ * shipped corpus has none; the parity scan in the feature review verified it).
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
