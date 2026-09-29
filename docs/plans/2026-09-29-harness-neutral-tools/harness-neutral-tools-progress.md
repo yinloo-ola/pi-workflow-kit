@@ -8,9 +8,9 @@ Setup: n/a
 
 Started: 2026-09-29T13:20:00+08:00
 
-Last updated: 2026-09-29T13:46:00+08:00
+Last updated: 2026-09-29T13:50:00+08:00
 
-Feature phase: ship-paused
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
