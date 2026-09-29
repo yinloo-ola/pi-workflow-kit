@@ -8,14 +8,14 @@ Setup: n/a
 
 Started: 2026-09-29T13:20:00+08:00
 
-Last updated: 2026-09-29T13:20:00+08:00
+Last updated: 2026-09-29T13:23:00+08:00
 
-Feature phase: e2e-written
+Feature phase: implementing (0/4)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ⬜ | Tool-freedom clause in all six skills | — | — |
+| 1 | 🔄 | Tool-freedom clause in all six skills | — | — |
 | 2 | ⬜ | Disposal blocks reframed as invariant + canonical example | — | — |
 | 3 | ⬜ | Floor-not-prescription line in five role contracts | — | — |
 | 4 | ⬜ | Prescription sweep in skill-lint | — | — |
