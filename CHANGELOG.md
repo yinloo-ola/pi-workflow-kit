@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-09-29
+
+### Changed
+
+- **Tool prescriptions in kit prose are now invariants with canonical examples.** All six `SKILL.md` carry one byte-identical tool-freedom clause after their intro paragraph: when the host grants a better tool for an operation (a sandboxed batch executor, a structured file API), the better tool wins and every shown recipe is a fallback — the kit's own `scripts/` helpers and plain `git` invocations are the exact exceptions, where deterministic output is the point. `pwk-finalizing`'s two disposal blocks each state the disposal invariant (folder unit, whole-move verification) immediately before their bash examples, commands unchanged and still byte-pinned. All five `agents/pwk-*.md` role contracts now read their `tools:` frontmatter as a minimum grant requested of the provider, not a prescription; the four reviewers keep their byte-identical shared conduct block.
+
+### Added
+
+- **A prescription sweep in skill-lint keeps prescriptions from coming back.** Every inline-code command and fenced bash block in a skill's contract content (`SKILL.md` + `references/` + `scripts/`, the set skill-lint already concatenates) must be sanctioned — `git`/`gh`, kit `scripts/` helpers, `npm run check|test`, the pinned disposal commands, and the deliberate pins reconciled on first run (python3 interpreter probes, the `grep -m1 '^Feature phase:'` header-extraction recipe, `ls docs/plans/` verification) — or sit in a sentence framed as one example (`e.g.`, `equivalent`, `one example`, `whatever`, `your harness`). Violations fail naming the file and the command; the shared rule lives in `tests/prescription-sweep.mjs` (unit-tested) and is exercised end-to-end by the feature E2E, which copies the kit, injects a bare `rm foo.txt` prescription into each skill, and asserts skill-lint fails naming file and command.
+
 ## [2.7.0] - 2026-09-23
 
 ### Changed
