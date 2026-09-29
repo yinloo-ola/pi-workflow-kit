@@ -18,6 +18,7 @@ import {
   STATUS_STATE_MARKERS,
   TOOL_FREEDOM_MARKERS,
 } from "./markers.mjs";
+import { sweepSkillDir } from "./prescription-sweep.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const skillsDir = join(root, "skills");
@@ -1464,6 +1465,25 @@ console.log("tool freedom:");
     const content = readFileSync(join(root, `agents/${role}.md`), "utf8");
     fgMark(role, content, TOOL_FREEDOM_MARKERS.floorLine, "floor-not-prescription line in the conduct block");
   }
+}
+
+// R4 — prescription sweep over every skill's contract content: each inline-code
+// command and fenced bash block must be sanctioned (git/gh, kit scripts/, the test
+// gates, the pinned disposal commands) or framed as one example. Stragglers the recon
+// inventory missed fail loudly here; the fix is framing the site or deliberately
+// sanctioning the recipe in tests/prescription-sweep.mjs — never a silent exemption.
+console.log("prescription sweep:");
+{
+  let violations = 0;
+  for (const skill of loadSkills()) {
+    for (const violation of sweepSkillDir(skillsDir, skill.name)) {
+      fail(
+        `prescription sweep: ${violation.file}: unframed, unsanctioned command \`${violation.command}\` — frame the sentence or deliberately sanction the recipe`,
+      );
+      violations++;
+    }
+  }
+  if (violations === 0) ok("prescription sweep: every command in skill content is sanctioned or framed");
 }
 
 console.log("");
