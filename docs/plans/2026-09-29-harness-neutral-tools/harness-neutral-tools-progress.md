@@ -8,23 +8,23 @@ Setup: n/a
 
 Started: 2026-09-29T13:20:00+08:00
 
-Last updated: 2026-09-29T13:23:00+08:00
+Last updated: 2026-09-29T13:28:00+08:00
 
-Feature phase: implementing (1/4)
+Feature phase: implementing (2/4)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Tool-freedom clause in all six skills | — | 3b7fdb2 |
-| 2 | 🔄 | Disposal blocks reframed as invariant + canonical example | — | — |
-| 3 | ⬜ | Floor-not-prescription line in five role contracts | — | — |
+| 2 | ✅ | Disposal blocks reframed as invariant + canonical example | — | 8efdd54 |
+| 3 | 🔄 | Floor-not-prescription line in five role contracts | — | — |
 | 4 | ⬜ | Prescription sweep in skill-lint | — | — |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
 |----|-------------|------------------|-----------|
 | 1 | Tool-freedom clause in all six skills | `TOOL_FREEDOM_MARKERS` in tests/markers.mjs pins the full clause + canonical fragment; new skill-lint check 14 asserts the clause in all six SKILL.md and byte-identity of the clause paragraph; the one-sentence clause inserted as its own paragraph after each intro. | no |
-| 2 | Disposal blocks reframed as invariant + canonical example | | |
+| 2 | Disposal blocks reframed as invariant + canonical example | `disposalInvariant` marker added to TOOL_FREEDOM_MARKERS; skill-lint asserts every finalizing bash fence is immediately preceded by a sentence carrying the marker — two invariant sentences (delete/archive) inserted as their own paragraphs before the fences, naming the folder unit and verification step; fenced commands untouched, DISPOSAL_ANCHORS stay green. | no |
 | 3 | Floor-not-prescription line in five role contracts | | |
 | 4 | Prescription sweep in skill-lint | | |
 

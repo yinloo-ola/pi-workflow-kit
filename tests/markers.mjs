@@ -215,6 +215,8 @@ export const TOOL_FREEDOM_MARKERS = {
     "Any command or tool recipe in this skill is an example, not the requirement — when your host grants a better tool for an operation (a sandboxed batch executor, a structured file API), use the better tool and treat the recipe as a fallback; the only exact exceptions are this kit's `scripts/` helpers and plain `git` invocations, whose deterministic output is the point.",
   toolFreedom: "use the better tool and treat the recipe as a fallback",
   disposalInvariant: "any single operation achieving exactly this is correct",
+  floorLine:
+    "The `tools:` frontmatter is the minimum grant requested of the delegation provider, not a prescription — use any tool your host actually grants.",
 };
 
 /**

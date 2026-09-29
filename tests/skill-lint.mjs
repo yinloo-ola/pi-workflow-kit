@@ -1441,10 +1441,28 @@ console.log("tool freedom:");
         .split("\n")
         .filter((line) => line.trim() !== "")
         .at(-1);
-      if (lastLine && lastLine.includes(TOOL_FREEDOM_MARKERS.disposalInvariant))
+      if (lastLine?.includes(TOOL_FREEDOM_MARKERS.disposalInvariant))
         ok("pwk-finalizing: disposal fence preceded by the invariant sentence");
       else fail("pwk-finalizing: disposal fence missing the invariant sentence before the bash example");
     }
+  }
+}
+
+// R3 — floor-not-prescription line in all five role contracts: the tools: frontmatter
+// stays a concrete grant list (providers need concrete grants), and the conduct prose
+// now says it is a floor. The four reviewers share a byte-identical conduct block, so
+// the same insertion point in each keeps that identity (role-contracts.test.ts pins it).
+{
+  const FLOOR_ROLES = [
+    "pwk-spec-reviewer",
+    "pwk-tracing-reviewer",
+    "pwk-smell-reviewer",
+    "pwk-hazard-reviewer",
+    "pwk-recon-scout",
+  ];
+  for (const role of FLOOR_ROLES) {
+    const content = readFileSync(join(root, `agents/${role}.md`), "utf8");
+    fgMark(role, content, TOOL_FREEDOM_MARKERS.floorLine, "floor-not-prescription line in the conduct block");
   }
 }
 
