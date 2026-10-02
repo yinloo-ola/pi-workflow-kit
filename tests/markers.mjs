@@ -220,6 +220,20 @@ export const TOOL_FREEDOM_MARKERS = {
 };
 
 /**
+ * Canonical executor-script sweep example (codemode preference): one sandboxed
+ * batch-executor call lists in-flight designs and extracts each topic's phase
+ * header-only from the sibling progress file, with design-only topics reporting
+ * `design`. Byte-pinned and embedded at the four sweep sites (pwk-brainstorming,
+ * pwk-executing-tasks, pwk-finalizing, pwk-status); skill-lint asserts presence,
+ * and the prescription sweep reads the fence's embedded commands like any other.
+ */
+export const CODEMODE_SWEEP_SCRIPT = `   const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
+   const files = designs ? designs.split('\\n') : [];
+   const heads = await Promise.all(files.map(d =>
+     tools.bash({ command: "grep -m1 '^Feature phase:' " + d.replace('-design.md', '-progress.md'), timeout: 15 }).then(r => r.output.trim() || 'design')));
+   return text(files.map((d, i) => d + ' — ' + heads[i]).join('\\n') || 'no in-flight topics');`;
+
+/**
  * Shared property helper (digest-rendering): a content line that is not a list item,
  * heading, or fence is a lazy continuation in CommonMark — it merges into the previous
  * paragraph, so a structured digest section made of such lines renders as one run-on

@@ -17,6 +17,7 @@ import {
   SINGLE_DOC_MARKERS,
   STATUS_STATE_MARKERS,
   TOOL_FREEDOM_MARKERS,
+  CODEMODE_SWEEP_SCRIPT,
 } from "./markers.mjs";
 import { sweepSkillDir } from "./prescription-sweep.mjs";
 
@@ -1423,6 +1424,25 @@ console.log("tool freedom:");
   if (clauses.every(Boolean)) {
     if (new Set(clauses).size === 1) ok("tool-freedom clause is byte-identical across all skills");
     else fail("tool-freedom clause differs across skills — re-copy the canonical sentence from tests/markers.mjs");
+  }
+}
+
+// --- Check 15: canonical executor-script sweep example (codemode preference, R3) ---
+// The four sweep sites demonstrate the batched shape with one byte-pinned script, so
+// the demonstrated example cannot drift per-site. The prescription sweep reads the
+// fence's embedded commands like any other fenced content.
+console.log("codemode sweep script:");
+{
+  const SWEEP_SITES = ["pwk-brainstorming", "pwk-executing-tasks", "pwk-finalizing", "pwk-status"];
+  for (const name of SWEEP_SITES) {
+    const skill = loadSkills().find((s) => s.name === name);
+    if (!skill) {
+      fail(`codemode sweep script: ${name} skill missing`);
+      continue;
+    }
+    if (skill.content.includes(CODEMODE_SWEEP_SCRIPT)) ok(`${name}: canonical sweep script embedded`);
+    else
+      fail(`${name}: canonical sweep script missing or drifted — re-copy CODEMODE_SWEEP_SCRIPT from tests/markers.mjs`);
   }
 }
 
