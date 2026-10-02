@@ -30,6 +30,7 @@ Retire rules that no longer apply during finalizing.
 
 - **A new content lint's first run over a live corpus surfaces stragglers — reconcile each, never exempt silently.** Expect sites the design inventory missed. Every failure gets an explicit decision: frame the sentence, or deliberately pin the recipe in the rule's allowlist with a comment saying so. The pins are policy and extending them is a reviewed decision — a catch-all exemption to make the run green silently deletes the policy.
 - **Generating a code file whose content contains markdown fences: write it from a JSON-encoded literal, not a template literal.** Nested backtick escaping (fences inside template literals) is corrupt-prone and fails only at transform time, several steps after the write. Hand the literal content through a non-evaluated channel (a data parameter) and keep generator code free of backtick soup.
+- **Widening a prose lint to a new fence language is a lint-surface change — extend the checker in the same change as the first content it will read.** Text inside a fence language the checker cannot parse is unclassified, so a rule violation written in the new syntax passes silently and the guarantee the lint advertises is weaker than it reads. Add the language to the extractor and land fixtures for its shapes before, or together with, the first real block; the checker and the content are one change, not two.
 
 ## Reviews & Delegation
 
@@ -54,6 +55,8 @@ Retire rules that no longer apply during finalizing.
 - **Test-doc wording assertions should match behavior, not exact sentences.** Prefer regexes over `toContain("exact phrase")` when asserting documentation; minor rewording of a doc sentence should not break three suites. Keep one canonical marker per contract (or a shared assertions helper) instead of copy-pasting the same phrase into multiple test files.
 
 - **Lint rules live in an importable pure module; the script only wires them.** A lint script written as top-level side effects ending in `process.exit` cannot be imported by the test runner — importing it would execute the whole lint and kill the worker. Put the rule (allowlists, classifiers, traversal) in a module both the script and the tests import; the script keeps only the wiring and the exit code.
+- **A byte-identity assertion over one shared constant makes an N-site edit self-verifying.** When a clause, header, or template is pinned identical across N files, changing the source constant and re-syncing the sites needs no new per-site assertions — the existing identity check fails on any straggler the edit missed. Prefer one pinned constant consumed by N sites over N independent pins; the failure mode is a straggler the check names for you.
+- **An illustrative artifact written in a design doc is a draft — execute it against the real tree before pinning it.** Example scripts composed at design time encode the design's assumptions about layout and paths, and those assumptions are exactly what the real tree contradicts. Run the example once, repair it, and pin the corrected bytes; a design draft promoted straight to a pinned constant ships its assumptions as policy.
 
 ## Shell & Subprocess Traps
 
@@ -61,6 +64,7 @@ Retire rules that no longer apply during finalizing.
 - **sed range-extraction of a repeated section: strip the terminator per-range, never to-EOF.** `sed -n '/START/,/END/p' | sed '/END/,$d'` works only for a single occurrence — with repeated sections the delete-to-EOF kills every later group. Use `sed '/END/d'` (strip each terminator line) and prove it with a fixture containing two groups; single-group fixtures cannot catch it.
 - **Run long-lived external processes in the foreground of a subagent, never detached.** Backgrounded processes (nohup &) get reaped between the parent's tool calls in this harness — the run dies mid-flight with no error surfaced. To execute a long command, delegate to a subagent whose bash call runs it in the foreground and blocks; orphaned grandchildren may survive and keep writing transcripts, so identify runs by session id and mtime, not by parent liveness.
 - **Linted TypeScript: use optional chaining.** Biome enforces `useOptionalChain` — write `x?.method()`, not `x && x.method()` (the `fgMark` helper treats undefined content as a fail).
+- **Shell-quote every path a demonstrated script derives at runtime.** A script embedded in agent-facing instructions is copied into working directories you do not control, so a path assembled by string concatenation (a variable interpolated into a directory-and-file path) breaks on any name containing a space or a shell metacharacter. Quote the derived path at the point of use, and include the quoting in the pinned bytes — the pin is what keeps the fix from being reverted by a later convenience edit.
 
 ## Context Economy
 
