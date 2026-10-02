@@ -515,9 +515,13 @@ export function detectCodeme(pi: ToolRegistryHost): boolean {
     if (typeof source !== "function") continue;
     try {
       const entries = source.call(pi);
-      if (Array.isArray(entries)) return grantsCodeme(entries);
+      // Each registry that exists decides on its own answer — a container-shape
+      // surprise fails closed to false rather than falling through to the broader
+      // registry, which also reports deferred (not granted) tools.
+      return Array.isArray(entries) ? grantsCodeme(entries) : false;
     } catch {
       // Registry surprises fail closed; visibility never breaks the session.
+      return false;
     }
   }
   return false;

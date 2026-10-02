@@ -19,7 +19,8 @@
  * and executor-script (javascript/js) fences yield commands only from the two
  * conservative tool-call shapes — a keyed `command:` literal or the first string
  * positional of a `tools.<name>(…)` call — so plain string variables are never
- * mistaken for prescriptions.
+ * mistaken for prescriptions. Pipe tails after `|` inherit the bash-sweep
+ * semantics and are not separately classified — the head command decides.
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";

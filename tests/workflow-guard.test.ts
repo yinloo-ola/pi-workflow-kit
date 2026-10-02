@@ -44,6 +44,16 @@ describe("detectCodeme", () => {
     expect(detectCodeme({ getAllTools: () => "not-a-list" })).toBe(false);
     // The active set is authoritative: registered but not declared means not granted.
     expect(detectCodeme({ getActiveTools: () => [], getAllTools: () => [{ name: "codemode" }] })).toBe(false);
+    // Container-shape surprises fail closed instead of trusting the broader registry.
+    expect(detectCodeme({ getActiveTools: () => "not-a-list", getAllTools: () => [{ name: "codemode" }] })).toBe(false);
+    expect(
+      detectCodeme({
+        getActiveTools: () => {
+          throw new Error("active set unavailable");
+        },
+        getAllTools: () => [{ name: "codemode" }],
+      }),
+    ).toBe(false);
   });
 });
 

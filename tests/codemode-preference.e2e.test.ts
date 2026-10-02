@@ -134,6 +134,24 @@ describe("codemode preference (feature E2E)", () => {
     noRegistry.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});
     expect(await reminderContent(noRegistry)).not.toContain("codemode: active");
 
+    const noPhaseFirst = createGuardHarness([{ name: "codemode" }]);
+    noPhaseFirst.handlers.get("session_start")?.({}, {});
+    const hintAlone = await reminderContent(noPhaseFirst);
+    expect(hintAlone, "no phase entered — the hint rides alone on the first tail message").toContain(
+      "codemode: active",
+    );
+    expect(hintAlone).not.toContain("DESIGN phase");
+    expect(await reminderContent(noPhaseFirst)).toBe("");
+
+    const pinnedOn = createGuardHarness([{ name: "codemode" }]);
+    pinnedOn.handlers.get("session_start")?.({}, {});
+    pinnedOn.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});
+    const onNotes: string[] = [];
+    pinnedOn.commands.get("pwk-guard")?.handler("on", createCommandContext(process.cwd(), onNotes));
+    const onHint = await reminderContent(pinnedOn);
+    expect(onHint, "guard-on keeps the informational line, drops the phase reminder").toContain("codemode: active");
+    expect(onHint).not.toContain("DESIGN phase");
+
     const pinnedOff = createGuardHarness([{ name: "codemode" }]);
     pinnedOff.handlers.get("session_start")?.({}, {});
     pinnedOff.handlers.get("input")?.({ text: "/skill:pwk-brainstorming" }, {});

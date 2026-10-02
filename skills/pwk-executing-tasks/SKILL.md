@@ -21,8 +21,9 @@ Resolve local references and scripts from this installed skill directory. If a r
    ```javascript
    const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
    const files = designs ? designs.split('\n') : [];
+   const shellq = (s) => "'" + s.replace(/'/g, "'\\''") + "'";
    const heads = await Promise.all(files.map(d =>
-     tools.bash({ command: "grep -m1 '^Feature phase:' " + d.replace('-design.md', '-progress.md'), timeout: 15 }).then(r => r.output.trim() || 'design')));
+     tools.bash({ command: "grep -m1 '^Feature phase:' " + shellq(d.replace('-design.md', '-progress.md')), timeout: 15 }).then(r => r.output.trim() || 'design')));
    return text(files.map((d, i) => d + ' — ' + heads[i]).join('\n') || 'no in-flight topics');
    ```
 
