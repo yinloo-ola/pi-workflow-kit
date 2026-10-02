@@ -12,7 +12,7 @@ Any command or tool recipe in this skill is an example, not the requirement — 
 ## Process
 
 0. **Verify the root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts).
-1. **Discover** — List `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight) — this working tree only; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines:
+1. **Discover** — List `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight) — this working tree only; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines (adapt the paths to the verified root when your cwd differs):
 
    ```javascript
    const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
