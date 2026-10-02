@@ -16,8 +16,36 @@ import { describe, it, expect } from "vitest";
 // The phase variable is module-level, so we need to reset it between tests.
 
 // Import the module to access getCurrentPhase
-import { getCurrentPhase, isSafeCommand, shouldBlockFilePath, UNLOCK_SKILLS } from "../extensions/workflow-guard";
+import {
+  detectCodeme,
+  getCurrentPhase,
+  isSafeCommand,
+  shouldBlockFilePath,
+  UNLOCK_SKILLS,
+} from "../extensions/workflow-guard";
 import { createExtensionHarness } from "./helpers";
+
+describe("detectCodeme", () => {
+  it("detects the executor in the active set or full registry, strings or objects", () => {
+    expect(detectCodeme({ getActiveTools: () => [{ name: "codemode" }] })).toBe(true);
+    expect(detectCodeme({ getAllTools: () => ["bash", "codemode"] })).toBe(true);
+    expect(detectCodeme({ getAllTools: () => [{ name: "bash" }] })).toBe(false);
+  });
+
+  it("fails closed without a registry, on surprises, and when the executor is not active", () => {
+    expect(detectCodeme({})).toBe(false);
+    expect(
+      detectCodeme({
+        getAllTools: () => {
+          throw new Error("registry unavailable");
+        },
+      }),
+    ).toBe(false);
+    expect(detectCodeme({ getAllTools: () => "not-a-list" })).toBe(false);
+    // The active set is authoritative: registered but not declared means not granted.
+    expect(detectCodeme({ getActiveTools: () => [], getAllTools: () => [{ name: "codemode" }] })).toBe(false);
+  });
+});
 
 describe("guard phase transitions", () => {
   it("unlocks on write-needing skills only", () => {

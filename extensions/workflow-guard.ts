@@ -487,6 +487,42 @@ const PHASE_REMINDERS: Record<Exclude<Phase, null>, string> = {
     "[pi-workflow-kit] DESIGN phase: read-only. No source edits; writes only under docs/plans/. No mutations.",
 };
 
+/** The one-line session visibility signal for a granted sandboxed batch executor.
+ *  Informational only — the skills carry the actual preference; this line makes the
+ *  host capability visible when work starts. */
+const CODEMODE_HINT_LINE =
+  "codemode: active — prefer it for batched read-only exploration (one executor call beats N tool round-trips); the kit's shell recipes are fallbacks.";
+
+/** A host that can report its tool registry (pi's ExtensionAPI can; minimal hosts and
+ *  test harnesses may not — detection fails closed there). */
+type ToolRegistryHost = {
+  getActiveTools?: () => unknown;
+  getAllTools?: () => unknown;
+};
+
+/** Does the host grant `codemode` (pi ≥ 1.0.0's sandboxed batch executor) to the model?
+ *  The active tool set is authoritative when the host exposes one (`getAllTools` also
+ *  reports registered-but-deferred tools); absent registries and unexpected entry
+ *  shapes fail closed to false — the visibility line must never throw. */
+export function detectCodeme(pi: ToolRegistryHost): boolean {
+  const grantsCodeme = (entries: unknown[]): boolean =>
+    entries.some((entry) =>
+      typeof entry === "string"
+        ? entry === "codemode"
+        : typeof entry === "object" && entry !== null && (entry as { name?: unknown }).name === "codemode",
+    );
+  for (const source of [pi.getActiveTools, pi.getAllTools]) {
+    if (typeof source !== "function") continue;
+    try {
+      const entries = source.call(pi);
+      if (Array.isArray(entries)) return grantsCodeme(entries);
+    } catch {
+      // Registry surprises fail closed; visibility never breaks the session.
+    }
+  }
+  return false;
+}
+
 /** Determine if a write/edit to filePath should be blocked during the given phase.
  *  Only writes under docs/plans/ are allowed during the design phase.
  */
@@ -515,6 +551,13 @@ let pendingPhaseReminder = false;
  */
 let guardOverride: "on" | "off" | null = null;
 
+/** Codemode visibility (once per session): whether the host grants the executor,
+ *  decided once at session_start, and whether the one-line hint has had its single
+ *  emission window (the window never retries — a later /pwk-guard auto/on does not
+ *  retro-add a suppressed line). */
+let codemodeActive = false;
+let codemodeAnnounced = false;
+
 /** Is the guard actively enforcing read-only right now? */
 function enforceActive(): boolean {
   if (guardOverride === "off") return false;
@@ -542,6 +585,8 @@ export default function (pi: ExtensionAPI) {
     phase = null;
     pendingPhaseReminder = false;
     guardOverride = null;
+    codemodeActive = detectCodeme(pi);
+    codemodeAnnounced = false;
   });
 
   // --- Project role setup -------------------------------------------------
@@ -673,15 +718,29 @@ export default function (pi: ExtensionAPI) {
   // return { block, reason }, not a message. So at bash time the reminder surfaces only when a
   // destructive command is actually blocked (the reactive `reason` in the tool_call handler).
   pi.on("before_agent_start", async () => {
-    if (!phase || !pendingPhaseReminder) return {};
+    // Codemode visibility: the line rides the first tail message of the session —
+    // appended to a phase reminder when one fires, emitted on its own when none
+    // does — once ever, and suppressed when the guard is pinned off.
+    let codemodeLine: string | null = null;
+    if (codemodeActive && !codemodeAnnounced) {
+      codemodeAnnounced = true;
+      if (guardOverride !== "off") codemodeLine = CODEMODE_HINT_LINE;
+    }
+    if (!phase || !pendingPhaseReminder) {
+      if (codemodeLine) return { message: { customType: "pwk-codemode-hint", content: codemodeLine, display: false } };
+      return {};
+    }
     pendingPhaseReminder = false;
     // Override states announce themselves via the /pwk-guard handler; this reminder
     // is the auto-mode phase-entry cue only.
-    if (guardOverride !== null) return {};
+    if (guardOverride !== null) {
+      if (codemodeLine) return { message: { customType: "pwk-codemode-hint", content: codemodeLine, display: false } };
+      return {};
+    }
     return {
       message: {
         customType: "pwk-phase-reminder",
-        content: PHASE_REMINDERS[phase],
+        content: codemodeLine ? `${PHASE_REMINDERS[phase]}\n\n${codemodeLine}` : PHASE_REMINDERS[phase],
         display: false,
       },
     };
