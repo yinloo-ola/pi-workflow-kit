@@ -8,7 +8,7 @@ Setup: n/a
 
 Started: 2026-10-02T04:34:44Z
 
-Last updated: 2026-10-02T06:10:00Z
+Last updated: 2026-10-02T06:25:00Z
 
 Feature phase: ship-paused
 
@@ -19,14 +19,14 @@ Feature phase: ship-paused
 | 2 | ✅ | Prescription sweep classifies commands inside javascript fences | — | 3d2acb9 |
 | 3 | ✅ | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | — | 303ffe2 |
 | 4 | ✅ | Developer-guide known-instances table and README enablement note | — | 321d177 |
-| 5 | ✅ | Guard session-start codemode detection and one-line tail reminder | — | cc1aadf c36b8c1 |
+| 5 | ✅ | Guard session-start codemode detection and one-line tail reminder | — | cc1aadf c36b8c1 e9405f0 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? |
 |----|-------------|------------------|-----------|
 | 1 | Clause names codemode as the framed executor instance | One-line canonical-string swap in markers.mjs applied atomically to all six SKILL.md; the existing byte-identity check and sweep stayed green with no new pins (the `e.g.` framing covers the new inline span). | |
 | 2 | Prescription sweep classifies commands inside javascript fences | New exported `extractExecutorCommands` pulls keyed `command:` literals (quoted or template) and first-positional strings of `tools.*()` calls out of javascript/js fences; each segment then flows through the existing sanctioned/framed machinery with the fence's introducing line as context. Six unit fixtures plus the E2E injection scenario; extraction stays deliberately shape-conservative so plain string variables never count. | |
-| 3 | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | `CODEMODE_SWEEP_SCRIPT` pinned in markers.mjs (fence indentation included, so the byte-match holds against list-indented embeds) with a new skill-lint presence check; each site keeps the pinned discovery sentences and gains an e.g.-framed lead-in + fence, with the per-topic extraction prose collapsed into it. The design draft's illustrative script grepped the design file itself; the pinned script derives each topic's sibling progress file so phases actually surface (design anticipated finalizing exact bytes). Review fix: the derived path is now POSIX-shell-quoted inside the script (hazard finding, landed with the review-fix commit in R5’s cell). | |
+| 3 | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | `CODEMODE_SWEEP_SCRIPT` pinned in markers.mjs (fence indentation included, so the byte-match holds against list-indented embeds) with a new skill-lint presence check; each site keeps the pinned discovery sentences and gains an e.g.-framed lead-in + fence, with the per-topic extraction prose collapsed into it. The design draft's illustrative script grepped the design file itself; the pinned script derives each topic's sibling progress file so phases actually surface (design anticipated finalizing exact bytes). Review fix: the derived path is now POSIX-shell-quoted inside the script (hazard finding, landed with the review-fix commit in R5’s cell). Post-review smoke fix: each site’s lead-in now says to adapt the script paths to the verified root when cwd differs (measured decline reason, landed in R5’s cell too). | |
 | 4 | Developer-guide known-instances table and README enablement note | New "Sandboxed batch executors — known instances" section: translate-the-shape note, verbatim-batching rule, six dated rows (pi codemode / opencode execute / Claude API PTC / Claude Code CLI REPL mode experimental / zcode + commandcode absent); README gains one paragraph with the Enable-codemode pointer, no table; CHANGELOG Unreleased entry drafted. All six rows dated after the E2E count check caught three undated rows. | |
 | 5 | Guard session-start codemode detection and one-line tail reminder | Exported `detectCodeme` pure helper (active set authoritative over full registry; absent/throwing registries fail closed), snapshot at session_start, and a once-per-session emission window in before_agent_start: the line rides the first tail message (appended to a phase reminder or emitted alone), suppressed while the guard is pinned off, never retro-added — the design's "session-start snapshot of both conditions" reads as detection snapshotted, suppression checked at the single emission window. Guard unit tests pin the helper shapes; the feature E2E pins the wiring matrix. | |
 

@@ -2,10 +2,12 @@
 
 Base: 7aa441f45ff7d5c272fda7fe18ed771da58083cd
 
-Head: c36b8c133e51479a35ff4de00b8b4581c65eda7d
+Head: e9405f0c97424a888251448510dde8f691b3525e
 
 ## Commits
 
+e9405f0 fix: sweep-site lead-ins note root-relative path adaptation (smoke-test finding)
+9851e36 docs: digest and ship-pause for codemode-preference
 c36b8c1 fix: review fixes — shell-quote canonical script path, fail-closed registry container shapes, pin both hint emission branches
 cc1aadf feat: guard session-start codemode detection and one-line tail reminder (R5)
 321d177 feat: developer-guide known-instances table and README enablement note (R4)
@@ -15,23 +17,24 @@ cc1aadf feat: guard session-start codemode detection and one-line tail reminder 
 
 ## Changed files
 
- CHANGELOG.md                          |   4 +
- README.md                             |   4 +
- docs/developer-usage-guide.md         |  17 +++
- extensions/workflow-guard.ts          |  69 +++++++++++-
- skills/pwk-brainstorming/SKILL.md     |  15 ++-
- skills/pwk-code-review/SKILL.md       |   2 +-
- skills/pwk-executing-tasks/SKILL.md   |  15 ++-
- skills/pwk-finalizing/SKILL.md        |  15 ++-
- skills/pwk-status/SKILL.md            |  16 ++-
- skills/pwk-walkthrough/SKILL.md       |   2 +-
- tests/codemode-preference.e2e.test.ts | 201 ++++++++++++++++++++++++++++++++++
- tests/markers.mjs                     |  17 ++-
- tests/prescription-sweep.mjs          |  39 ++++++-
- tests/prescription-sweep.test.ts      |  46 ++++++++
- tests/skill-lint.mjs                  |  20 ++++
- tests/workflow-guard.test.ts          |  40 ++++++-
- 16 files changed, 504 insertions(+), 18 deletions(-)
+ CHANGELOG.md                                       |   4 +
+ README.md                                          |   4 +
+ docs/developer-usage-guide.md                      |  17 ++
+ .../codemode-preference-progress.md                |  43 +++--
+ extensions/workflow-guard.ts                       |  69 ++++++-
+ skills/pwk-brainstorming/SKILL.md                  |  15 +-
+ skills/pwk-code-review/SKILL.md                    |   2 +-
+ skills/pwk-executing-tasks/SKILL.md                |  15 +-
+ skills/pwk-finalizing/SKILL.md                     |  15 +-
+ skills/pwk-status/SKILL.md                         |  16 +-
+ skills/pwk-walkthrough/SKILL.md                    |   2 +-
+ tests/codemode-preference.e2e.test.ts              | 201 +++++++++++++++++++++
+ tests/markers.mjs                                  |  17 +-
+ tests/prescription-sweep.mjs                       |  39 +++-
+ tests/prescription-sweep.test.ts                   |  46 +++++
+ tests/skill-lint.mjs                               |  20 ++
+ tests/workflow-guard.test.ts                       |  40 +++-
+ 17 files changed, 535 insertions(+), 30 deletions(-)
 
 ## Acceptance criteria (verbatim from the design doc)
 
@@ -250,6 +253,75 @@ index b35b546..6aab212 100644
  ## Test-first discipline
  
  Design docs specify *what* (acceptance criteria + end-to-end scenarios); the executor writes the feature-acceptance E2E first (red), then implements to green. This keeps the spec stable — implementation details can change without invalidating the design.
+diff --git a/docs/plans/2026-09-29-codemode-preference/codemode-preference-progress.md b/docs/plans/2026-09-29-codemode-preference/codemode-preference-progress.md
+index fae635a..2d3cf5f 100644
+--- a/docs/plans/2026-09-29-codemode-preference/codemode-preference-progress.md
++++ b/docs/plans/2026-09-29-codemode-preference/codemode-preference-progress.md
+@@ -8,33 +8,52 @@ Setup: n/a
+ 
+ Started: 2026-10-02T04:34:44Z
+ 
+-Last updated: 2026-10-02T04:34:44Z
++Last updated: 2026-10-02T06:10:00Z
+ 
+-Feature phase: e2e-written
++Feature phase: ship-paused
+ 
+ ## Requirements
+ | # | Done | Requirement | Per-req ceremony | Commit |
+ |---|------|-------------|-----------------|--------|
+-| 1 | ⬜ | Clause names codemode as the framed executor instance | — | — |
+-| 2 | ⬜ | Prescription sweep classifies commands inside javascript fences | — | — |
+-| 3 | ⬜ | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | — | — |
+-| 4 | ⬜ | Developer-guide known-instances table and README enablement note | — | — |
+-| 5 | ⬜ | Guard session-start codemode detection and one-line tail reminder | — | — |
++| 1 | ✅ | Clause names codemode as the framed executor instance | — | 5c8c4b2 |
++| 2 | ✅ | Prescription sweep classifies commands inside javascript fences | — | 3d2acb9 |
++| 3 | ✅ | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | — | 303ffe2 |
++| 4 | ✅ | Developer-guide known-instances table and README enablement note | — | 321d177 |
++| 5 | ✅ | Guard session-start codemode detection and one-line tail reminder | — | cc1aadf c36b8c1 |
+ 
+ ## Execution summary
+ | R# | Requirement | How it was built | Deviated? |
+ |----|-------------|------------------|-----------|
+-| 1 | Clause names codemode as the framed executor instance | | |
+-| 2 | Prescription sweep classifies commands inside javascript fences | | |
+-| 3 | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | | |
+-| 4 | Developer-guide known-instances table and README enablement note | | |
+-| 5 | Guard session-start codemode detection and one-line tail reminder | | |
++| 1 | Clause names codemode as the framed executor instance | One-line canonical-string swap in markers.mjs applied atomically to all six SKILL.md; the existing byte-identity check and sweep stayed green with no new pins (the `e.g.` framing covers the new inline span). | |
++| 2 | Prescription sweep classifies commands inside javascript fences | New exported `extractExecutorCommands` pulls keyed `command:` literals (quoted or template) and first-positional strings of `tools.*()` calls out of javascript/js fences; each segment then flows through the existing sanctioned/framed machinery with the fence's introducing line as context. Six unit fixtures plus the E2E injection scenario; extraction stays deliberately shape-conservative so plain string variables never count. | |
++| 3 | Pinned canonical codeme sweep script at the four sweep sites with bounded slimming | `CODEMODE_SWEEP_SCRIPT` pinned in markers.mjs (fence indentation included, so the byte-match holds against list-indented embeds) with a new skill-lint presence check; each site keeps the pinned discovery sentences and gains an e.g.-framed lead-in + fence, with the per-topic extraction prose collapsed into it. The design draft's illustrative script grepped the design file itself; the pinned script derives each topic's sibling progress file so phases actually surface (design anticipated finalizing exact bytes). Review fix: the derived path is now POSIX-shell-quoted inside the script (hazard finding, landed with the review-fix commit in R5’s cell). | |
++| 4 | Developer-guide known-instances table and README enablement note | New "Sandboxed batch executors — known instances" section: translate-the-shape note, verbatim-batching rule, six dated rows (pi codemode / opencode execute / Claude API PTC / Claude Code CLI REPL mode experimental / zcode + commandcode absent); README gains one paragraph with the Enable-codemode pointer, no table; CHANGELOG Unreleased entry drafted. All six rows dated after the E2E count check caught three undated rows. | |
++| 5 | Guard session-start codemode detection and one-line tail reminder | Exported `detectCodeme` pure helper (active set authoritative over full registry; absent/throwing registries fail closed), snapshot at session_start, and a once-per-session emission window in before_agent_start: the line rides the first tail message (appended to a phase reminder or emitted alone), suppressed while the guard is pinned off, never retro-added — the design's "session-start snapshot of both conditions" reads as detection snapshotted, suppression checked at the single emission window. Guard unit tests pin the helper shapes; the feature E2E pins the wiring matrix. | |
+ 
+ ## Deviation records
+ 
+ ## Code digest
+ 
+ ### Summary
++The kit now prefers sandboxed batch executors wherever the host grants one: the canonical tool-freedom clause names pi `codemode` as the framed instance, the four discovery-sweep sites demonstrate the batched shape with one byte-pinned script, and the guard shows a single informational tail line when the executor is active. The prescription sweep reads `javascript` fences so prescriptions cannot hide inside codeme-shaped blocks, and the shipped docs carry a dated cross-harness instances table. Everything stays advisory — invariants remain archetype-generic, bash recipes remain the fallback, and no enforcement semantics changed.
+ ### Flow
++- **Spine** — `TOOL_FREEDOM_MARKERS.clause` -> six SKILL.md clause paragraphs [R1] -> `CODEMODE_SWEEP_SCRIPT` -> four sweep-site fences [R3] -> `extractExecutorCommands` through `JS_FENCE_RE` -> `sweepText` sanctioned/framed cascade [R2] -> skill-lint Check 14 + Check 15 -> feature-E2E kit-copy scenarios
++- **Branches**
++  - `host grants the executor -> find once -> N parallel pinned grep -m1 -> joined summary lines only` [R3]
++  - `session_start -> detectCodeme -> before_agent_start single emission window -> hint rides the phase reminder or stands alone` [R5]
++  - `registry absent, throwing, or non-array -> false -> no line` — was: no runtime visibility existed [R5]
++  - `guard pinned off at the first fire -> window consumed silently -> /pwk-guard auto re-arms the phase reminder but never the hint` [R5]
++  - `prescription hidden in a javascript fence -> keyed/positional extraction -> violation names file and command` [R2]
++  - `host without an executor -> bash fallback recipes unchanged` [R1]
++- **Side effects** — reads: docs/plans listing + header-only phase lines, host tool registry at session start · writes: none — the runtime surface is one `display: false` tail message
+ ### Gotchas
++- derived paths inside canonical scripts must be POSIX-shell-quoted — the kit's one demonstrated example now is (hazard finding, fixed)
++- a registry that exists decides alone — container-shape surprises fail closed with no fall-through to the broader registry (tracing finding, fixed)
++- `/reload` re-fires session_start and re-arms the hint — one line per session-start, desired after a context reload (tracing observation)
++- pipe tails after `|` are not separately classified by the sweep — the head command decides (documented limitation)
+ ### Key files
++- `tests/markers.mjs` — the two canonical pins (clause text, sweep script)
++- `skills/pwk-status/SKILL.md` (+3 sibling sweep sites) — slimmed steps with the embedded script
++- `tests/prescription-sweep.mjs` — executor-fence extraction through the existing cascade
++- `extensions/workflow-guard.ts` — `detectCodeme` plus the one-line visibility window
++- `tests/codemode-preference.e2e.test.ts` — the primary enforced spec
 diff --git a/extensions/workflow-guard.ts b/extensions/workflow-guard.ts
 index 3370e54..d2100e2 100644
 --- a/extensions/workflow-guard.ts
@@ -358,7 +430,7 @@ index 3370e54..d2100e2 100644
        },
      };
 diff --git a/skills/pwk-brainstorming/SKILL.md b/skills/pwk-brainstorming/SKILL.md
-index ce4531c..60f14c0 100644
+index ce4531c..7fddf79 100644
 --- a/skills/pwk-brainstorming/SKILL.md
 +++ b/skills/pwk-brainstorming/SKILL.md
 @@ -7,7 +7,7 @@ description: "Use this before any creative work — creating features, building
@@ -375,7 +447,7 @@ index ce4531c..60f14c0 100644
  
  1. **Check git state** — `git status` + `git log --oneline -5`. Uncommitted work? Ask the user what to do first.
 -2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`; report in-flight topics and any active umbrella. For each in-flight topic with a progress file, report its `Feature phase:` line (matched header-only — `grep -m1 '^Feature phase:' <file>` — no body ingest); design-only topics report `design`. If the new idea continues an existing topic, ask whether to extend it or start fresh. Part of an umbrella? An existing `overview.md` **beside the design doc** means the split is already decided — read it for the roster and design this part's `<leaf>-design.md` against it (read [references/umbrella.md](references/umbrella.md) before proceeding).
-+2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`; report in-flight topics and any active umbrella, each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`; design-only topics report `design` — no body ingest). With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines:
++2. **Discovery** *(skip in a brand-new repo with no `docs/plans/`)* — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`; report in-flight topics and any active umbrella, each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`; design-only topics report `design` — no body ingest). With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines (adapt the paths to the verified root when your cwd differs):
 +
 +   ```javascript
 +   const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
@@ -404,7 +476,7 @@ index 06ecebd..89e9409 100644
  ## Process
  
 diff --git a/skills/pwk-executing-tasks/SKILL.md b/skills/pwk-executing-tasks/SKILL.md
-index 8ea8d2c..eb63cce 100644
+index 8ea8d2c..3e46396 100644
 --- a/skills/pwk-executing-tasks/SKILL.md
 +++ b/skills/pwk-executing-tasks/SKILL.md
 @@ -7,7 +7,7 @@ description: "Implement a design doc via the feature-gate flow: write the featur
@@ -421,7 +493,7 @@ index 8ea8d2c..eb63cce 100644
  
  1. **Git state** — `git status` + `git log --oneline -5`; note uncommitted changes.
 -2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. If no doc at all, ask the user to run `/skill:pwk-brainstorming` first; if several, ask which. Report one line, e.g. `Found: design "auth" — feature-gate execute (E2E written, implementing 2/5)`. A matching `*-progress.md` means this is a **resume** (see [Resume and progress](#resume-and-progress)). An umbrella part whose prior leaves are not all at `done`: surface their `Feature phase:` lines (matched header-only from each `<leaf>-progress.md`) as advisory context in the pre-flight report — no refusal, no reorder; build order stays advisory.
-+2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines:
++2. **Find the doc** — first verify the repo root: run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts). Then list `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines (adapt the paths to the verified root when your cwd differs):
 +
 +   ```javascript
 +   const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
@@ -437,7 +509,7 @@ index 8ea8d2c..eb63cce 100644
  
  ## First run
 diff --git a/skills/pwk-finalizing/SKILL.md b/skills/pwk-finalizing/SKILL.md
-index 7ce9075..0dd7bda 100644
+index 7ce9075..051bdf3 100644
 --- a/skills/pwk-finalizing/SKILL.md
 +++ b/skills/pwk-finalizing/SKILL.md
 @@ -7,13 +7,24 @@ description: "Use after all requirements are complete to archive or delete consu
@@ -452,7 +524,7 @@ index 7ce9075..0dd7bda 100644
  1. **Verify the repo root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts).
  2. **Run the FULL test suite** — every test must pass, and only a green suite ships. Resume spans sessions; re-run the suite yourself rather than trust the previous session's ending state. Anything failing → send the user back to `/skill:pwk-executing-tasks`.
 -3. Read **every** relevant progress file — for a multi-leaf topic that's each leaf's progress file — discovered by listing `docs/plans` recursively, excluding docs/plans/completed/, for `*-progress.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. More than one topic in flight? Ask which one this finalize ships — finalizing touches only its own topic, and another topic still being designed or executed never blocks this run. Then match, in the chosen topic's file(s), the `Feature phase:` line (e.g. `grep -m1 '^Feature phase:' <file>`) and read only the matching ❌/⏭ verdict rows in the Requirements table (e.g. `sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep '^| [0-9].*❌'` / `sed -n '/^## Requirements/,/^## Execution summary/p' <file> | grep '^| [0-9].*⏭'` — scoped to Requirements-table rows because the Execution summary rows share the same row shape, with reasons); the sections after the tables carry nothing the gate needs. Apply the gates below to the chosen topic's file(s) and no others:
-+3. Read **every** relevant progress file — for a multi-leaf topic that's each leaf's progress file — discovered by listing `docs/plans` recursively, excluding docs/plans/completed/, for `*-progress.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every topic’s `Feature phase:` extraction are one call, returning only the summary lines:
++3. Read **every** relevant progress file — for a multi-leaf topic that's each leaf's progress file — discovered by listing `docs/plans` recursively, excluding docs/plans/completed/, for `*-progress.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every topic’s `Feature phase:` extraction are one call, returning only the summary lines (adapt the paths to the verified root when your cwd differs):
 +
 +   ```javascript
 +   const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
@@ -468,7 +540,7 @@ index 7ce9075..0dd7bda 100644
     - **Only `⏭ skipped`** → warn and confirm ("Requirement N was skipped. Continue, or go back?").
     - **`Feature phase` must be `done`** in every progress file of the topic — any other value (`e2e-written`, `implementing (k/N)`, `reviewing`, `ship-paused`) means that topic is still in flight: its ship checkpoint has not been approved. Send the user back to `/skill:pwk-executing-tasks` instead of finalizing.
 diff --git a/skills/pwk-status/SKILL.md b/skills/pwk-status/SKILL.md
-index 197984a..f5e0256 100644
+index 197984a..039fd5c 100644
 --- a/skills/pwk-status/SKILL.md
 +++ b/skills/pwk-status/SKILL.md
 @@ -7,13 +7,23 @@ description: "Show all active pipeline topics and their phase/progress. Use when
@@ -483,7 +555,7 @@ index 197984a..f5e0256 100644
  0. **Verify the root** — run `pwd` (or your shell's equivalent) and `git rev-parse --show-toplevel`; mismatch → report both paths and stop; never `cd` (a worktree root counts).
 -1. **Discover** — List `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight) — this working tree only. Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`.
 -2. **State per topic/part — extract, never ingest.** For each progress file take the `Feature phase:` line by matching it (e.g. `grep -m1 '^Feature phase:' <file>` — wherever the template puts it); the body (execution summary, review reports, code digest) carries nothing status needs, and neither do design docs. A header reading `Setup: pending` renders the topic as **`awaiting setup`** — the setup checkpoint was never approved (the slot is only ever written when the design doc has a `## Setup` section, so the header alone decides — no design-doc read) — ahead of any phase-derived state below. Map the line to the displayed state:
-+1. **Discover** — List `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight) — this working tree only; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines:
++1. **Discover** — List `docs/plans` recursively, excluding docs/plans/completed/, for `*-design.md`, `*-progress.md`, and `overview.md` (topic docs live in `docs/plans/<date>-<topic>/` folders — archived work is not in flight) — this working tree only; take each topic’s `Feature phase:` line header-only (`grep -m1 '^Feature phase:' <file>`). Use whatever recurses in your harness; one example: `find docs/plans -name '<suffix>' -not -path '*/completed/*'`. With a sandboxed batch executor (e.g. `codemode` on pi ≥ 1.0.0) the listing and every phase extraction are one call, returning only the summary lines (adapt the paths to the verified root when your cwd differs):
 +
 +   ```javascript
 +   const designs = (await tools.bash({ command: "find docs/plans -name '*-design.md' -not -path '*/completed/*' | sort", timeout: 15 })).output.trim();
