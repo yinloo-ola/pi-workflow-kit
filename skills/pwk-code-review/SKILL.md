@@ -7,7 +7,7 @@ description: "Review a completed requirement's code — trace the logic, check s
 
 Review the code just implemented — one tagged requirement, or the whole feature at the feature-level review. **Unlocked** — you may edit code to apply smell fixes; flag everything else as a follow-up.
 
-Any command or tool recipe in this skill is an example, not the requirement — when your host grants a better tool for an operation (a sandboxed batch executor, a structured file API), use the better tool and treat the recipe as a fallback; the only exact exceptions are this kit's `scripts/` helpers and plain `git` invocations, whose deterministic output is the point.
+Any command or tool recipe in this skill is an example, not the requirement — when your host grants a better tool for an operation (a sandboxed batch executor — e.g. `codemode` on pi ≥ 1.0.0 — a structured file API), use the better tool and treat the recipe as a fallback; the only exact exceptions are this kit's `scripts/` helpers and plain `git` invocations, whose deterministic output is the point.
 
 ## Process
 
