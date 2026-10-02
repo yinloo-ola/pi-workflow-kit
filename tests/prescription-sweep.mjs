@@ -13,9 +13,13 @@
  *
  * Known limitations (deliberate, kept proportional): a command is detected by its
  * first token appearing in COMMAND_WORDS — an unlisted tool head (e.g. a brand-new
- * CLI) is not flagged until the word is added; and fence ranges assume no nested
+ * CLI) is not flagged until the word is added; fence ranges assume no nested
  * fences (an outer fenced block containing another fence line mis-spans — the
- * shipped corpus has none; the parity scan in the feature review verified it).
+ * shipped corpus has none; the parity scan in the feature review verified it);
+ * and executor-script (javascript/js) fences yield commands only from the two
+ * conservative tool-call shapes — a keyed `command:` literal or the first string
+ * positional of a `tools.<name>(…)` call — so plain string variables are never
+ * mistaken for prescriptions.
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -122,6 +126,7 @@ const COMMAND_WORDS = new Set([
 ]);
 
 const BASH_FENCE_RE = /```bash\n([\s\S]*?)```/g;
+const JS_FENCE_RE = /```(?:javascript|js)\n([\s\S]*?)```/g;
 const ANY_FENCE_RE = /```[a-z]*\n?[\s\S]*?```/g;
 const INLINE_RE = /`([^`\n]+)`/g;
 
@@ -173,6 +178,23 @@ const lineBefore = (text, index) => {
 /** Fence ranges of any language — inline spans inside code are not prose commands. */
 const fenceRanges = (text) => [...text.matchAll(ANY_FENCE_RE)].map((m) => [m.index ?? 0, (m.index ?? 0) + m[0].length]);
 
+/** Executor-script extraction shapes: a string or template literal keyed `command:`,
+ *  and the first string positional of a `tools.<name>(…)` call. */
+const KEYED_COMMAND_RE = /command\s*:\s*("([^"\\\n]|\\.)*"|'([^'\\\n]|\\.)*'|`([^`\\]|\\.)*`)/g;
+const TOOLS_POSITIONAL_RE = /\btools\s*\.\s*\w+\s*\(\s*("([^"\\\n]|\\.)*"|'([^'\\\n]|\\.)*'|`([^`\\]|\\.)*`)/g;
+
+/** Unescape a JS string-literal body's quote/backslash escapes; template interpolation
+ *  (`${…}`) passes through untouched — the command head is what gets classified. */
+const unescapeLiteral = (body) => body.replace(/\\(['"`\\])/g, "$1");
+
+/** Embedded tool-call command strings inside executor script code. */
+export function extractExecutorCommands(code) {
+  const commands = [];
+  for (const match of code.matchAll(KEYED_COMMAND_RE)) commands.push(unescapeLiteral(match[1].slice(1, -1)));
+  for (const match of code.matchAll(TOOLS_POSITIONAL_RE)) commands.push(unescapeLiteral(match[1].slice(1, -1)));
+  return commands;
+}
+
 /** Sweep one file's text: violations name the file and the offending command. */
 export function sweepText(file, text) {
   const violations = [];
@@ -185,6 +207,18 @@ export function sweepText(file, text) {
       const line = rawLine.trim();
       if (!line || line.startsWith("#")) continue;
       for (const segment of segmentsOf(line)) {
+        if (!looksLikeCommand(segment)) continue;
+        if (isSanctioned(segment)) continue;
+        if (isFramed(context)) continue;
+        violations.push({ file, command: segment });
+      }
+    }
+  }
+
+  for (const fence of text.matchAll(JS_FENCE_RE)) {
+    const context = lineBefore(text, fence.index ?? 0);
+    for (const extracted of extractExecutorCommands(fence[1])) {
+      for (const segment of segmentsOf(extracted)) {
         if (!looksLikeCommand(segment)) continue;
         if (isSanctioned(segment)) continue;
         if (isFramed(context)) continue;

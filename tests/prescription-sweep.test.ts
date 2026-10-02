@@ -94,3 +94,49 @@ describe("prescription sweep", () => {
     expect(violations[1].command).toContain("find");
   });
 });
+
+describe("executor-script fences (javascript/js)", () => {
+  it("fails an unsanctioned command keyed inside a javascript fence, naming file and command", () => {
+    const violations = sweep({
+      "SKILL.md":
+        '# Demo\n\nGather state first:\n\n```javascript\nconst out = await tools.bash({ command: "rm foo.txt" });\nreturn text(out);\n```\n',
+    });
+    expect(violations.length).toBe(1);
+    expect(violations[0].file).toBe("pwk-demo/SKILL.md");
+    expect(violations[0].command).toBe("rm foo.txt");
+  });
+
+  it("passes sanctioned commands inside a javascript fence without framing", () => {
+    expect(
+      sweep({
+        "SKILL.md": `# Demo\n\nDo it:\n\n\`\`\`javascript\nconst r = await tools.bash({ command: \`grep -m1 '^Feature phase:' \${file}\` });\nconst s = await tools.bash({ command: 'npm run check' });\n\`\`\`\n`,
+      }),
+    ).toEqual([]);
+  });
+
+  it("passes an unsanctioned command when the fence's introducing line is framed", () => {
+    expect(
+      sweep({
+        "SKILL.md":
+          '# Demo\n\nOne example, adjust to your harness:\n\n```javascript\nconst x = await tools.bash({ command: "curl https://example.test/x" });\n```\n',
+      }),
+    ).toEqual([]);
+  });
+
+  it("extracts first-positional strings in tools.* calls from js fences too", () => {
+    const violations = sweep({
+      "SKILL.md": '# Demo\n\nRun:\n\n```js\nawait tools.bash("find . -name node_modules -delete");\n```\n',
+    });
+    expect(violations.length).toBe(1);
+    expect(violations[0].command).toContain("find");
+  });
+
+  it("reports nothing for javascript without tool-call command strings", () => {
+    expect(
+      sweep({
+        "SKILL.md":
+          '# Demo\n\nLogic:\n\n```javascript\nconst flags = "rm foo.txt"; // a plain variable, not a keyed command\nconst n = lines.filter((l) => l.startsWith("mkdir tmp")).length;\n```\n',
+      }),
+    ).toEqual([]);
+  });
+});
