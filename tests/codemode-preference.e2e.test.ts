@@ -165,7 +165,7 @@ describe("codemode preference (feature E2E)", () => {
   it("ships the dated known-instances table in the dev guide and one enablement paragraph in README", () => {
     const guide = read("docs/developer-usage-guide.md");
     for (const harness of [
-      "pi `codemode`",
+      "that executor is `codemode`",
       "opencode",
       "Claude Platform API",
       "Claude Code CLI",

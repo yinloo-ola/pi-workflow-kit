@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The kit prefers sandboxed batch executors where the host grants them.** The canonical tool-freedom clause in all six skills names pi's `codemode` (pi ≥ 1.0.0) as the framed instance of the "sandboxed batch executor" archetype, and the four discovery-sweep sites (status, brainstorming, executing, finalizing) demonstrate the batched shape with a byte-pinned canonical script — one executor call lists in-flight designs and extracts every topic's phase header-only, with the pinned `grep -m1` recipe embedded verbatim. The prescription sweep now reads `javascript`/`js` fences (keyed `command:` literals and first-positional `tools.*()` strings classified like inline bash), so prescriptions cannot hide inside codeme-shaped blocks; the developer guide carries a dated known-instances table (pi `codemode`, opencode v2 `execute`, Claude API Programmatic Tool Calling, Claude Code CLI REPL mode experimental, zcode/commandcode absent); and the guard announces codemode once per session when the tool is active and the guard is not pinned off.
+
 ## [2.8.0] - 2026-09-29
 
 ### Changed

@@ -110,6 +110,23 @@ The destructive blacklist covers common file-mutating vectors (redirects, `tee`,
 
 No configuration needed. It activates automatically after install.
 
+## Sandboxed batch executors — known instances
+
+Every skill treats its shell recipes as fallbacks: when the host grants a sandboxed batch executor (a tool that runs a script calling the agent's other tools, batching calls and filtering output before the model sees it), the skills prefer it. On pi ≥ 1.0.0 that executor is `codemode`, and the four discovery-sweep sites demonstrate the shape with a byte-pinned canonical script. Translate the shape, not the syntax: the scripts call tools by name, so they read correctly whether the host declares tools directly (pi's default) or hides them behind the executor (Claude Code's REPL mode hides its REPL-only tools; pi's `codemode.mode: only` does the same). Pinned command strings — the kit's `scripts/` helpers, plain `git`, the pinned `grep -m1 '^Feature phase:'` extraction — stay byte-exact even when batched inside one executor call; the pin protects the command string, not the vehicle.
+
+Verified instances and absences, each dated so staleness is self-declaring rather than silently wrong:
+
+| Host | Executor | Status (verified 2026-09-29) |
+|------|----------|------------------------------|
+| pi ≥ 1.0.0 | `codemode` | Shipped, opt-in via settings — see pi's "Enable codemode" documentation (verified 2026-09-29) |
+| opencode v2 | `execute` ("Code Mode") | Shipped, gated by the `execute` permission (verified 2026-09-29) |
+| Claude Platform API | Programmatic Tool Calling (`code_execution_20260120`+) | GA — code-execution container calling tools programmatically (verified 2026-09-29) |
+| Claude Code CLI | REPL mode (`REPLTool`) | Experimental env-flag, source-verified, undocumented as of 2026-09-29 |
+| zcode | — | Absent as of 2026-09-29 (CLI closed-source; docs silent) |
+| commandcode | — | Absent as of 2026-09-29 (tool reference verified) |
+
+A present instance names the concrete tool to prefer; an absent one means the bash recipes are the path — the skills read identically either way, and the dated rows tell a future reader when to re-verify.
+
 ## Test-first discipline
 
 Design docs specify *what* (acceptance criteria + end-to-end scenarios); the executor writes the feature-acceptance E2E first (red), then implements to green. This keeps the spec stable — implementation details can change without invalidating the design.

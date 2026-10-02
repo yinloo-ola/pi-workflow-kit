@@ -80,6 +80,10 @@ A **design doc is one PR**; a **requirement is one testable slice within it**. *
 | **Walkthrough** | `/skill:pwk-walkthrough` | On demand: generate a detailed, file:line-anchored walkthrough of a shipped feature into `docs/walkthroughs/<topic>.md` (Summary / How it works / Key flows / Gotchas & invariants / Change map); stamped with the commit range, regenerated wholesale, never disposed. **Exits the gated phase** |
 | **Status** | `/skill:pwk-status` | Read-only overview of all active design topics — phase + progress. Use when resuming or juggling several designs in parallel worktrees. Not a pipeline phase; **does not exit the gated phase**. |
 
+### ⚡ Batched tool calls (pi ≥ 1.0.0 `codemode`)
+
+Every skill treats its shell recipes as fallbacks: when the host grants a sandboxed batch executor, the kit prefers it — on pi ≥ 1.0.0 that is `codemode` (turn it on via pi's "Enable codemode" settings documentation; the guard announces it once per session when active, and the discovery sweeps demonstrate the one-call shape). The dated cross-harness instance table — opencode's `execute`, Claude's Programmatic Tool Calling, and the verified absences — lives in `docs/developer-usage-guide.md`. On hosts without such a tool, the bash recipes are the path and nothing changes.
+
 ## The Workflow in Detail
 
 ### Phase Control
