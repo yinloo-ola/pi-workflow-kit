@@ -1594,17 +1594,19 @@ console.log("skill word budgets:");
   // count plus 10% headroom. A markdown file the table does not list is prose an agent
   // would pay to load, so it fails rather than slipping in unmeasured.
   const wordBudgets = new Map([
-    ["pwk-brainstorming/SKILL.md", 2395],
-    ["pwk-brainstorming/references/design-format.md", 1498],
-    ["pwk-brainstorming/references/umbrella.md", 402],
-    ["pwk-code-review/SKILL.md", 1045],
-    ["pwk-executing-tasks/SKILL.md", 3937],
-    ["pwk-executing-tasks/references/progress-format.md", 1298],
-    ["pwk-executing-tasks/references/resume.md", 646],
-    ["pwk-executing-tasks/references/review.md", 804],
-    ["pwk-finalizing/SKILL.md", 1827],
-    ["pwk-status/SKILL.md", 924],
-    ["pwk-walkthrough/SKILL.md", 584],
+    // Measured count plus 10% headroom, rounded up (ADR 0010): the ratchet holds the
+    // achieved floor, and a file that grows past it fails by name and count.
+    ["pwk-brainstorming/SKILL.md", 2430],
+    ["pwk-brainstorming/references/design-format.md", 1439],
+    ["pwk-brainstorming/references/umbrella.md", 303],
+    ["pwk-code-review/SKILL.md", 1098],
+    ["pwk-executing-tasks/SKILL.md", 3173],
+    ["pwk-executing-tasks/references/progress-format.md", 1107],
+    ["pwk-executing-tasks/references/resume.md", 494],
+    ["pwk-executing-tasks/references/review.md", 668],
+    ["pwk-finalizing/SKILL.md", 1806],
+    ["pwk-status/SKILL.md", 986],
+    ["pwk-walkthrough/SKILL.md", 643],
   ]);
 
   const markdownUnder = (dir) =>

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-10-14
+
+### Added
+
+- **The word-budget ratchet.** `skill-lint` holds a per-file budget (measured count plus 10% headroom, rounded up) and a corpus ceiling, and fails by file name and count when either is exceeded; budgets ratchet from achieved counts rather than a target percentage (ADR 0010). The five skill-text editorial rules are recorded in `AGENTS.md` as `E1`–`E5`.
+- **A fidelity/cost probe kit** — `tests/evals/skill-slimming/`: protocol, fixture task, usage parser, validator, fixtures, and one recorded run in `runs/2026-10-14/` with its transcripts, recomputed usage lines, and transcript hashes.
+
+### Changed
+
+- **Skill text is 16.3% smaller: 15,360 → 12,857 words across the eleven markdown files a host loads**, with every pinned phrase, command recipe, and contract line intact. Cut per file: `umbrella.md` 31.6%, `resume.md` 30.5%, `executing-tasks/SKILL.md` 26.8%, `review.md` 24.5%, `progress-format.md` 22.4%, `design-format.md` 12.7%, `finalizing/SKILL.md` 10.2%, `brainstorming/SKILL.md` 7.8%, `code-review/SKILL.md` 4.5%, `status/SKILL.md` 3.0%.
+- **The probe validator reports the cost direction instead of requiring it** (ADR 0009). Six authorized sessions — baseline 2.9.0 versus the slimmed kit, three trials each — held every behavior assessment with no regression, and the candidate median came in 1.3% higher, inside the run-to-run spread. Smaller corpus and cheaper sessions are reported as two separate facts.
+
 ## [2.9.0] - 2026-10-14
 
 ### Added

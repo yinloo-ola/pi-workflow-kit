@@ -43,6 +43,12 @@ docs/adr/     # permanent ADRs (never archived)
 - Types `PascalCase`, consts `UPPER_SNAKE`, functions `camelCase`.
 - **Export pure helpers** (`isSafeCommand`, `shouldBlockFilePath`, `getCurrentPhase`, `assessDelegationCoverage`) so tests run without the pi runtime. The default export only wires `pi.on(...)` handlers and the `/pwk-guard` + `/pwk-setup` commands.
 - Biome overrides for `tests/**` relax `noExplicitAny`, `noNonNullAssertion`, `noUnusedVariables`, `organizeImports`. Biome targets TS only — `node_modules`, `docs`, `*.md`, `*.json` excluded.
+- **Skill-text editorial rules (E1–E5)** — every edit under `skills/**` follows them:
+  - **E1:** Cut preamble, not instruction — each sentence states a trigger, an action, or a concrete example; motivation goes unless removing the reason invites a wrong action.
+  - **E2:** Delete what a competent agent already does — no reminders to read the file it must read, or to be careful; non-obvious house rules stay.
+  - **E3:** One home per rule, per file — the first mention is complete, later mentions are pointers; cross-file duplication stays, because each skill loads on its own.
+  - **E4:** Shortest carrier wins — a table row, a command, or a list item beats the prose that says the same in more words.
+  - **E5:** Never cut a contract or a decision record — the keep-list survives verbatim; only the explanation around it is slimmed.
 
 ## Workflow conventions (content changes)
 

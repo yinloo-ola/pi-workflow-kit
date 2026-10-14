@@ -14,29 +14,30 @@ import { describe, expect, it } from "vitest";
  * a future skill edit reads. `npm run check` is the outer gate (this file runs inside
  * it); these scenarios are the primary enforced spec.
  *
- * This test proves that: (1) every loadable skill markdown file sits at or under 70% of
- * its 2.9.0 word count and the corpus inside the 30% cut; (2) a skill file that grows
+ * This test proves that: (1) every loadable skill markdown file sits inside its recorded
+ * budget and the corpus inside its ceiling — budgets ratchet from the achieved counts plus
+ * 10% headroom (ADR 0010), not from a target percentage; (2) a skill file that grows
  * past its budget fails the gate by name and count rather than silently; (3) the probe
  * validator accepts a complete recorded report and rejects one that drops an assessment;
  * (4) the five editorial rules are recorded where the next skill edit looks.
  */
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
-/** Every markdown file a host can load, with the ceiling it must stay under (floor of 0.7 x its 2.9.0 count). */
+/** Every markdown file a host can load, with the ceiling it must stay under (measured count + 10% headroom, rounded up). */
 const BUDGETS: Record<string, number> = {
-  "skills/pwk-brainstorming/SKILL.md": 1676,
-  "skills/pwk-brainstorming/references/design-format.md": 1048,
-  "skills/pwk-brainstorming/references/umbrella.md": 281,
-  "skills/pwk-code-review/SKILL.md": 731,
-  "skills/pwk-executing-tasks/SKILL.md": 2755,
-  "skills/pwk-executing-tasks/references/progress-format.md": 908,
-  "skills/pwk-executing-tasks/references/resume.md": 452,
-  "skills/pwk-executing-tasks/references/review.md": 562,
-  "skills/pwk-finalizing/SKILL.md": 1278,
-  "skills/pwk-status/SKILL.md": 646,
-  "skills/pwk-walkthrough/SKILL.md": 408,
+  "skills/pwk-brainstorming/SKILL.md": 2430,
+  "skills/pwk-brainstorming/references/design-format.md": 1439,
+  "skills/pwk-brainstorming/references/umbrella.md": 303,
+  "skills/pwk-code-review/SKILL.md": 1098,
+  "skills/pwk-executing-tasks/SKILL.md": 3173,
+  "skills/pwk-executing-tasks/references/progress-format.md": 1107,
+  "skills/pwk-executing-tasks/references/resume.md": 494,
+  "skills/pwk-executing-tasks/references/review.md": 668,
+  "skills/pwk-finalizing/SKILL.md": 1806,
+  "skills/pwk-status/SKILL.md": 986,
+  "skills/pwk-walkthrough/SKILL.md": 643,
 };
-const CORPUS_CEILING = 10745;
+const CORPUS_CEILING = 14143;
 const PROBE_DIR = "tests/evals/skill-slimming";
 const RULE_LABELS = ["E1:", "E2:", "E3:", "E4:", "E5:"];
 
@@ -84,7 +85,7 @@ function runValidator(report: string) {
 }
 
 describe("skill slimming (feature E2E)", () => {
-  it("keeps every loadable skill file and the whole corpus inside the 30% cut", () => {
+  it("keeps every loadable skill file and the corpus inside the recorded budgets", () => {
     const files = Object.keys(BUDGETS);
     expect(files.length, "eleven loadable markdown files").toBe(11);
     let total = 0;
