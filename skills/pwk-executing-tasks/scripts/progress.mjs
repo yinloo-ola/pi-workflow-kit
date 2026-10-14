@@ -131,7 +131,9 @@ if (command === "set") {
     );
   }
   if (match[2] !== undefined && Number(match[2]) > Number(match[3])) {
-    fail(`${values.file}: implementing (${match[2]}/${match[3]}) has k greater than N`);
+    fail(
+      `${values.file}: phase "implementing (${match[2]}/${match[3]})" requires k <= N — accepted: e2e-written, implementing (k/N), reviewing, ship-paused, done`,
+    );
   }
   state.lines[state.phaseIndex] = `Feature phase: ${phase}`;
 } else if (command === "set-setup") {
