@@ -8,7 +8,7 @@
  * Run via `npm run skill-lint` (or as part of `npm run check`).
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CODE_DIGEST_MARKERS,
@@ -1584,6 +1584,68 @@ if (fin) {
     EVIDENCE_SPINE_MARKERS.digestQuotesEvidence,
     "disposed digests keep their Evidence cells",
   );
+}
+
+// --- Check 14: skill word budgets and no restatement (skill-slimming-2 R1) ---
+console.log("skill word budgets:");
+{
+  // One row per loadable markdown file under skills/. Budgets start at the 2.9.0 counts so
+  // the gate is green before the cut lands; the slimming pass tightens them to the achieved
+  // count plus 10% headroom. A markdown file the table does not list is prose an agent
+  // would pay to load, so it fails rather than slipping in unmeasured.
+  const wordBudgets = new Map([
+    ["pwk-brainstorming/SKILL.md", 2395],
+    ["pwk-brainstorming/references/design-format.md", 1498],
+    ["pwk-brainstorming/references/umbrella.md", 402],
+    ["pwk-code-review/SKILL.md", 1045],
+    ["pwk-executing-tasks/SKILL.md", 3937],
+    ["pwk-executing-tasks/references/progress-format.md", 1298],
+    ["pwk-executing-tasks/references/resume.md", 646],
+    ["pwk-executing-tasks/references/review.md", 804],
+    ["pwk-finalizing/SKILL.md", 1827],
+    ["pwk-status/SKILL.md", 924],
+    ["pwk-walkthrough/SKILL.md", 584],
+  ]);
+
+  const markdownUnder = (dir) =>
+    readdirSync(dir).flatMap((name) => {
+      const child = join(dir, name);
+      if (statSync(child).isDirectory()) return markdownUnder(child);
+      return /\.md$/.test(name) ? [child] : [];
+    });
+  const wordCount = (text) => text.split(/\s+/).filter(Boolean).length;
+
+  let overBudget = 0;
+  let restated = 0;
+  const files = markdownUnder(skillsDir).sort();
+  for (const file of files) {
+    const rel = join("skills", relative(skillsDir, file));
+    const content = readFileSync(file, "utf8");
+    const budget = wordBudgets.get(relative(skillsDir, file));
+    if (budget === undefined) {
+      fail(`word budget: ${rel}: no budget recorded — add a row to the table in tests/skill-lint.mjs`);
+      overBudget++;
+    } else if (wordCount(content) > budget) {
+      fail(`word budget: ${rel}: ${wordCount(content)} words, over its budget of ${budget}`);
+      overBudget++;
+    }
+
+    // A rule stated twice inside one file is the shape this check exists to stop: the first
+    // mention is complete, later mentions are pointers, per the skill-slimming editorial rules.
+    const sentences = new Map();
+    for (const raw of content.replace(/\s+/g, " ").split(/(?<=[.!?])\s+/)) {
+      const sentence = raw.trim();
+      if (wordCount(sentence) < 12) continue;
+      sentences.set(sentence, (sentences.get(sentence) ?? 0) + 1);
+    }
+    for (const [sentence, count] of sentences) {
+      if (count < 2) continue;
+      fail(`word budget: ${rel}: a rule is restated in one file — "${sentence.slice(0, 80)}…"`);
+      restated++;
+    }
+  }
+  if (overBudget === 0) ok(`word budget: all ${files.length} markdown files under skills/ are inside their budget`);
+  if (restated === 0) ok("word budget: no file restates a long sentence");
 }
 
 console.log("prescription sweep:");
