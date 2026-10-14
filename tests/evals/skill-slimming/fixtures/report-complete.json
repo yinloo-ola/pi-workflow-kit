@@ -1,0 +1,255 @@
+{
+  "protocolVersion": 1,
+  "commits": {
+    "baseline": "dfe0dd0",
+    "candidate": "88e9e24"
+  },
+  "trials": [
+    {
+      "trialId": "baseline-1",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-1.transcript.jsonl",
+        "usage": "evidence/baseline-1.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 60,
+        "outputTokens": 40,
+        "totalTokens": 100
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl"
+        }
+      ]
+    },
+    {
+      "trialId": "baseline-2",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-2.transcript.jsonl",
+        "usage": "evidence/baseline-2.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 70,
+        "outputTokens": 50,
+        "totalTokens": 120
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl"
+        }
+      ]
+    },
+    {
+      "trialId": "baseline-3",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-3.transcript.jsonl",
+        "usage": "evidence/baseline-3.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 80,
+        "outputTokens": 60,
+        "totalTokens": 140
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl"
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-1",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-1.transcript.jsonl",
+        "usage": "evidence/candidate-1.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 50,
+        "outputTokens": 30,
+        "totalTokens": 80
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl"
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-2",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-2.transcript.jsonl",
+        "usage": "evidence/candidate-2.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 55,
+        "outputTokens": 35,
+        "totalTokens": 90
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl"
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-3",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-3.transcript.jsonl",
+        "usage": "evidence/candidate-3.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 60,
+        "outputTokens": 40,
+        "totalTokens": 100
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl"
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl"
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl"
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl"
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl"
+        }
+      ]
+    }
+  ]
+}

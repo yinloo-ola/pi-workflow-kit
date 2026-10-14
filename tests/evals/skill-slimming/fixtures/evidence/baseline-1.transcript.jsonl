@@ -1,0 +1,6 @@
+{"type":"session-start","trialId":"baseline-1","condition":"baseline","fresh":true}
+{"type":"skill","name":"pwk-brainstorming","note":"design gate observed"}
+{"type":"approval","gate":"design approval","accepted":true}
+{"type":"skill","name":"pwk-executing-tasks","note":"feature gate observed"}
+{"type":"approval","gate":"ship checkpoint","accepted":true}
+{"type":"skill","name":"pwk-finalizing","note":"disposal observed"}

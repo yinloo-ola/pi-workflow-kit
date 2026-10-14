@@ -1,0 +1,40 @@
+{
+  "name": "skill-slimming-probe",
+  "version": 1,
+  "trialsPerCondition": 3,
+  "conditions": [
+    "baseline",
+    "candidate"
+  ],
+  "assessments": [
+    "vertical-slices",
+    "approval",
+    "current-only-design",
+    "predecessor-grounding",
+    "premature-finalize-blocking"
+  ],
+  "verdicts": [
+    "pass",
+    "fail"
+  ],
+  "usage": {
+    "format": "jsonl",
+    "requiredFields": [
+      "trialId",
+      "inputTokens",
+      "outputTokens",
+      "totalTokens"
+    ],
+    "tokenFields": [
+      "inputTokens",
+      "outputTokens",
+      "totalTokens"
+    ]
+  },
+  "evidence": {
+    "requiredFilesPerTrial": [
+      "transcript",
+      "usage"
+    ]
+  }
+}
