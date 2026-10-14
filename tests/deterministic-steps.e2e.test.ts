@@ -100,6 +100,13 @@ describe("deterministic steps (feature E2E)", () => {
   it("writes the progress slots through the helper and gates on a clean tree", () => {
     const kit = copyKit("pwk-det-progress-");
     try {
+      // The staging check verifies a git worktree, so the copy is one.
+      spawnSync("git", ["init", "-q"], { cwd: kit, encoding: "utf8" });
+      spawnSync("git", ["add", "-A"], { cwd: kit, encoding: "utf8" });
+      spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@local", "commit", "-q", "-m", "kit"], {
+        cwd: kit,
+        encoding: "utf8",
+      });
       const file = progressFile(kit);
       const helper = skill(kit, "pwk-executing-tasks", "progress.mjs");
 
@@ -168,6 +175,12 @@ describe("deterministic steps (feature E2E)", () => {
       const recon = read("skills/pwk-brainstorming/SKILL.md");
       expect(recon, "the recon step enumerates before declaring a capability missing").toMatch(/enumerat/i);
       expect(recon, "the batch-executor form is named").toContain("ALL_TOOLS");
+
+      const executingSkill = read("skills/pwk-executing-tasks/SKILL.md");
+      expect(
+        executingSkill.match(/stage-check\.mjs/g)?.length ?? 0,
+        "the packet step and the ship checkpoint both call the staging check",
+      ).toBeGreaterThanOrEqual(2);
 
       const python = spawnSync("sh", ["-c", "grep -rn -i 'python3\\|Python 3' skills AGENTS.md || true"], {
         cwd: kit,

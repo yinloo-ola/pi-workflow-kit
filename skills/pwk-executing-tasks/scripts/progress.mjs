@@ -32,8 +32,9 @@ function tableRows(lines, header) {
     if (!line.startsWith("|")) break;
     rows.push({
       index: i,
+      // Split on unescaped pipes only, so prose the helper escaped as \| survives a reparse.
       cells: line
-        .split("|")
+        .split(/(?<!\\)\|/)
         .slice(1, -1)
         .map((cell) => cell.trim()),
     });

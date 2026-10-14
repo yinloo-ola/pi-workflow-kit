@@ -134,6 +134,30 @@ describe("progress helper", () => {
     }
   });
 
+  it("parses back the prose it escaped, so later commands still work", () => {
+    const { dir, file } = workspace("pwk-progress-roundtrip-");
+    try {
+      const written = runHelper(file, [
+        "append-summary",
+        "--requirement",
+        "1",
+        "--built",
+        "a | b",
+        "--deviated",
+        "c",
+        "--evidence",
+        "d",
+      ]);
+      expect(written.status, `${written.stdout}${written.stderr}`).toBe(0);
+      const again = runHelper(file, ["set-row", "--requirement", "2", "--done", "✅"]);
+      expect(again.status, "a table the helper wrote must still parse").toBe(0);
+      expect(readFileSync(file, "utf8"), "the escaped pipe is preserved").toContain("a \\| b");
+      expect(readFileSync(file, "utf8"), "and the new row landed").toContain("| 2 | ✅ | Second thing | — | — |");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("refuses to overwrite an execution summary already written", () => {
     const { dir, file } = workspace(
       "pwk-progress-summary-",
