@@ -96,7 +96,9 @@ describe("skill slimming (feature E2E)", () => {
     expect(total, "corpus ceiling").toBeLessThanOrEqual(CORPUS_CEILING);
 
     const lint = runSkillLint(repoRoot);
-    expect(`${lint.stdout}${lint.stderr}`, "skill-lint must be green on the slimmed corpus").toContain("all checks passed");
+    expect(`${lint.stdout}${lint.stderr}`, "skill-lint must be green on the slimmed corpus").toContain(
+      "all checks passed",
+    );
     expect(lint.status).toBe(0);
   });
 

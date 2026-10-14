@@ -8,14 +8,14 @@ Setup: n/a
 
 Started: 2026-10-14T09:48:13Z
 
-Last updated: 2026-10-14T09:48:13Z
+Last updated: 2026-10-14T09:55:00Z
 
-Feature phase: e2e-written
+Feature phase: implementing (1/6)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
-| 1 | ⬜ | Word-budget ratchet for skill text | — | — |
+| 1 | ✅ | Word-budget ratchet for skill text | — | dac0577 |
 | 2 | ⬜ | Heaviest three SKILL.md cut | — | — |
 | 3 | ⬜ | Light three SKILL.md cut | — | — |
 | 4 | ⬜ | Reference markdown cut | — | — |
@@ -25,7 +25,7 @@ Feature phase: e2e-written
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? | Evidence |
 |----|-------------|------------------|-----------|----------|
-| 1 | Word-budget ratchet for skill text | | | |
+| 1 | Word-budget ratchet for skill text | A budget row for each of the 11 markdown files under `skills/` inside `skill-lint`, checked on every gate run, plus a rule that no file restates a 12-word sentence; both start green at the 2.9.0 counts so the gate exists before the cut it will police. | — | `skill-lint` measures all 11 files against their budgets and rejects an unbudgeted file or a restated rule — `node tests/skill-lint.mjs` green; the two quiet teeth proven on a throwaway kit copy by `tests/skill-budgets.test.ts` (2 passed). |
 | 2 | Heaviest three SKILL.md cut | | | |
 | 3 | Light three SKILL.md cut | | | |
 | 4 | Reference markdown cut | | | |
