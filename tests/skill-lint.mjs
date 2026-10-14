@@ -1699,6 +1699,30 @@ console.log("reference pointers:");
   if (broken === 0) ok(`reference pointer: all ${checked} reference pointers resolve`);
 }
 
+// --- Check 17: the recon step enumerates before declaring a capability missing (deterministic-steps R4) ---
+console.log("recon enumeration:");
+{
+  // A capability check that is never made is a guess: the step must say what was found
+  // before it reports anything missing, in both the batch-executor and the plain form.
+  const brainstorming = loadSkills().find((skill) => skill.name === "pwk-brainstorming");
+  const lines = brainstorming.content.split("\n");
+  const start = lines.findIndex((line) => line.includes("Codebase recon"));
+  const end = start === -1 ? -1 : lines.findIndex((line, index) => index > start && /^\d+\. \*\*/.test(line));
+  const block = start === -1 ? "" : lines.slice(start, end === -1 ? lines.length : end).join("\n");
+  if (!block) {
+    fail("recon enumeration: pwk-brainstorming has no recon step to check");
+  } else {
+    const problems = [];
+    if (!/enumerat/i.test(block)) problems.push("no instruction to enumerate the session's capabilities");
+    if (!block.includes("ALL_TOOLS")) problems.push("no batch-executor form (Array.from(ALL_TOOLS))");
+    if (block.includes("Scout: unavailable") && !/enumeration result/i.test(block)) {
+      problems.push("the unavailability report does not require the enumeration result");
+    }
+    if (problems.length) for (const problem of problems) fail(`recon enumeration: ${problem}`);
+    else ok("recon enumeration: the recon step enumerates before reporting a capability missing");
+  }
+}
+
 console.log("");
 if (failures === 0) {
   console.log("skill-lint: all checks passed");

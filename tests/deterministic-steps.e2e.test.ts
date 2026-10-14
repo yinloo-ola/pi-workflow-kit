@@ -187,6 +187,21 @@ describe("deterministic steps (feature E2E)", () => {
         encoding: "utf8",
       });
       expect(python.stdout.trim(), "no Python invocation or prerequisite remains").toBe("");
+
+      // A recon step that lost its enumeration instruction must fail, not pass quietly.
+      const reconFile = join(kit, "skills/pwk-brainstorming/SKILL.md");
+      const reconText = readFileSync(reconFile, "utf8");
+      const from = reconText.indexOf("first **enumerate what this session actually grants**");
+      const to = reconText.indexOf("Then request the host");
+      expect(from, "the enumeration sentence is where the assertion expects it").toBeGreaterThan(-1);
+      expect(to, "and so is the sentence that follows it").toBeGreaterThan(from);
+      writeFileSync(reconFile, reconText.slice(0, from) + reconText.slice(to));
+
+      const stripped = spawnSync("node", [join(kit, "tests", "skill-lint.mjs")], { cwd: kit, encoding: "utf8" });
+      expect(stripped.status, "a recon step without the enumeration instruction must fail").not.toBe(0);
+      expect(`${stripped.stdout}${stripped.stderr}`, "the failure names the missing instruction").toMatch(
+        /recon enumeration/,
+      );
     } finally {
       rmSync(kit, { recursive: true, force: true });
     }
