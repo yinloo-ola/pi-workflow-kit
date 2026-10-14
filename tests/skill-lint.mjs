@@ -14,6 +14,7 @@ import {
   CODE_DIGEST_MARKERS,
   DIGEST_MARKERS,
   DIGEST_RENDERING_MARKERS,
+  EVIDENCE_SPINE_MARKERS,
   SINGLE_DOC_MARKERS,
   STATUS_STATE_MARKERS,
   TOOL_FREEDOM_MARKERS,
@@ -1492,6 +1493,14 @@ console.log("codemode sweep script:");
 // gates, the pinned disposal commands) or framed as one example. Stragglers the recon
 // inventory missed fail loudly here; the fix is framing the site or deliberately
 // sanctioning the recipe in tests/prescription-sweep.mjs — never a silent exemption.
+// evidence-spine R1 — the PRD brief opens understand-the-idea: cited,
+// zero-context, human-corrected before frontier rounds.
+if (bs) {
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.briefRule, "PRD brief opens before any question");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.zeroContextRule, "zero-context plain-meaning-first rule");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.interpretationMark, "inference mark for uncited claims");
+}
+
 console.log("prescription sweep:");
 {
   let violations = 0;

@@ -220,6 +220,35 @@ export const TOOL_FREEDOM_MARKERS = {
 };
 
 /**
+ * Markers for the evidence-spine feature: the PRD brief that opens brainstorming
+ * (zero-context, cited, human-corrected), the decide-by-experiment tier inside the
+ * facts-vs-decisions rule, the probe test in the completion gate, and the execution
+ * summary's Evidence column with its pairing and refusal rules. Same contract as
+ * DIGEST_MARKERS — one canonical string per behavior, shared by skill-lint and the
+ * vitest suites.
+ */
+export const EVIDENCE_SPINE_MARKERS = {
+  briefRule: "open with a brief before any question",
+  zeroContextRule: "plain meaning first, the pointer second",
+  interpretationMark: "(interpretation: …)",
+  runnableFacts: "settled by a bounded sketch",
+  sketchClause: "(settled by sketch:",
+  inconclusiveMark: "INCONCLUSIVE",
+  probeTest: "no nameable probe",
+  probeKinds: "a run, a grep, or an assertion",
+  evidenceColumn: "| R# | Requirement | How it was built | Deviated? | Evidence |",
+  evidencePairing: "what it proves in plain words",
+  singleProbe: "one probe test",
+  evidenceRefusal: "or the requirement is not done",
+  evidenceFillStep: "Evidence cell non-empty",
+  digestQuotesEvidence: "Evidence cells",
+  briefName: "PRD brief",
+  tierName: "decide-by-experiment",
+  probeName: "probe test",
+  evidenceName: "Evidence rows",
+};
+
+/**
  * Canonical executor-script sweep example (codemode preference): one sandboxed
  * batch-executor call lists in-flight designs and extracts each topic's phase
  * header-only from the sibling progress file, with design-only topics reporting
