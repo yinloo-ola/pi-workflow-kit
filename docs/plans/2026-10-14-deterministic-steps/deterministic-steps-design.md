@@ -80,9 +80,9 @@ The pin-loss and corpus-census checkers move out of the disposable topic folder 
 **Acceptance criteria**
 - Given a skill markdown file and a named revision, When the pin checker runs, Then it reports the pinned phrases present and lost for that file.
 - Given a file that lost a pinned phrase against that revision, When it runs, Then it exits non-zero naming the phrase.
-- Given the corpus, When the census checker runs, Then it reports per-file pinned and free word counts.
-- Given the repository after this requirement, When `tests/` is listed, Then the relocated checkers are there and no measurement script remains under `docs/plans/`.
-- Given the packed tarball, When its file list is read, Then the relocated checkers are absent — `tests/` is not shipped.
+- Given a revision that does not resolve, When it runs, Then it exits non-zero naming the revision.
+
+(amended 2026-10-14, human decision Option 1: the relocation criteria — checkers under `tests/`, no measurement script in `docs/plans/`, absent from the packed tarball — were delivered by the skill-slimming-2 finalize, which moved them to `tests/tools/` byte-identically. R5 narrows to the two refinements above.)
 
 ### Checkpoints: none
 ### Review: skip

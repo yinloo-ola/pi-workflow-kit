@@ -8,7 +8,7 @@ Setup: n/a
 
 Started: 2026-10-14T14:35:00Z
 
-Last updated: 2026-10-14T15:26:34.679Z
+Last updated: 2026-10-14T15:35:48.234Z
 
 Feature phase: implementing (4/6)
 
@@ -19,7 +19,7 @@ Feature phase: implementing (4/6)
 | 2 | ✅ | Section-scoped reference reads and an anchor-resolving lint | — | 74be32d 6eac0cc |
 | 3 | ✅ | The reviewed diff is the shipped diff | — | 8a95578 ef9f31d |
 | 4 | ✅ | Enumerated capability checks | — | 5f4ed8d |
-| 5 | ⬜ | The pin checkers live in the repo | — | — |
+| 5 | 🔄 | The pin checkers live in the repo | — | — |
 | 6 | ⬜ | One runtime for the helpers | ⏸ full · 🔎 parallel | — |
 
 ## Execution summary

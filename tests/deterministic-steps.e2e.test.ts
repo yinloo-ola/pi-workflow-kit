@@ -257,10 +257,14 @@ describe("deterministic steps (feature E2E)", () => {
       const intact = run(checker, [target, "--against", "HEAD"], kit);
       expect(intact.status, `an intact file must pass: ${intact.stdout}${intact.stderr}`).toBe(0);
 
-      const pinned = read("skills/pwk-status/SKILL.md");
-      const phrase = pinned.split("\n").find((line) => line.trim().length > 60) ?? "";
-      expect(phrase.length, "the sample file must carry a long pinned-ish line").toBeGreaterThan(60);
-      writeFileSync(target, pinned.replace(phrase, ""));
+      // Take the phrase from the pool itself, so the test drops a real pin rather than a
+      // long line that may carry none.
+      const markers = readFileSync(join(kit, "tests", "markers.mjs"), "utf8");
+      const candidates = [...markers.matchAll(/"([^"\\\n]{20,})"/g)].map((match) => match[1]);
+      const statusSkill = read("skills/pwk-status/SKILL.md");
+      const phrase = candidates.find((candidate) => statusSkill.includes(candidate));
+      expect(phrase, "a marker literal from markers.mjs appears in the status skill").toBeTruthy();
+      writeFileSync(target, statusSkill.replace(phrase as string, ""));
       const dropped = run(checker, [target, "--against", "HEAD"], kit);
       expect(dropped.status, "a dropped pinned phrase must fail").not.toBe(0);
       expect(`${dropped.stdout}${dropped.stderr}`, "the failure names the lost phrase").toContain(
