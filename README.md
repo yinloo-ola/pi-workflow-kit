@@ -101,6 +101,8 @@ You control each phase — the agent never advances on its own. Invoke a skill t
 
 The design doc specifies *what*, not *how*. Each `### R<n>:` requirement block gives **acceptance criteria** (Given/When/Then, edge and error cases included) — no implementation code, no file-by-file recipe, no test-name lists. The executor has full autonomy to choose structure, signatures, and internals. A fine-grained implementation plan invalidates the moment a detail shifts; acceptance criteria survive implementation changes.
 
+Brainstorm opens with a **PRD brief** when source material exists — background, current situation, and the delta, cited and zero-context, corrected by you before any requirement is written. Unknowns settle by **decide-by-experiment**: a question a run can answer is answered by a bounded sketch, never guessed. A criterion passes the **probe test**: its `Then` names an outcome a command can observe.
+
 ### Feature-Gate Execution
 
 The feature is implemented via the feature-gate flow:
@@ -109,7 +111,7 @@ The feature is implemented via the feature-gate flow:
 2. **Report it — no stop** — one or two lines saying what the E2E proves, plus its failing output; the run continues straight into implementation (that text was already approved as `## Feature acceptance` during brainstorm, so this is the window to object before code is written, not a sign-off gate)
 3. Implement the requirements back-to-back (TDD: meaningful test → red → green per slice; full autonomy)
 4. Feature review — risk-scaled: four fresh-context roles over a script-assembled review packet when the design carries production-risk content, otherwise one inline pass
-5. ⏸ **ship checkpoint** — full suite + feature E2E green; you review the execution summary + coverage table (full diff on request)
+5. ⏸ **ship checkpoint** — full suite + feature E2E green; you review the execution summary **Evidence rows** (plain words + pointer per requirement) + coverage table (full diff on request)
 
 Per-requirement checkpoints/reviews are opt-in (default off); the feature-level review covers everything.
 

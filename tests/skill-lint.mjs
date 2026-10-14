@@ -1496,14 +1496,94 @@ console.log("codemode sweep script:");
 // evidence-spine R1 — the PRD brief opens understand-the-idea: cited,
 // zero-context, human-corrected before frontier rounds.
 if (bs) {
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.briefRule, "PRD brief opens before any question");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.zeroContextRule, "zero-context plain-meaning-first rule");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.interpretationMark, "inference mark for uncited claims");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.runnableFacts, "runnable facts settle by bounded sketch");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.sketchClause, "settled-by-sketch clause in the interview rule");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.inconclusiveMark, "INCONCLUSIVE returns the question with context");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.probeTest, "probe test rejects nameless-probe criteria");
-  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.probeKinds, "probe kinds: run, grep, assertion");
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.briefRule,
+    "PRD brief opens before any question",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.zeroContextRule,
+    "zero-context plain-meaning-first rule",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.interpretationMark,
+    "inference mark for uncited claims",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.runnableFacts,
+    "runnable facts settle by bounded sketch",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.sketchClause,
+    "settled-by-sketch clause in the interview rule",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.inconclusiveMark,
+    "INCONCLUSIVE returns the question with context",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.probeTest,
+    "probe test rejects nameless-probe criteria",
+  );
+  fgMark(
+    "pwk-brainstorming",
+    bs.contractContent,
+    EVIDENCE_SPINE_MARKERS.probeKinds,
+    "probe kinds: run, grep, assertion",
+  );
+}
+if (et) {
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    EVIDENCE_SPINE_MARKERS.evidenceColumn,
+    "execution summary carries the Evidence column",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    EVIDENCE_SPINE_MARKERS.evidenceFillStep,
+    "done mark only with a non-empty Evidence cell",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    EVIDENCE_SPINE_MARKERS.evidencePairing,
+    "evidence pairs plain words with a pointer",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    EVIDENCE_SPINE_MARKERS.singleProbe,
+    "one probe test allowed, never a list",
+  );
+  fgMark(
+    "pwk-executing-tasks",
+    et.contractContent,
+    EVIDENCE_SPINE_MARKERS.evidenceRefusal,
+    "empty Evidence cell refuses the done mark",
+  );
+}
+if (fin) {
+  fgMark(
+    "pwk-finalizing",
+    fin.contractContent,
+    EVIDENCE_SPINE_MARKERS.digestQuotesEvidence,
+    "disposed digests keep their Evidence cells",
+  );
 }
 
 console.log("prescription sweep:");

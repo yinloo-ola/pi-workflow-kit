@@ -108,7 +108,7 @@ describe("leaner execution gates (feature E2E)", () => {
     expect(executing).toContain(LEAN_GATES_MARKERS.flowCap);
     expect(executing).toContain(LEAN_GATES_MARKERS.flowWalkthroughOffer);
     // The Execution summary stays four columns — no location/commit column.
-    expect(DIGEST_MARKERS.execSummaryTable).toBe("| R# | Requirement | How it was built | Deviated? |");
+    expect(DIGEST_MARKERS.execSummaryTable).toBe("| R# | Requirement | How it was built | Deviated? | Evidence |");
     expect(executing).not.toMatch(/\|\s*Look at\s*\|/);
 
     // R6 — the Flow must agree with reviewed reality, and disagreements surface.

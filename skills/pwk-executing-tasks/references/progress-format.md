@@ -27,9 +27,9 @@ Read before creating or changing progress rows, or writing/re-presenting the cod
    | 1 | ⬜ | <requirement name> | — | — |
 
    ## Execution summary
-   | R# | Requirement | How it was built | Deviated? |
-   |----|-------------|------------------|-----------|
-   | 1 | <requirement name> | | |
+   | R# | Requirement | How it was built | Deviated? | Evidence |
+   |----|-------------|------------------|-----------|----------|
+   | 1 | <requirement name> | | | |
 
    ## Deviation records
 
@@ -76,7 +76,7 @@ Update the matching requirement row directly (not via pattern matching that coul
 - **Done cell:** `⬜` not started · `🔄` in progress · `✅` done · `❌` failed · `⏭` skipped. A row is **terminal** when its Done cell is `✅`, `❌`, or `⏭` — resolved, not necessarily passed. A `❌`/`⏭` row carries its reason as a suffix in the Requirement cell (finalizing's verdict greps read it), and its test coverage is reconciled in the same step — assertions removed or skipped with the reason; the suite must stay green. This skill sets all five values. A requirement under review stays `🔄`: `pwk-code-review` reports findings and never edits the Done cell — the loop only ever flips `🔄`→`✅` when the review returns clean, and findings leave the row `🔄` for another pass.
 - **Per-req ceremony cell** echoes the design doc's tag, not progress: `—` (default `none`/`skip`) · `⏸ full` (fires two stops — after the slice's tests and after it is complete) · `🔎 inline` · `🔎 parallel`.
 
-**Execution summary rows are written in the same step as marking a requirement ✅** — never retrofitted at the end. "How it was built" = one or two plain sentences: what it does now + the approach actually taken; file names sparingly; **no test names, no code** (the human reads this at the ship checkpoint — big picture only). If the implementation departs from the design, fill the Deviated? column **at deviation time** (when the departure happens), with a one-line why — it is a log, not a stop. A departure that **reverses or alters a design decision** gets a **deviation decision-record**: a short paragraph (what changed, why, what was rejected) written into the progress file while the knowledge is fresh — mechanical deviations keep the one-liner. `pwk-finalizing`'s learning sweep harvests these records for ADRs before the docs are disposed.
+**Execution summary rows are written in the same step as marking a requirement ✅** — never retrofitted at the end. "How it was built" = one or two plain sentences: what it does now + the approach actually taken; file names sparingly; **no test-name lists, no code** (the human reads this at the ship checkpoint — big picture only; the `Evidence` cell may name **one probe test**, never a list). The `Evidence` cell pairs **what it proves in plain words** with a pointer — a commit, a `file:line`, a command with its observed output line, or the single probe test — single-line so the table never breaks. No requirement is marked ✅ with an empty `Evidence` cell: either the pointer exists or the requirement is not done. If the implementation departs from the design, fill the Deviated? column **at deviation time** (when the departure happens), with a one-line why — it is a log, not a stop. A departure that **reverses or alters a design decision** gets a **deviation decision-record**: a short paragraph (what changed, why, what was rejected) written into the progress file while the knowledge is fresh — mechanical deviations keep the one-liner. `pwk-finalizing`'s learning sweep harvests these records for ADRs before the docs are disposed.
 
 
 ## Commit entries for packet assembly

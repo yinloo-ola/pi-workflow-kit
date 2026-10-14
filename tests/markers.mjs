@@ -10,7 +10,7 @@ export const DIGEST_MARKERS = {
   atAGlance: "## At a glance",
   atAGlanceTable: "| R# | Requirement in one line | Risk |",
   execSummary: "## Execution summary",
-  execSummaryTable: "| R# | Requirement | How it was built | Deviated? |",
+  execSummaryTable: "| R# | Requirement | How it was built | Deviated? | Evidence |",
   fillAsYouLand: "same step as marking",
   deviationAtDeviation: "when the departure happens",
   shipPaused: "ship-paused",

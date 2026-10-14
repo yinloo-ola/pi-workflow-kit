@@ -26,7 +26,8 @@ brainstorm → executing-tasks → finalizing
 /skill:pwk-brainstorming
 ```
 
-- Explore requirements and shape the design. Interviews in **frontier rounds**: questions form a dependency tree seeded by a six-dimension checklist; each round asks the full frontier as numbered questions, each with a recommended answer; facts are looked up, only decisions asked; the interview ends when the frontier is empty — nothing left silently assumed — and an assumption gate sweeps the draft before the design is presented.
+- Explore requirements and shape the design. Interviews in **frontier rounds**: questions form a dependency tree seeded by a six-dimension checklist; each round asks the full frontier as numbered questions, each with a recommended answer; facts are looked up, runnable unknowns settle by **decide-by-experiment** (a bounded sketch with a proof clause), only decisions asked; the interview ends when the frontier is empty — nothing left silently assumed — and an assumption gate sweeps the draft before the design is presented.
+- Open with a **PRD brief** when source material exists (background / current situation / the delta — cited, zero-context, corrected by the human before any requirement is written); every criterion passes the **probe test**: its `Then` names an outcome a command can observe.
 - Produce `docs/plans/<date>-<topic>/<leaf>-design.md` — descriptive, the **single buildable artifact**: a `## At a glance` digest for the human (2–4 sentence plain-language summary → **Key decisions**, one line each: decision + why, a `(rejected: …)` clause only when the fork was real → a `| R# | Requirement in one line | Risk |` table, one row per requirement) immediately before the `## Requirements` blocks — one `### R<n>:` block per requirement carrying its one-line behavior, **acceptance criteria** (Given/When/Then incl. edge/error cases) and Checkpoints/Review tags (no test-name lists, no separate plan doc) — ending with a `## Feature acceptance` section (end-to-end scenarios that prove the requirements compose into the feature — the feature's definition-of-done).
 - May start an **umbrella** for a requirement too big for one design doc (human-approved): writes the status-free `docs/plans/<date>-<topic>/overview.md` (the same topic folder, now with more than one leaf; a `## Parts (build order)` roster of leaves + build order) and the **first** leaf's `<leaf>-design.md` beside it. Later leaves are brainstormed one by one against the overview + implemented predecessors.
 - ADRs go to `docs/adr/` (permanent, never archived).
@@ -43,7 +44,7 @@ Write boundary: only `docs/plans/` is writable. Source files are hard-blocked.
 - After the review passes, the executor writes a **code digest** into the progress file — plain-language summary, execution flow, gotchas, key files — derived from the review packet; it rides the existing disposal globs.
 - Per-requirement checkpoints/reviews are **opt-in** — they fire only for requirements the design doc tags (default off); see [Proportionality](#proportionality).
 - **Regression check after each commit** — run the full existing suite to catch cross-requirement regressions immediately. The feature E2E stays red until the last requirement and is gated only at the ship checkpoint (the old integration gate folds into it).
-- Progress tracked in `docs/plans/<date>-<topic>/<leaf>-progress.md` (feature phase + requirement checklist).
+- Progress tracked in `docs/plans/<date>-<topic>/<leaf>-progress.md` (feature phase + requirement checklist); the execution summary's **Evidence rows** pair plain words with a pointer — no requirement is ✅ without one.
 
 No write restrictions. All tools available.
 

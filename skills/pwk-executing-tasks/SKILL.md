@@ -64,7 +64,7 @@ Set `Feature phase: implementing (0/N)` and work the requirements in listed orde
 5. **Learn.** Caught a repeat mistake? Append a **generic** rule to `docs/lessons.md` (strip domain specifics).
 6. **Commit** the requirement with a clear message; record the requirement's commit hash in the Commit column.
 7. **Per-requirement review** *(fires only when the requirement's `### Review` tag is `parallel` or `inline` — default `skip`)* — review the slice now (see [Per-requirement review](#per-requirement-review-opt-in)); the row stays 🔄 through the review.
-8. **Mark the requirement ✅** and write its execution-summary row in the same step; advance `Feature phase: implementing (k/N)`. For a reviewed requirement this fires only after the review returns clean.
+8. **Mark the requirement ✅** and write its execution-summary row in the same step — Evidence cell non-empty, plain words plus pointer; advance `Feature phase: implementing (k/N)`. For a reviewed requirement this fires only after the review returns clean.
 
 ### Per-requirement review (opt-in)
 
@@ -91,7 +91,7 @@ When every requirement's Done cell is terminal — `✅` (done), `❌` (failed, 
    **Reconcile the Flow against reviewed reality before writing it.** The Flow is written from what was reviewed, not from recollection: in `parallel` mode every hop must correspond to a path the tracing reviewer's report names — no hop invented, no reported path dropped. In `inline` mode there is no separate tracing report — the inline pass itself performs code tracing — so check the Flow against that pass's tracing findings and spec-coverage result instead. A discrepancy you cannot resolve is **surfaced** to the human in the ship checkpoint's findings status, never smoothed over by writing a Flow that omits the path.
 5. **Set `Feature phase: ship-paused`** and **⏸ CHECKPOINT: ship** — present, in this order:
    - a green-gates line: full suite green, feature E2E green (trivial doc: the suite line alone — there is no E2E);
-   - the **execution summary** — what each requirement became, deviations included;
+   - the **execution summary** — what each requirement became, deviations included, Evidence cells quoted so the human reads evidence rather than claims;
    - the **verdict rows** — list every `❌`/`⏭` row with its reason, so the approval is given knowing what failed;
    - the **code digest** — the plain-language change explanation from the progress file (summary, flow, gotchas, key files);
    - the **coverage table** (one verdict row per R#) — from the spec-reviewer report in `parallel` mode, from the inline pass's spec alignment in `inline` mode;
@@ -200,7 +200,7 @@ Feature phase: e2e-written
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 ## Execution summary
-| R# | Requirement | How it was built | Deviated? |
+| R# | Requirement | How it was built | Deviated? | Evidence |
 ## Code digest
 ### Summary
 ### Flow

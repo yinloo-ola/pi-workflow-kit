@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-10-14
+
+### Added
+
+- **PRD brief**: brainstorming opens with a cited, zero-context brief (background / current situation / the delta) when source material exists; the human corrects it before any requirement is written.
+- **Decide-by-experiment tier**: frontier questions answerable by running something settle by bounded sketches (`(settled by sketch: …)` proof clause; `INCONCLUSIVE` returns the question with context).
+- **Probe test**: a criterion is ready only when its `Then` names an outcome a command can observe.
+- **Evidence rows**: the execution summary gains an `Evidence` column — plain words plus pointer (commit, `file:line`, command + observed line, or the single probe test); no requirement is ✅ without one; the ship digest quotes them.
+
+### Changed
+
+- The shipped "no test names" execution-summary rule is amended: one probe test may be named inside `Evidence`, never a list.
+
 ## [2.8.1] - 2026-10-02
 
 ### Added

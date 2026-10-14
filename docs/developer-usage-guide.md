@@ -34,7 +34,7 @@ Or in `.pi/settings.json` / `~/.pi/agent/config.json`:
 
 ## The workflow
 
-You control each phase by invoking the skill. One folder per topic: `docs/plans/<date>-<topic>/` holds the topic's design doc, progress file, and review packet, and is the unit disposed at finalize. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — more than one leaf in that same folder, under one status-free overview, on one branch, finalized once:
+You control each phase by invoking the skill. Requirements are grounded in evidence: a **PRD brief** opens brainstorm when source material exists, unknowns settle by **decide-by-experiment** (bounded sketch, proof clause), criteria pass the **probe test** (their `Then` names an outcome a command can observe), and the execution summary's **Evidence rows** pair plain words with a pointer — nothing is ✅ without one. One folder per topic: `docs/plans/<date>-<topic>/` holds the topic's design doc, progress file, and review packet, and is the unit disposed at finalize. A design doc is one PR; a requirement is one testable slice within it. A requirement too big for one design doc but shipping as one PR is an **umbrella** — more than one leaf in that same folder, under one status-free overview, on one branch, finalized once:
 
 ```
 /skill:pwk-brainstorming  →  /skill:pwk-executing-tasks  →  /skill:pwk-finalizing
