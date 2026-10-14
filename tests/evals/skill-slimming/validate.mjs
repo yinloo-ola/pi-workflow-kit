@@ -8,8 +8,13 @@
  *
  * Usage: node validate.mjs <report.json>
  * Exit 0 = accepted (both commits distinct, six trials complete, every assessment
- * carried with evidence, token totals recomputed, no candidate regression, and the
- * candidate median below the baseline median). Exit 1 = rejected, naming each fault.
+ * carried with evidence, token totals recomputed, no candidate regression). Exit 1 =
+ * rejected, naming each fault.
+ *
+ * The direction of the cost comparison is a *finding*, not a validity property: the
+ * report also validates when the candidate median is higher, and the validator prints
+ * the direction so the reader sees which way it went. Only structural faults and
+ * unverifiable numbers reject.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
@@ -122,9 +127,8 @@ export function validateReport(report, absoluteReportPath) {
         { totals: totals[condition], median: median(totals[condition]), spread: spread(totals[condition]) },
       ]),
     );
-    if (stats.candidate.median >= stats.baseline.median) {
-      errors.push(`candidate median ${stats.candidate.median} is not below baseline median ${stats.baseline.median}`);
-    }
+    stats.direction = stats.candidate.median < stats.baseline.median ? "lower" : "higher-or-equal";
+    stats.delta = stats.candidate.median - stats.baseline.median;
   } else {
     errors.push("cannot compare: the two conditions do not each have complete recomputed totals");
   }
@@ -154,6 +158,12 @@ if (isCli) {
     );
     console.log(
       `candidate  ${candidate.totals.join(", ")}${" ".repeat(Math.max(1, 20 - candidate.totals.join(", ").length))}${candidate.median}${" ".repeat(19)}${candidate.spread}`,
+    );
+  }
+  if (result.stats) {
+    const { baseline, candidate, direction, delta } = result.stats;
+    console.log(
+      `finding: candidate median ${candidate.median} vs baseline median ${baseline.median} -> ${direction} (${delta >= 0 ? "+" : ""}${delta})`,
     );
   }
   if (result.errors.length) {

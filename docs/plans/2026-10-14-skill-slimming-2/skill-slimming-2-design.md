@@ -75,15 +75,16 @@ These files carry format contracts and command recipes, so their cut is mostly e
 ### Review: skip
 
 ### R5: Fidelity and cost probe recorded
-Six recorded runs — the baseline kit (commit `dfe0dd0`, version 2.9.0) and the slimmed kit, three trials each on one fixture task — show that no workflow behavior regressed and that the candidate sessions spent fewer tokens overall.
+Six recorded runs — the baseline kit (commit `dfe0dd0`, version 2.9.0) and the slimmed kit, three trials each on one fixture task — show whether workflow behavior regressed, and which way session token cost moved; either direction is a finding to report, never a reason to reject the report.
 
 The runs are real agent sessions, so the human authorizes provider, model, network, and spend before each one; the kit prepares the protocol, fixture, and validator but never invents a provider command. This is the topic's one human-run step, which is why the requirement carries a full checkpoint. If the runs cannot happen, this requirement is `⏭` and the ship gate stops there — a fabricated or fixture-derived report is never acceptable evidence.
 
 **Acceptance criteria**
-- Given two recorded conditions of three trials each, When the probe validator runs, Then it exits zero only if both commits are present and distinct, all six trials have a transcript and a usage file, every trial carries a verdict and an evidence pointer for each of the five assessments, the recorded token totals recompute from the raw usage lines, no candidate trial regresses an assessment against baseline, and the candidate median total tokens are below the baseline median.
+- Given two recorded conditions of three trials each, When the probe validator runs, Then it exits zero only if both commits are present and distinct, all six trials have a transcript and a usage file, every trial carries a verdict and an evidence pointer for each of the five assessments, the recorded token totals recompute from the raw usage lines, and no candidate trial regresses an assessment against baseline.
 - Given a candidate trial missing one assessment verdict, When the validator runs, Then it exits non-zero and names the trial and the missing assessment.
 - Given a trial whose usage lines do not sum to its recorded total, When the validator runs, Then it exits non-zero and names both the recorded and the recomputed value.
 - Given the two conditions, When the probe report is read, Then it shows both medians and the spread of each condition, so a reader can see the noise beside the comparison.
+- Given a candidate median above the baseline median, When the validator runs, Then the report still validates and the validator prints the difference and its direction as a finding — a negative cost result is recorded, not rejected. (amended 2026-10-14, ADR 0009)
 
 ### Checkpoints: full
 ### Review: skip

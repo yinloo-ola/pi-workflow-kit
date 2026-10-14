@@ -25,4 +25,8 @@ Exit 0 requires both commits present and distinct; all six trials with a transcr
 
 The word count and the token count are two separate facts. A smaller corpus that costs more tokens per session is a finding to report, not to hide — a terse skill that makes an agent loop costs more than it saved.
 
+## Recorded runs
+
+`runs/2026-10-14/` holds the topic's one recorded probe: six authorized sessions, their transcripts, the recomputed usage lines, and the validator's verdict. Its `README.md` states the conditions, the model actually used, and the result — including that the word cut produced no measurable token saving.
+
 Fixtures under `fixtures/` exercise the validator's accept and reject paths. They are not behavioral evidence and must never be presented as a recorded run. If no authorized runs happen, record that limitation and leave the probe unrecorded; a fabricated report is never acceptable evidence.

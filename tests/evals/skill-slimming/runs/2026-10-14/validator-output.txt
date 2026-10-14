@@ -1,0 +1,5 @@
+condition  trials              median total tokens  spread
+baseline   1888883, 2155572, 1995148 1995148                   266689
+candidate  2393815, 1839757, 2021740 2021740                   554058
+finding: candidate median 2021740 vs baseline median 1995148 -> higher-or-equal (+26592)
+✓ probe report accepted

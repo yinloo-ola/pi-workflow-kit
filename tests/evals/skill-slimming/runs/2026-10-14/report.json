@@ -1,0 +1,295 @@
+{
+  "protocolVersion": 1,
+  "commits": {
+    "baseline": "dfe0dd0455fd952756eb7a9d231f88ff96a496b4",
+    "candidate": "c3df7fc73bcf4242fbffbaeda45964fac0869ef2"
+  },
+  "trials": [
+    {
+      "trialId": "baseline-1",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-1.transcript.jsonl",
+        "usage": "evidence/baseline-1.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 1850987,
+        "outputTokens": 37896,
+        "totalTokens": 1888883
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl",
+          "note": "R1 filter -> R2 CLI flag -> R3 error path, each red->green with its own commit (65a664f, 419ae9c, b814cdc) and a full-suite regression check; no speculative scaffolding."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl",
+          "note": "Paused at the assumption gate (L16 -> user 'confirm' L17), at the ship checkpoint (L66 'CHECKPOINT: ship' -> user 'approve' L67), and at the finalize disposal choice (L83)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl",
+          "note": "Design doc (commit 5c55a34) carries only R1-R3 for the --since filter, each with Given/When/Then edge cases; no later-slice speculation."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl",
+          "note": "First turn read the existing scripts/log-summary.mjs, tests/log-summary.test.mjs, package.json, README.md and fixtures/events.jsonl (L10) before designing."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-1.transcript.jsonl",
+          "note": "No premature finalize: the finalize gate ran only after 'Feature phase: done' with both gates green (L77-78); the agent also self-caught an uncommitted E2E at L70."
+        }
+      ]
+    },
+    {
+      "trialId": "baseline-2",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-2.transcript.jsonl",
+        "usage": "evidence/baseline-2.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 2100087,
+        "outputTokens": 55485,
+        "totalTokens": 2155572
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl",
+          "note": "R1 filter -> R2 CLI flag -> R3 error path, each red->green with its own commit (56ba6e9, 17105d6, then R3) and a full-suite check after each; landed as one slice."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl",
+          "note": "Three human gates: assumption gate ('confirmed' L21), approach choice ('A' L25), ship checkpoint ('approve' L71)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl",
+          "note": "Design doc docs/plans/2026-10-14-since-filter/ covers only the --since filter; the session stayed read-only on source (only untracked docs/) until approval (L32)."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl",
+          "note": "Read the existing scripts/log-summary.mjs, tests/log-summary.test.mjs, fixtures/events.jsonl, README.md and package.json (L5-L11) before designing."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-2.transcript.jsonl",
+          "note": "No premature finalize: finalize ran after 'Feature phase: done' with 19/19 green (L74-L78); it also recovered from a transient review-helper merge-base error (L65) before the ship stop."
+        }
+      ]
+    },
+    {
+      "trialId": "baseline-3",
+      "condition": "baseline",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/baseline-3.transcript.jsonl",
+        "usage": "evidence/baseline-3.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 1933927,
+        "outputTokens": 61221,
+        "totalTokens": 1995148
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl",
+          "note": "R1 filter (1e7c778) -> R2 error path (c0ec581), each red->green with its own commit and a suite check; review fixes landed as 660a166. One cohesive slice, explicitly 'one design doc, no umbrella' (L18)."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl",
+          "note": "Gates: recon recommendations ('all recommended' L19), design approval ('approve' L27 -> 'Design approved' L32), ship checkpoint ('approve' L62), finalize disposal choice ('delete, rebase' L74)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl",
+          "note": "Design doc docs/plans/2026-10-14-since-filter/ covers only the --since filter; structural validator run and reported (L25-L26)."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl",
+          "note": "Read scripts/log-summary.mjs, tests/log-summary.test.mjs, fixtures/events.jsonl and package.json (L11) before designing; also settled Date.parse semantics by sketch (L15)."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/baseline-3.transcript.jsonl",
+          "note": "No premature finalize: finalize ran only after 'Feature phase: done' with 21/21 green (L65-L69)."
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-1",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-1.transcript.jsonl",
+        "usage": "evidence/candidate-1.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 2332157,
+        "outputTokens": 61658,
+        "totalTokens": 2393815
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl",
+          "note": "R1 42bc3c3 -> R2 0db38b9 -> R3 0978da3, each red->green with its own commit and a suite check; the feature E2E went green exactly as R3 landed (L58). No scaffolding."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl",
+          "note": "Gates: recon ('all ok' L21), design ('approve' L29), ship ('approved' L77), finalize disposal choice (L89)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl",
+          "note": "Design doc docs/plans/2026-10-14-add-since-filter/ carries only the --since filter (3 requirements); validator exit 0 reported (L27-L28)."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl",
+          "note": "Read package.json (L8) and scripts/log-summary.mjs, tests/log-summary.test.mjs, fixtures/events.jsonl (L9) before designing; also self-caught an untracked E2E file from the packet's changed-file list (L64-L66)."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-1.transcript.jsonl",
+          "note": "No premature finalize: finalize ran after 'Feature phase: done' with 22/22 green (L82-L86)."
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-2",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-2.transcript.jsonl",
+        "usage": "evidence/candidate-2.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 1789003,
+        "outputTokens": 50754,
+        "totalTokens": 1839757
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl",
+          "note": "R1 2bec071 -> R2 b817ff9 -> R3 87a2e18, each red->green with its own commit and a regression run; the feature E2E closes last."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl",
+          "note": "Gates: recon ('confirm all' L19), design ('approve' L21), the workspace decision the skill says to wait on ('A' L33), ship ('approve' L69), finalize choices (L77)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl",
+          "note": "Design doc docs/plans/2026-10-14-since-filter/ covers only the --since filter; validator exit 0 reported before writing code (L25-L26)."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl",
+          "note": "Read package.json (L11) and scripts/log-summary.mjs, tests/log-summary.test.mjs, fixtures/events.jsonl (L13) before designing."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-2.transcript.jsonl",
+          "note": "No premature finalize: finalize ran after 'Feature phase: done' with 19/19 green (L72-L76); the packet refresh also caught and fixed a real bound error (L63-L64)."
+        }
+      ]
+    },
+    {
+      "trialId": "candidate-3",
+      "condition": "candidate",
+      "fresh": true,
+      "evidence": {
+        "transcript": "evidence/candidate-3.transcript.jsonl",
+        "usage": "evidence/candidate-3.usage.jsonl"
+      },
+      "usage": {
+        "inputTokens": 1973770,
+        "outputTokens": 47970,
+        "totalTokens": 2021740
+      },
+      "assessments": [
+        {
+          "name": "vertical-slices",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl",
+          "note": "R1 369eedc -> R2 efdf4f8, each red->green with its own commit and a full-suite run after each; E2E closes last."
+        },
+        {
+          "name": "approval",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl",
+          "note": "Gates: recon ('confirm' L15), design ('approved' L19), workspace choice (L27), ship ('approve' L79), finalize choices (L89)."
+        },
+        {
+          "name": "current-only-design",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl",
+          "note": "Design doc docs/plans/2026-10-14-log-since-filter/ covers only the --since window filter; validator exit 0 before code (L21-L22)."
+        },
+        {
+          "name": "predecessor-grounding",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl",
+          "note": "Read scripts/log-summary.mjs, tests/log-summary.test.mjs, fixtures/events.jsonl and package.json (L9) before designing."
+        },
+        {
+          "name": "premature-finalize-blocking",
+          "verdict": "pass",
+          "evidence": "evidence/candidate-3.transcript.jsonl",
+          "note": "No premature finalize: finalize ran after 'Feature phase: done' with 10/10 green (L82-L86)."
+        }
+      ]
+    }
+  ],
+  "notes": {
+    "labeling": "trials are the sessions with non-zero token usage inside each probe HOME, ordered by start time (aborted 0-token starts are discarded)",
+    "tokenMapping": "inputTokens = input + cacheRead + cacheWrite; outputTokens = output; totalTokens unchanged from the session's own totalTokens",
+    "provenance": "each transcript's skill paths reference its condition's kit worktree (baseline transcripts cite pwk-probe-kit-baseline, candidate transcripts cite pwk-probe-kit-candidate)"
+  },
+  "observations": [
+    "Baseline trials recorded no ADR (honest-empty) and zeroed in on delete+rebase; candidate-1 wrote ADR 0001-reject-zone-less-date from a real fork and shipped it before disposal.",
+    "The 'Scout: unavailable' recon note appears in baseline-1 and candidate-1 alike, so the slimmer text does not change that behavior.",
+    "All four runs so far self-caught an uncommitted feature-E2E file from the review packet's changed-file list (baseline-1 L70, candidate-1 L64) - a recurring commit-hygiene slip, not a kit-text difference."
+  ]
+}

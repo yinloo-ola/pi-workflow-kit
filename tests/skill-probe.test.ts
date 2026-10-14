@@ -53,6 +53,34 @@ describe("skill probe validator", () => {
     }
   });
 
+  it("accepts a report whose candidate costs more, reporting the direction as a finding", () => {
+    const { dir, report } = copyFixture("pwk-probe-costlier-");
+    try {
+      const data = loadFixture(report);
+      // Raise the candidate's spend above the baseline's, updating raw lines and the
+      // recorded totals together so the recomputation still agrees.
+      for (const [id, total] of [
+        ["candidate-1", 250],
+        ["candidate-2", 300],
+        ["candidate-3", 350],
+      ] as const) {
+        const trial = data.trials.find((t: { trialId: string }) => t.trialId === id);
+        trial.usage = { inputTokens: total, outputTokens: 0, totalTokens: total };
+        writeFileSync(
+          join(dir, "evidence", `${id}.usage.jsonl`),
+          `${JSON.stringify({ trialId: id, inputTokens: total, outputTokens: 0, totalTokens: total })}\n`,
+        );
+      }
+      writeFileSync(report, JSON.stringify(data));
+      const { errors, stats } = validateReport(loadFixture(report), report);
+      expect(errors, "a costlier candidate is a finding, not a fault").toEqual([]);
+      expect(stats.direction).toBe("higher-or-equal");
+      expect(stats.candidate.median).toBe(300);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects a candidate trial that regresses an assessment the baseline passed", () => {
     const { dir, report } = copyFixture("pwk-probe-regress-");
     try {
