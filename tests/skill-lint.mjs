@@ -1499,6 +1499,9 @@ if (bs) {
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.briefRule, "PRD brief opens before any question");
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.zeroContextRule, "zero-context plain-meaning-first rule");
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.interpretationMark, "inference mark for uncited claims");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.runnableFacts, "runnable facts settle by bounded sketch");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.sketchClause, "settled-by-sketch clause in the interview rule");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.inconclusiveMark, "INCONCLUSIVE returns the question with context");
 }
 
 console.log("prescription sweep:");

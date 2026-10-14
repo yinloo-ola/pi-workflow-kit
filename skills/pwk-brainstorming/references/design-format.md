@@ -72,7 +72,7 @@ Touches a production-risk area (DB schema/migrations, auth, external APIs, concu
 
 Example (rate limiting): "Given a new API consumer with no prior usage, When they exceed 100 requests/minute for 3 consecutive minutes, Then they're throttled, a `rate_limited` event is emitted, and further requests return 429."
 
-**Audit before finishing:** every requirement block has acceptance criteria and both tags, and each requirement appears **exactly once** — none dropped, none duplicated. A `## Feature acceptance` section exists as the primary enforced spec — on every non-trivial doc; a trivial doc ends after its `### R1:` block and ships on the full suite instead. Production-risk areas are reflected in the requirement blocks that touch them.
+**Audit before finishing:** every requirement block has acceptance criteria and both tags, and each requirement appears **exactly once** — none dropped, none duplicated. A `## Feature acceptance` section exists as the primary enforced spec — on every non-trivial doc; a trivial doc ends after its `### R1:` block and ships on the full suite instead. Production-risk areas are reflected in the requirement blocks that touch them. A fact settled by a sketch carries its proof where it lands — `(settled by sketch: <what ran> → <result>)` — woven into the section it confirms, never a new template section.
 
 ## Structural validator contract
 
