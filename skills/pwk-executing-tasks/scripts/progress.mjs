@@ -59,6 +59,8 @@ function load(filePath) {
   if (phaseIndex === -1) fail(`${filePath}: no Feature phase line`);
   const setupIndex = lines.findIndex((line) => line.startsWith("Setup:"));
   if (setupIndex === -1) fail(`${filePath}: no Setup line`);
+  const lastUpdatedIndex = lines.findIndex((line) => line.startsWith("Last updated:"));
+  if (lastUpdatedIndex === -1) fail(`${filePath}: no Last updated line`);
   const requirements = tableRows(lines, REQUIREMENT_HEADER);
   if (!requirements) fail(`${filePath}: no Requirements table with its header row`);
   const summary = tableRows(lines, SUMMARY_HEADER);
@@ -73,7 +75,7 @@ function load(filePath) {
       fail(`${filePath}: line ${row.index + 1} is not a five-cell summary row`);
     }
   }
-  return { filePath, lines, phaseIndex, setupIndex, requirements, summary };
+  return { filePath, lines, phaseIndex, setupIndex, lastUpdatedIndex, requirements, summary };
 }
 
 const findRow = (rows, requirement, filePath, label) => {
@@ -86,7 +88,7 @@ const requirementRow = (cells) => `| ${cells.join(" | ")} |`;
 const stamp = () => new Date().toISOString();
 
 function save(state) {
-  state.lines[state.phaseIndex + 1] = `Last updated: ${stamp()}`;
+  state.lines[state.lastUpdatedIndex] = `Last updated: ${stamp()}`;
   const temporary = `${state.filePath}.tmp`;
   writeFileSync(temporary, state.lines.join("\n"));
   renameSync(temporary, state.filePath);

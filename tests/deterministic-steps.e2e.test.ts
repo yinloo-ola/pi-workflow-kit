@@ -179,6 +179,27 @@ describe("deterministic steps (feature E2E)", () => {
     }
   });
 
+  it("fails a reference pointer whose anchor matches no heading", () => {
+    const kit = copyKit("pwk-det-anchor-");
+    try {
+      const file = join(kit, "skills/pwk-executing-tasks/SKILL.md");
+      writeFileSync(
+        file,
+        readFileSync(file, "utf8").replace(
+          "references/review.md#assemble-evidence",
+          "references/review.md#no-such-section",
+        ),
+      );
+      const lint = spawnSync("node", [join(kit, "tests", "skill-lint.mjs")], { cwd: kit, encoding: "utf8" });
+      const out = `${lint.stdout}${lint.stderr}`;
+      expect(lint.status, "a dangling anchor must fail the lint").not.toBe(0);
+      expect(out, "the failure names the pointer and the anchor").toContain("references/review.md#no-such-section");
+      expect(out, "the failure names the reference file").toContain("review.md");
+    } finally {
+      rmSync(kit, { recursive: true, force: true });
+    }
+  });
+
   it("keeps the word-budget ratchet failing by file name and count", () => {
     const kit = copyKit("pwk-det-budget-");
     try {

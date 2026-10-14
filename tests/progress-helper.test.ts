@@ -96,6 +96,21 @@ describe("progress helper", () => {
     }
   });
 
+  it("refreshes Last updated in place, leaving the header blank lines intact", () => {
+    const { dir, file } = workspace("pwk-progress-stamp-");
+    try {
+      const result = runHelper(file, ["set", "--phase", "reviewing"]);
+      expect(result.status, `${result.stdout}${result.stderr}`).toBe(0);
+      const text = readFileSync(file, "utf8");
+      expect(text, "the stamp stays in its header slot, before the phase line").toMatch(
+        /Last updated: [^\n]*\n\nFeature phase: reviewing/,
+      );
+      expect(text.match(/Last updated:/g)?.length, "exactly one Last updated line").toBe(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("refuses an unknown done glyph", () => {
     const { dir, file } = workspace("pwk-progress-glyph-");
     try {

@@ -52,6 +52,8 @@ Read before creating or changing progress rows, or writing/re-presenting the cod
    - `<file>` — <what shifted inside it>
    ```
 
+## Code digest
+
    The `## Code digest` is filled once, at the write point in the ship checkpoint — never back-filled per requirement. Fill rules: plain language, R# anchors where natural, no test names. `### Summary` is 2–3 sentences: what the code now does differently, and why. `### Flow` uses `A -> B -> C` arrow chains, one spine or branch per bullet line. `### Gotchas` lifts real risks from the review findings, one real risk per bullet — `[ALERT]` only for reviewer-confirmed issues, never invented; with none, write `none beyond review findings`. `### Key files` is capped at 5 pivotal files, one bullet each.
 
    **Flow shape** — the ship stop's navigable map, the one digest section carrying structure:

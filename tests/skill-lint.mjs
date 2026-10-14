@@ -1663,6 +1663,42 @@ console.log("prescription sweep:");
   if (violations === 0) ok("prescription sweep: every command in skill content is sanctioned or framed");
 }
 
+// --- Check 16: reference pointers resolve (deterministic-steps R2) ---
+console.log("reference pointers:");
+{
+  // A pointer that names a section is only useful if the section is there: the file must
+  // exist, and an anchor must match a heading under the same slug rule the extractor uses.
+  const pointerSlug = (heading) =>
+    heading
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  const headingSlugs = (text) => [...text.matchAll(/^(#{1,6})\s+(.+?)\s*$/gm)].map((match) => pointerSlug(match[2]));
+
+  let broken = 0;
+  let checked = 0;
+  for (const skill of loadSkills()) {
+    const dir = dirname(skill.path);
+    for (const match of skill.content.matchAll(/\]\((references\/[^)#]+)\.md(?:#([^)]+))?\)/g)) {
+      checked++;
+      const rel = `${match[1]}.md`;
+      const target = join(dir, rel);
+      if (!existsSync(target)) {
+        fail(`reference pointer: ${skill.name}: ${rel} does not exist`);
+        broken++;
+        continue;
+      }
+      const anchor = match[2];
+      if (anchor && !headingSlugs(readFileSync(target, "utf8")).includes(anchor)) {
+        fail(`reference pointer: ${skill.name}: ${rel}#${anchor} matches no heading in ${rel}`);
+        broken++;
+      }
+    }
+  }
+  if (broken === 0) ok(`reference pointer: all ${checked} reference pointers resolve`);
+}
+
 console.log("");
 if (failures === 0) {
   console.log("skill-lint: all checks passed");
