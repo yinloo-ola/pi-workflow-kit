@@ -28,6 +28,7 @@ No build step. No typecheck script (`tsconfig.json` is IDE-only). No watch mode.
 ```
 extensions/   # TS source — workflow-guard.ts only (guard + /pwk-setup)
 tests/        # vitest — workflow-guard.test.ts + delegation contract tests
+tests/tools/  # authoring tools for a skill-text pass (pin census, pin-loss, free-prose map, repeat scan)
 skills/       # SKILL.md dirs, pwk-* namespaced, harness-neutral
 agents/       # canonical role contracts (recon scout + 4 reviewers)
 docs/         # developer-usage-guide, workflow-phases, oversight-model, provider-delegation-contract, lessons

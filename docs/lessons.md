@@ -76,6 +76,12 @@ Retire rules that no longer apply during finalizing.
 
 - **Gate and resume reads extract, never ingest.** A check that only needs a header line, a table, or a count must not read the file body — name the fields that can change the decision (header, table region, a count command) in the skill, so orientation costs scale with topic count instead of history size.
 
+## Measurement & Probes
+
+- **Measure the dominant term before optimizing a fraction.** A change to a small share of a large cost cannot rise above the noise: 95% of every session's tokens were context re-read, the corpus being edited was about 22% of that context, so a 16% cut moved the session total by roughly 4% against a 13-27% run-to-run spread — three trials could not resolve it in either direction. Identify the dominant term first, then decide whether the intended lever is worth measuring at all.
+- **A report's validity must not encode the hoped-for direction.** A validator that fails because the hypothesis did not hold rewards re-running until the numbers look right. Validate the record — structure, recomputation, coverage — and report the result's direction as a finding, positive or negative.
+- **Derived counts are regenerated from the measurement, never hand-maintained.** A budget, a ceiling, or a tally computed from a measurement must be re-derived when the measured artifact changes, in every table that states it; a hand-adjusted derived number silently becomes a fiction.
+
 ## Finalize & Disposal
 
 - **Re-run the full suite after disposal, before merging.** Disposal changes the tree the green suite ran against: pre-finalize checks ran with the topic folder present, and an E2E pinned to a ship-time artifact inside it (the sample progress doc) went red on shipped `main` only after the folder was deleted. Any test asserting an artifact the design marks as ephemeral must also handle the disposed state (skip with the reason in the test name), and the finalize sequence's last gate belongs after the `rm -rf`, not before it.

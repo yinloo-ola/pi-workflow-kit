@@ -148,6 +148,10 @@ The agent stops and waits there — approve, request changes, or send it back. T
 
 The feature-level review checks the whole diff composed and runs **before** the **ship checkpoint** — so your one final approval is fully informed (execution summary + coverage table; the raw diff stays one command away). The ship checkpoint already ran the full suite + the feature-acceptance E2E green — that *is* the integration check (there is no separate end pass). Finalize re-runs the full suite too — it never ships a red suite, even across resumed sessions.
 
+### Skill-Text Budgets
+
+The skill text a host loads is ratcheted. `skill-lint` holds a per-file word budget — the measured count plus 10% headroom, rounded up — and a corpus ceiling, and fails by file name and count when either is exceeded, so a slimming pass cannot quietly undo itself. The numbers come from measurement rather than a target percentage (ADR 0010). Each release's claim is checked by a recorded fidelity probe: six authorized sessions comparing the kit before and after on one fixture task, with the transcripts committed and the token totals recomputed from raw usage lines (`tests/evals/skill-slimming/`).
+
 ## Quick Start
 
 ```bash
