@@ -21,6 +21,16 @@ Validate the report:
 
 Exit 0 requires both commits present and distinct; all six trials with a transcript and a usage file; every trial carrying a verdict and an evidence pointer for each of the five assessments; the recorded token totals recomputing from the raw usage lines; no candidate trial regressing an assessment against baseline; and the candidate median total tokens below the baseline median. The validator prints both medians and both spreads, so the reader sees the noise beside the comparison.
 
+## Turning a session into usage lines
+
+`extract-usage.mjs` reads a session JSONL and prints the probe's usage lines, folding the provider's prompt-side cache tokens into `inputTokens` so each line's total matches the session's own accounting:
+
+```sh
+node tests/evals/skill-slimming/extract-usage.mjs <session.jsonl> <trialId> > evidence/<trialId>.usage.jsonl
+```
+
+`skill-probe.test.ts` rebuilds every recorded total from the committed transcripts this way, so a drifted transcript or a mistyped total fails the suite instead of resting on an unreproducible number.
+
 ## Reading the result
 
 The word count and the token count are two separate facts. A smaller corpus that costs more tokens per session is a finding to report, not to hide — a terse skill that makes an agent loop costs more than it saved.

@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
  */
 const kitDir = resolve(process.cwd(), "tests/evals/skill-slimming");
 const { validateReport } = await import(`${kitDir}/validate.mjs`);
+const { usageLinesFromSession } = await import(`${kitDir}/extract-usage.mjs`);
 
 const COMPLETE = join(kitDir, "fixtures", "report-complete.json");
 
@@ -105,6 +106,27 @@ describe("skill probe validator", () => {
     expect(stats.baseline.median).toBe(1995148);
     expect(stats.candidate.median).toBe(2021740);
     expect(stats.direction).toBe("higher-or-equal");
+  });
+
+  it("rebuilds every recorded total from the committed transcripts", () => {
+    // The evidence loop: transcript -> usage lines -> the totals the report records. If a
+    // transcript or a recorded total drifts, this fails rather than the claim resting on a
+    // number nobody can reproduce.
+    const run = resolve(kitDir, "runs", "2026-10-14");
+    const report = JSON.parse(readFileSync(join(run, "report.json"), "utf8"));
+    for (const trial of report.trials) {
+      const transcript = readFileSync(join(run, "evidence", `${trial.trialId}.transcript.jsonl`), "utf8");
+      const lines = usageLinesFromSession(transcript, trial.trialId);
+      const recomputed = lines.reduce(
+        (sum, line) => ({
+          inputTokens: sum.inputTokens + line.inputTokens,
+          outputTokens: sum.outputTokens + line.outputTokens,
+          totalTokens: sum.totalTokens + line.totalTokens,
+        }),
+        { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+      );
+      expect(recomputed, `${trial.trialId} totals`).toEqual(trial.usage);
+    }
   });
 
   it("rejects a report whose two conditions are the same commit", () => {
