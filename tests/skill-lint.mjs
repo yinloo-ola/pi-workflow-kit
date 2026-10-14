@@ -1502,6 +1502,8 @@ if (bs) {
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.runnableFacts, "runnable facts settle by bounded sketch");
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.sketchClause, "settled-by-sketch clause in the interview rule");
   fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.inconclusiveMark, "INCONCLUSIVE returns the question with context");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.probeTest, "probe test rejects nameless-probe criteria");
+  fgMark("pwk-brainstorming", bs.contractContent, EVIDENCE_SPINE_MARKERS.probeKinds, "probe kinds: run, grep, assertion");
 }
 
 console.log("prescription sweep:");
