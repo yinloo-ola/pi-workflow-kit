@@ -21,7 +21,9 @@ if (probe.status !== 0 || probe.stdout.trim() !== "true") {
   process.exit(1);
 }
 
-const status = spawnSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" });
+// -uall: git otherwise collapses an untracked directory to "dir/", and the point of the
+// failure is to name the file that would miss the reviewed diff.
+const status = spawnSync("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: root, encoding: "utf8" });
 if (status.status !== 0) {
   console.error(`stage-check.mjs: git status failed in ${root}: ${status.stderr.trim()}`);
   process.exit(1);
