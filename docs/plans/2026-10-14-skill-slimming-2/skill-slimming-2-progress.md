@@ -8,9 +8,9 @@ Setup: n/a
 
 Started: 2026-10-14T09:48:13Z
 
-Last updated: 2026-10-14T14:10:00Z
+Last updated: 2026-10-14T14:35:00Z
 
-Feature phase: implementing (5/6)
+Feature phase: implementing (6/6)
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -20,7 +20,7 @@ Feature phase: implementing (5/6)
 | 3 | ✅ | Light three SKILL.md cut | — | 531c9cc |
 | 4 | ✅ | Reference markdown cut | — | 88e9e24 |
 | 5 | ✅ | Fidelity and cost probe recorded | ⏸ full | c3df7fc, 9ce701c |
-| 6 | ⬜ | Rules recorded, budgets tightened, release | — | — |
+| 6 | ✅ | Rules recorded, budgets tightened, release | — | accc45f |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? | Evidence |
@@ -30,7 +30,7 @@ Feature phase: implementing (5/6)
 | 3 | Light three SKILL.md cut | Surgical pass on the lines the free-prose tool flagged: `pwk-code-review` 1,045 → 998 (4.5%), `pwk-status` 924 → 878 (5.0%), `pwk-walkthrough` left at 584 — a full-file rewrite of the first two cost nine pinned phrases for a 5% cut, so both were reverted and only genuinely free prose was touched. | yes — these files are contract text end to end; the designed 70% per file is unreachable here without breaking pinned assertions | `free-lines.mjs` per-line free prose; `pins-lost.mjs` reports 0 lost pins in all three; `npx vitest run` 300 pass (only the three not-yet-built E2E scenarios red); `node tests/skill-lint.mjs` green. |
 | 4 | Reference markdown cut | All five reference files slimmed against their pins: `umbrella.md` 402→275 (31.6%), `resume.md` 646→449 (30.5%), `review.md` 804→607 (24.5%), `progress-format.md` 1,298→1,007 (22.4%), `design-format.md` 1,498→1,308 (12.7%) — 4,648→3,646 combined. Explanatory sentences and in-file restatements went; every rule, command recipe, and pinned phrase stayed. | yes — three files cannot reach 70% without cutting contract text (see Deviation records) | `pins-lost.mjs` reports 0 lost pins in all five files; `npx vitest run` 300 pass with only this topic's three unbuilt E2E scenarios red; `node tests/skill-lint.mjs` green (budgets, no-restatement, prescription sweep). |
 | 5 | Fidelity and cost probe recorded | A probe kit (`protocol.json`, fixture task, `usage.mjs`, `validate.mjs`, fixtures) plus one authorized run: baseline 2.9.0 vs the slimmed kit, three trials each, in isolated HOMEs that load only the kit under test. Behavior held in every trial; the candidate median landed 1.3% higher, so the size claim and the cost claim are reported as two separate facts — the cut bought no measurable token saving. | yes — the criterion demanding a lower candidate median became a reported finding (ADR 0009) | `node tests/evals/skill-slimming/validate.mjs tests/evals/skill-slimming/runs/2026-10-14/report.json` → exit 0, `candidate median 2021740 vs baseline median 1995148 -> higher-or-equal (+26592)`; six transcripts + recomputed usage in `runs/2026-10-14/`; 5/5 assessments per trial. |
-| 6 | Rules recorded, budgets tightened, release | | | |
+| 6 | Rules recorded, budgets tightened, release | The five editorial rules are in `AGENTS.md` as `E1:`–`E5:`; `skill-lint` and the feature E2E carry per-file budgets = measured count + 10% headroom and a 14,143-word corpus ceiling, so the achieved floor is ratcheted rather than promised; the release ships as 2.10.0 with a CHANGELOG entry naming the topic. | yes — the designed 70% per-file target became the measured floor (ADR 0010), and the aggregate claim is the achieved 16.3%, not 30% | `npm run check` green (biome, 308 vitest, skill-lint); `tests/skill-slimming.e2e.test.ts` fully green including the budget and `E1:`–`E5:` scenarios; `package.json` at 2.10.0 plus a `[2.10.0]` CHANGELOG entry. |
 
 ## Deviation records
 
