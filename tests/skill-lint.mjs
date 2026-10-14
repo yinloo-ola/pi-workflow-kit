@@ -1589,10 +1589,9 @@ if (fin) {
 // --- Check 14: skill word budgets and no restatement (skill-slimming-2 R1) ---
 console.log("skill word budgets:");
 {
-  // One row per loadable markdown file under skills/. Budgets start at the 2.9.0 counts so
-  // the gate is green before the cut lands; the slimming pass tightens them to the achieved
-  // count plus 10% headroom. A markdown file the table does not list is prose an agent
-  // would pay to load, so it fails rather than slipping in unmeasured.
+  // One row per loadable markdown file under skills/, each at its measured count plus 10%
+  // headroom (ADR 0010). A markdown file the table does not list is prose an agent would pay
+  // to load, so it fails rather than slipping in unmeasured.
   const wordBudgets = new Map([
     // Measured count plus 10% headroom, rounded up (ADR 0010): the ratchet holds the
     // achieved floor, and a file that grows past it fails by name and count.

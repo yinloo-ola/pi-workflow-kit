@@ -98,6 +98,15 @@ describe("skill probe validator", () => {
     }
   });
 
+  it("validates the committed recorded run, so the evidence cannot rot unnoticed", () => {
+    const run = resolve(kitDir, "runs", "2026-10-14", "report.json");
+    const { errors, stats } = validateReport(JSON.parse(readFileSync(run, "utf8")), run);
+    expect(errors, "the recorded run must stay valid as committed").toEqual([]);
+    expect(stats.baseline.median).toBe(1995148);
+    expect(stats.candidate.median).toBe(2021740);
+    expect(stats.direction).toBe("higher-or-equal");
+  });
+
   it("rejects a report whose two conditions are the same commit", () => {
     const { dir, report } = copyFixture("pwk-probe-same-");
     try {
