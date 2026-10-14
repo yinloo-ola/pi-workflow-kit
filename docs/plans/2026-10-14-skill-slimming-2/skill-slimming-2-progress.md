@@ -10,16 +10,16 @@ Started: 2026-10-14T09:48:13Z
 
 Last updated: 2026-10-14T14:35:00Z
 
-Feature phase: implementing (6/6)
+Feature phase: done
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
 |---|------|-------------|-----------------|--------|
 | 1 | ✅ | Word-budget ratchet for skill text | — | dac0577 |
-| 2 | ✅ | Heaviest three SKILL.md cut | — | 920ffe5, fa5990e, 9926cb0 |
+| 2 | ✅ | Heaviest three SKILL.md cut | — | 920ffe5 fa5990e 9926cb0 |
 | 3 | ✅ | Light three SKILL.md cut | — | 531c9cc |
 | 4 | ✅ | Reference markdown cut | — | 88e9e24 |
-| 5 | ✅ | Fidelity and cost probe recorded | ⏸ full | c3df7fc, 9ce701c |
+| 5 | ✅ | Fidelity and cost probe recorded | ⏸ full | c3df7fc 9ce701c |
 | 6 | ✅ | Rules recorded, budgets tightened, release | — | accc45f |
 
 ## Execution summary
@@ -52,3 +52,34 @@ Feature phase: implementing (6/6)
   Every cut preserved the pinned phrase set (`pins-lost.mjs` → 0 lost per file) and the suite (300 pass; only this topic's three unbuilt E2E scenarios red). Cause: once the explanatory sentences are gone these files are rules end to end — `design-format.md`'s block rules, `progress-format.md`'s row vocabulary and digest fill rules, `review.md`'s packet-helper CLI contract — each machine-pinned or keep-list K5 contract. The cuttable prose measures 15–25%, not 30%. The corpus therefore lands at ~12,860 of 15,360 words — **a 16.3% cut**, below the design's 30% and below the ≥25% set as the relaxed target in the R2 deviation (Option 1). Decision needed: accept the measured floors (budgets from achieved numbers, as R2/R3) with the aggregate claim reduced to what was achieved, or extend scope (e.g. re-anchoring pinned assertions off prose — a design non-goal). **Human decision (2026-10-14, Option 1): accept the measured floors.** R4 closes ✅ with the deviation recorded; at R6 the budget table and the acceptance budgets are set from the achieved counts plus 10% headroom, and the aggregate claim is reduced to the achieved ~16%.
 
 ## Code digest
+
+### Summary
+The skill text a host loads is 16.3% smaller with every contract line intact, and its size can no longer drift back up: `skill-lint` and the feature E2E each hold a per-file budget and a corpus ceiling derived from the measured counts. A probe kit now records what that cut actually bought — six authorized sessions showing no behavior change and no measurable token saving.
+
+### Flow
+- **Spine** — `skills/**/*.md` -> `skill-lint` word budgets [R1] -> fail by file name and count when over [R6] -> `skill-slimming.e2e.test.ts` acceptance [R6] -> `npm run check` green
+- **Branches**
+  - a long sentence repeated inside one file -> no-restatement failure [R1]
+  - an unsanctioned command in skill content -> prescription sweep failure [R1]
+  - a file grows past its budget -> lint fails naming file and count, and the E2E asserts the same independently [R6]
+  - `AGENTS.md` missing an `E<n>:` label -> rules scenario fails [R6]
+- **Spine (probe)** — session JSONL -> `extract-usage` -> `usage.mjs` recompute [R5] -> `validate.mjs`: commits, six trials, five assessments with evidence, recomputed totals -> medians, spreads, direction [R5] -> `runs/2026-10-14/` evidence [R5]
+- **Branches (probe)**
+  - a missing assessment -> rejection naming trial and assessment [R5]
+  - a recorded total disagreeing with the raw lines -> rejection naming both values [R5]
+  - a candidate trial regressing a baseline-passed assessment -> rejection naming trial and assessment [R5]
+  - candidate median above baseline -> **finding, accepted** — was: rejected as a fault [R5, ADR 0009]
+- **Gotchas**
+  - The lint table and the E2E table are two independent copies of the same numbers and must move together — deliberate, so the acceptance spec never defers to the implementation table [R6, ADR 0010]
+  - The measured floors are not the designed 70%: three contract-dense reference files cannot reach it without deleting pinned rules [R4, ADR 0010]
+  - Per-file budgets are derived data — regenerate them from the measured counts whenever skill text changes [R6]
+  - [ALERT] The topic's measurement tooling (`pins-lost.mjs`, `pin-census-v2.mjs`, `free-lines.mjs`) sits inside the ephemeral `docs/plans/` folder and is deleted at finalize; only its results survive in the ADRs [R1–R4, open finding]
+  - The cut's token effect is a reported non-result: ~95% of a trial's tokens are context re-read, so prose size is a ~4% lever against a 13–27% spread [R5, ADR 0009]
+
+### Key files
+- `tests/skill-lint.mjs` — check 14: the per-file budgets, the no-restatement rule, and the corpus-facing ratchet
+- `tests/skill-slimming.e2e.test.ts` — the acceptance gates: budgets, corpus ceiling, validator accept/reject, the `E1:`–`E5:` rules
+- `tests/evals/skill-slimming/validate.mjs` — the probe validator: structure and recomputation reject, cost direction only reports
+- `skills/pwk-executing-tasks/SKILL.md` — the largest cut, 3,937 -> 2,884 words, every pinned phrase kept
+- `AGENTS.md` — the five editorial rules, `E1`–`E5`
+
