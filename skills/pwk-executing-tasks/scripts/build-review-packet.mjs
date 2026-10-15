@@ -14,7 +14,9 @@ class PacketError extends Error {}
 /** Keep original lines for evidence; inspect headings only outside fenced examples. */
 class Document {
   constructor(path) {
-    this.lines = readFileSync(path, "utf8").split(/(?<=\n)/);
+    // A strict decode, as Python's open(encoding="utf-8") is: reading as utf8 would replace
+    // invalid bytes and build a packet from damaged evidence.
+    this.lines = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path)).split(/(?<=\n)/);
     this.headings = [];
     this.visible = new Set();
     let fence = null;
