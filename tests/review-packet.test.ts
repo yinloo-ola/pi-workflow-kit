@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const REVIEW_REFERENCE = "skills/pwk-executing-tasks/references/review.md";
-const PACKET_HELPER = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.py");
+const PACKET_HELPER = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.mjs");
 
 /** A design doc shaped like the template pwk-brainstorming emits (pwk 2.0). */
 const DESIGN_FIXTURE = [
@@ -76,7 +76,7 @@ function readReviewReference(): string {
 describe("review packet recipe", () => {
   it("should define the helper invocation contract in the review reference", () => {
     const review = readReviewReference();
-    expect(review).toContain("build-review-packet.py");
+    expect(review).toContain("build-review-packet.mjs");
     for (const argument of ["--project", "--design", "--progress", "--scope feature"]) {
       expect(review).toContain(argument);
     }
@@ -106,7 +106,7 @@ describe("review packet recipe", () => {
       progress,
       `# Progress: demo\n\nDesign: docs/plans/2026-09-17-demo/demo-design.md\n\n## Requirements\n| # | Done | Requirement | Per-req ceremony | Commit |\n|---|---|---|---|---|\n| 1 | ✅ | alpha | — | ${firstCommit} |\n| 2 | ✅ | beta | — | ${secondCommit} |\n`,
     );
-    execFileSync("python3", [
+    execFileSync("node", [
       PACKET_HELPER,
       "--project",
       dir,
@@ -187,7 +187,7 @@ describe("review packet recipe", () => {
     ].join("\n");
     const progressPath = join(topic, "demo-progress.md");
     writeFileSync(progressPath, progress);
-    execFileSync("python3", [
+    execFileSync("node", [
       PACKET_HELPER,
       "--project",
       dir,

@@ -69,7 +69,7 @@ describe("review cost optimization feature (E2E)", () => {
     // R4+R5 — the executing skill builds scope as a packet file (never spawn-carried)
     // and spawns reviewers with one-liner pointers; per-requirement reviews mirror it.
     const review = readRepo("skills/pwk-executing-tasks/references/review.md");
-    expect(review).toContain("build-review-packet.py");
+    expect(review).toContain("build-review-packet.mjs");
     expect(review).toContain("--scope feature");
     expect(review).toContain("git rev-parse <first Commit-column entry>^");
     expect(review).toMatch(/review-packet\.md[\s\S]{0,600}(your role|role framing|role tail)/i);

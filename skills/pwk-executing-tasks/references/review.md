@@ -6,10 +6,10 @@ Read before any review, packet refresh, or digest write.
 
 **Assemble the review packet first** — once, by script, so that no packet byte passes through model output. The Commit column fixes both spans: feature base = `git rev-parse <first Commit-column entry>^`, the parent of the first recorded commit; a requirement packet spans the previous requirement's last commit (exclusive) to this one's last commit (inclusive), R1's exclusive bound being its own parent. No `merge-base` guessing. Commits landing mid-review → re-run the recipe before spawning a replacement role, so the packet matches HEAD:
 
-Use the installed skill directory, not a repository checkout; a missing runtime or helper (`python3 --version` ≥ 3.9) → report it and stop, with no auto-install or fallback.
+Use the installed skill directory, not a repository checkout; a missing runtime or helper (`node --version`) → report it and stop, with no auto-install or fallback.
 
 ```sh
-python3 "<executing-skill-dir>/scripts/build-review-packet.py" \
+node "<executing-skill-dir>/scripts/build-review-packet.mjs" \
   --project "<repo-root>" \
   --design "docs/plans/<date>-<topic>/<leaf>-design.md" \
   --progress "docs/plans/<date>-<topic>/<leaf>-progress.md" \

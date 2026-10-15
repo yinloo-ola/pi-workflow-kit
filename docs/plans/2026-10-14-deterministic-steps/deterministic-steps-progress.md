@@ -8,7 +8,7 @@ Setup: n/a
 
 Started: 2026-10-14T14:35:00Z
 
-Last updated: 2026-10-14T15:38:36.215Z
+Last updated: 2026-10-14T15:38:55.043Z
 
 Feature phase: implementing (5/6)
 
@@ -20,7 +20,7 @@ Feature phase: implementing (5/6)
 | 3 | ✅ | The reviewed diff is the shipped diff | — | 8a95578 ef9f31d |
 | 4 | ✅ | Enumerated capability checks | — | 5f4ed8d |
 | 5 | ✅ | The pin checkers live in the repo | — | c86c1b0 |
-| 6 | ⬜ | One runtime for the helpers | ⏸ full · 🔎 parallel | — |
+| 6 | 🔄 | One runtime for the helpers | ⏸ full · 🔎 parallel | — |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? | Evidence |

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const repoRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const PROGRESS_FORMAT = join(repoRoot, "skills/pwk-executing-tasks/references/progress-format.md");
 const EXECUTING_SKILL = join(repoRoot, "skills/pwk-executing-tasks/SKILL.md");
-const PACKET_HELPER = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.py");
+const PACKET_HELPER = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.mjs");
 
 /** The header fields whose CommonMark preview must show one line per field. */
 const HEADER_FIELDS = ["# Progress:", "Design:", "Branch:", "Setup:", "Started:", "Last updated:", "Feature phase:"];
@@ -137,7 +137,7 @@ function buildPacket(header: string[]): string {
   ].join("\n");
   writeFileSync(join(dir, "docs/plans/2026-09-17-demo/demo-progress.md"), progress);
   execSync("git add . && git commit -q -m progress", { cwd: dir });
-  execFileSync("python3", [
+  execFileSync("node", [
     PACKET_HELPER,
     "--project",
     dir,

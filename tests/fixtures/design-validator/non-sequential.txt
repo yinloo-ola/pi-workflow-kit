@@ -1,0 +1,2 @@
+# exit: 1
+non-sequential.md: line 8: expected R1, found R2; IDs must be sequential in document order

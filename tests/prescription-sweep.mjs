@@ -43,8 +43,8 @@ export const SANCTIONED_COMMANDS = [
   "ls docs/plans/completed/<date>-<topic>/ >/dev/null",
   "mkdir -p docs/plans/completed",
   // deliberate pins (harness-neutral sweep first-run reconciliation)
-  "python3",
-  "python3 --version",
+  "node",
+  "node --version",
   "grep -m1 '^Feature phase:'",
   "ls docs/plans/",
 ];
@@ -147,9 +147,9 @@ const looksLikeCommand = (command) => {
 const isSanctioned = (command) => {
   const head = headOf(command);
   if (SANCTIONED_PREFIXES.some((prefix) => head === prefix || head.startsWith(prefix))) return true;
-  // A kit helper invocation in any form (e.g. `python3 scripts/x.py --flag`) is the
-  // scripts/ exception wearing an interpreter prefix.
-  if (command.split(/\s+/).some((token) => token.startsWith("scripts/"))) return true;
+  // A kit helper invocation in any form — `scripts/x.mjs`, or the same path behind an
+  // interpreter and a skill directory — is the scripts/ exception, not an unsanctioned tool.
+  if (command.split(/\s+/).some((token) => /(^|\/)scripts\/[^/\s]+$/.test(token))) return true;
   if (command.startsWith("npm run check") || command.startsWith("npm run test")) return true;
   return SANCTIONED_COMMANDS.some((recipe) => command.startsWith(recipe));
 };

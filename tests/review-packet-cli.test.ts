@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const skill = join(root, "skills/pwk-executing-tasks");
-const helper = join(skill, "scripts/build-review-packet.py");
+const helper = join(skill, "scripts/build-review-packet.mjs");
 const temporary: string[] = [];
 const alpha = `### R1: alpha deadbeef
 
@@ -139,7 +139,7 @@ ${rows.join("\n")}
   writeFileSync(progress, progressText);
   function run(args: string[] = [], script = helper) {
     return spawnSync(
-      "python3",
+      "node",
       [script, "--project", project, "--design", design, "--progress", progress, "--scope", "feature", ...args],
       { cwd: outside, encoding: "utf8" },
     );
@@ -151,21 +151,17 @@ afterEach(() => {
   for (const path of temporary.splice(0)) rmSync(path, { recursive: true, force: true });
 });
 
-describe("review packet Python CLI", () => {
-  it("declares Python 3.9 and parses with its grammar without importing third-party modules", () => {
-    const result = spawnSync(
-      "python3",
-      [
-        "-c",
-        "import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text(), feature_version=(3, 9))",
-        helper,
-      ],
-      { encoding: "utf8" },
-    );
-    expect(result.status).toBe(0);
-    const help = spawnSync("python3", [helper, "--help"], { encoding: "utf8" });
+describe("review packet CLI", () => {
+  it("imports only Node builtins and documents its path rules in --help", () => {
+    const source = readFileSync(helper, "utf8");
+    const specifiers = [...source.matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1]);
+    expect(specifiers.length, "the helper imports something").toBeGreaterThan(0);
+    for (const specifier of specifiers) {
+      expect(specifier.startsWith("node:"), `${specifier} must be a Node builtin`).toBe(true);
+    }
+    const help = spawnSync("node", [helper, "--help"], { encoding: "utf8" });
     expect(help.status).toBe(0);
-    expect(help.stdout).toContain("Python 3.9+");
+    expect(help.stdout).toMatch(/Node/);
     expect(help.stdout).toContain("relative to --project");
   });
 
@@ -286,7 +282,7 @@ describe("review packet Python CLI", () => {
     cpSync(skill, copy, { recursive: true });
     const result = f.run(
       ["--design", relative(f.project, f.design), "--progress", relative(f.project, f.progress)],
-      join(copy, "scripts/build-review-packet.py"),
+      join(copy, "scripts/build-review-packet.mjs"),
     );
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);

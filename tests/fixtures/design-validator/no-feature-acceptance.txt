@@ -1,0 +1,2 @@
+# exit: 1
+no-feature-acceptance.md: ## Feature acceptance is required for non-trivial designs; the trivial exception needs an In short: one-liner and a single R1 block without full-format sections

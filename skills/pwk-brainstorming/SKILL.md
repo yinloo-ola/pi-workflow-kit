@@ -61,12 +61,12 @@ A large request with distinct testable outcomes that need separate design/execut
 
    **Completion gate:** Test observable behavior through the public interface. Audit every requirement’s criteria, tags, and risk notes — each appears exactly once. A criterion is ready only when its `Then` names an outcome a command can observe — a run, a grep, or an assertion; a criterion with no nameable probe sends the requirement back for splitting or rephrasing, and design-doc criteria never name tests — the probe materializes at execution. For non-trivial work, finish with an end-to-end `## Feature acceptance` as the primary enforced spec. If writing a scenario step would require inventing behavior, that invention goes back through the assumption gate: an unwritable step means an unspecified requirement, not permission to guess. Risk notes never set the tag — the written `### Review` value stays `skip` unless the human sets it, and only the human tags a slice for review. Keep designing until the requirements compose into a coherent feature and the human approves the design, including feature acceptance; trivial work keeps the compressed one-turn path above.
 
-   **Python prerequisite:** structural validation requires Python 3.9+ where commands execute, using only its standard library. Confirm a compatible `python3` exists before invoking the helper; if it is missing or too old, report the blocker and request a suitable runtime, then stop at this gate. Never auto-install Python, use a fallback implementation, or claim validation succeeded.
+   **Runtime prerequisite:** structural validation runs as a dependency-free Node script where commands execute, using only Node's standard library. Confirm `node --version` works before invoking the helper; if Node is missing, report the blocker and request a suitable runtime, then stop at this gate. Never auto-install a runtime, use a fallback implementation, or claim validation succeeded.
 
    Resolve the helper from this installed skill’s directory and pass explicit paths, quoting paths with spaces:
 
    ```sh
-   python3 "<brainstorming-skill-dir>/scripts/validate-design.py" "<design-path>"
+   node "<brainstorming-skill-dir>/scripts/validate-design.mjs" "<design-path>"
    ```
 
    Nonzero means validation did not succeed: report file-specific diagnostics, correct the structural errors, and rerun. A missing local reference or helper is a blocker before its dependent action; success verifies structure only — never semantic correctness, sound slicing, confirmed assumptions, or human approval.

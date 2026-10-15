@@ -7,7 +7,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const skill = join(root, "skills/pwk-brainstorming");
-const script = join(skill, "scripts/validate-design.py");
+const script = join(skill, "scripts/validate-design.mjs");
 const criterion = "- Given an input, When it is processed, Then the result is returned.";
 const requirement = (id = 1, tags = "") => `### R${id}: Observable outcome
 A caller receives a result.
@@ -33,14 +33,8 @@ let workspace: string;
 let cwd: string;
 let input: string;
 const run = (args: string[] = [input], helper = script) =>
-  spawnSync("python3", [helper, ...args], { cwd, encoding: "utf8", timeout: 10000 });
+  spawnSync("node", [helper, ...args], { cwd, encoding: "utf8", timeout: 10000 });
 
-beforeAll(() => {
-  const python = spawnSync("python3", ["-c", "import sys; sys.exit(sys.version_info < (3, 9))"]);
-  if (python.error || python.status !== 0) {
-    throw new Error("Python 3.9+ is required for design-validator tests; supply it before running (no auto-install).");
-  }
-});
 beforeEach(() => {
   workspace = mkdtempSync(join(tmpdir(), "pwk validator "));
   cwd = join(workspace, "unrelated cwd");
@@ -198,14 +192,14 @@ describe("design validator CLI", () => {
     cpSync(skill, copied, { recursive: true });
     writeFileSync(input, design());
     for (const path of [input, relative(cwd, input)]) {
-      const result = run([path], join(copied, "scripts/validate-design.py"));
+      const result = run([path], join(copied, "scripts/validate-design.mjs"));
       expect(result.status, result.stderr).toBe(0);
     }
   });
-  it("documents path interpretation and Python prerequisite in --help", () => {
+  it("documents path interpretation and its runtime in --help", () => {
     const result = run(["--help"]);
     expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/Python 3\.9/);
+    expect(result.stdout).toMatch(/Node/);
     expect(result.stdout).toMatch(/relative[\s\S]*(working directory|cwd)/i);
   });
   it("reports missing, non-file, and non-UTF-8 inputs without a traceback", () => {

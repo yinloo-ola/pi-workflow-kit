@@ -28,15 +28,15 @@ const SKILLS = [
 const REQUIRED_RESOURCES = [
   "pwk-brainstorming/references/umbrella.md",
   "pwk-brainstorming/references/design-format.md",
-  "pwk-brainstorming/scripts/validate-design.py",
+  "pwk-brainstorming/scripts/validate-design.mjs",
   "pwk-executing-tasks/references/progress-format.md",
   "pwk-executing-tasks/references/resume.md",
   "pwk-executing-tasks/references/review.md",
-  "pwk-executing-tasks/scripts/build-review-packet.py",
+  "pwk-executing-tasks/scripts/build-review-packet.mjs",
 ];
 const HELPERS = [
-  ["pwk-brainstorming", "scripts/validate-design.py"],
-  ["pwk-executing-tasks", "scripts/build-review-packet.py"],
+  ["pwk-brainstorming", "scripts/validate-design.mjs"],
+  ["pwk-executing-tasks", "scripts/build-review-packet.mjs"],
 ];
 const PUBLISHED_GUIDES = [
   "README.md",
@@ -46,7 +46,7 @@ const PUBLISHED_GUIDES = [
   "docs/provider-delegation-contract.md",
 ];
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
-const python = spawnSync("python3", ["--version"], { encoding: "utf8" });
+const python = spawnSync("node", ["--version"], { encoding: "utf8" });
 let fixture: string;
 let packed: Set<string>;
 
@@ -62,14 +62,14 @@ function filesUnder(directory: string): string[] {
  * Logical /skill:pwk-* handoffs and project docs/plans paths are not resources.
  */
 function resourcePaths(content: string): string[] {
-  return [...content.matchAll(/(?:\.{1,2}\/)*(?:references|scripts)\/[A-Za-z0-9_./-]+\.(?:md|py)\b/g)].map(
+  return [...content.matchAll(/(?:\.{1,2}\/)*(?:references|scripts)\/[A-Za-z0-9_./-]+\.(?:md|mjs)\b/g)].map(
     (match) => match[0],
   );
 }
 
 function assertLocalClosure(skillRoot: string): void {
   const files = filesUnder(skillRoot);
-  for (const file of files.filter((path) => /\.(?:md|py)$/.test(path))) {
+  for (const file of files.filter((path) => /\.(?:md|mjs)$/.test(path))) {
     const content = readFileSync(file, "utf8");
     const label = relative(skillRoot, file);
     // Reject concrete sibling filesystem access, not logical skill handoffs.
@@ -190,7 +190,7 @@ describe("R3 installed skill resource closure", () => {
       }
       const cwd = join(fixture, "unrelated project with spaces");
       mkdirSync(cwd, { recursive: true });
-      const result = spawnSync("python3", [join(skillRoot, script), "--help"], {
+      const result = spawnSync("node", [join(skillRoot, script), "--help"], {
         cwd,
         encoding: "utf8",
         timeout: 10_000,
@@ -260,23 +260,23 @@ describe("R3 installed-resource guidance", () => {
     const agents = readFileSync(join(ROOT, "AGENTS.md"), "utf8");
     expect(agents).toMatch(/references\//);
     expect(agents).toMatch(/scripts\//);
-    expect(agents).toMatch(/Python 3/);
+    expect(agents).toMatch(/node/i);
     expect(agents).not.toMatch(/the single code file/);
     const claude = join(ROOT, "CLAUDE.md");
     if (existsSync(claude)) expect(readFileSync(claude, "utf8")).toBe(agents);
   });
 
-  it.each(HELPERS)("keeps missing-Python blocker instructions visible in %s before %s", (skill, script) => {
+  it.each(HELPERS)("keeps missing-runtime blocker instructions visible in %s before %s", (skill, script) => {
     const content = readFileSync(join(ROOT, "skills", skill, "SKILL.md"), "utf8");
     // Guidance-only gate: never emulate a missing runtime by installing one.
     // Actual instruction-following remains the separately recorded R4 gate.
     const paragraphs = content.split(/\n\s*\n/);
-    const prerequisite = paragraphs.filter((paragraph) => /Python 3|python3/.test(paragraph)).join("\n");
-    expect(prerequisite, "Declare the supported Python version").toMatch(/Python 3(?:\.\d+)?/);
+    const prerequisite = paragraphs.filter((paragraph) => /node --version/i.test(paragraph)).join("\n");
+    expect(prerequisite, "Declare the runtime the helper needs").toMatch(/Node/i);
     expect(prerequisite).toMatch(/missing|unavailable|not (?:installed|available|found)/i);
     expect(prerequisite).toMatch(/blocker|blocked|block/);
     expect(prerequisite).toMatch(/stop|do not (?:continue|proceed)|must not (?:continue|proceed)/i);
-    expect(prerequisite).toMatch(/(?:request|ask)[\s\S]*(?:runtime|interpreter|Python)/i);
+    expect(prerequisite).toMatch(/(?:request|ask)[\s\S]*(?:runtime|interpreter|Node)/i);
     expect(prerequisite).toMatch(/(?:do not|never|no)[\s\S]*(?:auto.?install|install[^.\n]*automatic)/i);
     expect(prerequisite).toMatch(/(?:do not|never|no)[\s\S]*(?:fallback|alternate|second implementation)/i);
     expect(prerequisite).toMatch(/(?:do not|never|no)[\s\S]*(?:claim|report)[\s\S]*(?:success|succeed|passed)/i);
