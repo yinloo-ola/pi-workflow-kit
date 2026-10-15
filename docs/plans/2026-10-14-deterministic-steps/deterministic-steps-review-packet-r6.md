@@ -2,10 +2,12 @@
 
 Base: c86c1b03f457fe85d2855a14fd61322fbcb92e8f
 
-Head: 55f7211bcb086f5d8368fd9eb204a622cacbf9b7
+Head: 0c0579489ad51b305fa07d45dc51f4a3df5aec31
 
 ## Commits
 
+0c05794 fix(packet): refuse invalid UTF-8 as the Python helper did (R6 review)
+f9bc008 fix(validator): anchor tag detection, Unicode criteria, splitlines parity (R6 review)
 55f7211 feat(runtime): port both helpers to Node with golden-verified output (deterministic-steps R6)
 1286cb0 docs: R5 row and evidence (deterministic-steps)
 
@@ -16,15 +18,18 @@ Head: 55f7211bcb086f5d8368fd9eb204a622cacbf9b7
  docs/workflow-phases.md                            |   4 +-
  skills/pwk-brainstorming/SKILL.md                  |   4 +-
  .../pwk-brainstorming/references/design-format.md  |   2 +-
- .../pwk-brainstorming/scripts/validate-design.mjs  | 234 ++++++++++++
+ .../pwk-brainstorming/scripts/validate-design.mjs  | 239 ++++++++++++
  .../pwk-brainstorming/scripts/validate-design.py   | 194 ----------
  skills/pwk-executing-tasks/SKILL.md                |   2 +-
  skills/pwk-executing-tasks/references/review.md    |   4 +-
- .../scripts/build-review-packet.mjs                | 397 +++++++++++++++++++++
+ .../scripts/build-review-packet.mjs                | 399 +++++++++++++++++++++
  .../scripts/build-review-packet.py                 | 320 -----------------
  tests/design-validator.test.ts                     |  16 +-
+ tests/fixtures/design-validator/cjk-criteria.txt   |   4 +
+ .../fixtures/design-validator/cr-line-endings.txt  |   4 +
  .../design-validator/duplicate-requirement.txt     |   2 +
  .../fixtures/design-validator/missing-criteria.txt |   2 +
+ .../design-validator/name-contains-tag.txt         |   4 +
  .../design-validator/no-feature-acceptance.txt     |   2 +
  tests/fixtures/design-validator/non-sequential.txt |   2 +
  tests/fixtures/design-validator/valid-trivial.txt  |   3 +
@@ -33,7 +38,7 @@ Head: 55f7211bcb086f5d8368fd9eb204a622cacbf9b7
  tests/fixtures/review-packet/fixture-head.txt      |   1 +
  .../review-packet/fixture-progress-template.md     |  27 ++
  tests/fixtures/review-packet/packet-golden.md      | 115 ++++++
- tests/node-helpers.test.ts                         | 184 ++++++++++
+ tests/node-helpers.test.ts                         | 199 ++++++++++
  tests/prescription-sweep.mjs                       |  10 +-
  tests/prescription-sweep.test.ts                   |   4 +-
  tests/progress-header-blank-lines.e2e.test.ts      |   4 +-
@@ -41,7 +46,7 @@ Head: 55f7211bcb086f5d8368fd9eb204a622cacbf9b7
  tests/review-cost-optimization.test.ts             |   2 +-
  tests/review-packet-cli.test.ts                    |  30 +-
  tests/review-packet.test.ts                        |   8 +-
- 30 files changed, 1058 insertions(+), 583 deletions(-)
+ 33 files changed, 1092 insertions(+), 583 deletions(-)
 
 ## Acceptance criteria (verbatim from the design doc)
 
@@ -88,7 +93,7 @@ index 3e519dd..3f82e26 100644
  - `agents/pwk-*.md` — canonical, provider-neutral role contracts (recon scout + four reviewers). `/pwk-setup` copies them into the project's `.agents/agents/` so compatible delegation extensions (e.g. `@tintinweb/pi-subagents`) can discover them; the kit installs no delegation provider itself.
  
 diff --git a/docs/plans/2026-10-14-deterministic-steps/deterministic-steps-progress.md b/docs/plans/2026-10-14-deterministic-steps/deterministic-steps-progress.md
-index 8cf6967..633d828 100644
+index 8cf6967..db07a00 100644
 --- a/docs/plans/2026-10-14-deterministic-steps/deterministic-steps-progress.md
 +++ b/docs/plans/2026-10-14-deterministic-steps/deterministic-steps-progress.md
 @@ -8,9 +8,9 @@ Setup: n/a
@@ -96,7 +101,7 @@ index 8cf6967..633d828 100644
  Started: 2026-10-14T14:35:00Z
  
 -Last updated: 2026-10-14T15:35:48.234Z
-+Last updated: 2026-10-14T15:38:55.043Z
++Last updated: 2026-10-15T00:01:46.422Z
  
 -Feature phase: implementing (4/6)
 +Feature phase: implementing (5/6)
@@ -110,7 +115,7 @@ index 8cf6967..633d828 100644
 -| 5 | 🔄 | The pin checkers live in the repo | — | — |
 -| 6 | ⬜ | One runtime for the helpers | ⏸ full · 🔎 parallel | — |
 +| 5 | ✅ | The pin checkers live in the repo | — | c86c1b0 |
-+| 6 | 🔄 | One runtime for the helpers | ⏸ full · 🔎 parallel | — |
++| 6 | 🔄 | One runtime for the helpers | ⏸ full · 🔎 parallel | 55f7211 |
  
  ## Execution summary
  | R# | Requirement | How it was built | Deviated? | Evidence |
@@ -175,10 +180,10 @@ index 2be0529..82fcec3 100644
  
 diff --git a/skills/pwk-brainstorming/scripts/validate-design.mjs b/skills/pwk-brainstorming/scripts/validate-design.mjs
 new file mode 100644
-index 0000000..e240648
+index 0000000..f322c8f
 --- /dev/null
 +++ b/skills/pwk-brainstorming/scripts/validate-design.mjs
-@@ -0,0 +1,234 @@
+@@ -0,0 +1,239 @@
 +#!/usr/bin/env node
 +/**
 + * Read-only structural validation of a workflow design document.
@@ -206,7 +211,10 @@ index 0000000..e240648
 +  const errors = [];
 +  let fence = "";
 +  let fenceLine = 0;
-+  for (const [offset, line] of text.split(/\r?\n/).entries()) {
++  // Python's splitlines: break on CRLF, CR, or LF, and never keep a trailing empty line.
++  const rawLines = text.split(/\r\n|\r|\n/);
++  if (/[\r\n]$/.test(text)) rawLines.pop();
++  for (const [offset, line] of rawLines.entries()) {
 +    const number = offset + 1;
 +    if (fence) {
 +      const char = fence[0] === "`" ? "`" : "~";
@@ -231,7 +239,8 @@ index 0000000..e240648
 +function hasContent(lines) {
 +  return lines.some((line) => {
 +    const text = line.replace(/^\s*(?:[-+*]|[0-9]+[.)])\s*/, "").trim();
-+    return Boolean(text) && /\w/.test(text);
++    // Unicode word characters: a criteria section written in CJK is not empty.
++    return Boolean(text) && /[\p{L}\p{N}_]/u.test(text);
 +  });
 +}
 +
@@ -308,7 +317,8 @@ index 0000000..e240648
 +      for (const name of names) {
 +        if (
 +          heading.level !== 3 ||
-+          !new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title)
++          // Anchored, as Python's re.match is: a title that merely contains a tag word is not a tag.
++          !new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title)
 +        ) {
 +          continue;
 +        }
@@ -364,7 +374,7 @@ index 0000000..e240648
 +  for (const heading of headings) {
 +    for (const name of Object.keys(TAG_VALUES)) {
 +      if (
-+        new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title) &&
++        new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title) &&
 +        !ownedTags.has(heading.index)
 +      ) {
 +        const owner = name === "Feature review" ? "## Feature acceptance" : "a ### R<n>: requirement block";
@@ -645,10 +655,10 @@ index c06474d..6eaddbb 100644
    --progress "docs/plans/<date>-<topic>/<leaf>-progress.md" \
 diff --git a/skills/pwk-executing-tasks/scripts/build-review-packet.mjs b/skills/pwk-executing-tasks/scripts/build-review-packet.mjs
 new file mode 100644
-index 0000000..79a37f0
+index 0000000..718df53
 --- /dev/null
 +++ b/skills/pwk-executing-tasks/scripts/build-review-packet.mjs
-@@ -0,0 +1,397 @@
+@@ -0,0 +1,399 @@
 +#!/usr/bin/env node
 +/**
 + * Build review evidence from explicit, immutable Git bounds.
@@ -665,7 +675,9 @@ index 0000000..79a37f0
 +/** Keep original lines for evidence; inspect headings only outside fenced examples. */
 +class Document {
 +  constructor(path) {
-+    this.lines = readFileSync(path, "utf8").split(/(?<=\n)/);
++    // A strict decode, as Python's open(encoding="utf-8") is: reading as utf8 would replace
++    // invalid bytes and build a packet from damaged evidence.
++    this.lines = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path)).split(/(?<=\n)/);
 +    this.headings = [];
 +    this.visible = new Set();
 +    let fence = null;
@@ -1419,6 +1431,26 @@ index fcc9bed..942a3c5 100644
      expect(result.stdout).toMatch(/relative[\s\S]*(working directory|cwd)/i);
    });
    it("reports missing, non-file, and non-UTF-8 inputs without a traceback", () => {
+diff --git a/tests/fixtures/design-validator/cjk-criteria.txt b/tests/fixtures/design-validator/cjk-criteria.txt
+new file mode 100644
+index 0000000..251a409
+--- /dev/null
++++ b/tests/fixtures/design-validator/cjk-criteria.txt
+@@ -0,0 +1,4 @@
++# exit: 0
++cjk-criteria.md: structural checks passed. Semantic correctness is not verified.
++  R1: Checkpoints=none, Review=skip
++  Feature review=auto
+diff --git a/tests/fixtures/design-validator/cr-line-endings.txt b/tests/fixtures/design-validator/cr-line-endings.txt
+new file mode 100644
+index 0000000..b524084
+--- /dev/null
++++ b/tests/fixtures/design-validator/cr-line-endings.txt
+@@ -0,0 +1,4 @@
++# exit: 0
++cr-line-endings.md: structural checks passed. Semantic correctness is not verified.
++  R1: Checkpoints=none, Review=skip
++  Feature review=auto
 diff --git a/tests/fixtures/design-validator/duplicate-requirement.txt b/tests/fixtures/design-validator/duplicate-requirement.txt
 new file mode 100644
 index 0000000..4846e83
@@ -1435,6 +1467,16 @@ index 0000000..32b56fa
 @@ -0,0 +1,2 @@
 +# exit: 1
 +missing-criteria.md: line 8: R1 needs a standalone **Acceptance criteria** section
+diff --git a/tests/fixtures/design-validator/name-contains-tag.txt b/tests/fixtures/design-validator/name-contains-tag.txt
+new file mode 100644
+index 0000000..9e17898
+--- /dev/null
++++ b/tests/fixtures/design-validator/name-contains-tag.txt
+@@ -0,0 +1,4 @@
++# exit: 0
++name-contains-tag.md: structural checks passed. Semantic correctness is not verified.
++  R1: Checkpoints=none, Review=skip
++  Feature review=auto
 diff --git a/tests/fixtures/design-validator/no-feature-acceptance.txt b/tests/fixtures/design-validator/no-feature-acceptance.txt
 new file mode 100644
 index 0000000..a576dce
@@ -1665,10 +1707,10 @@ index 0000000..c6bc048
 +
 diff --git a/tests/node-helpers.test.ts b/tests/node-helpers.test.ts
 new file mode 100644
-index 0000000..389de51
+index 0000000..0fc6770
 --- /dev/null
 +++ b/tests/node-helpers.test.ts
-@@ -0,0 +1,184 @@
+@@ -0,0 +1,199 @@
 +import { spawnSync } from "node:child_process";
 +import {
 +  existsSync,
@@ -1700,11 +1742,11 @@ index 0000000..389de51
 +const PACKET = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.mjs");
 +
 +const CRITERION = "- Given an input, When it is processed, Then the result is returned.";
-+const requirement = (id = 1, tags = "") => `### R${id}: Observable outcome
++const requirement = (id = 1, tags = "", name = "Observable outcome", body = CRITERION) => `### R${id}: ${name}
 +A caller receives a result.
 +
 +**Acceptance criteria**
-+${CRITERION}
++${body}
 +
 +${tags}`;
 +const feature = `## Feature acceptance\n\n${CRITERION}\n`;
@@ -1728,6 +1770,19 @@ index 0000000..389de51
 +  "no-feature-acceptance": design(requirement(), ""),
 +  "duplicate-requirement": design(`${requirement(1)}\n${requirement(2).replace("R2", "R1")}`),
 +  "non-sequential": design(requirement(2)),
++  // A requirement name containing a tag word is not a tag: the detectors anchor at the start.
++  "name-contains-tag": design(requirement(1, "### Checkpoints: none\n### Review: skip", "Deferred Review notes")),
++  // Criteria written in CJK are not empty: word characters include non-ASCII letters.
++  "cjk-criteria": design(
++    requirement(
++      1,
++      "### Checkpoints: none\n### Review: skip",
++      "Observable outcome",
++      "\u7ed9\u5b9a \u8f93\u5165\uff0c\u5f53\u5904\u7406 \u65f6\uff0c\u5219\u8fd4\u56de \u7ed3\u679c\u3002",
++    ),
++  ),
++  // Lone CR line endings still separate headings, as Python's splitlines does.
++  "cr-line-endings": design().replace(/\n/g, "\r"),
 +};
 +
 +/** A git repo whose content and metadata are fixed, so its hashes are reproducible. */
@@ -1837,10 +1892,12 @@ index 0000000..389de51
 +          continue;
 +        }
 +        // These two name Python only to assert its absence.
-+        // These name Python only to assert its absence, or to detect it.
++        // These name Python only to assert its absence, or to detect it, and a generated
++        // packet quotes the diff it was built from.
 +        if (["node-helpers.test.ts", "deterministic-steps.e2e.test.ts", "prescription-sweep.mjs"].includes(name)) {
 +          continue;
 +        }
++        if (/-review-packet.*\.md$/.test(name)) continue;
 +        if (!/\.(md|ts|mjs)$/.test(name)) continue;
 +        const text = readFileSync(path, "utf8");
 +        if (/python3|Python 3/i.test(text)) offenders.push(`${path.replace(`${repoRoot}/`, "")}`);
