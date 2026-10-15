@@ -8,9 +8,9 @@ Setup: n/a
 
 Started: 2026-10-14T14:35:00Z
 
-Last updated: 2026-10-15T00:01:46.422Z
+Last updated: 2026-10-15T00:15:56.473Z
 
-Feature phase: implementing (5/6)
+Feature phase: reviewing
 
 ## Requirements
 | # | Done | Requirement | Per-req ceremony | Commit |
@@ -20,7 +20,7 @@ Feature phase: implementing (5/6)
 | 3 | ✅ | The reviewed diff is the shipped diff | — | 8a95578 ef9f31d |
 | 4 | ✅ | Enumerated capability checks | — | 5f4ed8d |
 | 5 | ✅ | The pin checkers live in the repo | — | c86c1b0 |
-| 6 | 🔄 | One runtime for the helpers | ⏸ full · 🔎 parallel | 55f7211 |
+| 6 | ✅ | One runtime for the helpers | ⏸ full · 🔎 parallel | 55f7211 f9bc008 0c05794 |
 
 ## Execution summary
 | R# | Requirement | How it was built | Deviated? | Evidence |
@@ -30,7 +30,7 @@ Feature phase: implementing (5/6)
 | 3 | The reviewed diff is the shipped diff | A Node helper fails when the tree holds uncommitted or untracked paths outside docs/plans/, listing them; the plan folder stays exempt because the design, progress file, and generated packet are legitimately dirty while a step is in flight. A root it cannot verify (not a git worktree) fails loudly rather than passing, and the packet-assembly step and the ship checkpoint both instruct running it. | yes — the feature E2E had to git-init its kit copy, since the check verifies a worktree and a plain directory cannot be verified | vitest run tests/stage-check.test.ts -> 5 pass (clean tree, untracked outside, modified tracked outside, plan-folder-only dirty, unverifiable root); the feature E2E's first scenario is fully green, and a stray file in the kit copy fails naming it. |
 | 4 | Enumerated capability checks | The recon step now requires enumerating what the session actually grants before it says anything is missing — under a batch executor Array.from(ALL_TOOLS), otherwise the tools and roles the host listed — naming the result, and reporting Scout: unavailable only among the enumerated tools with that result attached. skill-lint gained a check that the step carries the instruction and both forms. | — | skill-lint: 'recon enumeration: the recon step enumerates before reporting a capability missing'; the feature E2E asserts the repo text matches /enumerat/i and names ALL_TOOLS, and that stripping the sentence from a kit copy fails the lint naming the check. |
 | 5 | The pin checkers live in the repo | The relocated pin checker gained a named-revision argument (--against <rev>, default HEAD), repo-relative path resolution so a caller can pass an absolute path, and a non-zero exit that names every lost phrase — so a later pass can gate on it instead of only diffing HEAD. The pool harvest now tolerates a missing source file. | yes — R5 narrowed to those two refinements by human decision (Option 1); the relocation criteria were delivered by the skill-slimming-2 finalize, and the design records the amendment | vitest run tests/pins-lost.test.ts -> 4 pass (intact, a drop against a named revision, an absolute path, an unresolvable revision); the feature E2E's pin scenario is green and takes a real phrase from markers.mjs. |
-| 6 | One runtime for the helpers | | | |
+| 6 | One runtime for the helpers | Both helpers are dependency-free Node scripts (validate-design.mjs, build-review-packet.mjs), proven against goldens recorded from the Python originals while both existed: the validator matches exit codes and diagnostics case by case across nine fixtures, and the packet is byte-identical at 2,759 bytes. The Python prerequisite retires from the skill text, docs, and AGENTS.md; seven suites were converted; both .py files are deleted. | yes — the parallel review found three real divergences from the Python original (unanchored tag detection, ASCII-only word characters, invalid UTF-8 accepted) plus a test-scope bug (the absence scan flagged generated packets); all four were fixed and pinned with new goldens generated from the Python source recovered from Git | vitest run tests/node-helpers.test.ts -> 3 pass (validator goldens over nine fixtures, byte-identical packet, no Python remains); full suite 340 pass / 0 fail; reviewer reports retained — spec: gap then fixed; tracing: HIGH anchored tag, MEDIUM Unicode, LOW line-splitting, all fixed; smell: none; hazard: none triggered. |
 
 ## Deviation records
 
