@@ -602,20 +602,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Bash guard during brainstorm/plan** — `bash` tool calls are restricted to a read-only allowlist (grep, find, cat, git status/log/diff, etc.). Destructive commands (rm, mv, install, git mutations, sudo, editors) are hard-blocked.
 
-
+[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.11.1...HEAD
+[2.11.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.11.0...v2.11.1
+[2.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.10.0...v2.11.0
+[2.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.9.0...v2.10.0
+[2.9.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.8.1...v2.9.0
+[2.8.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.8.0...v2.8.1
+[2.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.7.0...v2.8.0
+[2.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.6.0...v2.7.0
+[2.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.4.0...v2.5.0
+[2.4.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.3.0...v2.4.0
+[2.3.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.1.2...v2.2.0
+[2.1.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.1.1...v2.1.2
+[2.1.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.8.0...v2.0.0
+[1.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.7.0...v1.8.0
+[1.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.6.1...v1.7.0
+[1.6.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.6.0...v1.6.1
+[1.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.4.0...v1.5.0
+[1.4.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.18.0...v1.0.0
+[0.18.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.17.0...v0.18.0
+[0.17.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.13.1...v0.13.2
-[1.1.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.0.0...v1.1.0
-[1.2.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.1.0...v1.2.0
-[1.3.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.2.0...v1.3.0
-[Unreleased]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v1.3.0...HEAD
-[0.18.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.17.0...v0.18.0
-[0.17.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.16.0...v0.17.0
+[0.13.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.12.0...v0.13.0
 [0.11.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.9.0...v0.10.0
-[0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.7.0
-[0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.6.0
-[0.5.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/yinloo-ola/pi-workflow-kit/releases/tag/v0.5.0
+[0.9.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.4...v0.9.0
+[0.8.3]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.2...v0.8.3
+[0.8.1]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.7.1...v0.8.0
+[0.7.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/yinloo-ola/pi-workflow-kit/compare/v0.5.3...v0.6.0
