@@ -12,6 +12,8 @@ AI coding agents tend to skip design and jump straight into implementation, prod
 pi install npm:@tianhai/pi-workflow-kit
 ```
 
+The deterministic helpers — design validation, the review packet, the progress writer, the section extractor, and the staging check — are dependency-free Node scripts. No Python is required.
+
 For Pi delegation providers that discover project agents, install the canonical PWK roles before starting a gated workflow:
 
 ```text

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.11.0] - 2026-10-15
+
+### Added
+
+- **Deterministic helpers replace the workflow's hand-edited steps.** `progress.mjs` is the only writer of the progress file's structural slots — phase, setup, a requirement row's done cell and commit, execution-summary content — and refuses anything it cannot validate, leaving the file byte-identical. `ref.mjs` prints one anchored section of a reference file, so a step loads the section it needs instead of the whole document. `stage-check.mjs` fails when the tree holds uncommitted or untracked paths outside `docs/plans/`, which keeps the reviewed diff and the shipped diff the same.
+- **Two new `skill-lint` checks.** Every reference pointer must resolve — the file exists, and the anchor matches a heading under the slug rule — and the recon step must enumerate the session's capabilities before it reports one missing.
+- **The pin checker takes a revision and gates on it.** `tests/tools/pins-lost.mjs` gained `--against <rev>` and a non-zero exit that names every lost phrase.
+
+### Changed
+
+- **One runtime: the two Python helpers became dependency-free Node scripts** (ADR 0011). `validate-design.py` and `build-review-packet.py` are ported and proven against goldens recorded from the originals while both existed — the validator matches exit codes and diagnostics case by case across nine fixtures, and the packet builder produces a byte-identical packet. The Python 3.9+ prerequisite retires from the skills, `AGENTS.md`, and the guides.
+- **Guards fail closed and carry no bypass** (ADR 0012). No `--force` and no warn-and-continue: every refusal names the file, path, or value at fault, and the human's `git` is the visible override.
+
 ## [2.10.0] - 2026-10-14
 
 ### Added
