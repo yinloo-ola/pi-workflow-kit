@@ -176,6 +176,10 @@ describe("deterministic steps (feature E2E)", () => {
       expect(recon, "the recon step enumerates before declaring a capability missing").toMatch(/enumerat/i);
       expect(recon, "the batch-executor form is named").toContain("ALL_TOOLS");
 
+      const reviewRef = read("skills/pwk-executing-tasks/references/review.md");
+      expect(reviewRef, "the review fallback enumerates before declaring a capability missing").toMatch(/enumerat/i);
+      expect(reviewRef, "the review site names the batch-executor probe too").toContain("ALL_TOOLS");
+
       const executingSkill = read("skills/pwk-executing-tasks/SKILL.md");
       expect(
         executingSkill.match(/stage-check\.mjs/g)?.length ?? 0,

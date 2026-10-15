@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.11.1] - 2026-10-15
+
+### Fixed
+
+- **The review fallback no longer fires on a hidden tool.** Under a tool-hiding executor (pi 1.2.0 with `codemode` in `only` mode) the spawn tool is callable but absent from the model's visible tool list; `pwk-executing-tasks` read that absence as "no delegation capability" and ran the four reviewer roles inline. The review mechanics now gate the inline fallback on an enumeration (`Array.from(ALL_TOOLS)`), the entrypoint points at the rule, the recon step names the trap, the provider contract defines absence as an enumeration result, and `skill-lint` gained a check that holds the rule.
+
 ## [2.11.0] - 2026-10-15
 
 ### Added

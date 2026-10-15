@@ -1723,6 +1723,28 @@ console.log("recon enumeration:");
   }
 }
 
+// --- Check 18: the review fallback enumerates before declaring a capability missing (deterministic-steps R4) ---
+console.log("review enumeration:");
+{
+  // The same rule as the recon step, at the review capability: absence is a probe result, not
+  // an inference from the tools the model can see, so the mechanics file names the probe and
+  // the entrypoint that reaches it gates on enumeration.
+  const executing = loadSkills().find((skill) => skill.name === "pwk-executing-tasks");
+  const refPath = executing ? join(dirname(executing.path), "references/review.md") : "";
+  const refText = executing && existsSync(refPath) ? readFileSync(refPath, "utf8") : "";
+  const problems = [];
+  if (!executing) problems.push("pwk-executing-tasks is not loaded");
+  if (!/enumerat/i.test(refText))
+    problems.push("references/review.md does not require enumeration before the inline fallback");
+  if (!refText.includes("ALL_TOOLS"))
+    problems.push("references/review.md names no batch-executor probe (Array.from(ALL_TOOLS))");
+  if (executing && !/enumerat/i.test(executing.content)) {
+    problems.push("pwk-executing-tasks/SKILL.md does not gate its fallback on enumeration");
+  }
+  if (problems.length) for (const problem of problems) fail(`review enumeration: ${problem}`);
+  else ok("review enumeration: the review fallback enumerates before declaring a capability missing");
+}
+
 console.log("");
 if (failures === 0) {
   console.log("skill-lint: all checks passed");

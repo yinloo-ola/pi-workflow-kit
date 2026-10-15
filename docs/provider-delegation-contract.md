@@ -93,7 +93,7 @@ An empty report is not a successful result. A missing role is not silently disca
 
 ## Fallback protocol
 
-If no provider satisfies the requested capabilities, the host performs the role inline using the same logical contract. For recon, it reports:
+Absence is established by enumeration, not by a visible tool list: a tool-hiding executor keeps the spawn mechanism out of the model's tools while it stays callable. If no provider satisfies the requested capabilities, the host performs the role inline using the same logical contract. For recon, it reports:
 
 ```text
 Scout: unavailable — inline recon used.
