@@ -25,7 +25,10 @@ function visibleLines(text) {
   const errors = [];
   let fence = "";
   let fenceLine = 0;
-  for (const [offset, line] of text.split(/\r?\n/).entries()) {
+  // Python's splitlines: break on CRLF, CR, or LF, and never keep a trailing empty line.
+  const rawLines = text.split(/\r\n|\r|\n/);
+  if (/[\r\n]$/.test(text)) rawLines.pop();
+  for (const [offset, line] of rawLines.entries()) {
     const number = offset + 1;
     if (fence) {
       const char = fence[0] === "`" ? "`" : "~";
@@ -50,7 +53,8 @@ function visibleLines(text) {
 function hasContent(lines) {
   return lines.some((line) => {
     const text = line.replace(/^\s*(?:[-+*]|[0-9]+[.)])\s*/, "").trim();
-    return Boolean(text) && /\w/.test(text);
+    // Unicode word characters: a criteria section written in CJK is not empty.
+    return Boolean(text) && /[\p{L}\p{N}_]/u.test(text);
   });
 }
 
@@ -127,7 +131,8 @@ function validate(text) {
       for (const name of names) {
         if (
           heading.level !== 3 ||
-          !new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title)
+          // Anchored, as Python's re.match is: a title that merely contains a tag word is not a tag.
+          !new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title)
         ) {
           continue;
         }
@@ -183,7 +188,7 @@ function validate(text) {
   for (const heading of headings) {
     for (const name of Object.keys(TAG_VALUES)) {
       if (
-        new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title) &&
+        new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(heading.title) &&
         !ownedTags.has(heading.index)
       ) {
         const owner = name === "Feature review" ? "## Feature acceptance" : "a ### R<n>: requirement block";

@@ -1,0 +1,4 @@
+# exit: 0
+cr-line-endings.md: structural checks passed. Semantic correctness is not verified.
+  R1: Checkpoints=none, Review=skip
+  Feature review=auto

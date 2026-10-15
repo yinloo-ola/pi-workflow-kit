@@ -29,11 +29,11 @@ const VALIDATOR = join(repoRoot, "skills/pwk-brainstorming/scripts/validate-desi
 const PACKET = join(repoRoot, "skills/pwk-executing-tasks/scripts/build-review-packet.mjs");
 
 const CRITERION = "- Given an input, When it is processed, Then the result is returned.";
-const requirement = (id = 1, tags = "") => `### R${id}: Observable outcome
+const requirement = (id = 1, tags = "", name = "Observable outcome", body = CRITERION) => `### R${id}: ${name}
 A caller receives a result.
 
 **Acceptance criteria**
-${CRITERION}
+${body}
 
 ${tags}`;
 const feature = `## Feature acceptance\n\n${CRITERION}\n`;
@@ -57,6 +57,19 @@ const CASES: Record<string, string> = {
   "no-feature-acceptance": design(requirement(), ""),
   "duplicate-requirement": design(`${requirement(1)}\n${requirement(2).replace("R2", "R1")}`),
   "non-sequential": design(requirement(2)),
+  // A requirement name containing a tag word is not a tag: the detectors anchor at the start.
+  "name-contains-tag": design(requirement(1, "### Checkpoints: none\n### Review: skip", "Deferred Review notes")),
+  // Criteria written in CJK are not empty: word characters include non-ASCII letters.
+  "cjk-criteria": design(
+    requirement(
+      1,
+      "### Checkpoints: none\n### Review: skip",
+      "Observable outcome",
+      "\u7ed9\u5b9a \u8f93\u5165\uff0c\u5f53\u5904\u7406 \u65f6\uff0c\u5219\u8fd4\u56de \u7ed3\u679c\u3002",
+    ),
+  ),
+  // Lone CR line endings still separate headings, as Python's splitlines does.
+  "cr-line-endings": design().replace(/\n/g, "\r"),
 };
 
 /** A git repo whose content and metadata are fixed, so its hashes are reproducible. */
@@ -166,10 +179,12 @@ describe("node helpers (conversion)", () => {
           continue;
         }
         // These two name Python only to assert its absence.
-        // These name Python only to assert its absence, or to detect it.
+        // These name Python only to assert its absence, or to detect it, and a generated
+        // packet quotes the diff it was built from.
         if (["node-helpers.test.ts", "deterministic-steps.e2e.test.ts", "prescription-sweep.mjs"].includes(name)) {
           continue;
         }
+        if (/-review-packet.*\.md$/.test(name)) continue;
         if (!/\.(md|ts|mjs)$/.test(name)) continue;
         const text = readFileSync(path, "utf8");
         if (/python3|Python 3/i.test(text)) offenders.push(`${path.replace(`${repoRoot}/`, "")}`);
