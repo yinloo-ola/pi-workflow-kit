@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -169,34 +169,49 @@ describe("node helpers (conversion)", () => {
       "packet helper ported",
     ).toBe(false);
 
-    const offenders: string[] = [];
-    const walk = (dir: string) => {
+    // The operative surface: what a host loads and follows. A decision record, a plan doc,
+    // and frozen evidence all legitimately name the runtime this topic retired, so the check
+    // enumerates its subjects rather than walking a tree and excluding them.
+    const skillFiles: string[] = [];
+    const walkSkills = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) walkSkills(path);
+        else if (/\.(md|mjs)$/.test(name)) skillFiles.push(path);
+      }
+    };
+    walkSkills(join(repoRoot, "skills"));
+    const operative = [
+      ...skillFiles,
+      join(repoRoot, "AGENTS.md"),
+      ...readdirSync(join(repoRoot, "docs"))
+        .filter((name) => name.endsWith(".md"))
+        .map((name) => join(repoRoot, "docs", name)),
+    ];
+    for (const path of operative) {
+      expect(readFileSync(path, "utf8"), `${relative(repoRoot, path)} states the runtime`).not.toMatch(
+        /python3|Python 3/i,
+      );
+    }
+
+    // No test invokes one either: this looks for an invocation, not for a mention, so the
+    // suites that assert Python's absence and the detector list need no exemption.
+    const invocations: string[] = [];
+    const walkTests = (dir: string) => {
       for (const name of readdirSync(dir)) {
         const path = join(dir, name);
         if (statSync(path).isDirectory()) {
           if (name === "runs") continue; // frozen probe evidence
-          // The plan folder describes this very conversion, including the was: clause the
-          // digest format requires; it is ephemeral and never ships.
-          if (name === "plans") continue;
-          walk(path);
+          walkTests(path);
           continue;
         }
-        // These two name Python only to assert its absence.
-        // These name Python only to assert its absence, or to detect it, and a generated
-        // packet quotes the diff it was built from.
-        if (["node-helpers.test.ts", "deterministic-steps.e2e.test.ts", "prescription-sweep.mjs"].includes(name)) {
-          continue;
+        if (!/\.(ts|mjs)$/.test(name)) continue;
+        if (/(spawnSync|execFileSync|execSync)\(\s*"python3"/.test(readFileSync(path, "utf8"))) {
+          invocations.push(relative(repoRoot, path));
         }
-        if (/-review-packet.*\.md$/.test(name)) continue;
-        if (!/\.(md|ts|mjs)$/.test(name)) continue;
-        const text = readFileSync(path, "utf8");
-        if (/python3|Python 3/i.test(text)) offenders.push(`${path.replace(`${repoRoot}/`, "")}`);
       }
     };
-    walk(join(repoRoot, "skills"));
-    walk(join(repoRoot, "docs"));
-    walk(join(repoRoot, "tests"));
-    expect(offenders, "no Python invocation or prerequisite remains").toEqual([]);
-    expect(readFileSync(join(repoRoot, "AGENTS.md"), "utf8"), "AGENTS.md states the runtime").not.toMatch(/python3/i);
+    walkTests(join(repoRoot, "tests"));
+    expect(invocations, "no test invokes a Python interpreter").toEqual([]);
   });
 });
