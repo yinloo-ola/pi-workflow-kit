@@ -175,6 +175,9 @@ describe("node helpers (conversion)", () => {
         const path = join(dir, name);
         if (statSync(path).isDirectory()) {
           if (name === "runs") continue; // frozen probe evidence
+          // The plan folder describes this very conversion, including the was: clause the
+          // digest format requires; it is ephemeral and never ships.
+          if (name === "plans") continue;
           walk(path);
           continue;
         }
